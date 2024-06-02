@@ -12,12 +12,7 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
     }
 
     let unitsConsumed;
-
-    if (exportReading > importReading) {
-        unitsConsumed = (solarGeneration - exportReading) + importReading;
-    } else {
-        unitsConsumed = importReading - exportReading;
-    }
+    unitsConsumed = (solarGeneration - exportReading) + importReading;
 
     const resultText = `Your total units consumed are ${unitsConsumed.toFixed(2)} kWh.`;
 
