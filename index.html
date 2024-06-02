@@ -11,6 +11,13 @@
         <h1>Solar Prosumers Electricity Bill Calculator</h1>
         <form id="billCalculator">
             <div class="form-group">
+                <label for="phase">Select Phase:</label>
+                <select id="phase" name="phase">
+                    <option value="phase1">Phase 1</option>
+                    <option value="phase2">Phase 2</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label for="solarGeneration">Solar Generation Meter Reading (kWh):</label>
                 <input type="number" id="solarGeneration" name="solarGeneration" required>
             </div>
@@ -28,7 +35,12 @@
                 </div>
             </div>
             <button type="submit">Calculate Units Consumed</button>
+            <button type="button" id="resetButton">Reset</button>
         </form>
+        <div id="billDetails" style="display: none;">
+            <h2>Bill Details</h2>
+            <div id="billInfo"></div>
+        </div>
         <div id="result"></div>
     </div>
     <script src="scripts.js"></script>
