@@ -20,11 +20,16 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
     }
 
     let unitsConsumed = (solarGeneration - exportReading) + importReading;
-    let bankAdjustedUnits = bankClosing - unitsConsumed;
+    
+    let bankAdjustedUnits = solarGeneration- unitsConsumed;
 
     if (bankAdjustedUnits < 0) {
-        bankAdjustedUnits = -bankAdjustedUnits;
+        bankAdjustedUnits = bankAdjustedUnits + bankClosing;
     } else {
+        bankAdjustedUnits = 0;
+    }
+    bankAdjustedUnits = -bankAdjustedUnits;
+    if(bankAdjustedUnits < 0){
         bankAdjustedUnits = 0;
     }
 
@@ -60,37 +65,62 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
         }
     }
 
+    let unitRate;
     if (bankAdjustedUnits <= 250) {
         if (bankAdjustedUnits <= 50) {
             energyCharge = bankAdjustedUnits * 3.25;
+            unitRate = 3.25;
         } else if (bankAdjustedUnits <= 100) {
             energyCharge = bankAdjustedUnits * 4.05;
+            unitRate = 4.05;
         } else if (bankAdjustedUnits <= 150) {
             energyCharge = bankAdjustedUnits * 5.10;
+            unitRate = 5.10;
         } else if (bankAdjustedUnits <= 200) {
             energyCharge = bankAdjustedUnits * 6.95;
+            unitRate = 6.95;
         } else {
             energyCharge = bankAdjustedUnits * 8.20;
+            unitRate = 8.20;
         }
     } else {
         if (bankAdjustedUnits <= 300) {
             energyCharge = bankAdjustedUnits * 6.40;
+            unitRate = 6.40;
         } else if (bankAdjustedUnits <= 350) {
             energyCharge = bankAdjustedUnits * 7.25;
+            unitRate = 7.25;
         } else if (bankAdjustedUnits <= 400) {
             energyCharge = bankAdjustedUnits * 7.60;
+            unitRate = 7.60;
         } else if (bankAdjustedUnits <= 500) {
             energyCharge = bankAdjustedUnits * 7.90;
+            unitRate = 7.90;
         } else {
             energyCharge = bankAdjustedUnits * 8.80;
+            unitRate = 8.80;
         }
     }
+
+    const meterRent = 36.58;
+    const duty = energyCharge * 0.10;
+    const fuelSurcharge = 10.26;
+    const generationDuty = solarGeneration * 0.15;
+    const monthlyFuelSurcharge = 11.40;
+    const totalBillAmount = fixedCharge + meterRent + energyCharge + duty + fuelSurcharge + generationDuty + monthlyFuelSurcharge;
 
     const billInfo = `
         <div>Bill Type: ${billType}</div>
         <div>Fixed Charge: ₹${fixedCharge}</div>
-        <div>Energy Charge: ₹${energyCharge.toFixed(2)}</div>
-        <div>Bank Adjusted Units: ${bankAdjustedUnits.toFixed(2)} kWh</div>
+        <div>Meter Rent: ₹${meterRent}</div>
+        <div>Unit Charge: ₹${unitRate}/Unit</div>
+        <div>No: of Units Consumed (adjusted from bank): ${bankAdjustedUnits.toFixed(2)}</div>
+        <div>Energy Charge: ₹${energyCharge.toFixed(2)} (${bankAdjustedUnits.toFixed(2)} x ₹${unitRate})</div>
+        <div>Duty: ₹${duty.toFixed(2)} (10% of the Energy Charge)</div>
+        <div>Fuel Surcharge: ₹${fuelSurcharge.toFixed(2)}</div>
+        <div>Generation Duty: ₹${generationDuty.toFixed(2)} (${solarGeneration.toFixed(2)} x 0.15)</div>
+        <div>Monthly Fuel Surcharge: ₹${monthlyFuelSurcharge.toFixed(2)}</div>
+        <div>Total Bill Amount: ₹${totalBillAmount.toFixed(2)}</div>
     `;
 
     document.getElementById('result').innerText = `Your total units consumed are ${unitsConsumed.toFixed(2)} kWh.`;
@@ -103,10 +133,10 @@ document.getElementById('resetButton').addEventListener('click', function(event)
 
     // Clear all input fields
     document.getElementById('phase').value = 'phase1';
-    document.getElementById('solarGeneration').value = '';
-    document.getElementById('import').value = '';
-    document.getElementById('export').value = '';
-    document.getElementById('bankClosing').value = '';
+    document.getElementById('solarGeneration').value = '0';
+    document.getElementById('import').value = '0';
+    document.getElementById('export').value = '0';
+    document.getElementById('bankClosing').value = '0';
 
     // Clear result
     document.getElementById('result').innerText = '';
