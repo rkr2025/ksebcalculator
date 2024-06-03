@@ -19,19 +19,25 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
         return;
     }
 
-    let unitsConsumed = (solarGeneration - exportReading) + importReading;
-    
-    let bankAdjustedUnits = solarGeneration- unitsConsumed;
+    let unitsConsumed = (solarGeneration - exportReading) + importReading; //always positive
+    let backupInCurrentMonth = solarGeneration -  exportReading; // always positive
+    let totalBankBalance = backupInCurrentMonth + bankClosing; //always positive
+    let bankAdjustedUnits = 0;
 
-    if (bankAdjustedUnits < 0) {
-        bankAdjustedUnits = bankAdjustedUnits + bankClosing;
-    } else {
+    //let finalConsumption =  unitsConsumed - totalBankBalance;
+
+    if(importReading > exportReading){
+        bankAdjustedUnits = importReading - exportReading;
+    }else{
         bankAdjustedUnits = 0;
     }
-    bankAdjustedUnits = -bankAdjustedUnits;
-    if(bankAdjustedUnits < 0){
-        bankAdjustedUnits = 0;
-    }
+
+    // console.log('finalConsumption first: ' + finalConsumption);
+    // console.log('unitsConsumed: ' + unitsConsumed);
+    // console.log('backupInCurrentMonth: ' + backupInCurrentMonth);
+    // console.log('totalBankBalance: ' + totalBankBalance);
+    // console.log('bankAdjustedUnits: ' + bankAdjustedUnits);
+
 
     let billType;
     let fixedCharge;
@@ -102,19 +108,19 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
         }
     }
 
-    const meterRent = 36.58;
+    const meterRent = 41.38;
     const duty = energyCharge * 0.10;
-    const fuelSurcharge = 10.26;
+    const fuelSurcharge = bankAdjustedUnits * 0.09;
     const generationDuty = solarGeneration * 0.15;
-    const monthlyFuelSurcharge = 11.40;
+    const monthlyFuelSurcharge = bankAdjustedUnits * 0.10;
     const totalBillAmount = fixedCharge + meterRent + energyCharge + duty + fuelSurcharge + generationDuty + monthlyFuelSurcharge;
 
     const billInfo = `
         <div>Bill Type: ${billType}</div>
         <div>Fixed Charge: ₹${fixedCharge}</div>
-        <div>Meter Rent: ₹${meterRent}</div>
+        <div>Meter Rent (GST Inc): ₹${meterRent}</div>
         <div>Unit Charge: ₹${unitRate}/Unit</div>
-        <div>No: of Units Consumed (adjusted from bank): ${bankAdjustedUnits.toFixed(2)}</div>
+        <div>No: of Units Consumed (for Energy calculation): ${bankAdjustedUnits.toFixed(2)}</div>
         <div>Energy Charge: ₹${energyCharge.toFixed(2)} (${bankAdjustedUnits.toFixed(2)} x ₹${unitRate})</div>
         <div>Duty: ₹${duty.toFixed(2)} (10% of the Energy Charge)</div>
         <div>Fuel Surcharge: ₹${fuelSurcharge.toFixed(2)}</div>
