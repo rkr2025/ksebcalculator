@@ -21,8 +21,11 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
 
     let unitsConsumed = (solarGeneration - exportReading) + importReading;
     let bankAdjustedUnits = bankClosing - unitsConsumed;
-    if (bankAdjustedUnits < 0){
-        bankAdjustedUnits = bankAdjustedUnits * -1;
+
+    if (bankAdjustedUnits < 0) {
+        bankAdjustedUnits = -bankAdjustedUnits;
+    } else {
+        bankAdjustedUnits = 0;
     }
 
     let billType;
@@ -50,7 +53,7 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
             fixedCharge = (phase === 'phase1') ? 175 : 210;
         } else if (unitsConsumed <= 400) {
             fixedCharge = (phase === 'phase1') ? 200 : 210;
-        } else  if (unitsConsumed <= 500) {
+        } else if (unitsConsumed <= 500) {
             fixedCharge = (phase === 'phase1') ? 230 : 235;
         } else {
             fixedCharge = (phase === 'phase1') ? 260 : 235;
@@ -76,7 +79,7 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
             energyCharge = bankAdjustedUnits * 7.25;
         } else if (bankAdjustedUnits <= 400) {
             energyCharge = bankAdjustedUnits * 7.60;
-        } else  if (bankAdjustedUnits <= 500) {
+        } else if (bankAdjustedUnits <= 500) {
             energyCharge = bankAdjustedUnits * 7.90;
         } else {
             energyCharge = bankAdjustedUnits * 8.80;
