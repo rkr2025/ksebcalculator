@@ -121,14 +121,38 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
     `;
 
     document.getElementById('result').innerText = `Your total units consumed are ${unitsConsumed.toFixed(2)} kWh.`;
-    document.getElementById('result1').innerText = `Input ${unitsConsumed.toFixed(2)} kWh.`;
+    document.getElementById('result1').innerText = `നിലവിലെ ഉപയോഗം അനുസരിച്ചു താങ്കൾ ഒരു യൂണിറ്റിന് ₹${unitRate.toFixed(2)} നൽകണം. `;
+    document.getElementById('result2').innerText = `നിലവിലെ ഉപയോഗം അനുസരിച്ചു താങ്കൾ ഒരു യൂണിറ്റിന് ₹${unitRate.toFixed(2)} നൽകണം. `;
+    document.getElementById('result3').innerText = `നിലവിലെ ഉപയോഗം അനുസരിച്ചു താങ്കൾ ഒരു യൂണിറ്റിന് ₹${unitRate.toFixed(2)} നൽകണം. `;
+    document.getElementById('result4').innerText = `നിലവിലെ ഉപയോഗം അനുസരിച്ചു താങ്കൾ ഒരു യൂണിറ്റിന് ₹${unitRate.toFixed(2)} നൽകണം. `;
+    document.getElementById('result5').innerText = `നിലവിലെ ഉപയോഗം അനുസരിച്ചു താങ്കൾ ഒരു യൂണിറ്റിന് ₹${unitRate.toFixed(2)} നൽകണം. `;
+    document.getElementById('result6').innerText = `നിലവിലെ ഉപയോഗം അനുസരിച്ചു താങ്കൾ ഒരു യൂണിറ്റിന് ₹${unitRate.toFixed(2)} നൽകണം. `;
+    document.getElementById('result').style.display = 'block';
+    document.getElementById('result1').style.display = 'block';
+    document.getElementById('result2').style.display = 'block';
+    document.getElementById('result3').style.display = 'block';
+    document.getElementById('result4').style.display = 'block';
+    document.getElementById('result5').style.display = 'block';
+    document.getElementById('result6').style.display = 'block';
     document.getElementById('billInfo').innerHTML = billInfo;
     document.getElementById('billDetails').style.display = 'block';
 });
 
 document.getElementById('resetButton').addEventListener('click', function() {
     document.getElementById('billCalculator').reset();
-    document.getElementById('result').innerText = '';
-    document.getElementById('result1').innerText = '';
+    // document.getElementById('result').innerText = '';
+    // document.getElementById('result1').innerText = '';
+    // document.getElementById('result2').innerText = '';
+    // document.getElementById('result3').innerText = '';
+    // document.getElementById('result4').innerText = '';
+    // document.getElementById('result5').innerText = '';
+    // document.getElementById('result6').innerText = '';
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('result1').style.display = 'none';
+    document.getElementById('result2').style.display = 'none';
+    document.getElementById('result3').style.display = 'none';
+    document.getElementById('result4').style.display = 'none';
+    document.getElementById('result5').style.display = 'none';
+    document.getElementById('result6').style.display = 'none';
     document.getElementById('billDetails').style.display = 'none';
 });
