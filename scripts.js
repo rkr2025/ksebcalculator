@@ -5,10 +5,9 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
     const solarGeneration = parseFloat(document.getElementById('solarGeneration').value);
     const importReading = parseFloat(document.getElementById('import').value);
     const exportReading = parseFloat(document.getElementById('export').value);
-    const bankClosing = parseFloat(document.getElementById('bankClosing').value);
 
     // Validate positive values
-    if (solarGeneration < 0 || importReading < 0 || exportReading < 0 || bankClosing < 0) {
+    if (solarGeneration < 0 || importReading < 0 || exportReading < 0) {
         alert("Please enter positive values.");
         return;
     }
@@ -122,6 +121,7 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
     `;
 
     document.getElementById('result').innerText = `Your total units consumed are ${unitsConsumed.toFixed(2)} kWh.`;
+    document.getElementById('result1').innerText = `Input ${unitsConsumed.toFixed(2)} kWh.`;
     document.getElementById('billInfo').innerHTML = billInfo;
     document.getElementById('billDetails').style.display = 'block';
 });
@@ -134,9 +134,9 @@ document.getElementById('resetButton').addEventListener('click', function(event)
     document.getElementById('solarGeneration').value = '0';
     document.getElementById('import').value = '0';
     document.getElementById('export').value = '0';
-    document.getElementById('bankClosing').value = '0';
 
     // Clear result
     document.getElementById('result').innerText = '';
+    document.getElementById('result1').innerText = '';
     document.getElementById('billDetails').style.display = 'none';
 });
