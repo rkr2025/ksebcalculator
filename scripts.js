@@ -57,7 +57,7 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
         } else if (unitsConsumed <= 500) {
             fixedCharge = (phase === 'phase1') ? 230 : 235;
         } else {
-            fixedCharge = (phase === 'phase1') ? 260 : 235;
+            fixedCharge = (phase === 'phase1') ? 260 : 260;
         }
     }
 
@@ -138,19 +138,19 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
     
 
     if (importReading > exportReading) {
-        document.getElementById('result1').innerText = `താങ്കൾ കഴിഞ്ഞ മാസം ${importReading} യൂണിറ്റ്  Import ഉം  ${exportReading} യൂണിറ്റ് Export ഉം ചെയ്തിട്ടുണ്ട്.  വ്യത്യാസം വരുന്ന ${bankAdjustedUnits} യൂണിറ്റ് ചാർജ് ചെയ്യപ്പെടുന്നതാണ് . `;
+        document.getElementById('result1').innerText = `താങ്കൾ കഴിഞ്ഞ മാസം ${importReading} യൂണിറ്റ്  IMPORT ഉം  ${exportReading} യൂണിറ്റ് EXPORT ഉം ചെയ്തിട്ടുണ്ട്.  വ്യത്യാസം വരുന്ന ${bankAdjustedUnits} യൂണിറ്റ് ചാർജ് ചെയ്യപ്പെടുന്നതാണ് . `;
         document.getElementById('result2').innerText = `താങ്കളുടെ ബില്ലിംഗ് ടൈപ്പ്: ${billType} ആകുന്നു. നിലവിലെ താരിഫ് അനുസരിച്ചു താങ്കൾ ഒരു യൂണിറ്റിന് ₹${unitRate.toFixed(2)} (${phase}) നൽകണം. ${bankAdjustedUnits} x ₹${unitRate.toFixed(2)} = ₹${energyCharge.toFixed(2)}  `;
-        document.getElementById('result3').innerText = `Total Bill Amount ഏകദേശം  ₹${totalBillAmount.toFixed(2)} (GST, meter rent, tariff changes adjustment to be considered)`;
+        document.getElementById('result3').innerText = `Total Bill Amount ഏകദേശം  ₹${totalBillAmount.toFixed(2)} (GST, meter rent, tariff changes may vary)`;
         document.getElementById('result4').innerText = ` Total Solar Generation ${solarGeneration} യൂണിറ്റ് ആകുന്നു`;
         document.getElementById('result5').innerText = `ഇത് ഒരു ഏകദേശ കണക്ക് ആകുന്നു. താരിഫ് ഓരോ തവണയും മാറ്റം വരാറുണ്ട്, അത് കൊണ്ട് യഥാർത്ഥ താരിഫ് KSEB യിൽ നിന്നും മനസിലാക്കുക  `;
-        document.getElementById('result6').innerText = `മേൽ കൊടുത്തിട്ടുള്ളതിൽ calculation തെറ്റുകൾ ഉണ്ടെങ്കിൽ , താരിഫ് മാറ്റം ഉണ്ടെങ്കിൽ ആ വിവരങ്ങൾ calculatoronline2024@gmail.com എന്ന വിലാസത്തിൽ അറിയിക്കുക. `;
+        document.getElementById('result6').innerText = `മേൽ കൊടുത്തിട്ടുള്ളതിൽ calculation തെറ്റുകൾ ഉണ്ടെങ്കിൽ , വേറെ ഓപ്ഷനുകൾ ആവശ്യമാണെങ്കിൽ ,താരിഫ് മാറ്റം ഉണ്ടെങ്കിൽ ആ വിവരങ്ങൾ calculatoronline2024@gmail.com എന്ന വിലാസത്തിൽ അറിയിക്കുക. `;
     }else{
         document.getElementById('result1').innerText = `താങ്കൾ കഴിഞ്ഞ മാസം ${importReading} യൂണിറ്റ്  Import ഉം  ${exportReading} യൂണിറ്റ് Export ഉം ചെയ്തിട്ടുണ്ട്. Export കൂടുതലായതു കൊണ്ട് എനർജി ചാർജ് കൊടുക്കേണ്ടതില്ല. `;
         document.getElementById('result2').innerText = `Total Bill Amount ഏകദേശം  ₹${totalBillAmount.toFixed(2)} (GST, meter rent, tariff changes adjustment to be considered)`;
         document.getElementById('result3').innerText = ` Total Solar Generation ${solarGeneration} യൂണിറ്റ് ആകുന്നു`;
-        document.getElementById('result4').innerText = ` ഏകദേശം ${accountBalance} യൂണിറ്റ്  ബാങ്ക് അക്കൗണ്ടിലേക്ക് കൂടുന്നതാണ്.`;
+        document.getElementById('result4').innerText = ` ഏകദേശം ${accountBalance} യൂണിറ്റ്  ബാങ്ക് അക്കൗണ്ടിലേക്ക് അധികമായി ചേർക്കുന്നതാണ്.`;
         document.getElementById('result5').innerText = `ഇത് ഒരു ഏകദേശ കണക്ക് ആകുന്നു. താരിഫ് ഓരോ തവണയും മാറ്റം വരാറുണ്ട്, അത് കൊണ്ട് യഥാർത്ഥ താരിഫ് KSEB യിൽ നിന്നും മനസിലാക്കുക  `;
-        document.getElementById('result6').innerText = `മേൽ കൊടുത്തിട്ടുള്ളതിൽ calculation തെറ്റുകൾ ഉണ്ടെങ്കിൽ , താരിഫ് മാറ്റം ഉണ്ടെങ്കിൽ ആ വിവരങ്ങൾ calculatoronline2024@gmail.com എന്ന വിലാസത്തിൽ അറിയിക്കുക. `;
+        document.getElementById('result6').innerText = `മേൽ കൊടുത്തിട്ടുള്ളതിൽ calculation തെറ്റുകൾ ഉണ്ടെങ്കിൽ , വേറെ ഓപ്ഷനുകൾ ആവശ്യമാണെങ്കിൽ , താരിഫ് മാറ്റം ഉണ്ടെങ്കിൽ ആ വിവരങ്ങൾ calculatoronline2024@gmail.com എന്ന വിലാസത്തിൽ അറിയിക്കുക. `;
     }
     
 
