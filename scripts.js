@@ -21,9 +21,9 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
     let unitsConsumed = (solarGeneration - exportReading) + importReading;
     let bankAdjustedUnits = 0;
 
-    if(importReading > exportReading){
+    if (importReading > exportReading) {
         bankAdjustedUnits = importReading - exportReading;
-    }else{
+    } else {
         bankAdjustedUnits = 0;
     }
 
@@ -107,17 +107,17 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
     const totalBillAmount = fixedCharge + meterRent + energyCharge + duty + fuelSurcharge + generationDuty + monthlyFuelSurcharge;
 
     const billInfo = `
-        <div>Bill Type: ${billType}</div>
-        <div>Fixed Charge: ₹${fixedCharge}</div>
-        <div>Meter Rent (GST Inc): ₹${meterRent}</div>
-        <div>Unit Charge: ₹${unitRate}/Unit</div>
-        <div>No: of Units Consumed (for Energy calculation): ${bankAdjustedUnits.toFixed(2)}</div>
-        <div>Energy Charge: ₹${energyCharge.toFixed(2)} (${bankAdjustedUnits.toFixed(2)} x ₹${unitRate})</div>
-        <div>Duty: ₹${duty.toFixed(2)} (10% of the Energy Charge)</div>
-        <div>Fuel Surcharge: ₹${fuelSurcharge.toFixed(2)}</div>
-        <div>Generation Duty: ₹${generationDuty.toFixed(2)} (${solarGeneration.toFixed(2)} x 0.15)</div>
-        <div>Monthly Fuel Surcharge: ₹${monthlyFuelSurcharge.toFixed(2)}</div>
-        <div>Total Bill Amount: ₹${totalBillAmount.toFixed(2)}</div>
+        <tr><td>Bill Type</td><td>${billType}</td></tr>
+        <tr><td>Fixed Charge</td><td>₹${fixedCharge}</td></tr>
+        <tr><td>Meter Rent (GST Inc)</td><td>₹${meterRent}</td></tr>
+        <tr><td>Unit Charge</td><td>₹${unitRate}/Unit</td></tr>
+        <tr><td>No: of Units Consumed (for Energy calculation)</td><td>${bankAdjustedUnits.toFixed(2)}</td></tr>
+        <tr><td>Energy Charge</td><td>₹${energyCharge.toFixed(2)} (${bankAdjustedUnits.toFixed(2)} x ₹${unitRate})</td></tr>
+        <tr><td>Duty</td><td>₹${duty.toFixed(2)} (10% of the Energy Charge)</td></tr>
+        <tr><td>Fuel Surcharge</td><td>₹${fuelSurcharge.toFixed(2)}</td></tr>
+        <tr><td>Generation Duty</td><td>₹${generationDuty.toFixed(2)} (${solarGeneration.toFixed(2)} x 0.15)</td></tr>
+        <tr><td>Monthly Fuel Surcharge</td><td>₹${monthlyFuelSurcharge.toFixed(2)}</td></tr>
+        <tr><td>Total Bill Amount</td><td>₹${totalBillAmount.toFixed(2)}</td></tr>
     `;
 
     document.getElementById('result').innerText = `Your total units consumed are ${unitsConsumed.toFixed(2)} kWh.`;
@@ -126,16 +126,8 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
     document.getElementById('billDetails').style.display = 'block';
 });
 
-document.getElementById('resetButton').addEventListener('click', function(event) {
-    event.preventDefault();
-
-    // Clear all input fields
-    document.getElementById('phase').value = 'phase1';
-    document.getElementById('solarGeneration').value = '0';
-    document.getElementById('import').value = '0';
-    document.getElementById('export').value = '0';
-
-    // Clear result
+document.getElementById('resetButton').addEventListener('click', function() {
+    document.getElementById('billCalculator').reset();
     document.getElementById('result').innerText = '';
     document.getElementById('result1').innerText = '';
     document.getElementById('billDetails').style.display = 'none';
