@@ -19,25 +19,14 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
         return;
     }
 
-    let unitsConsumed = (solarGeneration - exportReading) + importReading; //always positive
-    let backupInCurrentMonth = solarGeneration -  exportReading; // always positive
-    let totalBankBalance = backupInCurrentMonth + bankClosing; //always positive
+    let unitsConsumed = (solarGeneration - exportReading) + importReading;
     let bankAdjustedUnits = 0;
-
-    //let finalConsumption =  unitsConsumed - totalBankBalance;
 
     if(importReading > exportReading){
         bankAdjustedUnits = importReading - exportReading;
     }else{
         bankAdjustedUnits = 0;
     }
-
-    // console.log('finalConsumption first: ' + finalConsumption);
-    // console.log('unitsConsumed: ' + unitsConsumed);
-    // console.log('backupInCurrentMonth: ' + backupInCurrentMonth);
-    // console.log('totalBankBalance: ' + totalBankBalance);
-    // console.log('bankAdjustedUnits: ' + bankAdjustedUnits);
-
 
     let billType;
     let fixedCharge;
@@ -73,7 +62,10 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
 
     let unitRate;
     if (bankAdjustedUnits <= 250) {
-        if (bankAdjustedUnits <= 50) {
+        if (bankAdjustedUnits <= 40) {
+            energyCharge = bankAdjustedUnits * 1.50;
+            unitRate = 1.50;
+        } else if (bankAdjustedUnits <= 50) {
             energyCharge = bankAdjustedUnits * 3.25;
             unitRate = 3.25;
         } else if (bankAdjustedUnits <= 100) {
