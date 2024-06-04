@@ -63,10 +63,11 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
 
     let unitRate;
     if (bankAdjustedUnits <= 250) {
-        if (bankAdjustedUnits <= 40) {
-            energyCharge = bankAdjustedUnits * 1.50;
-            unitRate = 1.50;
-        } else if (bankAdjustedUnits <= 50) {
+        // if (bankAdjustedUnits <= 40) {
+        //     energyCharge = bankAdjustedUnits * 1.50;
+        //     unitRate = 1.50;
+        // } else 
+        if (bankAdjustedUnits <= 50) {
             energyCharge = bankAdjustedUnits * 3.25;
             unitRate = 3.25;
         } else if (bankAdjustedUnits <= 100) {
