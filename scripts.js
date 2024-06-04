@@ -99,12 +99,20 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
         }
     }
 
-    const meterRent = 41.38;
+    let meterRent;
+    if(phase === 'phase1'){
+        meterRent = 30;
+    }else{
+        meterRent = 35;
+    }
+
+
     const duty = energyCharge * 0.10;
     const fuelSurcharge = bankAdjustedUnits * 0.09;
     const generationDuty = solarGeneration * 0.15;
     const monthlyFuelSurcharge = bankAdjustedUnits * 0.10;
     const totalBillAmount = fixedCharge + meterRent + energyCharge + duty + fuelSurcharge + generationDuty + monthlyFuelSurcharge;
+    //let gstCalculation = fixedCharge + meterRent + duty;
 
     const billInfo = `
         <tr><td>Bill Type</td><td>${billType}</td></tr>
@@ -120,13 +128,29 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
         <tr><td>Total Bill Amount</td><td>₹${totalBillAmount.toFixed(2)}</td></tr>
     `;
 
-    document.getElementById('result').innerText = `Your total units consumed are ${unitsConsumed.toFixed(2)} kWh.`;
-    document.getElementById('result1').innerText = `നിലവിലെ ഉപയോഗം അനുസരിച്ചു താങ്കൾ ഒരു യൂണിറ്റിന് ₹${unitRate.toFixed(2)} നൽകണം. `;
-    document.getElementById('result2').innerText = `നിലവിലെ ഉപയോഗം അനുസരിച്ചു താങ്കൾ ഒരു യൂണിറ്റിന് ₹${unitRate.toFixed(2)} നൽകണം. `;
-    document.getElementById('result3').innerText = `നിലവിലെ ഉപയോഗം അനുസരിച്ചു താങ്കൾ ഒരു യൂണിറ്റിന് ₹${unitRate.toFixed(2)} നൽകണം. `;
-    document.getElementById('result4').innerText = `നിലവിലെ ഉപയോഗം അനുസരിച്ചു താങ്കൾ ഒരു യൂണിറ്റിന് ₹${unitRate.toFixed(2)} നൽകണം. `;
-    document.getElementById('result5').innerText = `നിലവിലെ ഉപയോഗം അനുസരിച്ചു താങ്കൾ ഒരു യൂണിറ്റിന് ₹${unitRate.toFixed(2)} നൽകണം. `;
-    document.getElementById('result6').innerText = `നിലവിലെ ഉപയോഗം അനുസരിച്ചു താങ്കൾ ഒരു യൂണിറ്റിന് ₹${unitRate.toFixed(2)} നൽകണം. `;
+    //document.getElementById('result').innerText = `Your total units consumed are ${unitsConsumed.toFixed(2)} kWh.`;
+    
+    //document.getElementById('result2').innerText = `താങ്കളുടെ ബില്ലിംഗ് ടൈപ്പ്: ${billType} ആകുന്നു.`;
+    document.getElementById('result').innerText = `താങ്കൾ കഴിഞ്ഞ മാസം ${unitsConsumed.toFixed(2)} യൂണിറ്റ് വൈദ്യുതി ഉപയോഗിച്ചിട്ടുണ്ട്. അത് കൊണ്ട് fixed charge ₹${fixedCharge} ആകുന്നു. `;
+    
+
+    if (importReading > exportReading) {
+        document.getElementById('result1').innerText = `താങ്കൾ കഴിഞ്ഞ മാസം ${importReading} യൂണിറ്റ്  Import ഉം  ${exportReading} യൂണിറ്റ് Export ഉം ചെയ്തിട്ടുണ്ട്.  വ്യത്യാസം വരുന്ന ${bankAdjustedUnits} യൂണിറ്റ് ചാർജ് ചെയ്യപ്പെടുന്നതാണ് . `;
+        document.getElementById('result2').innerText = `താങ്കളുടെ ബില്ലിംഗ് ടൈപ്പ്: ${billType} ആകുന്നു. നിലവിലെ താരിഫ് അനുസരിച്ചു താങ്കൾ ഒരു യൂണിറ്റിന് ₹${unitRate.toFixed(2)} (${phase}) നൽകണം. അങ്ങനെ ${bankAdjustedUnits} x ₹${unitRate.toFixed(2)} = ₹${energyCharge.toFixed(2)}  `;
+    }else{
+        document.getElementById('result1').innerText = `താങ്കൾ കഴിഞ്ഞ മാസം ${importReading} യൂണിറ്റ്  Import ഉം  ${exportReading} യൂണിറ്റ് Export ഉം ചെയ്തിട്ടുണ്ട്. Export കൂടുതലായതു കൊണ്ട് എനർജി ചാർജ് കൊടുക്കേണ്ടതില്ല. `;
+    }
+    
+    
+
+
+    document.getElementById('result3').innerText = `what to write `;
+    document.getElementById('result4').innerText = `what to write `;
+    document.getElementById('result5').innerText = `what to write `;
+    document.getElementById('result6').innerText = `what to write `;
+
+
+
     document.getElementById('result').style.display = 'block';
     document.getElementById('result1').style.display = 'block';
     document.getElementById('result2').style.display = 'block';
