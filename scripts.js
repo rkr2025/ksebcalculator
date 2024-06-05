@@ -132,7 +132,7 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
         <tr><td>Total Bill Amount</td><td>₹${totalBillAmount.toFixed(2)}</td></tr>
     `;
 
-    document.getElementById('result').innerText = `ആകെ Solar Generation ${solarGeneration} യൂണിറ്റ് ആകുന്നു.ഇതിൽ നിന്നും ${generationUsage} യൂണിറ്റ് താങ്കൾ ഉപയോഗിച്ചിട്ടുണ്ട് . KSEB യിൽ നിന്നും ${importReading} യൂണിറ്റും ഉപയോഗിച്ചിട്ടുണ്ട്. അങ്ങനെ ആകെ ${unitsConsumed} യൂണിറ്റാണ് താങ്കളുടെ ആകെ വൈദ്യുതി ഉപയോഗം. `;
+    document.getElementById('result').innerText = `ആകെ Solar Generation ${solarGeneration} യൂണിറ്റ് ആകുന്നു.ഇതിൽ നിന്നും ${generationUsage} യൂണിറ്റ് നേരിട്ട് താങ്കൾ ഉപയോഗിച്ചിട്ടുണ്ട് . KSEB യിൽ നിന്നും ${importReading} യൂണിറ്റും ഉപയോഗിച്ചിട്ടുണ്ട്. അങ്ങനെ ആകെ ${unitsConsumed} യൂണിറ്റാണ് താങ്കളുടെ ആകെ വൈദ്യുതി ഉപയോഗം. `;
     document.getElementById('result1').innerText = `നിലവിലെ താരിഫ് അനുസരിച്ച് ${unitsConsumed} യൂണിറ്റിന് ₹${fixedCharge} ആണ് Fixed Charge ആയി വരുന്നത്.`;
     
 
