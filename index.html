@@ -3,61 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar Prosumers Electricity Bill Calculator</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Site Under Maintenance</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f3f4f6;
+            font-family: 'Arial', sans-serif;
+            color: #333;
+        }
+        .container {
+            text-align: center;
+        }
+        .container h1 {
+            font-size: 3em;
+            margin-bottom: 0.5em;
+            color: #ff6f61;
+        }
+        .container p {
+            font-size: 1.5em;
+            margin-bottom: 1em;
+        }
+        .loader {
+            border: 16px solid #f3f4f6;
+            border-radius: 50%;
+            border-top: 16px solid #ff6f61;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .footer {
+            margin-top: 2em;
+            font-size: 1em;
+            color: #888;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>Solar Prosumers Electricity Bill Calculator</h1>
-        <form id="billCalculator">
-            <div class="form-group">
-                <label for="phase">Select Phase:</label>
-                <select id="phase" name="phase">
-                    <option value="phase1">Phase 1</option>
-                    <option value="phase3">Phase 3</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="solarGeneration">Solar Generation Meter Reading (kWh):</label>
-                <input type="number" id="solarGeneration" name="solarGeneration" value="0" required>
-            </div>
-            <div class="form-group">
-                <label>KSEB Net Meter Reading:</label>
-                <div class="input-group">
-                    <div class="sub-group">
-                        <label for="import">Import (kWh):</label>
-                        <input type="number" id="import" name="import" value="0" required>
-                    </div>
-                    <div class="sub-group">
-                        <label for="export">Export (kWh):</label>
-                        <input type="number" id="export" name="export" value="0" required>
-                    </div>
-                </div>
-            </div>
-            <button type="submit">Bill Calculation</button>
-            <button type="button" id="resetButton">Reset</button>
-        </form>
-        <div id="billDetails" style="display: none;">
-            <table id="billTable">
-                <thead>
-                    <tr>
-                        <th>Description</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody id="billInfo">
-                    <!-- Bill details will be inserted here -->
-                </tbody>
-            </table>
+        <div class="loader"></div>
+        <h1>We'll Be Back Soon!</h1>
+        <p>Our website is currently undergoing maintenance.</p>
+        <p>Thank you for your patience.</p>
+        <div class="footer">
+            &copy; 2024 Solar Bill Calculator
         </div>
-        <div id="result" class="result"></div>
-        <div id="result1" class="result"></div>
-        <div id="result2" class="result"></div>
-        <div id="result3" class="result"></div>
-        <div id="result4" class="result"></div>
-        <div id="result5" class="result"></div>
-        <div id="result6" class="result"></div>
     </div>
-    <script src="scripts.js"></script>
 </body>
 </html>
