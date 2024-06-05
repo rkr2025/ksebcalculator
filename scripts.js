@@ -139,15 +139,19 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
     if (importReading > exportReading) {
         document.getElementById('result2').innerText = `താങ്കൾ കഴിഞ്ഞ മാസം ${importReading} യൂണിറ്റ്  IMPORT ഉം  ${exportReading} യൂണിറ്റ് EXPORT ഉം ചെയ്തിട്ടുണ്ട്.  വ്യത്യാസം വരുന്ന ${bankAdjustedUnits} യൂണിറ്റ് ചാർജ് ചെയ്യപ്പെടുന്നതാണ് . `;
         document.getElementById('result3').innerText = `താങ്കളുടെ ബില്ലിംഗ് ടൈപ്പ്: ${billType} ആകുന്നു. നിലവിലെ താരിഫ് അനുസരിച്ചു താങ്കൾ ഒരു യൂണിറ്റിന് ₹${unitRate.toFixed(2)} (${phase}) നൽകണം. Total Engergy Charge: ${bankAdjustedUnits} x ₹${unitRate.toFixed(2)} = ₹${energyCharge.toFixed(2)}  `;
-        document.getElementById('result4').innerText = `Total Bill Amount ഏകദേശം  ₹${totalBillAmount.toFixed(2)} (GST, meter rent, tariff changes may vary)`;
+        document.getElementById('result4').innerText = `Total Bill Amount ഏകദേശം  ₹${totalBillAmount.toFixed(2)} (GST, Meter rent, Tariff changes, Advance അനുസരിച്ച് മാറ്റം വരാം )`;
     }else{
-        document.getElementById('result2').innerText = `താങ്കൾ കഴിഞ്ഞ മാസം ${importReading} യൂണിറ്റ്  Import ഉം  ${exportReading} യൂണിറ്റ് Export ഉം ചെയ്തിട്ടുണ്ട്. Export കൂടുതലായതു കൊണ്ട് എനർജി ചാർജ് കൊടുക്കേണ്ടതില്ല. `;
+        if(importReading == exportReading){
+            document.getElementById('result2').innerText = `താങ്കൾ കഴിഞ്ഞ മാസം ${importReading} യൂണിറ്റ്  Import ഉം  ${exportReading} യൂണിറ്റ് Export ഉം ചെയ്തിട്ടുണ്ട്. ഇവിടെ Export ഉം Import ഉം തുല്ല്യമാണ്. എനർജി ചാർജ് കൊടുക്കേണ്ടതില്ല. `;
+        }else{
+            document.getElementById('result2').innerText = `താങ്കൾ കഴിഞ്ഞ മാസം ${importReading} യൂണിറ്റ്  Import ഉം  ${exportReading} യൂണിറ്റ് Export ഉം ചെയ്തിട്ടുണ്ട്. Export കൂടുതലായതു കൊണ്ട് എനർജി ചാർജ് കൊടുക്കേണ്ടതില്ല. `;
+        }
         document.getElementById('result3').innerText = `Total Bill Amount ഏകദേശം  ₹${totalBillAmount.toFixed(2)} (GST, Meter rent, Tariff changes, Advance അനുസരിച്ച് മാറ്റം വരാം )`;
-        document.getElementById('result4').innerText = `അധികം Generate ചെയ്‌ത ${accountBalance} യൂണിറ്റ്  ബാങ്ക് അക്കൗണ്ടിലേക്ക് ചേർക്കുന്നതാണ്.`;
+        document.getElementById('result4').innerText = `ഇവിടെ അധികമായി Generate ചെയ്‌തത്  ${accountBalance} യൂണിറ്റ് (Export-Import) ആണ്. അത്  ബാങ്ക് അക്കൗണ്ടിലേക്ക് ചേർക്കുന്നതാണ്.`;
     }
     document.getElementById('result5').innerText = `ഇത് ഒരു ഏകദേശ കണക്ക് ആകുന്നു. താരിഫ് (w.e.f 1/11/2023) ഓരോ തവണയും മാറ്റം വരാറുണ്ട്, അത് കൊണ്ട് യഥാർത്ഥ താരിഫ് KSEB യിൽ നിന്നും മനസിലാക്കുക  `;
     document.getElementById('result6').innerText = `മേൽ കൊടുത്തിട്ടുള്ളതിൽ calculation തെറ്റുകൾ ഉണ്ടെങ്കിൽ , വേറെ ഓപ്ഷനുകൾ ആവശ്യമാണെങ്കിൽ , താരിഫ് മാറ്റം ഉണ്ടെങ്കിൽ ആ വിവരങ്ങൾ calculatoronline2024@gmail.com എന്ന വിലാസത്തിൽ അറിയിക്കുക. 
-                                                    Note: The information provided is for reference only. For accurate details, always refer to official sources.  (v1.0.0)`;
+                                                    Note: The information provided is for reference only. For accurate details, always refer to official sources.  (v1.0.1)`;
     
 
     document.getElementById('result').style.display = 'block';
