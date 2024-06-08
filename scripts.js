@@ -160,7 +160,7 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
     }
     document.getElementById('result5').innerText = `ഇത് ഒരു ഏകദേശ കണക്ക് ആകുന്നു. താരിഫ് (w.e.f 1/11/2023) ഓരോ തവണയും മാറ്റം വരാറുണ്ട്, അത് കൊണ്ട് യഥാർത്ഥ താരിഫ് KSEB യിൽ നിന്നും മനസിലാക്കുക  `;
     document.getElementById('result6').innerHTML = `മേൽ കൊടുത്തിട്ടുള്ളതിൽ calculation തെറ്റുകൾ ഉണ്ടെങ്കിൽ , വേറെ ഓപ്ഷനുകൾ ആവശ്യമാണെങ്കിൽ , താരിഫ് മാറ്റം ഉണ്ടെങ്കിൽ ആ വിവരങ്ങൾ calculatoronline2024@gmail.com എന്ന വിലാസത്തിൽ അറിയിക്കുക. 
-                                                    <span style="font-style: italic">Note: The information provided is for reference only. For accurate details, always refer to official sources.</span>  (v1.0.8)`;
+                                                    <span style="font-style: italic">Note: The information provided is for reference only. For accurate details, always refer to official sources.</span>  (v1.0.9)`;
 
 
     document.getElementById('result').style.display = 'block';
