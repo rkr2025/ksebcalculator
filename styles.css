@@ -113,3 +113,32 @@ th {
   cursor: pointer;
 }
 
+.form-group {
+  margin-bottom: 15px;
+}
+
+/*Drop Down selection Below*/
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+/* .form-group select,
+.form-group input {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+} */
+
+/*All options Adjacent nearby*/
+.form-group-inline {
+  display: flex;
+  gap: 15px;
+}
+
+/*Right Aligned*/
+/* .form-group-inline .form-group {
+  flex: 1;
+} */
+
+

@@ -2,6 +2,7 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
     event.preventDefault();
 
     const phase = document.getElementById('phase').value;
+    const meterOwner = document.getElementById('meterOwner').value;
     const solarGeneration = parseFloat(document.getElementById('solarGeneration').value);
     const importReading = parseFloat(document.getElementById('import').value);
     const exportReading = parseFloat(document.getElementById('export').value);
@@ -107,9 +108,17 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
 
     let meterRent;
     if (phase === 'phase1') {
-        meterRent = 30 * 1.18; //18% GST
+        if(meterOwner === 'kseb'){
+            meterRent = 30 * 1.18; //18% GST
+        }else{
+            meterRent = 0;
+        }
     } else {
-        meterRent = 35 * 1.18; //18% GST
+        if(meterOwner === 'kseb'){
+            meterRent = 35 * 1.18; //18% GST
+        }else{
+            meterRent = 0;
+        }
     }
 
 
@@ -126,8 +135,8 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
         <tr><td>No: of Units Consumed (for Energy calculation)</td><td>${bankAdjustedUnits.toFixed(2)}</td></tr>
         <tr><td>Energy Charge</td><td>₹${energyCharge.toFixed(2)} (${bankAdjustedUnits.toFixed(2)} x ₹${unitRate.toFixed(2)})</td></tr>
         <tr><td>Duty</td><td>₹${duty.toFixed(2)} (10% of the Energy Charge)</td></tr>
-        <tr><td>Fuel Surcharge</td><td>₹${fuelSurcharge.toFixed(2)} (Consumption: ${bankAdjustedUnits}Unit x 9ps)</td></tr>
-        <tr><td>Generation Duty</td><td>₹${generationDuty.toFixed(2)} (Solar Generation ${solarGeneration}Unit x 15ps)</td></tr>
+        <tr><td>Fuel Surcharge</td><td>₹${fuelSurcharge.toFixed(2)} (Consumption: ${bankAdjustedUnits} Unit x 9ps)</td></tr>
+        <tr><td>Generation Duty</td><td>₹${generationDuty.toFixed(2)} (Solar Generation ${solarGeneration} Unit x 15ps)</td></tr>
         <tr><td>Monthly Fuel Surcharge</td><td>₹${monthlyFuelSurcharge.toFixed(2)} (Consumption: ${bankAdjustedUnits}Unit x 10ps)</td></tr>
         <tr><td>Total Bill Amount</td><td>₹${totalBillAmount.toFixed(2)}</td></tr>
     `;
@@ -151,7 +160,7 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
     }
     document.getElementById('result5').innerText = `ഇത് ഒരു ഏകദേശ കണക്ക് ആകുന്നു. താരിഫ് (w.e.f 1/11/2023) ഓരോ തവണയും മാറ്റം വരാറുണ്ട്, അത് കൊണ്ട് യഥാർത്ഥ താരിഫ് KSEB യിൽ നിന്നും മനസിലാക്കുക  `;
     document.getElementById('result6').innerHTML = `മേൽ കൊടുത്തിട്ടുള്ളതിൽ calculation തെറ്റുകൾ ഉണ്ടെങ്കിൽ , വേറെ ഓപ്ഷനുകൾ ആവശ്യമാണെങ്കിൽ , താരിഫ് മാറ്റം ഉണ്ടെങ്കിൽ ആ വിവരങ്ങൾ calculatoronline2024@gmail.com എന്ന വിലാസത്തിൽ അറിയിക്കുക. 
-                                                    <span style="font-style: italic">Note: The information provided is for reference only. For accurate details, always refer to official sources.</span>  (v1.0.6)`;
+                                                    <span style="font-style: italic">Note: The information provided is for reference only. For accurate details, always refer to official sources.</span>  (v1.0.7)`;
 
 
     document.getElementById('result').style.display = 'block';
