@@ -1,4 +1,4 @@
-document.getElementById('billCalculator').addEventListener('submit', function(event) {
+document.getElementById('billCalculator').addEventListener('submit', function (event) {
     event.preventDefault();
 
     const phase = document.getElementById('phase').value;
@@ -33,7 +33,7 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
         bankAdjustedUnits = importReading - exportReading;
     } else {
         bankAdjustedUnits = 0;
-        accountBalance =  exportReading - importReading;
+        accountBalance = exportReading - importReading;
     }
 
     let billType;
@@ -41,7 +41,7 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
     let energyCharge;
 
     if (unitsConsumed <= 250) {
-        billType = "Telescopic";
+        //billType = "Telescopic";
         if (unitsConsumed <= 50) {
             fixedCharge = (phase === 'phase1') ? 40 : 100;
         } else if (unitsConsumed <= 100) {
@@ -54,7 +54,7 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
             fixedCharge = (phase === 'phase1') ? 130 : 200;
         }
     } else {
-        billType = "Non-Telescopic";
+        //billType = "Non-Telescopic";
         if (unitsConsumed <= 300) {
             fixedCharge = (phase === 'phase1') ? 150 : 205;
         } else if (unitsConsumed <= 350) {
@@ -70,23 +70,46 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
 
     let unitRate;
     if (bankAdjustedUnits <= 250) {
+        billType = "Telescopic";
+        // if (bankAdjustedUnits <= 50) {
+        //     energyCharge = bankAdjustedUnits * 3.25;
+        //     unitRate = 3.25;
+        // } else if (bankAdjustedUnits <= 100) {
+        //     energyCharge = bankAdjustedUnits * 4.05;
+        //     unitRate = 4.05;
+        // } else if (bankAdjustedUnits <= 150) {
+        //     energyCharge = bankAdjustedUnits * 5.10;
+        //     unitRate = 5.10;
+        // } else if (bankAdjustedUnits <= 200) {
+        //     energyCharge = bankAdjustedUnits * 6.95;
+        //     unitRate = 6.95;
+        // } else {
+        //     energyCharge = bankAdjustedUnits * 8.20;
+        //     unitRate = 8.20;
+        // }
         if (bankAdjustedUnits <= 50) {
             energyCharge = bankAdjustedUnits * 3.25;
-            unitRate = 3.25;
+            //unitRate = 3.25;
         } else if (bankAdjustedUnits <= 100) {
-            energyCharge = bankAdjustedUnits * 4.05;
-            unitRate = 4.05;
+            energyCharge = 50 * 3.25 + (bankAdjustedUnits - 50) * 4.05;
+            //unitRate = 4.05;
         } else if (bankAdjustedUnits <= 150) {
-            energyCharge = bankAdjustedUnits * 5.10;
-            unitRate = 5.10;
+            energyCharge = 50 * 3.25 + 50 * 4.05 + (bankAdjustedUnits - 100) * 5.10;
+            //unitRate = 5.10;
         } else if (bankAdjustedUnits <= 200) {
-            energyCharge = bankAdjustedUnits * 6.95;
-            unitRate = 6.95;
+            energyCharge = 50 * 3.25 + 50 * 4.05 + 50 * 5.10 + (bankAdjustedUnits - 150) * 6.95;
+            //unitRate = 6.95;
+        } else if (bankAdjustedUnits <= 250) {
+            energyCharge = 50 * 3.25 + 50 * 4.05 + 50 * 5.10 + 50 * 6.95 + (bankAdjustedUnits - 200) * 8.20;
+            //unitRate = 8.20;
+        }
+        if (bankAdjustedUnits > 0) {
+            unitRate = energyCharge / bankAdjustedUnits;
         } else {
-            energyCharge = bankAdjustedUnits * 8.20;
-            unitRate = 8.20;
+            unitRate = 0;
         }
     } else {
+        billType = "Non-Telescopic";
         if (bankAdjustedUnits <= 300) {
             energyCharge = bankAdjustedUnits * 6.40;
             unitRate = 6.40;
@@ -106,9 +129,9 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
     }
 
     let meterRent;
-    if(phase === 'phase1'){
+    if (phase === 'phase1') {
         meterRent = 30;
-    }else{
+    } else {
         meterRent = 35;
     }
 
@@ -122,37 +145,37 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
         <tr><td>Bill Type</td><td>${billType}</td></tr>
         <tr><td>Fixed Charge</td><td>₹${fixedCharge}</td></tr>
         <tr><td>Meter Rent (GST Inc)</td><td>₹${meterRent}</td></tr>
-        <tr><td>Unit Charge</td><td>₹${unitRate}/Unit</td></tr>
+        <tr><td>Unit Charge</td><td>₹${unitRate.toFixed(2)}/Unit</td></tr>
         <tr><td>No: of Units Consumed (for Energy calculation)</td><td>${bankAdjustedUnits.toFixed(2)}</td></tr>
-        <tr><td>Energy Charge</td><td>₹${energyCharge.toFixed(2)} (${bankAdjustedUnits.toFixed(2)} x ₹${unitRate})</td></tr>
+        <tr><td>Energy Charge</td><td>₹${energyCharge.toFixed(2)} (${bankAdjustedUnits.toFixed(2)} x ₹${unitRate.toFixed(2)})</td></tr>
         <tr><td>Duty</td><td>₹${duty.toFixed(2)} (10% of the Energy Charge)</td></tr>
-        <tr><td>Fuel Surcharge</td><td>₹${fuelSurcharge.toFixed(2)}</td></tr>
-        <tr><td>Generation Duty</td><td>₹${generationDuty.toFixed(2)} (${solarGeneration.toFixed(2)} x 0.15)</td></tr>
-        <tr><td>Monthly Fuel Surcharge</td><td>₹${monthlyFuelSurcharge.toFixed(2)}</td></tr>
+        <tr><td>Fuel Surcharge</td><td>₹${fuelSurcharge.toFixed(2)} (Consumption: ${bankAdjustedUnits}Unit x 9ps)</td></tr>
+        <tr><td>Generation Duty</td><td>₹${generationDuty.toFixed(2)} (Solar Generation ${solarGeneration}Unit x 15ps)</td></tr>
+        <tr><td>Monthly Fuel Surcharge</td><td>₹${monthlyFuelSurcharge.toFixed(2)} (Consumption: ${bankAdjustedUnits}Unit x 10ps)</td></tr>
         <tr><td>Total Bill Amount</td><td>₹${totalBillAmount.toFixed(2)}</td></tr>
     `;
 
-    document.getElementById('result').innerText = `ആകെ Solar Generation ${solarGeneration} യൂണിറ്റ് ആകുന്നു.ഇതിൽ നിന്നും ${generationUsage} യൂണിറ്റ് നേരിട്ട് താങ്കൾ ഉപയോഗിച്ചിട്ടുണ്ട് . KSEB യിൽ നിന്നും ${importReading} യൂണിറ്റും ഉപയോഗിച്ചിട്ടുണ്ട്. അങ്ങനെ ആകെ ${unitsConsumed} യൂണിറ്റാണ് താങ്കളുടെ ആകെ വൈദ്യുതി ഉപയോഗം. `;
-    document.getElementById('result1').innerText = `നിലവിലെ താരിഫ് അനുസരിച്ച് ${unitsConsumed} യൂണിറ്റിന് ₹${fixedCharge} ആണ് Fixed Charge ആയി വരുന്നത്.`;
-    
+    document.getElementById('result').innerHTML = `ആകെ Solar Generation <strong class="green-text">${solarGeneration}</strong> യൂണിറ്റ് ആകുന്നു.ഇതിൽ നിന്നും <strong class="red-text">${generationUsage}</strong> യൂണിറ്റ് നേരിട്ട് താങ്കൾ ഉപയോഗിച്ചിട്ടുണ്ട് . KSEB യിൽ നിന്നും <strong class="red-text">${importReading}</strong> യൂണിറ്റ് ഉപയോഗിച്ചിട്ടുണ്ട്. അങ്ങനെ <strong class="red-text">${unitsConsumed}</strong> യൂണിറ്റാണ് താങ്കളുടെ ആകെ വൈദ്യുതി ഉപയോഗം. `;
+    document.getElementById('result1').innerHTML = `നിലവിലെ താരിഫ് (${phase}) അനുസരിച്ച് <strong class="red-text">${unitsConsumed}</strong> യൂണിറ്റിന് ₹${fixedCharge} ആണ് Fixed Charge ആയി വരുന്നത്.`;
+
 
     if (importReading > exportReading) {
-        document.getElementById('result2').innerText = `താങ്കൾ കഴിഞ്ഞ മാസം ${importReading} യൂണിറ്റ്  IMPORT ഉം  ${exportReading} യൂണിറ്റ് EXPORT ഉം ചെയ്തിട്ടുണ്ട്.  വ്യത്യാസം വരുന്ന ${bankAdjustedUnits} യൂണിറ്റ് ചാർജ് ചെയ്യപ്പെടുന്നതാണ് . `;
-        document.getElementById('result3').innerText = `താങ്കളുടെ ബില്ലിംഗ് ടൈപ്പ്: ${billType} ആകുന്നു. നിലവിലെ താരിഫ് അനുസരിച്ചു താങ്കൾ ഒരു യൂണിറ്റിന് ₹${unitRate.toFixed(2)} (${phase}) നൽകണം. Total Engergy Charge: ${bankAdjustedUnits} x ₹${unitRate.toFixed(2)} = ₹${energyCharge.toFixed(2)}  `;
+        document.getElementById('result2').innerText = `താങ്കൾ കഴിഞ്ഞ മാസം ${importReading} യൂണിറ്റ്  Import ഉം  ${exportReading} യൂണിറ്റ് Export ഉം ചെയ്തിട്ടുണ്ട്.  വ്യത്യാസം വരുന്ന ${bankAdjustedUnits} യൂണിറ്റ് ചാർജ് ചെയ്യപ്പെടുന്നതാണ് . `;
+        document.getElementById('result3').innerText = `താങ്കളുടെ ബില്ലിംഗ് ടൈപ്പ്: ${billType} ആകുന്നു. നിലവിലെ താരിഫ് അനുസരിച്ചു താങ്കൾ ഒരു യൂണിറ്റിന് ₹${unitRate.toFixed(2)} നൽകണം. Total Engergy Charge: ${bankAdjustedUnits} x ₹${unitRate.toFixed(2)} = ₹${energyCharge.toFixed(2)}  `;
         document.getElementById('result4').innerText = `Total Bill Amount ഏകദേശം  ₹${totalBillAmount.toFixed(2)} (GST, Meter rent, Tariff changes, Advance അനുസരിച്ച് മാറ്റം വരാം )`;
-    }else{
-        if(importReading == exportReading){
+    } else {
+        if (importReading == exportReading) {
             document.getElementById('result2').innerText = `താങ്കൾ കഴിഞ്ഞ മാസം ${importReading} യൂണിറ്റ്  Import ഉം  ${exportReading} യൂണിറ്റ് Export ഉം ചെയ്തിട്ടുണ്ട്. ഇവിടെ Export ഉം Import ഉം തുല്ല്യമാണ്. എനർജി ചാർജ് കൊടുക്കേണ്ടതില്ല. `;
-        }else{
-            document.getElementById('result2').innerText = `താങ്കൾ കഴിഞ്ഞ മാസം ${importReading} യൂണിറ്റ്  Import ഉം  ${exportReading} യൂണിറ്റ് Export ഉം ചെയ്തിട്ടുണ്ട്. Export കൂടുതലായതു കൊണ്ട് എനർജി ചാർജ് കൊടുക്കേണ്ടതില്ല. `;
+        } else {
+            document.getElementById('result2').innerHTML = `താങ്കൾ കഴിഞ്ഞ മാസം ${importReading} യൂണിറ്റ്  Import ഉം  ${exportReading} യൂണിറ്റ് Export ഉം ചെയ്തിട്ടുണ്ട്. <span class="green-text">Export കൂടുതലായതു കൊണ്ട് എനർജി ചാർജ് കൊടുക്കേണ്ടതില്ല.</span> `;
         }
         document.getElementById('result3').innerText = `Total Bill Amount ഏകദേശം  ₹${totalBillAmount.toFixed(2)} (GST, Meter rent, Tariff changes, Advance അനുസരിച്ച് മാറ്റം വരാം )`;
         document.getElementById('result4').innerText = `ഇവിടെ അധികമായി Generate ചെയ്‌തത്  ${accountBalance} യൂണിറ്റ് (Export-Import) ആണ്. അത്  ബാങ്ക് അക്കൗണ്ടിലേക്ക് ചേർക്കുന്നതാണ്.`;
     }
     document.getElementById('result5').innerText = `ഇത് ഒരു ഏകദേശ കണക്ക് ആകുന്നു. താരിഫ് (w.e.f 1/11/2023) ഓരോ തവണയും മാറ്റം വരാറുണ്ട്, അത് കൊണ്ട് യഥാർത്ഥ താരിഫ് KSEB യിൽ നിന്നും മനസിലാക്കുക  `;
-    document.getElementById('result6').innerText = `മേൽ കൊടുത്തിട്ടുള്ളതിൽ calculation തെറ്റുകൾ ഉണ്ടെങ്കിൽ , വേറെ ഓപ്ഷനുകൾ ആവശ്യമാണെങ്കിൽ , താരിഫ് മാറ്റം ഉണ്ടെങ്കിൽ ആ വിവരങ്ങൾ calculatoronline2024@gmail.com എന്ന വിലാസത്തിൽ അറിയിക്കുക. 
-                                                    Note: The information provided is for reference only. For accurate details, always refer to official sources.  (v1.0.1)`;
-    
+    document.getElementById('result6').innerHTML = `മേൽ കൊടുത്തിട്ടുള്ളതിൽ calculation തെറ്റുകൾ ഉണ്ടെങ്കിൽ , വേറെ ഓപ്ഷനുകൾ ആവശ്യമാണെങ്കിൽ , താരിഫ് മാറ്റം ഉണ്ടെങ്കിൽ ആ വിവരങ്ങൾ calculatoronline2024@gmail.com എന്ന വിലാസത്തിൽ അറിയിക്കുക. 
+                                                    <span style="font-style: italic">Note: The information provided is for reference only. For accurate details, always refer to official sources.</span>  (v1.0.2)`;
+
 
     document.getElementById('result').style.display = 'block';
     document.getElementById('result1').style.display = 'block';
@@ -165,7 +188,7 @@ document.getElementById('billCalculator').addEventListener('submit', function(ev
     document.getElementById('billDetails').style.display = 'block';
 });
 
-document.getElementById('resetButton').addEventListener('click', function() {
+document.getElementById('resetButton').addEventListener('click', function () {
     document.getElementById('billCalculator').reset();
     document.getElementById('result').style.display = 'none';
     document.getElementById('result1').style.display = 'none';
