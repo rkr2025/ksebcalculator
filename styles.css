@@ -98,3 +98,9 @@ th {
 .red-text {
   color: red;
 }
+
+#printButton {
+  display: none;
+  margin: 20px auto;
+  display: block;
+}
