@@ -41,7 +41,6 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
     let energyCharge;
 
     if (unitsConsumed <= 250) {
-        //billType = "Telescopic";
         if (unitsConsumed <= 50) {
             fixedCharge = (phase === 'phase1') ? 40 : 100;
         } else if (unitsConsumed <= 100) {
@@ -54,7 +53,6 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
             fixedCharge = (phase === 'phase1') ? 130 : 200;
         }
     } else {
-        //billType = "Non-Telescopic";
         if (unitsConsumed <= 300) {
             fixedCharge = (phase === 'phase1') ? 150 : 205;
         } else if (unitsConsumed <= 350) {
@@ -71,37 +69,16 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
     let unitRate;
     if (bankAdjustedUnits <= 250) {
         billType = "Telescopic";
-        // if (bankAdjustedUnits <= 50) {
-        //     energyCharge = bankAdjustedUnits * 3.25;
-        //     unitRate = 3.25;
-        // } else if (bankAdjustedUnits <= 100) {
-        //     energyCharge = bankAdjustedUnits * 4.05;
-        //     unitRate = 4.05;
-        // } else if (bankAdjustedUnits <= 150) {
-        //     energyCharge = bankAdjustedUnits * 5.10;
-        //     unitRate = 5.10;
-        // } else if (bankAdjustedUnits <= 200) {
-        //     energyCharge = bankAdjustedUnits * 6.95;
-        //     unitRate = 6.95;
-        // } else {
-        //     energyCharge = bankAdjustedUnits * 8.20;
-        //     unitRate = 8.20;
-        // }
         if (bankAdjustedUnits <= 50) {
             energyCharge = bankAdjustedUnits * 3.25;
-            //unitRate = 3.25;
         } else if (bankAdjustedUnits <= 100) {
             energyCharge = 50 * 3.25 + (bankAdjustedUnits - 50) * 4.05;
-            //unitRate = 4.05;
         } else if (bankAdjustedUnits <= 150) {
             energyCharge = 50 * 3.25 + 50 * 4.05 + (bankAdjustedUnits - 100) * 5.10;
-            //unitRate = 5.10;
         } else if (bankAdjustedUnits <= 200) {
             energyCharge = 50 * 3.25 + 50 * 4.05 + 50 * 5.10 + (bankAdjustedUnits - 150) * 6.95;
-            //unitRate = 6.95;
         } else if (bankAdjustedUnits <= 250) {
             energyCharge = 50 * 3.25 + 50 * 4.05 + 50 * 5.10 + 50 * 6.95 + (bankAdjustedUnits - 200) * 8.20;
-            //unitRate = 8.20;
         }
         if (bankAdjustedUnits > 0) {
             unitRate = energyCharge / bankAdjustedUnits;
@@ -174,7 +151,7 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
     }
     document.getElementById('result5').innerText = `ഇത് ഒരു ഏകദേശ കണക്ക് ആകുന്നു. താരിഫ് (w.e.f 1/11/2023) ഓരോ തവണയും മാറ്റം വരാറുണ്ട്, അത് കൊണ്ട് യഥാർത്ഥ താരിഫ് KSEB യിൽ നിന്നും മനസിലാക്കുക  `;
     document.getElementById('result6').innerHTML = `മേൽ കൊടുത്തിട്ടുള്ളതിൽ calculation തെറ്റുകൾ ഉണ്ടെങ്കിൽ , വേറെ ഓപ്ഷനുകൾ ആവശ്യമാണെങ്കിൽ , താരിഫ് മാറ്റം ഉണ്ടെങ്കിൽ ആ വിവരങ്ങൾ calculatoronline2024@gmail.com എന്ന വിലാസത്തിൽ അറിയിക്കുക. 
-                                                    <span style="font-style: italic">Note: The information provided is for reference only. For accurate details, always refer to official sources.</span>  (v1.0.2)`;
+                                                    <span style="font-style: italic">Note: The information provided is for reference only. For accurate details, always refer to official sources.</span>  (v1.0.3)`;
 
 
     document.getElementById('result').style.display = 'block';
