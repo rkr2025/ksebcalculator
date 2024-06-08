@@ -1,6 +1,7 @@
 body {
   font-family: "Arial", sans-serif;
   background-color: #f5f5f5;
+  background: linear-gradient(to right, #6dd5fa, #ffffff);
   margin: 0;
   padding: 0;
 }
@@ -113,6 +114,7 @@ th {
   cursor: pointer;
 }
 
+/* For Adding Meter Owner Line */
 .form-group {
   margin-bottom: 15px;
 }
@@ -140,5 +142,80 @@ th {
 /* .form-group-inline .form-group {
   flex: 1;
 } */
+
+/* For Instructions - Start */
+.container {
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.instructions-link-container {
+  text-align: right;
+  margin-bottom: 10px;
+}
+
+.instructions-link {
+  color: #007bff;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.instructions-link:hover {
+  text-decoration: underline;
+}
+/* For Instructions - End */
+
+
+
+/* Return page -Start */
+/* Return Link */
+.return-link {
+  display: block;
+  margin-top: 20px;
+  text-align: center;
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.container1 {
+  max-width: 800px;
+  margin: 50px auto;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+li {
+  margin-bottom: 10px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #555;
+}
+
+@media (max-width: 600px) {
+  .container {
+    margin: 20px;
+    padding: 15px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  li {
+    font-size: 14px;
+  }
+
+  .return-link {
+    font-size: 16px;
+  }
+}
+/* Return page -End */
 
 
