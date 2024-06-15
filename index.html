@@ -22,6 +22,7 @@
         </div>
         <h1>Solar Prosumers Electricity Bill Calculator</h1>
         <form id="billCalculator">
+            <!-- Adding Phase and Meter Owner drop down -->
             <div class="form-group-inline">
                 <div class="form-group">
                     <label for="phase">Phase:</label>
@@ -30,6 +31,8 @@
                         <option value="phase3">Phase 3</option>
                     </select>
                 </div>
+
+                <!-- Adding Meter Owner -->
                 <div class="form-group">
                     <label for="meterOwner">Meter Owner:</label>
                     <select id="meterOwner" name="meterOwner">
@@ -38,12 +41,43 @@
                     </select>
                 </div>
             </div>
-            <div class="form-group">
-                <label for="solarGeneration">Solar Generation Meter Reading (kWh):</label>
+                <!-- Adding Billing Type -->
+                <div class="form-group">
+                    <label for="billingType">Billing Type:</label>
+                    <select id="billingType" name="billingType">
+                    <option value="normal">Normal Billing</option>
+                    <option value="tod">ToD Billing</option>
+                    </select>
+                </div>
+
+            <!-- Normal Billing Solar Reading Inputs-->
+            <div class="form-group" id="normalBillingSection">
+                <label style="margin-top: 30px;" for="solarGeneration">Solar Generation Meter Reading (kWh):</label>
                 <input type="number" id="solarGeneration" name="solarGeneration" value="0" required>
             </div>
-            <div class="form-group">
-                <label>KSEB Net Meter Reading:</label>
+
+            <!-- ToD Billing Solar Reading Inputs-->
+            <div class="form-group" id="todBillingSection" style="display: none;">
+                <label style="margin-top: 30px;">Solar Generation Meter Reading (kWh):</label>
+                <div class="input-group">
+                    <div class="sub-group">
+                        <label for="solarNormal">Normal:</label>
+                        <input type="number" id="solarNormal" name="solarNormal" value="0" min="0">
+                    </div>
+                    <div class="sub-group">
+                        <label for="solarOffPeak">Off Peak:</label>
+                        <input type="number" id="solarOffPeak" name="solarOffPeak" value="0" min="0">
+                    </div>
+                    <div class="sub-group">
+                        <label for="solarPeak">Peak:</label>
+                        <input type="number" id="solarPeak" name="solarPeak" value="0" min="0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Normal Billing KSEB Net Reading Inputs-->
+            <div class="form-group" id="normalNetMeterReadingSection">
+                <label style="margin-top: 30px;">KSEB Net Meter Reading:</label>
                 <div class="input-group">
                     <div class="sub-group">
                         <label for="import">Import Total (kWh):</label>
@@ -55,6 +89,40 @@
                     </div>
                 </div>
             </div>
+
+            <!-- ToD Billing KSEB Net Reading Inputs-->
+            <div class="form-group" id="todNetMeterReadingSection" style="display: none;">
+                <label style="margin-top: 50px;">KSEB Net Meter Reading (kWh):</label>
+                <div class="input-group">
+                    <div class="sub-group">
+                        <label for="importNormal">Import - Normal:</label>
+                        <input type="number" id="importNormal" name="importNormal" value="0" min="0">
+                    </div>
+                    <div class="sub-group">
+                        <label for="importOffPeak">Import - Off Peak:</label>
+                        <input type="number" id="importOffPeak" name="importOffPeak" value="0" min="0">
+                    </div>
+                    <div class="sub-group">
+                        <label for="importPeak">Import - Peak:</label>
+                        <input type="number" id="importPeak" name="importPeak" value="0" min="0">
+                    </div>
+                </div>
+                <div style="margin-top: 30px;" class="input-group">
+                    <div class="sub-group">
+                        <label for="exportNormal">Export - Normal:</label>
+                        <input type="number" id="exportNormal" name="exportNormal" value="0" min="0">
+                    </div>
+                    <div class="sub-group">
+                        <label for="exportOffPeak">Export - Off Peak:</label>
+                        <input type="number" id="exportOffPeak" name="exportOffPeak" value="0" min="0">
+                    </div>
+                    <div class="sub-group">
+                        <label for="exportPeak">Export - Peak:</label>
+                        <input type="number" id="exportPeak" name="exportPeak" value="0" min="0">
+                    </div>
+                </div>
+            </div>
+
             <button type="submit">Bill Calculation</button>
             <button type="button" id="resetButton">Reset</button>
         </form>

@@ -3,9 +3,32 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
 
     const phase = document.getElementById('phase').value;
     const meterOwner = document.getElementById('meterOwner').value;
-    const solarGeneration = parseFloat(document.getElementById('solarGeneration').value);
-    const importReading = parseFloat(document.getElementById('import').value);
-    const exportReading = parseFloat(document.getElementById('export').value);
+    var billingType = document.getElementById('billingType').value;
+    var solarGeneration;
+    var importReading;
+    var exportReading;
+
+
+    if (billingType === 'normal') {
+        solarGeneration = parseFloat(document.getElementById('solarGeneration').value) || 0;
+        importReading = parseFloat(document.getElementById('import').value) || 0;
+        exportReading = parseFloat(document.getElementById('export').value) || 0;
+    } else if (billingType === 'tod') {
+        var solarNormal = parseFloat(document.getElementById('solarNormal').value) || 0;
+        var solarOffPeak = parseFloat(document.getElementById('solarOffPeak').value) || 0;
+        var solarPeak = parseFloat(document.getElementById('solarPeak').value) || 0;
+        var importNormal = parseFloat(document.getElementById('importNormal').value) || 0;
+        var importOffPeak = parseFloat(document.getElementById('importOffPeak').value) || 0;
+        var importPeak = parseFloat(document.getElementById('importPeak').value) || 0;
+        var exportNormal = parseFloat(document.getElementById('exportNormal').value) || 0;
+        var exportOffPeak = parseFloat(document.getElementById('exportOffPeak').value) || 0;
+        var exportPeak = parseFloat(document.getElementById('exportPeak').value) || 0;
+
+        solarGeneration = solarNormal + solarOffPeak + solarPeak;
+        importReading = importNormal + importOffPeak + importPeak;
+        exportReading = exportNormal + exportOffPeak + exportPeak;
+    }
+
     let accountBalance;
     let generationUsage = solarGeneration - exportReading;
 
@@ -219,7 +242,7 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
     }
     document.getElementById('result5').innerHTML = `Tariff (w.e.f 1/11/2023) changes from time to time so check actual tariff from KSEB`;
     document.getElementById('result6').innerHTML = `If there are any calculation errors in the above, if other options are required, if there is a change in tariff, inform the information @ <span class="green-text"><b><i>calculatoronline2024@gmail.com</i></b></span>
-                                                    <span style="font-style: italic">Note: The information provided is for reference only. For accurate details, always refer to official sources.</span>  (v1.0.10)`;
+                                                    <span style="font-style: italic">Note: The information provided is for reference only. For accurate details, always refer to official sources.</span>  (v1.0.11)`;
 
 
     document.getElementById('result').style.display = 'block';
@@ -235,6 +258,37 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
     document.getElementById('moveToTop').style.display = 'block';
 });
 
+document.getElementById('billingType').addEventListener('change', function() {
+    var billingType = this.value;
+    var normalBillingSection = document.getElementById('normalBillingSection');
+    var todBillingSection = document.getElementById('todBillingSection');
+    var normalNetMeterReadingSection = document.getElementById('normalNetMeterReadingSection');
+    var todNetMeterReadingSection = document.getElementById('todNetMeterReadingSection');
+
+    if (billingType === 'normal') {
+        normalBillingSection.style.display = 'block';
+        normalNetMeterReadingSection.style.display = 'block';
+        todBillingSection.style.display = 'none';
+        todNetMeterReadingSection.style.display = 'none';
+    } else if (billingType === 'tod') {
+        normalBillingSection.style.display = 'none';
+        normalNetMeterReadingSection.style.display = 'none';
+        todBillingSection.style.display = 'block';
+        todNetMeterReadingSection.style.display = 'block';
+    }
+
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('result1').style.display = 'none';
+    document.getElementById('result2').style.display = 'none';
+    document.getElementById('result3').style.display = 'none';
+    document.getElementById('result4').style.display = 'none';
+    document.getElementById('result5').style.display = 'none';
+    document.getElementById('result6').style.display = 'none';
+    document.getElementById('billDetails').style.display = 'none';
+    document.getElementById('printButton').style.display = 'none';
+    document.getElementById('moveToTop').style.display = 'none';
+});
+
 document.getElementById('resetButton').addEventListener('click', function () {
     document.getElementById('billCalculator').reset();
     document.getElementById('result').style.display = 'none';
@@ -247,6 +301,24 @@ document.getElementById('resetButton').addEventListener('click', function () {
     document.getElementById('billDetails').style.display = 'none';
     document.getElementById('printButton').style.display = 'none';
     document.getElementById('moveToTop').style.display = 'none';
+
+    var billingType = document.getElementById('billingType').value;
+    var normalBillingSection = document.getElementById('normalBillingSection');
+    var todBillingSection = document.getElementById('todBillingSection');
+    var normalNetMeterReadingSection = document.getElementById('normalNetMeterReadingSection');
+    var todNetMeterReadingSection = document.getElementById('todNetMeterReadingSection');
+
+    if (billingType === 'normal') {
+        normalBillingSection.style.display = 'block';
+        normalNetMeterReadingSection.style.display = 'block';
+        todBillingSection.style.display = 'none';
+        todNetMeterReadingSection.style.display = 'none';
+    } else if (billingType === 'tod') {
+        normalBillingSection.style.display = 'none';
+        normalNetMeterReadingSection.style.display = 'none';
+        todBillingSection.style.display = 'block';
+        todNetMeterReadingSection.style.display = 'block';
+    }
 });
 
 document.getElementById('printButton').addEventListener('click', function() {
