@@ -177,6 +177,10 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
     const monthlyFuelSurcharge = bankAdjustedUnits * 0.10;
     const totalBillAmount = fixedCharge + meterRent + energyCharge + duty + fuelSurcharge + generationDuty + monthlyFuelSurcharge;
     let billInfo = '';
+
+    if (billingType === 'tod'){
+        billType = billType + ' (ToD)';
+    }
     if(bankAdjustedUnits > 0){
         billInfo = `
         <tr><td>Bill Type</td><td><b>${billType}</b></td></tr>
