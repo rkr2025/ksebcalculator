@@ -173,9 +173,8 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
 
     const duty = energyCharge * 0.10;
     const fuelSurcharge = bankAdjustedUnits * 0.09;
-    const generationDuty = solarGeneration * 0.15;
     const monthlyFuelSurcharge = bankAdjustedUnits * 0.10;
-    const totalBillAmount = fixedCharge + meterRent + energyCharge + duty + fuelSurcharge + generationDuty + monthlyFuelSurcharge;
+    const totalBillAmount = fixedCharge + meterRent + energyCharge + duty + fuelSurcharge + monthlyFuelSurcharge;
     let billInfo = '';
 
     if (billingType === 'tod'){
@@ -191,7 +190,6 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
         <tr><td>Energy Charge</td><td><b>₹${energyCharge.toFixed(2)}</b></td></tr>
         <tr><td>Duty</td><td><b>₹${duty.toFixed(2)}</b> (10% of the Energy Charge)</td></tr>
         <tr><td>Fuel Surcharge</td><td><b>₹${fuelSurcharge.toFixed(2)}</b> (Consumption: ${bankAdjustedUnits} Unit x 9ps)</td></tr>
-        <tr><td>Generation Duty</td><td><b>₹${generationDuty.toFixed(2)}</b> (SolarGeneration- ${solarGeneration} Unit x 15ps)</td></tr>
         <tr><td>Monthly Fuel Surcharge</td><td><b>₹${monthlyFuelSurcharge.toFixed(2)}</b> (Consumption: ${bankAdjustedUnits}Unit x 10ps)</td></tr>
         <tr><td>Total Bill Amount</td><td><b>₹${totalBillAmount.toFixed(2)}</b></td></tr>
     `;
@@ -201,7 +199,6 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
         <tr><td>Bill Type</td><td>${billType}</td></tr>
         <tr><td>Fixed Charge</td><td><b>₹${fixedCharge}</b></td></tr>
         <tr><td>Meter Rent (GST Inc)</td><td>₹${meterRent}</td></tr>
-        <tr><td>Generation Duty</td><td><b>₹${generationDuty.toFixed(2)}</b> (SolarGeneration- ${solarGeneration} Unit x 15ps)</td></tr>
         <tr><td>Total Bill Amount</td><td><b>₹${totalBillAmount.toFixed(2)}</b></td></tr>
     `;
     }
@@ -246,7 +243,7 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
     }
     document.getElementById('result5').innerHTML = `Tariff (w.e.f 1/11/2023) changes from time to time so check actual tariff from KSEB`;
     document.getElementById('result6').innerHTML = `If there are any calculation errors in the above, if other options are required, if there is a change in tariff, inform the information @ <span class="green-text"><b><i>calculatoronline2024@gmail.com</i></b></span>
-                                                    <span style="font-style: italic">Note: The information provided is for reference only. For accurate details, always refer to official sources.</span>  (v1.0.11)`;
+                                                    <span style="font-style: italic">Note: The information provided is for reference only. For accurate details, always refer to official sources.</span>  (v1.0.12)`;
 
 
     document.getElementById('result').style.display = 'block';
