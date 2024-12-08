@@ -182,13 +182,45 @@ th {
   cursor: pointer;
 }
 
-.container1 {
+/* .container1 {
   max-width: 800px;
   margin: 50px auto;
   padding: 20px;
   background-color: rgba(255, 255, 255, 0.9);
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   border-radius: 10px;
+} */
+
+.container1 {
+  max-width: 90%;
+  margin: 50px auto;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media only screen and (max-width: 768px) {
+  .container1 {
+    max-width: 95%;
+    padding: 15px;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  .container1 {
+    max-width: 98%;
+    padding: 10px;
+  }
+}
+
+.tariff-image {
+  width: 100%;
+  height: auto;
+  margin: 0 auto;
 }
 
 li {

@@ -243,7 +243,7 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
     }
     document.getElementById('result5').innerHTML = `Tariff (w.e.f 1/11/2023) changes from time to time so check actual tariff from KSEB`;
     document.getElementById('result6').innerHTML = `If there are any calculation errors in the above, if other options are required, if there is a change in tariff, inform the information @ <span class="green-text"><b><i>calculatoronline2024@gmail.com</i></b></span>
-                                                    <span style="font-style: italic">Note: The information provided is for reference only. For accurate details, always refer to official sources.</span>  (v1.0.12)`;
+                                                    <span style="font-style: italic">Note: The information provided is for reference only. For accurate details, always refer to official sources.</span>  (v1.0.13)`;
 
 
     document.getElementById('result').style.display = 'block';
