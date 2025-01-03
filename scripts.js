@@ -253,28 +253,7 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
 ///
 
     /////////
-    // Get the current date
-    var currentDate = new Date();
-
-    // Get the year and month from the current date
-    var currentYear = currentDate.getFullYear();
-    var currentMonth = currentDate.getMonth();
-    var currentDay = currentDate.getDate();
-
-    // Define the cutoff date (December 31st)
-    var cutoffDate = new Date(currentYear, 11, 31); // 11 represents December
-
-    // Check if the current date is after the cutoff date
-    if (currentDay > 31) {
-    // Since it's already the next year, apply the new tariff rules
-        applyNewTariffRules();
-    } else if (currentYear > cutoffDate.getFullYear() || (currentYear === cutoffDate.getFullYear() && currentMonth > cutoffDate.getMonth()) || (currentYear === cutoffDate.getFullYear() && currentMonth === cutoffDate.getMonth() && currentDay > cutoffDate.getDate())) {
-    // If the current year is after the cutoff year, or if the current year and month are after the cutoff year and month, or if the current year, month, and day are after the cutoff year, month, and day, apply the new tariff rules
-        applyNewTariffRules();
-    } else {
-    // Otherwise, apply the old tariff rules
-        applyOldTariffRules();
-    }
+    applyNewTariffRules();
     ////////
 
     let meterRent;
@@ -365,7 +344,7 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
     }
     document.getElementById('result5').innerHTML = `Tariff (w.e.f 1/11/2023) changes from time to time so check actual tariff from KSEB`;
     document.getElementById('result6').innerHTML = `If there are any calculation errors in the above, if other options are required, if there is a change in tariff, inform the information @ <span class="green-text"><b><i>calculatoronline2024@gmail.com</i></b></span>
-                                                    <span style="font-style: italic">Note: The information provided is for reference only. For accurate details, always refer to official sources.</span>  (v1.0.13)`;
+                                                    <span style="font-style: italic">Note: The information provided is for reference only. For accurate details, always refer to official sources.</span>  (v1.0.14)`;
 
 
     document.getElementById('result').style.display = 'block';
