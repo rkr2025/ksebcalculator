@@ -310,7 +310,7 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
                                                    <p>താങ്കൾ നേരിട്ട് ഉപയോഗിച്ചത് = <strong class="red-text">${generationUsage} Unit</strong> <br>(SolarGeneration(${solarGeneration}) - Export(${exportReading})). </p>
                                                    <p>KSEB യിൽ നിന്നും ഉപയോഗിച്ചത് = <strong class="red-text">${importReading} Unit</strong></p> <hr>
                                                    <p>അങ്ങനെ <strong class="red-text">${unitsConsumed}</strong> (${generationUsage}+${importReading}) യൂണിറ്റാണ് താങ്കളുടെ ആകെ വൈദ്യുതി ഉപയോഗം.</p>`;
-    document.getElementById('result1').innerHTML = `Fixed charge for ${unitsConsumed} Unit (${phase}) =   <strong class="red-text">₹${fixedCharge}</strong> `;
+    document.getElementById('result1').innerHTML = `Fixed charge for ${unitsConsumed} Unit (${phase}) =   <strong class="red-text">₹${fixedCharge}</strong> (w.e.f 5/12/2024)`;
 
 
     if (importReading > exportReading) {
@@ -342,9 +342,9 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
         document.getElementById('result4').innerHTML = `Extra Energy Generation = ${accountBalance} Unit will be added to bank 
                                                         <br>(Export(${exportReading})-Import(${importReading}))`;
     }
-    document.getElementById('result5').innerHTML = `Tariff (w.e.f 1/11/2023) changes from time to time so check actual tariff from KSEB`;
+    document.getElementById('result5').innerHTML = `Tariff (w.e.f 5/12/2024) changes from time to time so check actual tariff from KSEB`;
     document.getElementById('result6').innerHTML = `If there are any calculation errors in the above, if other options are required, if there is a change in tariff, inform the information @ <span class="green-text"><b><i>calculatoronline2024@gmail.com</i></b></span>
-                                                    <span style="font-style: italic">Note: The information provided is for reference only. For accurate details, always refer to official sources.</span>  (v1.0.14)`;
+                                                    <span style="font-style: italic">Note: The information provided is for reference only. For accurate details, always refer to official sources.</span>  (v1.0.15)`;
 
 
     document.getElementById('result').style.display = 'block';
