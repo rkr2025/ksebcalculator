@@ -12,9 +12,9 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
     var todBillingAbove20kW = 0;
     var myBankDepositAtKseb = 0;
 
-    var solarGeneration;
-    var importReading;
-    var exportReading;
+    var solarGeneration = 0;
+    var importReading = 0;
+    var exportReading = 0;
     var exportPlusBank = 0;
 
     if(doYouhaveBankBalance === 'Yes'){
@@ -66,18 +66,18 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
     console.log('Total Export -> export plus Bank: ' + exportPlusBank);
 
 
-    let accountBalance;
+    let accountBalance = 0;
     let generationUsage = solarGeneration - exportReading;
 
     // Check if all inputs are zero
     if (solarGeneration === 0 && importReading === 0 && exportReading === 0) {
-        alert("Enter the details to proceed");
+        alert("All inputs are zero. Please enter valid readings.");
         return;
     }
 
     // Validate positive values
     if (solarGeneration < 0 || importReading < 0 || exportReading < 0 || myBankDepositAtKseb < 0) {
-        alert("Please enter positive values.");
+        alert("Please enter positive values for solar generation, import, and export readings.");
         return;
     }
 
@@ -555,9 +555,9 @@ const getExportPeakAdjustmentMessage = (PeakConsumptionAdjusted_80_percent, impo
 };
 
 const getExportPeakAdjustmentMessage_below20kW = (NormalConsumptionAdjusted_Below20kW, importPeak,Peak_NoOfUnitsFor_energy_calculation_Below20kW,unitRate_Below20kW) => {
-    console.log('&&&&& PeakConsumptionAdjusted_Below20kW : ' + NormalConsumptionAdjusted_Below20kW);
+    console.log('&&&&& NormalConsumptionAdjusted_Below20kW : ' + NormalConsumptionAdjusted_Below20kW);
     console.log('&&&&& importPeak : ' + importPeak);
-    console.log('&&&&& Peak_NoOfUnitsFor_energy_calculation : ' + Peak_NoOfUnitsFor_energy_calculation);
+    console.log('&&&&& Peak_NoOfUnitsFor_energy_calculation : ' + Peak_NoOfUnitsFor_energy_calculation_Below20kW);
     if (NormalConsumptionAdjusted_Below20kW > importPeak) {
       return `<p>ഇവിടെ Peak Hours Adjusted Energy (<strong class="green-text">${NormalConsumptionAdjusted_Below20kW.toFixed(2)} Unit</strong>) കൂടുതൽ ആയതുകൊണ്ട് Peak TimeZone (6pm to 10pm) ഉപയോഗം (${importPeak.toFixed(2)}) പൂർണമായും Adjust ചെയ്യാം. <strong class="green-text"> അതിനാൽ Peak TimeZone എനർജി ചാർജ് ഇല്ല 👍</strong></p>
               <p>Peak TimeZone Energy Consumption: <strong class="green-text">${Peak_NoOfUnitsFor_energy_calculation_Below20kW.toFixed(2)} Units 😌 </strong></p><hr>
@@ -638,13 +638,15 @@ const getEnergyCaluculationMessage = (
         `;
 };
 
-    const duty = energyCharge * 0.10;
+    var duty = 0;
     const fuelSurcharge = bankAdjustedUnits * 0.09;
     const monthlyFuelSurcharge = bankAdjustedUnits * 0.10;
-    var totalBillAmount;
+    var totalBillAmount = 0;
     if(todBillingAbove20kW){
+        duty = energyCharge * 0.10;
         totalBillAmount = fixedCharge + meterRent + energyCharge + duty + fuelSurcharge + monthlyFuelSurcharge;
     }else{
+        duty = energyCharge_Below20kW * 0.10;
         totalBillAmount = fixedCharge + meterRent + energyCharge_Below20kW + duty + fuelSurcharge + monthlyFuelSurcharge;
     }
     let billInfo = '';
@@ -652,13 +654,16 @@ const getEnergyCaluculationMessage = (
     console.log('CHECKPOINT 3 : ');
 
     if(bankAdjustedUnits > 0){
+
+        const energyChargeToUse = todBillingAbove20kW > 0 ? energyCharge : energyCharge_Below20kW;
+
         billInfo = `
         <tr><td>Bill Type</td><td><b>${billType}</b></td></tr>
         <tr><td>Fixed Charge</td><td><b>₹${fixedCharge}</b></td></tr>
         <tr><td>Meter Rent</td><td><b>₹${meterRent}</b></td></tr>
         <tr><td>No: of Units Consumed (for Energy calculation)</td><td>${bankAdjustedUnits.toFixed(2)}</td></tr>
         <tr><td>Unit Charge</td><td>₹${unitRate.toFixed(2)}/Unit</td></tr>
-        <tr><td>Energy Charge</td><td><b>₹${energyCharge.toFixed(2)}</b></td></tr>
+        <tr><td>Energy Charge</td><td><b>₹${energyChargeToUse.toFixed(2)}</b></td></tr>
         <tr><td>Duty</td><td><b>₹${duty.toFixed(2)}</b> (10% of the Energy Charge)</td></tr>
         <tr><td>Fuel Surcharge</td><td><b>₹${fuelSurcharge.toFixed(2)}</b> (Consumption: ${bankAdjustedUnits.toFixed(2)} Unit x 9ps)</td></tr>
         <tr><td>Monthly Fuel Surcharge</td><td><b>₹${monthlyFuelSurcharge.toFixed(2)}</b> (Consumption: ${bankAdjustedUnits.toFixed(2)}Unit x 10ps)</td></tr>
@@ -802,7 +807,7 @@ const getEnergyCaluculationMessage = (
                 document.getElementById('result2').innerHTML += `<u><strong>T1 - Normal TimeZone (6am to 6pm) Calculations </strong></u>`;
                 document.getElementById('result2').innerHTML += getExportNormalAdjustmentMessage_below20kW(exportPlusBank,importNormal,unitRate_Below20kW, NormalConsumptionAdjusted_Below20kW, NormalConsumptionAdjusted_Below20kW,Normal_NoOfUnitsFor_energy_calculation);
                 document.getElementById('result3').innerHTML += `<b><u><strong>T2 - Peak TimeZone (6pm to 10pm) (Connected Load < 20kW)</strong></u></b>`;
-                document.getElementById('result3').innerHTML += getExportPeakAdjustmentMessage_below20kW(NormalConsumptionAdjusted_Below20kW,importPeak,Peak_NoOfUnitsFor_energy_calculation_Below20kW);
+                document.getElementById('result3').innerHTML += getExportPeakAdjustmentMessage_below20kW(NormalConsumptionAdjusted_Below20kW,importPeak,Peak_NoOfUnitsFor_energy_calculation_Below20kW,unitRate_Below20kW);
                 document.getElementById('result3').innerHTML += `<b><u><strong>T3 - Off-Peak TimeZone (10pm to 6am) Calculations </strong></u></b>`;
                 document.getElementById('result3').innerHTML += getExportOffPeakAdjustmentMessage_below20kW(importOffPeak,PeakConsumptionAdjusted_Below20kW,OffPeak_NoOfUnitsFor_energy_calculation_Below20kW,unitRate_Below20kW);
                 document.getElementById('result3').innerHTML += getEnergyCaluculationMessage(bankAdjustedUnits_Below20kW, Normal_NoOfUnitsFor_energy_calculation, Peak_NoOfUnitsFor_energy_calculation_Below20kW, OffPeak_NoOfUnitsFor_energy_calculation_Below20kW, unitRate_Below20kW, NormalConsumptionAdjusted_energy_charge, PeakConsumptionAdjusted_energy_charge_Below20kW, OffPeakConsumptionAdjusted_energy_charge_Below20kW,energyCharge_Below20kW);
@@ -904,8 +909,10 @@ document.getElementById('resetButton').addEventListener('click', function () {
     document.getElementById('printButton').style.display = 'none';
     document.getElementById('moveToTop').style.display = 'none';
     
-    document.getElementById('bankedUnitSection').style.display = 'none';
-    document.getElementById('connectedLoadContainer').style.display = 'none';
+    document.getElementById('bankedUnitSection').style.display = 
+        document.getElementById('mybank').value === 'Yes' ? 'block' : 'none';
+    document.getElementById('connectedLoadContainer').style.display = 
+        document.getElementById('billingType').value === 'tod' ? 'block' : 'none';
 
     var billingType = document.getElementById('billingType').value;
     var normalBillingSection = document.getElementById('normalBillingSection');
