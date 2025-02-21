@@ -6,9 +6,17 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
     var billingType = document.getElementById('billingType').value;
     var doYouhaveBankBalance = document.getElementById('mybank').value;
 
+    document.getElementById('result').innerHTML = ``;
+    document.getElementById('result1').innerHTML = ``;
+    document.getElementById('result2').innerHTML = ``;
+    document.getElementById('result3').innerHTML = ``;
+    document.getElementById('result4').innerHTML = ``;
+    document.getElementById('result5').innerHTML = ``;
+    document.getElementById('result6').innerHTML = ``;
+
     console.log('Bank Balanace: '  + doYouhaveBankBalance );
 
-    var connectedLoad;
+    var connectedLoad='';
     var todBillingAbove20kW = 0;
     var myBankDepositAtKseb = 0;
 
@@ -16,8 +24,7 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
     var importReading = 0;
     var exportReading = 0;
     var exportPlusBank = 0;
-    var billingMethodToUse = 0;
-    var todType;
+    var todType='';
 
     if(doYouhaveBankBalance === 'Yes'){
         myBankDepositAtKseb = parseFloat(document.getElementById('bankedUnitInput').value) || 0;
@@ -111,7 +118,7 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
 
     console.log('net Bank adjusted Units: ' + bankAdjustedUnits);
 
-    let billType;
+    let billType='';
     let fixedCharge = 0;
     let energyCharge = 0;
     let unitRate = 0;
@@ -180,7 +187,7 @@ function applyNewTariffRules() {
     console.log('bankAdjusted Units:' + bankAdjustedUnits);
 
     if (billingType == 'normal') {
-        console.log('Check 4');
+        console.log('Check 4: Billing Type is Normal');
         if (bankAdjustedUnits <= 250) {
             console.log('Check 6');
             billType = "Telescopic";
@@ -246,7 +253,7 @@ function applyNewTariffRules() {
             }
         }
     } else {
-        console.log('Check 5');
+        console.log('Check 5: Billing Type is ToD');
         //TOD BILLING TYPE - common to if connected load below 20kw - Normal charge, else TOD
         console.log('TOD: bankAdjustedUnits: '+bankAdjustedUnits);
         console.log('TOD: todBillingAbove20kW: '+todBillingAbove20kW);
@@ -533,10 +540,10 @@ const getExportNormalAdjustmentMessage = (exportPlusBank, importNormal, unitRate
       return `<p>Export+Bank (${exportReading.toFixed(2)} + ${myBankDepositAtKseb.toFixed(2)}) ഉം പകൽ സമയ ഉപയോഗവും (${importNormal.toFixed(2)}) തുല്യമായത് കൊണ്ട് പൂർണമായും അതിൽ Adjust ചെയ്യാൻ കഴിയുന്നതാണ്. <strong class="green-text"> അതിനാൽ Normal TimeZone എനർജി ഇല്ല.👍</strong>  No other Peak TimeZone Adjustment possible further. </p>
               <p>Normal TimeZone Energy Consumption: <strong class="green-text">${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😌</p> </strong>`;
     } else{
-      return `<p>താങ്കളുടെ പകൽ സമയ ഉപയോഗം (<strong class="red-text">${importNormal.toFixed(2)} Unit </strong>) ആകുന്നു. ഇത് Export+Bank (<strong class="green-text"> ${exportReading.toFixed(2)} + ${myBankDepositAtKseb.toFixed(2)} Unit  </strong>) 
-              നേക്കാൾ കൂടുതൽ ആയതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(exportPlusBank - importNormal).toFixed(2)} Unit</strong>) 
+      return `<p>താങ്കളുടെ പകൽ സമയ ഉപയോഗം (<strong class="red-text">${importNormal.toFixed(2)} Unit </strong>) ആകുന്നു. Export+Bank: ${(exportReading + myBankDepositAtKseb).toFixed(2)}(<strong class="green-text"> ${exportReading.toFixed(2)} + ${myBankDepositAtKseb.toFixed(2)} Unit  </strong>) 
+              കുറവാണ് . അതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(exportPlusBank - importNormal).toFixed(2)} Unit</strong>) 
               Normal Rate ൻ്റെ 90%, (അതായത്  ₹${unitRate.toFixed(2)} x 0.9 = ₹${(unitRate * 0.9).toFixed(2)}) നിരക്കിൽ ചാർജ് ചെയ്യുന്നതാണ്. </p>
-              <p>Normal TimeZone Energy Consumption: <strong class="red-text">${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😟</p>  </strong>
+              <p>Normal TimeZone Energy Consumption: <strong class="red-text">${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} Units ⚡</p>  </strong>
               <hr>`;
     }
 };
@@ -553,10 +560,10 @@ const getExportNormalAdjustmentMessage_below20kW = (exportPlusBank, importNormal
       return `<p>Export+Bank (${exportReading.toFixed(2)} + ${myBankDepositAtKseb.toFixed(2)}) ഉം പകൽ സമയ ഉപയോഗവും (${importNormal.toFixed(2)}) തുല്യമായത് കൊണ്ട് പൂർണമായും അതിൽ Adjust ചെയ്യാൻ കഴിയുന്നതാണ്. <strong class="green-text"> അതിനാൽ Normal TimeZone എനർജി ഇല്ല.👍</strong>  No other Peak TimeZone Adjustment possible further. </p>
               <p>Normal TimeZone Energy Consumption: <strong class="green-text">${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😌</p> </strong>`;
     } else{
-      return `<p>താങ്കളുടെ പകൽ സമയ ഉപയോഗം (<strong class="red-text">${importNormal.toFixed(2)} Unit </strong>) ആകുന്നു. ഇത് Export+Bank (<strong class="green-text">${exportReading.toFixed(2)} + ${myBankDepositAtKseb.toFixed(2)} Unit</strong>)
-              നേക്കാൾ കൂടുതൽ ആയതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(exportPlusBank - importNormal).toFixed(2)} Unit</strong>) 
+      return `<p>താങ്കളുടെ പകൽ സമയ ഉപയോഗം (<strong class="red-text">${importNormal.toFixed(2)} Unit </strong>) ആകുന്നു. Export+Bank: ${(exportReading + myBankDepositAtKseb).toFixed(2)} (<strong class="green-text">${exportReading.toFixed(2)} + ${myBankDepositAtKseb.toFixed(2)} Unit</strong>)
+              കുറവാണ് . അതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(exportPlusBank - importNormal).toFixed(2)} Unit</strong>) 
               Normal Rate ൻ്റെ 90%, (അതായത്  ₹${unitRate_Below20kW.toFixed(2)} x 0.9 = ₹${(unitRate_Below20kW * 0.9).toFixed(2)}) നിരക്കിൽ ചാർജ് ചെയ്യുന്നതാണ്. </p>
-              <p>Normal TimeZone Energy Consumption: <strong class="red-text">${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😟</p>  </strong>
+              <p>Normal TimeZone Energy Consumption: <strong class="red-text">${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} Units⚡</p>  </strong>
               <hr>`;
     }
 };
@@ -572,10 +579,10 @@ const getExportPeakAdjustmentMessage = (PeakConsumptionAdjusted_80_percent, impo
       return `<p>ബാക്കിയുള്ള Export Energy (${PeakConsumptionAdjusted_80_percent.toFixed(2)} Unit) ഉം Peak TimeZone (6pm to 10pm) ഉപയോഗവും (${importPeak.toFixed(2)}) തുല്യമായത് കൊണ്ട് പൂർണമായും അതിൽ Adjust ചെയ്യാൻ കഴിയുന്നതാണ്. <strong class="green-text">അതിനാൽ Peak TimeZone എനർജി ചാർജ് ഇല്ല 👍 </strong>. No other Peak TimeZone Adjustment possible further.</p>
               <p>Peak TimeZone Energy Consumption: <strong class="green-text">${Peak_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😌</p> </strong>`;
     } else{
-      return `<p>താങ്കളുടെ Peak hours (6pm to 10pm) ഉപയോഗം (<strong class="red-text">${importPeak.toFixed(2)} Unit </strong>) ആകുന്നു. ഇത് Peak Adjusted Energy (<strong class="green-text">${PeakConsumptionAdjusted_80_percent.toFixed(2)} Unit</strong>) 
-              നേക്കാൾ കൂടുതൽ ആയതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(importPeak - PeakConsumptionAdjusted_80_percent).toFixed(2)} Unit</strong>) 
-              Normal Rate ൻ്റെ 125%, (അതായത്  ₹${unitRate.toFixed(2)} x 1.25 = <strong class="red-text">₹${(unitRate * 1.25).toFixed(2)}</strong>) നിരക്കിൽ ചാർജ് ചെയ്യുന്നതാണ് 😐.</p>
-              <p>Peak TimeZone Energy Consumption: <strong class="red-text">${Peak_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😟</p> </strong><hr>`;
+      return `<p>താങ്കളുടെ Peak hours (6pm to 10pm) ഉപയോഗം (<strong class="red-text">${importPeak.toFixed(2)} Unit </strong>) ആകുന്നു. Peak Adjusted Energy (<strong class="green-text">${PeakConsumptionAdjusted_80_percent.toFixed(2)} Unit</strong>) 
+              കുറവാണ്. അതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(importPeak - PeakConsumptionAdjusted_80_percent).toFixed(2)} Unit</strong>) 
+              Normal Rate ൻ്റെ 125%, (അതായത്  ₹${unitRate.toFixed(2)} x 1.25 = <strong class="red-text">₹${(unitRate * 1.25).toFixed(2)}</strong>) നിരക്കിൽ ചാർജ് ചെയ്യുന്നതാണ് ⚡.</p>
+              <p>Peak TimeZone Energy Consumption: <strong class="red-text">${Peak_NoOfUnitsFor_energy_calculation.toFixed(2)} Units ⚡</p> </strong><hr>`;
     }
 
 };
@@ -595,10 +602,10 @@ const getExportPeakAdjustmentMessage_below20kW = (NormalConsumptionAdjusted_Belo
       return `<p>ബാക്കിയുള്ള Export Energy (${NormalConsumptionAdjusted_Below20kW.toFixed(2)} Unit) ഉം Peak TimeZone (6pm to 10pm) ഉപയോഗവും (${importPeak.toFixed(2)}) തുല്യമായത് കൊണ്ട് പൂർണമായും അതിൽ Adjust ചെയ്യാൻ കഴിയുന്നതാണ്. <strong class="green-text">അതിനാൽ Peak TimeZone എനർജി ചാർജ് ഇല്ല 👍 </strong>. No other Peak TimeZone Adjustment possible further.</p>
               <p>Peak TimeZone Energy Consumption: <strong class="green-text">${Peak_NoOfUnitsFor_energy_calculation_Below20kW.toFixed(2)} Units 😌</p> </strong>`;
     } else{
-      return `<p>താങ്കളുടെ Peak hours (6pm to 10pm) ഉപയോഗം (<strong class="red-text">${importPeak.toFixed(2)} Unit </strong>) ആകുന്നു. ഇത് Peak Adjusted Energy (<strong class="green-text">${NormalConsumptionAdjusted_Below20kW.toFixed(2)} Unit</strong>) 
-              നേക്കാൾ കൂടുതൽ ആയതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(NormalConsumptionAdjusted_Below20kW - importPeak).toFixed(2)} Unit</strong>) 
-              Normal Rate ൻ്റെ 125%, (അതായത്  ₹${unitRate_Below20kW.toFixed(2)} x 1.25 = <strong class="red-text">₹${(unitRate_Below20kW * 1.25).toFixed(2)}</strong>) നിരക്കിൽ ചാർജ് ചെയ്യുന്നതാണ് 😐.</p>
-              <p>Peak TimeZone Energy Consumption: <strong class="red-text">${Peak_NoOfUnitsFor_energy_calculation_Below20kW.toFixed(2)} Units 😟</p> </strong><hr>`;
+      return `<p>താങ്കളുടെ Peak hours (6pm to 10pm) ഉപയോഗം (<strong class="red-text">${importPeak.toFixed(2)} Unit </strong>) ആകുന്നു. Peak Adjusted Energy (<strong class="green-text">${NormalConsumptionAdjusted_Below20kW.toFixed(2)} Unit</strong>) 
+              കുറവാണ് . അതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(NormalConsumptionAdjusted_Below20kW - importPeak).toFixed(2)} Unit</strong>) 
+              Normal Rate ൻ്റെ 125%, (അതായത്  ₹${unitRate_Below20kW.toFixed(2)} x 1.25 = <strong class="red-text">₹${(unitRate_Below20kW * 1.25).toFixed(2)}</strong>) നിരക്കിൽ ചാർജ് ചെയ്യുന്നതാണ് ⚡.</p>
+              <p>Peak TimeZone Energy Consumption: <strong class="red-text">${Peak_NoOfUnitsFor_energy_calculation_Below20kW.toFixed(2)} Units⚡</p> </strong><hr>`;
     }
 
 };
@@ -614,10 +621,10 @@ const getExportOffPeakAdjustmentMessage = (importOffPeak, PeakConsumptionAdjuste
         return `<p>ബാക്കിയുള്ള Export Energy (${PeakConsumptionAdjusted.toFixed(2)} Unit) ഉം Off-Peak TimeZone (10pm to 6am) ഉപയോഗവും (${importOffPeak.toFixed(2)}) തുല്യമായത് കൊണ്ട് പൂർണമായും അതിൽ Adjust ചെയ്യാൻ കഴിയുന്നതാണ്. <strong class="green-text">അതിനാൽ Off-Peak TimeZone എനർജി ഇല്ല </strong>. No other Peak TimeZone Adjustment possible further.</p>
                <p>Off-Peak TimeZone Energy Consumption: <strong class="green-text">${OffPeak_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😌</p> </strong>`;
     } else{
-        return `<p>താങ്കളുടെ Off-Peak hours (10pm to 6am) ഉപയോഗം (<strong class="red-text">${importOffPeak.toFixed(1)} Unit </strong>) ആകുന്നു. ഇത് Off-Peak Adjusted Energy (<strong class="green-text">${PeakConsumptionAdjusted.toFixed(2)} Unit</strong>) 
-                നേക്കാൾ കൂടുതൽ ആയതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(PeakConsumptionAdjusted - importOffPeak).toFixed(2)} Unit</strong>) 
+        return `<p>താങ്കളുടെ Off-Peak hours (10pm to 6am) ഉപയോഗം (<strong class="red-text">${importOffPeak.toFixed(1)} Unit </strong>) ആകുന്നു. Off-Peak Adjusted Energy (<strong class="green-text">${PeakConsumptionAdjusted.toFixed(2)} Unit</strong>) 
+                കുറവാണ് . അതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(PeakConsumptionAdjusted - importOffPeak).toFixed(2)} Unit</strong>) 
                 Normal Rate ൽ , (അതായത്  <strong class="red-text">₹${unitRate.toFixed(2)}</strong>) നിരക്കിൽ ചാർജ് ചെയ്യുന്നതാണ്.</p>
-                <p>Off-Peak TimeZone Energy Consumption: <strong class="red-text">${OffPeak_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😐</p> </strong> <hr>`;
+                <p>Off-Peak TimeZone Energy Consumption: <strong class="red-text">${OffPeak_NoOfUnitsFor_energy_calculation.toFixed(2)} Units ⚡</p> </strong> <hr>`;
     }
 };
 
@@ -632,10 +639,10 @@ const getExportOffPeakAdjustmentMessage_below20kW = (importOffPeak, PeakConsumpt
         return `<p>ബാക്കിയുള്ള Export Energy (${PeakConsumptionAdjusted_Below20kW.toFixed(2)} Unit) ഉം Off-Peak TimeZone (10pm to 6am) ഉപയോഗവും (${importOffPeak.toFixed(2)}) തുല്യമായത് കൊണ്ട് പൂർണമായും അതിൽ Adjust ചെയ്യാൻ കഴിയുന്നതാണ്. <strong class="green-text">അതിനാൽ Off-Peak TimeZone എനർജി ഇല്ല </strong>. No other Peak TimeZone Adjustment possible further.</p>
                <p>Off-Peak TimeZone Energy Consumption: <strong class="green-text">${OffPeak_NoOfUnitsFor_energy_calculation_Below20kW.toFixed(2)} Units 😌</p> </strong>`;
     } else{
-        return `<p>താങ്കളുടെ Off-Peak hours (10pm to 6am) ഉപയോഗം (<strong class="red-text">${importOffPeak.toFixed(1)} Unit </strong>) ആകുന്നു. ഇത് Off-Peak Adjusted Energy (<strong class="green-text">${PeakConsumptionAdjusted_Below20kW.toFixed(2)} Unit</strong>) 
-                നേക്കാൾ കൂടുതൽ ആയതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(PeakConsumptionAdjusted_Below20kW - importOffPeak).toFixed(2)} Unit</strong>) 
+        return `<p>താങ്കളുടെ Off-Peak hours (10pm to 6am) ഉപയോഗം (<strong class="red-text">${importOffPeak.toFixed(1)} Unit </strong>) ആകുന്നു. Off-Peak Adjusted Energy (<strong class="green-text">${PeakConsumptionAdjusted_Below20kW.toFixed(2)} Unit</strong>) 
+                കുറവാണ് . അതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(PeakConsumptionAdjusted_Below20kW - importOffPeak).toFixed(2)} Unit</strong>) 
                 Normal Rate ൽ , (അതായത്  <strong class="red-text">₹${unitRate_Below20kW.toFixed(2)}</strong>) നിരക്കിൽ ചാർജ് ചെയ്യുന്നതാണ്.</p>
-                <p>Off-Peak TimeZone Energy Consumption: <strong class="red-text">${OffPeak_NoOfUnitsFor_energy_calculation_Below20kW.toFixed(2)} Units 😐</p> </strong> <hr>`;
+                <p>Off-Peak TimeZone Energy Consumption: <strong class="red-text">${OffPeak_NoOfUnitsFor_energy_calculation_Below20kW.toFixed(2)} Units ⚡</p> </strong> <hr>`;
     }
 };
 
@@ -654,7 +661,7 @@ const getEnergyCaluculationMessage = (
         return `
             <hr>
             <p><u>ENERGY CALCULATION DETAILS</u></p>
-            <p>Total Energy Consumption: ${bankAdjustedUnits.toFixed(2)} Unit (${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} + ${Peak_NoOfUnitsFor_energy_calculation.toFixed(2)} + ${OffPeak_NoOfUnitsFor_energy_calculation.toFixed(2)})</p>
+            <p>Total Energy Consumption: ${bankAdjustedUnits.toFixed(2)} Unit (${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} + ${Peak_NoOfUnitsFor_energy_calculation.toFixed(2)} + ${OffPeak_NoOfUnitsFor_energy_calculation.toFixed(2)}) ⚡ </p>
             <p>Energy Charge for ${bankAdjustedUnits.toFixed(2)} Unit is: <strong>₹${unitRate.toFixed(2)}</strong></p>
             <p>Normal TimeZone Energy Charge: <strong class="red-text">₹${NormalConsumptionAdjusted_energy_charge.toFixed(2)}</strong> (${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} x ${unitRate.toFixed(2)} x 90%)</p>
             <p>Peak TimeZone Energy Charge: <strong class="red-text">₹${PeakConsumptionAdjusted_energy_charge.toFixed(2)}</strong> (${Peak_NoOfUnitsFor_energy_calculation.toFixed(2)} x ${unitRate.toFixed(2)} x 125%)</p>
@@ -723,6 +730,7 @@ const getEnergyCaluculationMessage = (
                                                             <p>വ്യത്യാസം വരുന്ന <strong class="red-text">${bankAdjustedUnits} Unit </strong> (${importReading}-${exportPlusBank}) ചാർജ് ചെയ്യപ്പെടുന്നതാണ്.</p>`;
             if (billType === 'Telescopic' || billType === 'Telescopic-ToD')
             {
+                console.log('Check 222');
                 document.getElementById('result3').innerHTML = `താങ്കളുടെ ബില്ലിംഗ് ടൈപ്പ്: ${billType} ആകുന്നു. <hr><p>Energy Charge Calculation (For ${bankAdjustedUnits} Unit):</p>
                 ${breakdown} `;
             }else{
@@ -806,7 +814,7 @@ const getEnergyCaluculationMessage = (
     document.getElementById('result5').innerHTML = `Tariff (w.e.f 5/12/2024) changes from time to time so check actual tariff from KSEB`;
     document.getElementById('result6').innerHTML = `Should you encounter any discrepancies in the calculations above, require additional options, or need updates due to tariff changes, 
                                                     please reach out to us at <span class="green-text"><b><i>calculatoronline2024@gmail.com</i></b></span> . Kindly note that the information provided here is intended for reference 
-                                                    purposes only. For precise and authoritative details, we always recommend consulting official sources. (Version 1.0.15)`;
+                                                    purposes only. For precise and authoritative details, we always recommend consulting official sources. (Version 1.0.16)`;
 //
 
     document.getElementById('result').style.display = 'block';
