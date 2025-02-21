@@ -28,8 +28,8 @@ h1 {
 /* Instructions Link */
 .instructions-link-container {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: 1px;
+  right: 1px;
 }
 
 .instructions-link {
