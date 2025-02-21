@@ -1,259 +1,302 @@
 /* General Styles */
 body {
-  font-family: "Arial", sans-serif;
-  background-color: #f5f5f5;
-  background: linear-gradient(to right, #6dd5fa, #ffffff);
+  font-family: "Roboto", sans-serif;
+  background: linear-gradient(135deg, #74ebd5, #acb6e5);
   margin: 0;
-  padding: 0;
+  padding: 20px;
+  color: #333;
 }
 
 .container {
-  max-width: 600px;
-  margin: 20px auto; /* Reduced margin for smaller screens */
-  padding: 15px;
-  background-color: #fff;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 25px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  position: relative;
 }
 
 h1 {
   text-align: center;
-  color: #333;
-  margin-bottom: 20px;
-  font-size: 24px; /* Adjusted for smaller screens */
+  color: #2c3e50;
+  margin-bottom: 30px;
+  font-size: 28px;
+  font-weight: 600;
 }
 
-/* Form Group Alignment */
+/* Instructions Link */
+.instructions-link-container {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+.instructions-link {
+  color: #3498db;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.instructions-link:hover {
+  background-color: #ecf0f1;
+  text-decoration: none;
+}
+
+/* Form Styling */
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 5px;
-  color: #555;
-  font-weight: bold;
-}
-
-.form-group input, .form-group select {
-  width: 100%;
-  padding: 10px;
-  box-sizing: border-box;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  margin-bottom: 8px;
+  color: #2c3e50;
+  font-weight: 500;
   font-size: 14px;
 }
 
-/* Inline Form Groups (for side-by-side elements) */
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #fafafa;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-group select {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+  font-size: 13px;
+  background-color: #fafafa;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg fill="%23333" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 12px;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+  outline: none;
+}
+
+/* Inline Form Groups (Dropdowns) */
 .form-group-inline {
   display: flex;
-  flex-direction: column; /* Stack vertically on small screens */
-  gap: 15px;
-  margin-bottom: 15px;
+  flex-direction: row; /* Force horizontal alignment */
+  flex-wrap: nowrap; /* Keep side by side by default */
+  gap: 10px; /* Tight spacing */
+  margin-bottom: 20px;
 }
 
 .form-group-inline .form-group {
-  width: 100%; /* Full width for stacked elements */
+  flex: 1 1 0; /* Equal width for all dropdowns */
+  min-width: 0; /* Allow shrinking */
 }
 
-/* Input Groups (for grouped inputs) */
+/* Input Groups */
 .input-group {
-  display: flex;
-  flex-direction: column; /* Stack vertically on small screens */
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 15px;
+}
+
+.input-group .sub-group label {
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+/* Section Headers */
+.form-group > label[style*="margin-top"] {
+  font-size: 16px;
+  color: #2980b9;
+  font-weight: 600;
   margin-bottom: 15px;
-}
-
-.input-group .sub-group {
-  width: 100%; /* Full width for stacked elements */
-}
-
-.input-group label {
-  margin-bottom: 5px;
-  color: #555;
-}
-
-.input-group input {
-  width: 100%;
-  padding: 10px;
-  box-sizing: border-box;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
 }
 
 /* Buttons */
 button {
-  width: 100%; /* Full-width buttons on smaller screens */
-  padding: 10px;
-  background-color: #28a745;
+  width: 100%;
+  padding: 12px;
+  background-color: #27ae60;
   border: none;
   color: white;
   font-size: 16px;
-  border-radius: 4px;
+  font-weight: 500;
+  border-radius: 6px;
   cursor: pointer;
-  margin: 10px 0;
+  transition: background-color 0.3s, transform 0.2s;
 }
 
 button:hover {
-  background-color: #218838;
+  background-color: #219653;
+  transform: translateY(-2px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+#resetButton {
+  background-color: #e74c3c;
+}
+
+#resetButton:hover {
+  background-color: #c0392b;
 }
 
 /* Results and Tables */
 .result {
-  margin-top: 20px;
+  margin-top: 25px;
   padding: 15px;
-  background-color: #e9ecef;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  text-align: center;
-  font-size: 18px;
-  display: none; /* Hide by default */
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #3498db;
+  font-size: 16px;
+  color: #2c3e50;
+  display: none;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
+  margin-top: 25px;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 th, td {
-  padding: 10px;
-  border: 1px solid #ccc;
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
   text-align: left;
 }
 
 th {
-  background-color: #f5f5f5;
+  background-color: #3498db;
+  color: white;
+  font-weight: 500;
 }
 
-/* Colors for Text */
-.green-text {
-  color: green;
+td {
+  color: #555;
 }
 
-.red-text {
-  color: red;
-}
-
-/* Print and Move to Top Buttons */
+/* Print and Move to Top */
 #printButton {
   display: none;
   margin: 20px auto;
-  width: 100%;
-  max-width: 200px;
-  text-align: center;
+  width: 200px;
+  background-color: #8e44ad;
+}
+
+#printButton:hover {
+  background-color: #732d91;
 }
 
 #moveToTop {
   display: none;
   margin: 20px auto;
   text-align: center;
-  color: blue;
-  cursor: pointer;
-}
-
-/* Instructions Link */
-.instructions-link-container {
-  text-align: right;
-  margin-bottom: 20px;
-}
-
-.instructions-link {
-  color: #007bff;
+  color: #3498db;
+  font-weight: 500;
   text-decoration: none;
-  font-size: 16px;
+  font-size: 14px;
 }
 
-.instructions-link:hover {
+#moveToTop:hover {
+  color: #2980b9;
   text-decoration: underline;
 }
 
-/* Return Page Styles */
-.return-link {
-  display: block;
+/* Banked Unit Section */
+#bankedUnitSection {
   margin-top: 20px;
-  text-align: center;
-  color: blue;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.container1 {
-  max-width: 90%;
-  margin: 20px auto; /* Reduced margin for smaller screens */
   padding: 15px;
-  background-color: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  background-color: #f5f6fa;
+  border-radius: 8px;
 }
 
-.tariff-image {
-  width: 100%;
-  height: auto;
-  margin: 0 auto;
-}
-
-li {
-  margin-bottom: 10px;
-  font-size: 16px;
-  line-height: 1.5;
-  color: #555;
-}
-
-/* Responsive Adjustments */
+/* Responsive Design */
 @media (min-width: 768px) {
-  .form-group-inline {
-      flex-direction: row; /* Side-by-side on larger screens */
-  }
-
   .input-group {
-      flex-direction: row; /* Side-by-side on larger screens */
+    grid-template-columns: repeat(3, 1fr);
   }
 
   button {
-      width: 48%; /* Original width for larger screens */
+    width: 48%;
+    margin: 10px 1%;
+  }
+
+  .container {
+    max-width: 800px;
+  }
+
+  h1 {
+    font-size: 32px;
+  }
+
+  .form-group-inline {
+    gap: 15px;
   }
 }
 
 @media (max-width: 480px) {
   .container {
-      margin: 10px;
-      padding: 10px;
+    padding: 15px;
+    margin: 10px;
   }
 
   h1 {
-      font-size: 22px; /* Adjusted for very small screens */
+    font-size: 24px;
   }
 
-  li {
-      font-size: 14px;
+  button {
+    padding: 10px;
+    font-size: 14px;
   }
 
-  .return-link {
-      font-size: 16px;
+  .form-group-inline {
+    flex-wrap: wrap; /* Wrap on small screens */
+    gap: 8px;
+  }
+
+  .form-group-inline .form-group {
+    flex: 1 1 45%; /* Two per row */
   }
 }
 
-/* Banked Unit Section */
-#bankedUnitSection {
-  margin-top: 15px;
+@media (max-width: 360px) {
+  .form-group-inline {
+    flex-direction: column; /* Stack on tiny screens */
+  }
+
+  .form-group-inline .form-group {
+    flex: 1 1 100%; /* Full width */
+  }
 }
 
-#bankedUnitSection label {
-  color: #333;
-  font-weight: bold;
+/* Additional Utility Styles */
+.green-text {
+  color: #27ae60;
+  font-weight: 600;
 }
 
-#bankedUnitSection input {
-  width: 100%;
-  padding: 10px;
-  box-sizing: border-box;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
-  margin-top: 5px;
+.red-text {
+  color: #e74c3c;
+  font-weight: 600;
 }

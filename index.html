@@ -25,51 +25,45 @@
             <!-- Adding Phase -->
             <div class="form-group-inline">
                 <div class="form-group">
-                    <label for="phase">Phase:</label>
-                    <select id="phase" name="phase">
-                        <option value="phase1">Phase 1</option>
-                        <option value="phase3">Phase 3</option>
-                    </select>
+                  <label for="phase">Phase:</label>
+                  <select id="phase" name="phase">
+                    <option value="phase1">Phase 1</option>
+                    <option value="phase3">Phase 3</option>
+                  </select>
                 </div>
-
-                <!-- Adding Meter Owner -->
                 <div class="form-group">
-                    <label for="meterOwner">Meter Owner:</label>
-                    <select id="meterOwner" name="meterOwner">
-                        <option value="kseb">KSEB</option>
-                        <option value="consumer">Consumer</option>
-                    </select>
+                  <label for="meterOwner">Meter Owner:</label>
+                  <select id="meterOwner" name="meterOwner">
+                    <option value="kseb">KSEB</option>
+                    <option value="consumer">Consumer</option>
+                  </select>
                 </div>
-                <!-- Adding Billing Type -->
                 <div class="form-group">
-                    <label for="billingType">Billing Type:</label>
-                    <select id="billingType" name="billingType">
+                  <label for="billingType">Billing Type:</label>
+                  <select id="billingType" name="billingType">
                     <option value="normal">Normal</option>
                     <option value="tod">ToD</option>
-                    </select>
+                  </select>
                 </div>
-            </div>
-
-            <!-- $$$$$ Adding New Dropdowns Connected Load -->
-            <div class="form-group-inline" id="connectedLoadContainer" style="display: none;">
                 <div class="form-group">
-                    <label for="load">Connected Load (for ToD):</label>
-                    <select id="load" name="load">
-                        <option value="below20k">Below 20kW</option>
-                        <option value="above20k">Above 20kW</option>
-                    </select>
+                  <label for="mybank">Banked Units:</label>
+                  <select id="mybank" name="mybank">
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                  </select>
                 </div>
-            </div>
-
-                <!-- Adding Banked Unit -->
+              </div>
+              
+              <!-- Connected Load stays separate as it’s conditional -->
+              <div class="form-group-inline" id="connectedLoadContainer" style="display: none;">
                 <div class="form-group">
-                    <label for="mybank">Banked Units:</label>
-                    <select id="mybank" name="mybank">
-                        <option value="No">No</option>
-                        <option value="Yes">Yes</option>
-                    </select>
+                  <label for="load">Connected Load (for ToD):</label>
+                  <select id="load" name="load">
+                    <option value="below20k">Below 20kW</option>
+                    <option value="above20k">Above 20kW</option>
+                  </select>
                 </div>
-            </div>
+              </div>
 
             <!-- Banked Unit Section -->
             <div class="form-group" id="bankedUnitSection" style="display: none;">
