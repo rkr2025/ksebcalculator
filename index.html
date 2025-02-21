@@ -20,42 +20,44 @@
         <div class="instructions-link-container">
             <a href="instructions.html" class="instructions-link">Instructions</a>
         </div>
+        <div id="current-date-time" style="position: absolute; top: 1px; left: 1px; font-size: 12px; color: #333;"></div>
         <h1>Solar Prosumers Electricity Bill Calculator</h1>
+        <div id="quote" style="left: 50%; font-size: 14px; color: #666; font-style: italic; text-align: center; padding: 10px; background-color: #f9f9f9; border-radius: 2px; box-shadow: 0 0 10px rgba(0,0,0,0.1); top: -10px;"></div>
+        <div style="height: 30px;"></div>
         <form id="billCalculator">
             <!-- Adding Phase -->
-<!-- Adding Phase -->
-<div class="form-group-inline">
-    <div class="form-group">
-        <label for="phase">Phase:</label>
-        <select id="phase" name="phase">
-            <option value="phase1">Phase 1</option>
-            <option value="phase3">Phase 3</option>
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="meterOwner">Meter Owner:</label>
-        <select id="meterOwner" name="meterOwner">
-            <option value="kseb">KSEB</option>
-            <option value="consumer">Consumer</option>
-        </select>
-    </div>
-</div>
-<div class="form-group-inline">
-    <div class="form-group">
-        <label for="billingType">Billing Type:</label>
-        <select id="billingType" name="billingType">
-            <option value="normal">Normal</option>
-            <option value="tod">ToD</option>
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="mybank">Banked Units:</label>
-        <select id="mybank" name="mybank">
-            <option value="No">No</option>
-            <option value="Yes">Yes</option>
-        </select>
-    </div>
-</div>
+            <div class="form-group-inline">
+                <div class="form-group">
+                    <label for="phase">Phase:</label>
+                    <select id="phase" name="phase">
+                        <option value="phase1">Phase 1</option>
+                        <option value="phase3">Phase 3</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="meterOwner">Meter Owner:</label>
+                    <select id="meterOwner" name="meterOwner">
+                        <option value="kseb">KSEB</option>
+                        <option value="consumer">Consumer</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group-inline">
+                <div class="form-group">
+                    <label for="billingType">Billing Type:</label>
+                    <select id="billingType" name="billingType">
+                        <option value="normal">Normal</option>
+                        <option value="tod">ToD</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="mybank">Banked Units:</label>
+                    <select id="mybank" name="mybank">
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+            </div>
               
               <!-- Connected Load stays separate as it’s conditional -->
               <div class="form-group-inline" id="connectedLoadContainer" style="display: none;">
@@ -171,7 +173,7 @@
         <div id="result5" class="result"></div>
         <div id="result6" class="result"></div>
         <button type="button" id="printButton" style="display: none;">Print</button>
-        <a href="#top" id="moveToTop" style="display: none;">Move to Top</a>
+        <a href="#top" id="moveToTop" style="display: none;">Move to Top</a>        
     </div>
     <script src="scripts.js"></script>
 </body>
