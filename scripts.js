@@ -828,6 +828,9 @@ const getEnergyCaluculationMessage = (
     document.getElementById('billDetails').style.display = 'block';
     document.getElementById('printButton').style.display = 'block';
     document.getElementById('moveToTop').style.display = 'block';
+
+    // Scroll to the 'Description' table
+    document.getElementById('billDetails').scrollIntoView({ behavior: 'smooth' });
 });
 
 document.getElementById('billingType').addEventListener('change', function() {
