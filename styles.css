@@ -72,7 +72,7 @@ h1 {
 }
 
 .form-group select {
-  width: 100%;
+  width: 150px; /* Fixed width for dropdowns */
   padding: 8px;
   box-sizing: border-box;
   border: 1px solid #dcdcdc;
@@ -97,22 +97,23 @@ h1 {
 /* Inline Form Groups (Dropdowns) */
 .form-group-inline {
   display: flex;
-  flex-direction: row; /* Force horizontal alignment */
-  flex-wrap: nowrap; /* Keep side by side by default */
-  gap: 10px; /* Tight spacing */
-  margin-bottom: 20px;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 15px; /* Increased gap for better spacing between pairs */
+  margin-bottom: 15px; /* Reduced margin to keep lines closer */
+  justify-content: flex-start;
 }
 
 .form-group-inline .form-group {
-  flex: 1 1 0; /* Equal width for all dropdowns */
-  min-width: 0; /* Allow shrinking */
+  flex: 0 0 auto; /* Fixed width, no growing/shrinking */
+  min-width: 0;
 }
 
 /* Input Groups */
 .input-group {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 15px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
 }
 
 .input-group .sub-group label {
@@ -235,6 +236,7 @@ td {
 @media (min-width: 768px) {
   .input-group {
     grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
   }
 
   button {
@@ -271,22 +273,55 @@ td {
   }
 
   .form-group-inline {
-    flex-wrap: wrap; /* Wrap on small screens */
-    gap: 8px;
+    flex-wrap: nowrap;
+    gap: 10px; /* Slightly smaller gap */
   }
 
   .form-group-inline .form-group {
-    flex: 1 1 45%; /* Two per row */
+    flex: 0 0 auto;
+  }
+
+  .form-group select {
+    width: 120px; /* Smaller width for small screens */
+    padding: 6px;
+    font-size: 12px;
+  }
+
+  .input-group {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .form-group input {
+    padding: 8px;
+    font-size: 12px;
   }
 }
 
 @media (max-width: 360px) {
   .form-group-inline {
-    flex-direction: column; /* Stack on tiny screens */
+    flex-wrap: nowrap;
+    gap: 8px; /* Tighter gap for tiny screens */
   }
 
   .form-group-inline .form-group {
-    flex: 1 1 100%; /* Full width */
+    flex: 0 0 auto;
+  }
+
+  .form-group select {
+    width: 100px; /* Even smaller width */
+    padding: 5px;
+    font-size: 11px;
+  }
+
+  .input-group {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+  }
+
+  .form-group input {
+    padding: 6px;
+    font-size: 11px;
   }
 }
 
