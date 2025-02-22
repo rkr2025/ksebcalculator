@@ -309,7 +309,7 @@ function applyNewTariffRules() {
                     OffPeakConsumptionAdjusted_energy_charge = 0;
                     console.log('VII OffPeakConsumptionAdjusted is : ' + OffPeakConsumptionAdjusted);
                     
-                }else if(PeakConsumptionAdjusted == importPeak) {
+                }else if(PeakConsumptionAdjusted == importOffPeak) {
                     OffPeakConsumptionAdjusted_energy_charge = 0;
                     OffPeakConsumptionAdjusted = 0;
                     console.log('VIII OffPeakConsumptionAdjusted is : ' + OffPeakConsumptionAdjusted);
@@ -443,13 +443,12 @@ function applyNewTariffRules() {
                     
                     //OffPeak Usage calculation for connected Load below 20kW 
                     console.log('4 PeakConsumptionAdjusted_Below20kW is : ' + PeakConsumptionAdjusted_Below20kW);
-                    console.log('5 PeakConsumptionAdjusted_Below20kW is : ' + PeakConsumptionAdjusted_Below20kW);
                     if(PeakConsumptionAdjusted_Below20kW > importOffPeak){
                         OffPeakConsumptionAdjusted_Below20kW = PeakConsumptionAdjusted_Below20kW - importOffPeak;
                         OffPeakConsumptionAdjusted_energy_charge_Below20kW = 0;
                         console.log('VII OffPeakConsumptionAdjusted_Below20kW is : ' + OffPeakConsumptionAdjusted_Below20kW);
                         
-                    }else if(PeakConsumptionAdjusted_Below20kW == importPeak) {
+                    }else if(PeakConsumptionAdjusted_Below20kW == importOffPeak) {
                         OffPeakConsumptionAdjusted_energy_charge_Below20kW = 0;
                         OffPeakConsumptionAdjusted_Below20kW = 0;
                         console.log('VIII OffPeakConsumptionAdjusted_Below20kW is : ' + OffPeakConsumptionAdjusted_Below20kW);
