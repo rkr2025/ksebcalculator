@@ -19,7 +19,8 @@
     <div class="container">
         <div id="current-date-time" style="position: absolute; top: 1px; left: 1px; width: 100%; text-align: center; font-size: 13px; color: #333;"></div>
         <h1>Solar Prosumers Electricity Bill Calculator</h1>
-        <div id="quote" style="left: 50%; font-size: 14px; color: #666; font-style: italic; text-align: center; padding: 10px; background-color: #f9f9f9; border-radius: 2px; box-shadow: 0 0 10px rgba(0,0,0,0.1); top: -10px;"></div>
+        <!-- <div id="quote" style="left: 50%; font-size: 14px; color: #666; font-style: italic; text-align: center; padding: 10px; background-color: #f9f9f9; border-radius: 2px; box-shadow: 0 0 10px rgba(0,0,0,0.1); top: -10px;"></div> -->
+        <div id="quote" style="position: relative; margin: 20px auto; font-size: 12px; color: #444; font-style: italic; text-align: center; padding: 12px 20px; background: linear-gradient(135deg, #ffffff, #f0f4f8); border-radius: 6px; box-shadow: 0 3px 12px rgba(0,0,0,0.15); font-family: 'Georgia', serif; border-left: 3px solid #1e90ff; width: 90%; max-width: 320px; line-height: 1.5; transition: all 0.3s ease;"></div>
         <div style="height: 30px;"></div>
         <form id="billCalculator">
             <!-- Adding Phase -->
@@ -151,12 +152,6 @@
         </form>
         <div id="billDetails" style="display: none;">
             <table id="billTable">
-                <thead>
-                    <tr>
-                        <th>Description</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
                 <tbody id="billInfo">
                     <!-- Bill details will be inserted here -->
                 </tbody>
