@@ -3098,7 +3098,7 @@ function getRandomQuote() {
 // Function to fetch a random quote from Quotable API
 const fetchRandomQuote = async () => {
     try {
-        const response = await fetch('http://api.quotable.io/random?tags=motivational|inspirational');
+        const response = await fetch('http://api.quotable.io/random?tags=motivational%7Cinspirational');
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
