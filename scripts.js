@@ -2255,10 +2255,31 @@ const getEnergyCaluculationMessage = (
     }
     console.log('Check 26');
     //Ending Note - Section End
-    document.getElementById('result5').innerHTML = `Tariff (w.e.f 5/12/2024) changes from time to time so check actual tariff from KSEB`;
-    document.getElementById('result6').innerHTML = `Should you encounter any discrepancies in the calculations above, require additional options, or need updates due to tariff changes, 
-                                                    please reach out to us at <span class="green-text"><b><i>calculatoronline2024@gmail.com</i></b></span> . Kindly note that the information provided here is intended for reference 
-                                                    purposes only. For precise and authoritative details, we always recommend consulting official sources. (Version 1.0.16)`;
+    // document.getElementById('result5').innerHTML = `Tariff (w.e.f 5/12/2024) changes from time to time so check actual tariff from KSEB`;
+    // document.getElementById('result6').innerHTML = `Should you encounter any discrepancies in the calculations above, require additional options, or need updates due to tariff changes, 
+    //                                                 please reach out to us at <span class="green-text"><b><i>calculatoronline2024@gmail.com</i></b></span> . Kindly note that the information provided here is intended for reference 
+    //                                                 purposes only. For precise and authoritative details, we always recommend consulting official sources. (Version 1.0.16)`;
+
+    document.getElementById('result5').innerHTML = `
+    <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); padding: 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin: 20px auto; max-width: 90%; font-family: 'Arial', sans-serif; text-align: center;">
+        <p style="font-size: 14px; color: #2c3e50; line-height: 1.6; margin: 0;">
+            <strong style="color: #e67e22;">Tariff Notice:</strong> Tariffs (effective from <span style="font-style: italic;">5/12/2024</span>) are subject to change. For the latest rates, please refer to <span style="color: #3498db; font-weight: bold;">KSEB official sources</span>.
+        </p>
+    </div>
+`;
+
+    document.getElementById('result6').innerHTML = `
+        <div style="background: linear-gradient(135deg, #ffffff, #f2f4f8); padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); margin: 20px auto; max-width: 90%; font-family: 'Georgia', serif; border-left: 4px solid #2ecc71;">
+            <p style="font-size: 14px; color: #333; line-height: 1.8; margin: 0;">
+                <strong style="color: #27ae60;">Need Assistance?</strong> If you notice any discrepancies in the calculations, require additional features, or need updates due to tariff changes, feel free to contact us at 
+                <a href="mailto:calculatoronline2024@gmail.com" style="color: #2ecc71; font-style: italic; text-decoration: none; transition: color 0.3s ease;">calculatoronline2024@gmail.com</a>
+            </p>
+            <p style="font-size: 13px; color: #666; margin-top: 10px; line-height: 1.6;">
+                <em>Note:</em> This information is provided for reference only. For accurate and official details, consult <span style="color: #3498db;">KSEB</span> or other authoritative sources. 
+                <span style="display: block; margin-top: 5px; font-size: 12px; color: #888;">(Version 1.0.18)</span>
+            </p>
+        </div>
+    `;
 //
 
     document.getElementById('result').style.display = 'block';
