@@ -655,19 +655,61 @@ const getEnergyCaluculationMessage = (
     PeakConsumptionAdjusted_energy_charge,
     OffPeakConsumptionAdjusted_energy_charge,
     energyCharge
-  ) => {
-        // Generate energy calculation details
-        return `
-            <hr>
-            <p><u>ENERGY CALCULATION DETAILS</u></p>
-            <p>Total Energy Consumption: ${bankAdjustedUnits.toFixed(2)} Unit (${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} + ${Peak_NoOfUnitsFor_energy_calculation.toFixed(2)} + ${OffPeak_NoOfUnitsFor_energy_calculation.toFixed(2)}) ⚡ </p>
-            <p>Energy Charge for ${bankAdjustedUnits.toFixed(2)} Unit is: <strong>₹${unitRate.toFixed(2)}</strong></p>
-            <p>Normal TimeZone Energy Charge: <strong class="red-text">₹${NormalConsumptionAdjusted_energy_charge.toFixed(2)}</strong> (${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} x ${unitRate.toFixed(2)} x 90%)</p>
-            <p>Peak TimeZone Energy Charge: <strong class="red-text">₹${PeakConsumptionAdjusted_energy_charge.toFixed(2)}</strong> (${Peak_NoOfUnitsFor_energy_calculation.toFixed(2)} x ${unitRate.toFixed(2)} x 125%)</p>
-            <p>Off-Peak TimeZone Energy Charge: <strong class="red-text">₹${OffPeakConsumptionAdjusted_energy_charge.toFixed(2)}</strong> (${OffPeak_NoOfUnitsFor_energy_calculation.toFixed(2)} x ${unitRate.toFixed(2)})</p>
-            <hr>
-            <p>Total Energy Charge: <strong class="red-text">₹${energyCharge.toFixed(2)}</strong> (${NormalConsumptionAdjusted_energy_charge.toFixed(2)} (T1) + ${PeakConsumptionAdjusted_energy_charge.toFixed(2)} (T2) + ${OffPeakConsumptionAdjusted_energy_charge.toFixed(2)} (T3))</p>
-        `;
+) => {
+    return `
+        <hr>
+        <h3><u>Energy Calculation Details</u></h3>
+        <div style="overflow-x: auto; margin: 20px 0;">
+            <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px;">
+                <thead>
+                    <tr style="background-color: #f2f2f2;">
+                        <th style="border: 1px solid #ddd; padding: 6px; text-align: left; width: 40%;">Description</th>
+                        <th style="border: 1px solid #ddd; padding: 6px; text-align: right; width: 20%;">Units</th>
+                        <th style="border: 1px solid #ddd; padding: 6px; text-align: right; width: 20%;">Rate</th>
+                        <th style="border: 1px solid #ddd; padding: 6px; text-align: right; width: 20%;">Charge (₹)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 6px;">Normal TimeZone (90%)</td>
+                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)}</td>
+                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${(unitRate * 0.9).toFixed(2)}</td>
+                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="red-text">${NormalConsumptionAdjusted_energy_charge.toFixed(2)}</strong></td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 6px;">Peak TimeZone (125%)</td>
+                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${Peak_NoOfUnitsFor_energy_calculation.toFixed(2)}</td>
+                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${(unitRate * 1.25).toFixed(2)}</td>
+                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="red-text">${PeakConsumptionAdjusted_energy_charge.toFixed(2)}</strong></td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 6px;">Off-Peak TimeZone (100%)</td>
+                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${OffPeak_NoOfUnitsFor_energy_calculation.toFixed(2)}</td>
+                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${unitRate.toFixed(2)}</td>
+                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="red-text">${OffPeakConsumptionAdjusted_energy_charge.toFixed(2)}</strong></td>
+                    </tr>
+                    <tr style="background-color: #f9f9f9;">
+                        <td style="border: 1px solid #ddd; padding: 6px;"><strong>Total Energy Consumption</strong></td>
+                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong>${bankAdjustedUnits.toFixed(2)}</strong></td>
+                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">-</td>
+                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="red-text">${energyCharge.toFixed(2)}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p style="font-size: 0.9em;">Base Unit Rate: ₹${unitRate.toFixed(2)} | Total Energy Charge = Normal (T1) + Peak (T2) + Off-Peak (T3)</p>
+        <style>
+            @media (max-width: 600px) {
+                table {
+                    font-size: 12px;
+                }
+                th, td {
+                    padding: 4px;
+                }
+            }
+        </style>
+        <hr>
+    `;
 };
 
     var duty = 0;
