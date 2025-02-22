@@ -3096,17 +3096,16 @@ function getRandomQuote() {
 // });
 
 // Function to fetch a random quote from Quotable API
+// Function to fetch a random motivational/inspirational quote from ZenQuotes API
 const fetchRandomQuote = async () => {
     try {
         const response = await fetch('https://zenquotes.io/api/random');
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        return `Daily Thought: "${data.content}" — ${data.author || 'Unknown'}`;
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        const [data] = await response.json();
+        return `Daily Thought: "${data.q}" — ${data.a || 'Unknown'}`;
     } catch (error) {
-        console.error('Failed to fetch quote:', error);
-        return getRandomQuote();
+        console.error('Failed to fetch quote:', error.message);
+        return getRandomQuote(); // Fallback to local quotes
     }
 };
 
