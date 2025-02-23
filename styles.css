@@ -3,7 +3,7 @@ body {
   font-family: "Roboto", sans-serif;
   background: linear-gradient(135deg, #74ebd5, #acb6e5);
   margin: 0;
-  padding: 2px;
+  padding: 5px;
   color: #333;
 }
 
@@ -167,7 +167,7 @@ h1:hover {
   font-size: 16px;
   color: #2980b9;
   font-weight: 600;
-  margin-bottom: 15px;
+  margin-bottom: 5px;
 }
 
 /* Buttons */
@@ -376,3 +376,85 @@ td {
   color: #e74c3c;
   font-weight: 600;
 }
+
+/* My changes for KSEB normal inputs */
+/* Base styles for the meter readings section */
+.meter-readings {
+  display: flex;
+  flex-wrap: nowrap; /* Prevent wrapping to new lines, keeping inputs horizontal */
+  gap: 5px; /* Space between inputs */
+  margin-top: 10px;
+  justify-content: space-between; /* Evenly distribute inputs horizontally */
+}
+
+.meter-input {
+  flex: 1; /* Each meter-input takes equal space */
+  min-width: 0; /* Prevent overflow on smaller screens */
+}
+
+.meter-input label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 14px;
+  color: #333;
+}
+
+.meter-input input {
+  width: 100%; /* Full width within each meter-input */
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box; /* Include padding and border in width */
+}
+
+/* Responsive adjustments for smaller screens (e.g., mobile) */
+@media (max-width: 768px) {
+  .meter-readings {
+      gap: 10px; /* Increase gap on smaller screens for readability */
+      justify-content: space-around; /* Evenly space inputs with slight flexibility */
+  }
+
+  .meter-input {
+      flex: 0 1 calc(50% - 10px); /* Each input takes ~50% of the container width, accounting for gap */
+  }
+
+  .meter-input input {
+      font-size: 12px; /* Smaller text on mobile */
+      padding: 6px;
+  }
+
+  .meter-input label {
+      font-size: 10px; /* Smaller labels on mobile */
+  }
+}
+
+/* Optional: Ensure inputs look good on very small screens */
+@media (max-width: 480px) {
+  .meter-readings {
+      gap: 5px; /* Reduce gap on very small screens */
+  }
+
+  .meter-input {
+      flex: 0 1 calc(50% - 5px); /* Adjust width for very small screens, maintaining horizontal split */
+  }
+
+  .meter-input input {
+      font-size: 10px; /* Even smaller text on tiny screens */
+      padding: 6px;
+  }
+
+  .meter-input label {
+      font-size: 13px; /* Even smaller labels on tiny screens */
+  }
+}
+
+/* Optional: For larger screens, ensure inputs don’t stretch too much */
+@media (min-width: 1200px) {
+  .meter-input {
+      max-width: 45%; /* Limit width to prevent excessive stretching */
+  }
+}
+
+/*My changes stopped */
+
