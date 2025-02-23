@@ -458,3 +458,160 @@ td {
 
 /*My changes stopped */
 
+
+/*Tod Billing Styles*/
+.billing-section {
+  margin-bottom: 30px; /* Space below the section for the button */
+  padding: 15px; /* Optional padding for the section */
+  background: #f9f9f9; /* Optional light background for visual separation */
+  border-radius: 5px; /* Optional rounded corners */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Optional subtle shadow */
+}
+
+/* Styles for ToD Billing meter readings */
+.tod-readings {
+  display: flex;
+  flex-wrap: nowrap; /* Prevent wrapping to new lines, keeping inputs horizontal */
+  gap: 5px; /* Space between inputs */
+  margin-top: 10px;
+  justify-content: space-between; /* Evenly distribute inputs horizontally */
+  align-items: flex-start; /* Align items at the top of the flex container */
+}
+
+.tod-input {
+  flex: 1; /* Each tod-input takes equal space */
+  min-width: 0; /* Prevent overflow on smaller screens */
+  display: flex; /* Use flex within each tod-input to align label and input */
+  flex-direction: column; /* Stack label and input vertically within each tod-input */
+  align-items: flex-start; /* Align contents (label and input) to the top within each tod-input */
+}
+
+.tod-input label {
+  display: flex; /* Use flex to control label line breaks */
+  flex-direction: column; /* Stack label parts vertically */
+  margin-bottom: 4px; /* Reduced margin for tighter vertical spacing */
+  font-size: 14px;
+  color: #333;
+  flex-shrink: 0; /* Prevent label from shrinking */
+}
+
+.label-prefix,
+.label-suffix {
+  display: block; /* Ensure each span is a block element for stacking */
+  white-space: nowrap; /* Prevent text wrapping within each span */
+}
+
+.label-prefix {
+  margin-bottom: 2px; /* Small space between "Import -" or "Export -" and the suffix */
+}
+
+.tod-input input {
+  width: 100%; /* Full width within each tod-input */
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box; /* Include padding and border in width */
+  flex-grow: 1; /* Allow input to grow to fill available space */
+  align-self: stretch; /* Ensure input stretches to match container width */
+}
+
+/* Specific styling for Export labels to match Import alignment */
+.tod-input[for="exportOffPeak"] .label-prefix,
+.tod-input[for="exportNormal"] .label-prefix,
+.tod-input[for="exportPeak"] .label-prefix {
+  color: #e11eba; /* Ensure Export prefix maintains its color */
+}
+
+.tod-input[for="exportOffPeak"] .label-suffix,
+.tod-input[for="exportNormal"] .label-suffix,
+.tod-input[for="exportPeak"] .label-suffix {
+  color: #e11eba; /* Ensure Export suffix maintains its color */
+}
+
+.tod-input[for="importOffPeak"] .label-prefix,
+.tod-input[for="importNormal"] .label-prefix,
+.tod-input[for="importPeak"] .label-prefix {
+  color: #007BFF; /* Ensure Import prefix maintains its color */
+}
+
+.tod-input[for="importOffPeak"] .label-suffix,
+.tod-input[for="importNormal"] .label-suffix,
+.tod-input[for="importPeak"] .label-suffix {
+  color: #007BFF; /* Ensure Import suffix maintains its color */
+}
+
+/* Responsive adjustments for smaller screens (e.g., mobile) */
+@media (max-width: 768px) {
+  .billing-section {
+      margin-bottom: 20px; /* Reduce bottom margin on smaller screens for tighter layout */
+  }
+
+  .tod-readings {
+      gap: 8px; /* Slightly reduce gap on smaller screens for tighter fit */
+      justify-content: space-around; /* Evenly space inputs with slight flexibility */
+      align-items: flex-start; /* Ensure all inputs align at the top */
+  }
+
+  .tod-input {
+      flex: 0 1 calc(33.33% - 8px); /* Adjust width to account for reduced gap */
+  }
+
+  .tod-input label {
+      font-size: 12px; /* Smaller labels on mobile */
+      margin-bottom: 2px; /* Further reduce margin for tight alignment */
+  }
+
+  .label-prefix {
+      margin-bottom: 1px; /* Reduce space between lines on mobile */
+  }
+
+  .tod-input input {
+      font-size: 12px; /* Smaller text on mobile */
+      padding: 5px; /* Slightly reduce padding for tighter fit */
+  }
+}
+
+/* Optional: Ensure ToD Billing inputs look good on very small screens */
+@media (max-width: 480px) {
+  .billing-section {
+      margin-bottom: 15px; /* Further reduce bottom margin on very small screens */
+  }
+
+  .tod-readings {
+      gap: 4px; /* Further reduce gap on very small screens */
+      justify-content: space-around; /* Evenly space inputs with slight flexibility */
+      align-items: flex-start; /* Ensure all inputs align at the top */
+  }
+
+  .tod-input {
+      flex: 0 1 calc(33.33% - 4px); /* Adjust width for very small screens, maintaining horizontal split */
+  }
+
+  .tod-input label {
+      font-size: 10px; /* Even smaller labels on tiny screens */
+      margin-bottom: 1px; /* Minimize margin for tight alignment */
+  }
+
+  .label-prefix {
+      margin-bottom: 0px; /* Minimize space between lines on very small screens */
+  }
+
+  .tod-input input {
+      font-size: 10px; /* Even smaller text on tiny screens */
+      padding: 3px; /* Further reduce padding for tight fit */
+  }
+}
+
+/* Optional: For larger screens, ensure ToD Billing inputs don’t stretch too much */
+@media (min-width: 1200px) {
+  .billing-section {
+      margin-bottom: 40px; /* Increase bottom margin on larger screens for more space */
+  }
+
+  .tod-input {
+      max-width: 30%; /* Limit width to prevent excessive stretching, allowing for gap */
+  }
+}
+/*Tod Billing style end*/
+

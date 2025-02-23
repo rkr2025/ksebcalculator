@@ -103,71 +103,74 @@
                 </div>
             </div>
 
-            <!-- Normal Billing KSEB Net Reading Inputs
+            <!-- Normal Billing KSEB Net Reading Inputs -->
             <div class="form-group" id="normalNetMeterReadingSection">
                 <label style="margin-top: 10px;">KSEB Net Meter Reading:</label>
-                <div class="input-group">
-                    <div class="sub-group">
+                <div class="input-group meter-readings">
+                    <div class="meter-input">
                         <label for="import">Import Total (kWh):</label>
                         <input type="number" id="import" name="import" value="0" required>
                     </div>
-                    <div class="sub-group">
+                    <div class="meter-input">
                         <label for="export">Export Total (kWh):</label>
                         <input type="number" id="export" name="export" value="0" required>
                     </div>
                 </div>
-            </div> -->
-
-        <!-- Normal Billing KSEB Net Reading Inputs -->
-        <div class="form-group" id="normalNetMeterReadingSection">
-            <label style="margin-top: 10px;">KSEB Net Meter Reading:</label>
-            <div class="input-group meter-readings">
-                <div class="meter-input">
-                    <label for="import">Import Total (kWh):</label>
-                    <input type="number" id="import" name="import" value="0" required>
-                </div>
-                <div class="meter-input">
-                    <label for="export">Export Total (kWh):</label>
-                    <input type="number" id="export" name="export" value="0" required>
-                </div>
             </div>
-        </div>
 
-            <!-- ToD Billing KSEB Net Reading Inputs-->
-            <div class="form-group" id="todNetMeterReadingSection" style="display: none;">
+            <!-- ToD Billing KSEB Net Reading Inputs -->
+            <div class="billing-section" id="todNetMeterReadingSection" style="display: none;">
                 <label style="margin-top: 20px;">KSEB Net Meter Reading (kWh):</label>
-                <div class="input-group">
-                    <div class="sub-group">
-                        <label for="importNormal" style="color: #007BFF; font-weight: bold;">Import - Normal:</label>
+                <div class="input-group tod-readings">
+                    <div class="tod-input">
+                        <label for="importNormal">
+                            <span class="label-prefix" style="color: #007BFF; font-weight: bold;">Import -</span>
+                            <span class="label-suffix" style="color: #007BFF; font-weight: bold;">Normal</span>
+                        </label>
                         <input type="number" id="importNormal" name="importNormal" value="0" min="0">
                     </div>
-                    <div class="sub-group">
-                        <label for="importOffPeak" style="color: #007BFF; font-weight: bold;">Import - OFF Peak:</label>
+                    <div class="tod-input">
+                        <label for="importOffPeak">
+                            <span class="label-prefix" style="color: #007BFF; font-weight: bold;">Import -</span>
+                            <span class="label-suffix" style="color: #007BFF; font-weight: bold;">OFF Peak</span>
+                        </label>
                         <input type="number" id="importOffPeak" name="importOffPeak" value="0" min="0">
                     </div>
-                    <div class="sub-group">
-                        <label for="importPeak" style="color: #007BFF; font-weight: bold;">Import - PEAK:</label>
+                    <div class="tod-input">
+                        <label for="importPeak">
+                            <span class="label-prefix" style="color: #007BFF; font-weight: bold;">Import -</span>
+                            <span class="label-suffix" style="color: #007BFF; font-weight: bold;">PEAK</span>
+                        </label>
                         <input type="number" id="importPeak" name="importPeak" value="0" min="0">
                     </div>
                 </div>
-                <div style="margin-top: 30px;" class="input-group">
-                    <div class="sub-group">
-                        <label for="exportNormal" style="color: #e11eba; font-weight: bold;">Export - Normal:</label>
+                <div style="margin-top: 30px;" class="input-group tod-readings">
+                    <div class="tod-input">
+                        <label for="exportNormal">
+                            <span class="label-prefix" style="color: #e11eba; font-weight: bold;">Export -</span>
+                            <span class="label-suffix" style="color: #e11eba; font-weight: bold;">Normal</span>
+                        </label>
                         <input type="number" id="exportNormal" name="exportNormal" value="0" min="0">
                     </div>
-                    <div class="sub-group">
-                        <label for="exportOffPeak" style="color: #e11eba; font-weight: bold;">Export - OFF Peak:</label>
+                    <div class="tod-input">
+                        <label for="exportOffPeak">
+                            <span class="label-prefix" style="color: #e11eba; font-weight: bold;">Export -</span>
+                            <span class="label-suffix" style="color: #e11eba; font-weight: bold;">OFF Peak</span>
+                        </label>
                         <input type="number" id="exportOffPeak" name="exportOffPeak" value="0" min="0">
                     </div>
-                    <div class="sub-group">
-                        <label for="exportPeak" style="color: #e11eba; font-weight: bold;">Export - PEAK:</label>
+                    <div class="tod-input">
+                        <label for="exportPeak">
+                            <span class="label-prefix" style="color: #e11eba; font-weight: bold;">Export -</span>
+                            <span class="label-suffix" style="color: #e11eba; font-weight: bold;">PEAK</span>
+                        </label>
                         <input type="number" id="exportPeak" name="exportPeak" value="0" min="0">
                     </div>
                 </div>
             </div>
-
+            <div style="height: 5px;"></div>
             <button type="submit">Bill Calculation</button>
-            <div style="height: 4px;"></div>
+            <div style="height: 5px;"></div>
             <button type="button" id="resetButton">Reset</button>
         </form>
         <div id="billDetails" style="display: none;">
