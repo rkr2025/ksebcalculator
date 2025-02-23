@@ -384,7 +384,9 @@ td {
 
 
 
-/*normal billing solar reading*/
+/*Normal sectionnormal billing solar reading*/
+/* Styles for the normal billing section */
+/* Styles for the normal billing section */
 /* Styles for the normal billing section */
 .normal-section {
   margin-bottom: 30px; /* Space below the section for the button */
@@ -430,6 +432,8 @@ td {
   color: #333; /* Dark gray for readability (overridden by specific colors below) */
   flex-shrink: 0; /* Prevent label from shrinking */
   font-weight: bold; /* Bold text for emphasis */
+  /* Debug: Ensure label is visible and takes full space */
+  width: 100%;
 }
 
 .label-prefix,
@@ -437,16 +441,29 @@ td {
   display: block; /* Ensure each span is a block element for stacking */
   white-space: nowrap; /* Prevent text wrapping within each span */
   font-weight: bold; /* Bold text for all label parts */
+  color: #28a745; /* Green color for both prefix and suffix to match solar theme */
 }
 
 .label-prefix {
-  color: #28a745; /* Green color for the prefix to match solar theme */
-  margin-bottom: 2px; /* Small space between prefix and suffix */
+  margin-bottom: 4px; /* Increased space between prefix and suffix for clearer two-line effect */
+  /* Debug: Ensure prefix is visible */
+  visibility: visible !important;
 }
 
 .label-suffix {
-  color: #28a745; /* Green color for the suffix */
+  /* Removed visibility: hidden and height: 0 to make the text visible */
+  margin-bottom: 0; /* No additional margin below suffix */
   font-size: 14px; /* Slightly smaller for the second line */
+  /* Debug: Ensure suffix is visible and takes full space */
+  visibility: visible !important;
+  height: auto !important; /* Ensure the height adjusts to content */
+}
+
+/* Debug: Override any potential conflicting styles */
+.label-suffix, .label-prefix {
+  opacity: 1 !important; /* Ensure no transparency */
+  display: block !important; /* Force block display */
+  position: static !important; /* Prevent any positioning issues */
 }
 
 .normal-input input {
@@ -492,7 +509,7 @@ td {
   }
 
   .label-prefix {
-      margin-bottom: 1px; /* Reduce space between lines on mobile */
+      margin-bottom: 2px; /* Reduce space between lines on mobile */
   }
 
   .label-suffix {
@@ -762,12 +779,13 @@ td {
 
 
 
-/*Tod Billing Styles*/
+/*Billing section Tod Billing Styles*/
+/* Styles for the billing sections */
 /* Styles for the billing sections */
 .billing-section {
   margin-bottom: 30px; /* Space below the section for the button */
   padding: 20px; /* Increased padding for a more spacious feel */
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef); /* Soft blue-gray gradient for a clean look */
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef); /* Soft blue-gray gradient for a clean, KSEB-themed look */
   border-radius: 8px; /* Rounded corners for a modern look */
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Enhanced shadow for depth */
   border-left: 4px solid #007BFF; /* Blue accent border for KSEB theme */
@@ -808,6 +826,8 @@ td {
   color: #333; /* Dark gray for readability (overridden by specific colors below) */
   flex-shrink: 0; /* Prevent label from shrinking */
   font-weight: bold; /* Bold text for emphasis */
+  /* Debug: Ensure label is visible and takes full space */
+  width: 100%;
 }
 
 .label-prefix,
@@ -818,41 +838,23 @@ td {
 }
 
 .label-prefix {
-  margin-bottom: 2px; /* Small space between prefix and suffix */
+  margin-bottom: 4px; /* Increased space between prefix and suffix for clearer two-line effect */
+  /* Debug: Ensure prefix is visible */
+  visibility: visible !important;
 }
 
-.tod-input input {
-  width: 100%; /* Full width within each tod-input */
-  padding: 10px; /* Increased padding for a larger, more polished input */
-  border: 2px solid #007BFF; /* Blue border for Import inputs */
-  border-radius: 4px; /* Rounded corners for inputs */
-  font-size: 14px; /* Readable font size */
-  box-sizing: border-box; /* Include padding and border in width */
-  flex-grow: 1; /* Allow input to grow to fill available space */
-  align-self: stretch; /* Ensure input stretches to match container width */
-  background: #f0f8ff; /* Light blue background for Import inputs */
-  transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for interactivity */
-}
-
-.tod-input input:focus {
-  border-color: #0056b3; /* Darker blue on focus for emphasis */
-  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3); /* Glow effect on focus */
-  outline: none; /* Remove default outline */
-}
-
-/* Specific styling for Export inputs and labels */
-.tod-input[for="exportOffPeak"] input,
-.tod-input[for="exportNormal"] input,
-.tod-input[for="exportPeak"] input {
-  border-color: #e11eba; /* Pink border for Export inputs */
-  background: #fff0f6; /* Light pink background for Export inputs */
-}
-
-.tod-input[for="exportOffPeak"] input:focus,
-.tod-input[for="exportNormal"] input:focus,
-.tod-input[for="exportPeak"] input:focus {
-  border-color: #c1157a; /* Darker pink on focus for emphasis */
-  box-shadow: 0 0 8px rgba(225, 30, 186, 0.3); /* Glow effect on focus */
+/* Fix for .label-suffix to ensure visibility */
+.label-suffix {
+  /* Removed any potential hidden styles (e.g., visibility: hidden, height: 0) */
+  margin-bottom: 0; /* No additional margin below suffix */
+  font-size: 14px; /* Slightly smaller for the second line */
+  /* Debug: Ensure suffix is visible and takes full space */
+  visibility: visible !important;
+  height: auto !important; /* Ensure the height adjusts to content */
+  opacity: 1 !important; /* Ensure no transparency */
+  display: block !important; /* Force block display */
+  position: static !important; /* Prevent any positioning issues */
+  color: inherit; /* Inherit color from parent label or specific styles below */
 }
 
 /* Specific styling for Import labels */
@@ -881,6 +883,40 @@ td {
   color: #e11eba; /* Pink color for Export suffix */
 }
 
+.tod-input input {
+  width: 100%; /* Full width within each tod-input */
+  padding: 10px; /* Increased padding for a larger, more polished input */
+  border: 2px solid #007BFF; /* Blue border for Import inputs */
+  border-radius: 4px; /* Rounded corners for inputs */
+  font-size: 14px; /* Readable font size */
+  box-sizing: border-box; /* Include padding and border in width */
+  flex-grow: 1; /* Allow input to grow to fill available space */
+  align-self: stretch; /* Ensure input stretches to match container width */
+  background: #f0f8ff; /* Light blue background for Import inputs */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for interactivity */
+}
+
+.tod-input input:focus {
+  border-color: #0056b3; /* Darker blue on focus for emphasis */
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3); /* Glow effect on focus */
+  outline: none; /* Remove default outline */
+}
+
+/* Specific styling for Export inputs */
+.tod-input[for="exportOffPeak"] input,
+.tod-input[for="exportNormal"] input,
+.tod-input[for="exportPeak"] input {
+  border-color: #e11eba; /* Pink border for Export inputs */
+  background: #fff0f6; /* Light pink background for Export inputs */
+}
+
+.tod-input[for="exportOffPeak"] input:focus,
+.tod-input[for="exportNormal"] input:focus,
+.tod-input[for="exportPeak"] input:focus {
+  border-color: #c1157a; /* Darker pink on focus for emphasis */
+  box-shadow: 0 0 8px rgba(225, 30, 186, 0.3); /* Glow effect on focus */
+}
+
 /* Responsive adjustments for smaller screens (e.g., mobile) */
 @media (max-width: 768px) {
   .billing-section {
@@ -905,7 +941,11 @@ td {
   }
 
   .label-prefix {
-      margin-bottom: 1px; /* Reduce space between lines on mobile */
+      margin-bottom: 2px; /* Reduce space between lines on mobile */
+  }
+
+  .label-suffix {
+      font-size: 10px; /* Smaller suffix on mobile */
   }
 
   .tod-input input {
@@ -942,6 +982,10 @@ td {
       margin-bottom: 0px; /* Minimize space between lines on very small screens */
   }
 
+  .label-suffix {
+      font-size: 8px; /* Even smaller suffix on tiny screens */
+  }
+
   .tod-input input {
       font-size: 10px; /* Even smaller text on tiny screens */
       padding: 4px; /* Further reduce padding for tight fit */
@@ -959,7 +1003,7 @@ td {
       max-width: 30%; /* Limit width to prevent excessive stretching, allowing for gap */
   }
 }
-/*Tod Billing style end*/
+/*Billing secton Tod Billing style end*/
 
 
 
