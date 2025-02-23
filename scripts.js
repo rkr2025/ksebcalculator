@@ -2228,7 +2228,7 @@ const getEnergyCaluculationMessage = (
             document.getElementById('result2').innerHTML += `<u><strong>T2 - Peak TimeZone (6pm to 10pm) Calculations </strong></u>`;
             document.getElementById('result2').innerHTML += getExportPeakAdjustmentMessage(PeakConsumptionAdjusted_80_percent,importPeak,PeakConsumptionAdjusted,Peak_NoOfUnitsFor_energy_calculation,unitRate);
             document.getElementById('result2').innerHTML += `<u><strong>T3 - Off-Peak TimeZone (10pm to 6am) Calculations </strong></u>`;
-            document.getElementById('result2').innerHTML += getExportOffPeakAdjustmentMessage(importOffPeak,PeakConsumptionAdjusted,OffPeak_NoOfUnitsFor_energy_calculation,OffPeakConsumptionAdjusted, OffPeak_NoOfUnitsFor_energy_calculation, unitRate);
+            document.getElementById('result2').innerHTML += getExportOffPeakAdjustmentMessage(importOffPeak,PeakConsumptionAdjusted,OffPeakConsumptionAdjusted, OffPeak_NoOfUnitsFor_energy_calculation, unitRate);
             document.getElementById('result3').innerHTML = getEnergyCaluculationMessage(bankAdjustedUnits, Normal_NoOfUnitsFor_energy_calculation, Peak_NoOfUnitsFor_energy_calculation, OffPeak_NoOfUnitsFor_energy_calculation, unitRate, NormalConsumptionAdjusted_energy_charge, PeakConsumptionAdjusted_energy_charge, OffPeakConsumptionAdjusted_energy_charge,energyCharge);
             document.getElementById('result3').innerHTML += `Total Bill Amount ഏകദേശം <strong class="red-text"> ₹${totalBillAmount.toFixed(2)} </strong>
                                                             <br><i>(Security Deposit interest, Tariff changes, Advance അനുസരിച്ച് മാറ്റം വരാം)</i>`;        
@@ -2246,7 +2246,7 @@ const getEnergyCaluculationMessage = (
             document.getElementById('result3').innerHTML += getExportPeakAdjustmentMessage_below20kW(NormalConsumptionAdjusted_Below20kW,importPeak,Peak_NoOfUnitsFor_energy_calculation_Below20kW,unitRate_Below20kW);
 
             document.getElementById('result3').innerHTML += `<b><u><strong>T3 - Off-Peak TimeZone (10pm to 6am) Calculations </strong></u></b>`;
-            document.getElementById('result3').innerHTML += getExportOffPeakAdjustmentMessage_below20kW(importOffPeak,PeakConsumptionAdjusted_Below20kW,OffPeak_NoOfUnitsFor_energy_calculation_Below20kW,unitRate_Below20kW, OffPeak_NoOfUnitsFor_energy_calculation_Below20kW );
+            document.getElementById('result3').innerHTML += getExportOffPeakAdjustmentMessage_below20kW(importOffPeak,PeakConsumptionAdjusted_Below20kW,OffPeakConsumptionAdjusted_Below20kW,unitRate_Below20kW, OffPeak_NoOfUnitsFor_energy_calculation_Below20kW);
 
             document.getElementById('result3').innerHTML += getEnergyCaluculationMessage(bankAdjustedUnits_Below20kW, Normal_NoOfUnitsFor_energy_calculation, Peak_NoOfUnitsFor_energy_calculation_Below20kW, OffPeak_NoOfUnitsFor_energy_calculation_Below20kW, unitRate_Below20kW, NormalConsumptionAdjusted_energy_charge, PeakConsumptionAdjusted_energy_charge_Below20kW, OffPeakConsumptionAdjusted_energy_charge_Below20kW,energyCharge_Below20kW);
             document.getElementById('result3').innerHTML += `<b>Total Bill Amount ഏകദേശം <strong class="red-text"> ₹${totalBillAmount.toFixed(2)} </strong>
