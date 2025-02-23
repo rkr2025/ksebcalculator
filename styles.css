@@ -3,7 +3,7 @@ body {
   font-family: "Roboto", sans-serif;
   background: linear-gradient(135deg, #74ebd5, #acb6e5);
   margin: 0;
-  padding: 1px;
+  padding: 2px;
   color: #333;
 }
 
@@ -16,14 +16,6 @@ body {
   border-radius: 12px;
   position: relative;
 }
-
-/* h1 {
-  text-align: center;
-  color: #2c3e50;
-  margin-bottom: 10px;
-  font-size: 28px;
-  font-weight: 600;
-} */
 
 h1 {
   text-align: center;
@@ -149,7 +141,7 @@ h1:hover {
   flex-direction: row;
   flex-wrap: nowrap;
   gap: 15px; /* Increased gap for better spacing between pairs */
-  margin-bottom: 15px; /* Reduced margin to keep lines closer */
+  margin-bottom: 2px; /* Reduced margin to keep lines closer */
   justify-content: flex-start;
 }
 
