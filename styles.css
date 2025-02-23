@@ -459,21 +459,31 @@ td {
 /*My changes stopped */
 
 
+
+
+
+
+
+
+
+
 /*Tod Billing Styles*/
+/* Styles for the billing sections */
 .billing-section {
   margin-bottom: 30px; /* Space below the section for the button */
-  padding: 15px; /* Optional padding for the section */
-  background: #f9f9f9; /* Optional light background for visual separation */
-  border-radius: 5px; /* Optional rounded corners */
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Optional subtle shadow */
+  padding: 20px; /* Increased padding for a more spacious feel */
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef); /* Soft blue-gray gradient for a clean look */
+  border-radius: 8px; /* Rounded corners for a modern look */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Enhanced shadow for depth */
+  border-left: 4px solid #007BFF; /* Blue accent border for KSEB theme */
 }
 
 /* Styles for ToD Billing meter readings */
 .tod-readings {
   display: flex;
   flex-wrap: nowrap; /* Prevent wrapping to new lines, keeping inputs horizontal */
-  gap: 5px; /* Space between inputs */
-  margin-top: 10px;
+  gap: 10px; /* Increased gap for a more polished look */
+  margin-top: 15px; /* Slightly more margin for better spacing */
   justify-content: space-between; /* Evenly distribute inputs horizontally */
   align-items: flex-start; /* Align items at the top of the flex container */
 }
@@ -484,67 +494,103 @@ td {
   display: flex; /* Use flex within each tod-input to align label and input */
   flex-direction: column; /* Stack label and input vertically within each tod-input */
   align-items: flex-start; /* Align contents (label and input) to the top within each tod-input */
+  background: #ffffff; /* White background for inputs to stand out */
+  padding: 10px; /* Padding around each input group for a boxed look */
+  border-radius: 6px; /* Rounded corners for inputs */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
+  transition: box-shadow 0.3s ease; /* Smooth hover effect */
+}
+
+.tod-input:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Slightly larger shadow on hover for interactivity */
 }
 
 .tod-input label {
   display: flex; /* Use flex to control label line breaks */
   flex-direction: column; /* Stack label parts vertically */
-  margin-bottom: 4px; /* Reduced margin for tighter vertical spacing */
-  font-size: 14px;
-  color: #333;
+  margin-bottom: 8px; /* Increased margin for better spacing between label and input */
+  font-size: 16px; /* Slightly larger font for bold, readable labels */
+  color: #333; /* Dark gray for readability (overridden by specific colors below) */
   flex-shrink: 0; /* Prevent label from shrinking */
+  font-weight: bold; /* Bold text for emphasis */
 }
 
 .label-prefix,
 .label-suffix {
   display: block; /* Ensure each span is a block element for stacking */
   white-space: nowrap; /* Prevent text wrapping within each span */
+  font-weight: bold; /* Bold text for all label parts */
 }
 
 .label-prefix {
-  margin-bottom: 2px; /* Small space between "Import -" or "Export -" and the suffix */
+  margin-bottom: 2px; /* Small space between prefix and suffix */
 }
 
 .tod-input input {
   width: 100%; /* Full width within each tod-input */
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
+  padding: 10px; /* Increased padding for a larger, more polished input */
+  border: 2px solid #007BFF; /* Blue border for Import inputs */
+  border-radius: 4px; /* Rounded corners for inputs */
+  font-size: 14px; /* Readable font size */
   box-sizing: border-box; /* Include padding and border in width */
   flex-grow: 1; /* Allow input to grow to fill available space */
   align-self: stretch; /* Ensure input stretches to match container width */
+  background: #f0f8ff; /* Light blue background for Import inputs */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for interactivity */
 }
 
-/* Specific styling for Export labels to match Import alignment */
-.tod-input[for="exportOffPeak"] .label-prefix,
-.tod-input[for="exportNormal"] .label-prefix,
-.tod-input[for="exportPeak"] .label-prefix {
-  color: #e11eba; /* Ensure Export prefix maintains its color */
+.tod-input input:focus {
+  border-color: #0056b3; /* Darker blue on focus for emphasis */
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3); /* Glow effect on focus */
+  outline: none; /* Remove default outline */
 }
 
-.tod-input[for="exportOffPeak"] .label-suffix,
-.tod-input[for="exportNormal"] .label-suffix,
-.tod-input[for="exportPeak"] .label-suffix {
-  color: #e11eba; /* Ensure Export suffix maintains its color */
+/* Specific styling for Export inputs and labels */
+.tod-input[for="exportOffPeak"] input,
+.tod-input[for="exportNormal"] input,
+.tod-input[for="exportPeak"] input {
+  border-color: #e11eba; /* Pink border for Export inputs */
+  background: #fff0f6; /* Light pink background for Export inputs */
 }
 
+.tod-input[for="exportOffPeak"] input:focus,
+.tod-input[for="exportNormal"] input:focus,
+.tod-input[for="exportPeak"] input:focus {
+  border-color: #c1157a; /* Darker pink on focus for emphasis */
+  box-shadow: 0 0 8px rgba(225, 30, 186, 0.3); /* Glow effect on focus */
+}
+
+/* Specific styling for Import labels */
 .tod-input[for="importOffPeak"] .label-prefix,
 .tod-input[for="importNormal"] .label-prefix,
 .tod-input[for="importPeak"] .label-prefix {
-  color: #007BFF; /* Ensure Import prefix maintains its color */
+  color: #007BFF; /* Blue color for Import prefix */
 }
 
 .tod-input[for="importOffPeak"] .label-suffix,
 .tod-input[for="importNormal"] .label-suffix,
 .tod-input[for="importPeak"] .label-suffix {
-  color: #007BFF; /* Ensure Import suffix maintains its color */
+  color: #007BFF; /* Blue color for Import suffix */
+}
+
+/* Specific styling for Export labels */
+.tod-input[for="exportOffPeak"] .label-prefix,
+.tod-input[for="exportNormal"] .label-prefix,
+.tod-input[for="exportPeak"] .label-prefix {
+  color: #e11eba; /* Pink color for Export prefix */
+}
+
+.tod-input[for="exportOffPeak"] .label-suffix,
+.tod-input[for="exportNormal"] .label-suffix,
+.tod-input[for="exportPeak"] .label-suffix {
+  color: #e11eba; /* Pink color for Export suffix */
 }
 
 /* Responsive adjustments for smaller screens (e.g., mobile) */
 @media (max-width: 768px) {
   .billing-section {
       margin-bottom: 20px; /* Reduce bottom margin on smaller screens for tighter layout */
+      padding: 15px; /* Reduce padding for compactness */
   }
 
   .tod-readings {
@@ -554,12 +600,13 @@ td {
   }
 
   .tod-input {
-      flex: 0 1 calc(33.33% - 8px); /* Adjust width to account for reduced gap */
+      padding: 8px; /* Reduce padding on mobile for tighter fit */
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05); /* Lighter shadow on mobile */
   }
 
   .tod-input label {
       font-size: 12px; /* Smaller labels on mobile */
-      margin-bottom: 2px; /* Further reduce margin for tight alignment */
+      margin-bottom: 6px; /* Reduce margin for tight alignment */
   }
 
   .label-prefix {
@@ -568,7 +615,8 @@ td {
 
   .tod-input input {
       font-size: 12px; /* Smaller text on mobile */
-      padding: 5px; /* Slightly reduce padding for tighter fit */
+      padding: 6px; /* Reduce padding for tighter fit */
+      border-width: 1px; /* Thinner border on mobile */
   }
 }
 
@@ -576,6 +624,7 @@ td {
 @media (max-width: 480px) {
   .billing-section {
       margin-bottom: 15px; /* Further reduce bottom margin on very small screens */
+      padding: 10px; /* Further reduce padding for compactness */
   }
 
   .tod-readings {
@@ -585,12 +634,13 @@ td {
   }
 
   .tod-input {
-      flex: 0 1 calc(33.33% - 4px); /* Adjust width for very small screens, maintaining horizontal split */
+      padding: 6px; /* Further reduce padding on mobile for tight fit */
+      box-shadow: none; /* Remove shadow on very small screens for simplicity */
   }
 
   .tod-input label {
       font-size: 10px; /* Even smaller labels on tiny screens */
-      margin-bottom: 1px; /* Minimize margin for tight alignment */
+      margin-bottom: 4px; /* Minimize margin for tight alignment */
   }
 
   .label-prefix {
@@ -599,7 +649,8 @@ td {
 
   .tod-input input {
       font-size: 10px; /* Even smaller text on tiny screens */
-      padding: 3px; /* Further reduce padding for tight fit */
+      padding: 4px; /* Further reduce padding for tight fit */
+      border-width: 1px; /* Thinner border on very small screens */
   }
 }
 
@@ -614,4 +665,179 @@ td {
   }
 }
 /*Tod Billing style end*/
+
+
+
+
+
+
+
+
+
+
+/* Solar Tod Side changes*/
+/* Styles for the solar billing section */
+/* Styles for the solar billing section */
+.solar-section {
+  margin-bottom: 30px; /* Space below the section for the button */
+  padding: 20px; /* Increased padding for a more spacious feel */
+  background: linear-gradient(135deg, #f8faf9, #e9f0e9); /* Soft green gradient for a clean, solar-themed look */
+  border-radius: 8px; /* Rounded corners for a modern look */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Enhanced shadow for depth */
+  border-left: 4px solid #28a745; /* Green accent border for solar theme */
+}
+
+/* Styles for Solar Billing meter readings */
+.solar-readings {
+  display: flex;
+  flex-wrap: nowrap; /* Prevent wrapping to new lines, keeping inputs horizontal */
+  gap: 10px; /* Increased gap for a more polished look */
+  margin-top: 15px; /* Slightly more margin for better spacing */
+  justify-content: space-between; /* Evenly distribute inputs horizontally */
+  align-items: flex-start; /* Align items at the top of the flex container */
+}
+
+.solar-input {
+  flex: 1; /* Each solar-input takes equal space */
+  min-width: 0; /* Prevent overflow on smaller screens */
+  display: flex; /* Use flex within each solar-input to align label and input */
+  flex-direction: column; /* Stack label and input vertically within each solar-input */
+  align-items: flex-start; /* Align contents (label and input) to the top within each solar-input */
+  background: #ffffff; /* White background for inputs to stand out */
+  padding: 10px; /* Padding around each input group for a boxed look */
+  border-radius: 6px; /* Rounded corners for inputs */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
+  transition: box-shadow 0.3s ease; /* Smooth hover effect */
+}
+
+.solar-input:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Slightly larger shadow on hover for interactivity */
+}
+
+.solar-input label {
+  display: flex; /* Use flex to control label line breaks */
+  flex-direction: column; /* Stack label parts vertically */
+  margin-bottom: 8px; /* Increased margin for better spacing between label and input */
+  font-size: 16px; /* Slightly larger font for bold, readable labels */
+  color: #333; /* Dark gray for readability */
+  flex-shrink: 0; /* Prevent label from shrinking */
+  font-weight: bold; /* Bold text for emphasis */
+}
+
+.label-prefix,
+.label-suffix {
+  display: block; /* Ensure each span is a block element for stacking */
+  white-space: nowrap; /* Prevent text wrapping within each span */
+  font-weight: bold; /* Bold text for all label parts */
+}
+
+.label-prefix {
+  color: #28a745; /* Green color for the prefix to match solar theme */
+  margin-bottom: 2px; /* Small space between prefix and suffix (or empty line) */
+}
+
+.label-suffix {
+  color: #28a745; /* Green color for the suffix (empty in this case) */
+  visibility: hidden; /* Hide the empty suffix to maintain two-line spacing without content */
+  height: 0; /* Ensure no extra height from the hidden suffix */
+}
+
+.solar-input input {
+  width: 100%; /* Full width within each solar-input */
+  padding: 10px; /* Increased padding for a larger, more polished input */
+  border: 2px solid #28a745; /* Green border for a solar theme */
+  border-radius: 4px; /* Rounded corners for inputs */
+  font-size: 14px; /* Readable font size */
+  box-sizing: border-box; /* Include padding and border in width */
+  flex-grow: 1; /* Allow input to grow to fill available space */
+  align-self: stretch; /* Ensure input stretches to match container width */
+  background: #f9faf9; /* Light green background for inputs */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for interactivity */
+}
+
+.solar-input input:focus {
+  border-color: #1e7e34; /* Darker green on focus for emphasis */
+  box-shadow: 0 0 8px rgba(40, 167, 69, 0.3); /* Glow effect on focus */
+  outline: none; /* Remove default outline */
+}
+
+/* Responsive adjustments for smaller screens (e.g., mobile) */
+@media (max-width: 768px) {
+  .solar-section {
+      margin-bottom: 20px; /* Reduce bottom margin on smaller screens for tighter layout */
+      padding: 15px; /* Reduce padding for compactness */
+  }
+
+  .solar-readings {
+      gap: 8px; /* Slightly reduce gap on smaller screens for tighter fit */
+      justify-content: space-around; /* Evenly space inputs with slight flexibility */
+      align-items: flex-start; /* Ensure all inputs align at the top */
+  }
+
+  .solar-input {
+      padding: 8px; /* Reduce padding on mobile for tighter fit */
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05); /* Lighter shadow on mobile */
+  }
+
+  .solar-input label {
+      font-size: 12px; /* Smaller labels on mobile */
+      margin-bottom: 6px; /* Reduce margin for tight alignment */
+  }
+
+  .label-prefix {
+      margin-bottom: 1px; /* Reduce space between lines on mobile */
+  }
+
+  .solar-input input {
+      font-size: 12px; /* Smaller text on mobile */
+      padding: 6px; /* Reduce padding for tighter fit */
+      border-width: 1px; /* Thinner border on mobile */
+  }
+}
+
+/* Optional: Ensure Solar Billing inputs look good on very small screens */
+@media (max-width: 480px) {
+  .solar-section {
+      margin-bottom: 15px; /* Further reduce bottom margin on very small screens */
+      padding: 10px; /* Further reduce padding for compactness */
+  }
+
+  .solar-readings {
+      gap: 4px; /* Further reduce gap on very small screens */
+      justify-content: space-around; /* Evenly space inputs with slight flexibility */
+      align-items: flex-start; /* Ensure all inputs align at the top */
+  }
+
+  .solar-input {
+      padding: 6px; /* Further reduce padding on mobile for tight fit */
+      box-shadow: none; /* Remove shadow on very small screens for simplicity */
+  }
+
+  .solar-input label {
+      font-size: 10px; /* Even smaller labels on tiny screens */
+      margin-bottom: 4px; /* Minimize margin for tight alignment */
+  }
+
+  .label-prefix {
+      margin-bottom: 0px; /* Minimize space between lines on very small screens */
+  }
+
+  .solar-input input {
+      font-size: 10px; /* Even smaller text on tiny screens */
+      padding: 4px; /* Further reduce padding for tight fit */
+      border-width: 1px; /* Thinner border on very small screens */
+  }
+}
+
+/* Optional: For larger screens, ensure Solar Billing inputs don’t stretch too much */
+@media (min-width: 1200px) {
+  .solar-section {
+      margin-bottom: 40px; /* Increase bottom margin on larger screens for more space */
+  }
+
+  .solar-input {
+      max-width: 30%; /* Limit width to prevent excessive stretching, allowing for gap */
+  }
+}
+/* Solar ToD side End*/
 

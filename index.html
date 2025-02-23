@@ -84,20 +84,29 @@
                 <input type="number" id="solarGeneration" name="solarGeneration" value="0" required>
             </div>
 
-            <!-- ToD Billing Solar Reading Inputs-->
-            <div class="form-group" id="todBillingSection" style="display: none;">
+            <!-- ToD Billing Solar Reading Inputs -->
+            <div class="solar-section" id="todBillingSection" style="display: none;">
                 <label style="margin-top: 30px;">Solar Generation Meter Reading (kWh):</label>
-                <div class="input-group">
-                    <div class="sub-group">
-                        <label for="solarNormal">Normal:</label>
+                <div class="input-group solar-readings">
+                    <div class="solar-input">
+                        <label for="solarNormal">
+                            <span class="label-prefix">Normal:</span>
+                            <span class="label-suffix"></span>
+                        </label>
                         <input type="number" id="solarNormal" name="solarNormal" value="0" min="0">
                     </div>
-                    <div class="sub-group">
-                        <label for="solarOffPeak">Off Peak:</label>
+                    <div class="solar-input">
+                        <label for="solarOffPeak">
+                            <span class="label-prefix">Off Peak:</span>
+                            <span class="label-suffix"></span>
+                        </label>
                         <input type="number" id="solarOffPeak" name="solarOffPeak" value="0" min="0">
                     </div>
-                    <div class="sub-group">
-                        <label for="solarPeak">Peak:</label>
+                    <div class="solar-input">
+                        <label for="solarPeak">
+                            <span class="label-prefix">Peak:</span>
+                            <span class="label-suffix"></span>
+                        </label>
                         <input type="number" id="solarPeak" name="solarPeak" value="0" min="0">
                     </div>
                 </div>
@@ -147,7 +156,7 @@
                 <div style="margin-top: 30px;" class="input-group tod-readings">
                     <div class="tod-input">
                         <label for="exportNormal">
-                            <span class="label-prefix" style="color: #e11eba; font-weight: bold;">Export -</span>
+                            <span class="label-prefix" style="color: #e11eba; font-weight: bold;"> Export -</span>
                             <span class="label-suffix" style="color: #e11eba; font-weight: bold;">Normal</span>
                         </label>
                         <input type="number" id="exportNormal" name="exportNormal" value="0" min="0">
@@ -168,6 +177,7 @@
                     </div>
                 </div>
             </div>
+
             <div style="height: 5px;"></div>
             <button type="submit">Bill Calculation</button>
             <div style="height: 5px;"></div>
