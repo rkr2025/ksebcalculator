@@ -93,7 +93,7 @@
 
             <!-- ToD Billing Solar Reading Inputs -->
             <div class="solar-section" id="todBillingSection" style="display: none;">
-                <label style="margin-top: 30px;">Solar Generation Meter Reading (kWh):</label>
+                <label style="margin-top: 30px;color: #28a745; font-weight: bold;">Solar Generation Meter Reading (kWh):</label>
                 <div class="input-group solar-readings">
                     <div class="solar-input">
                         <label for="solarNormal">
@@ -122,21 +122,21 @@
             <!-- Normal Billing KSEB Net Reading Inputs -->
             <div class="kseb-section" id="normalNetMeterReadingSection">
                 <label style="margin-top: 10px;">
-                    <span class="label-prefix">KSEB Net:</span>
-                    <span class="label-suffix">Meter Reading (kWh)</span>
+                    <span class="label-prefix" style="color: #28a745; font-weight: bold;">KSEB Net</span>
+                    <span class="label-suffix" style="color: #28a745; font-weight: bold;">Meter Reading (kWh)</span>
                 </label>
                 <div class="input-group kseb-readings">
                     <div class="kseb-input">
                         <label for="import">
-                            <span class="label-prefix">Import</span>
-                            <span class="label-suffix">Total (kWh)</span>
+                            <span class="label-prefix" style="color: #ff0000; font-weight: bold;">Import</span>
+                            <span class="label-suffix" style="color: #ff0000; font-weight: bold;">Total (kWh)</span>
                         </label>
                         <input type="number" id="import" name="import" value="0" required>
                     </div>
                     <div class="kseb-input">
                         <label for="export">
-                            <span class="label-prefix">Export</span>
-                            <span class="label-suffix">Total (kWh)</span>
+                            <span class="label-prefix" style="color: #28a745; font-weight: bold;">Export</span>
+                            <span class="label-suffix" style="color: #28a745; font-weight: bold;">Total (kWh)</span>
                         </label>
                         <input type="number" id="export" name="export" value="0" required>
                     </div>
@@ -146,26 +146,26 @@
 
             <!-- ToD Billing KSEB Net Reading Inputs -->
             <div class="billing-section" id="todNetMeterReadingSection" style="display: none;">
-                <label style="margin-top: 20px;">KSEB Net Meter Reading (kWh):</label>
+                <label style="margin-top: 20px; color: #28a745; font-weight: bold;">KSEB Net Meter Reading (kWh):</label>
                 <div class="input-group tod-readings">
                     <div class="tod-input">
                         <label for="importNormal">
-                            <span class="label-prefix" style="color: #007BFF; font-weight: bold;">Import -</span>
-                            <span class="label-suffix" style="color: #007BFF; font-weight: bold;">Normal</span>
+                            <span class="label-prefix" style="color: #ff0000; font-weight: bold;">Import -</span>
+                            <span class="label-suffix" style="color: #ff0000; font-weight: bold;">Normal</span>
                         </label>
                         <input type="number" id="importNormal" name="importNormal" value="0" min="0">
                     </div>
                     <div class="tod-input">
                         <label for="importOffPeak">
-                            <span class="label-prefix" style="color: #007BFF; font-weight: bold;">Import -</span>
-                            <span class="label-suffix" style="color: #007BFF; font-weight: bold;">OFF Peak</span>
+                            <span class="label-prefix" style="color: #ff0000; font-weight: bold;">Import -</span>
+                            <span class="label-suffix" style="color: #ff0000; font-weight: bold;">OFF Peak</span>
                         </label>
                         <input type="number" id="importOffPeak" name="importOffPeak" value="0" min="0">
                     </div>
                     <div class="tod-input">
                         <label for="importPeak">
-                            <span class="label-prefix" style="color: #007BFF; font-weight: bold;">Import -</span>
-                            <span class="label-suffix" style="color: #007BFF; font-weight: bold;">PEAK</span>
+                            <span class="label-prefix" style="color: #ff0000; font-weight: bold;">Import -</span>
+                            <span class="label-suffix" style="color: #ff0000; font-weight: bold;">PEAK</span>
                         </label>
                         <input type="number" id="importPeak" name="importPeak" value="0" min="0">
                     </div>
@@ -173,22 +173,22 @@
                 <div style="margin-top: 30px;" class="input-group tod-readings">
                     <div class="tod-input">
                         <label for="exportNormal">
-                            <span class="label-prefix" style="color: #e11eba; font-weight: bold;">Export -</span>
-                            <span class="label-suffix" style="color: #e11eba; font-weight: bold;">Normal</span>
+                            <span class="label-prefix" style="color: #28a745; font-weight: bold;">Export -</span>
+                            <span class="label-suffix" style="color: #28a745; font-weight: bold;">Normal</span>
                         </label>
                         <input type="number" id="exportNormal" name="exportNormal" value="0" min="0">
                     </div>
                     <div class="tod-input">
                         <label for="exportOffPeak">
-                            <span class="label-prefix" style="color: #e11eba; font-weight: bold;">Export -</span>
-                            <span class="label-suffix" style="color: #e11eba; font-weight: bold;">OFF Peak</span>
+                            <span class="label-prefix" style="color: #28a745; font-weight: bold;">Export -</span>
+                            <span class="label-suffix" style="color: #28a745; font-weight: bold;">OFF Peak</span>
                         </label>
                         <input type="number" id="exportOffPeak" name="exportOffPeak" value="0" min="0">
                     </div>
                     <div class="tod-input">
                         <label for="exportPeak">
-                            <span class="label-prefix" style="color: #e11eba; font-weight: bold;">Export -</span>
-                            <span class="label-suffix" style="color: #e11eba; font-weight: bold;">PEAK</span>
+                            <span class="label-prefix" style="color: #28a745; font-weight: bold;">Export -</span>
+                            <span class="label-suffix" style="color: #28a745; font-weight: bold;">PEAK</span>
                         </label>
                         <input type="number" id="exportPeak" name="exportPeak" value="0" min="0">
                     </div>
