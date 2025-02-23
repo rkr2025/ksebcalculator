@@ -542,7 +542,7 @@ td {
   }
 
   .normal-section label {
-      font-size: 10px; /* Even smaller labels on tiny screens */
+      font-size: 14px; /* Even smaller labels on tiny screens */
       margin-bottom: 4px; /* Minimize margin for tight alignment */
   }
 
@@ -551,7 +551,7 @@ td {
   }
 
   .label-suffix {
-      font-size: 8px; /* Even smaller suffix on tiny screens */
+      font-size: 12px; /* Even smaller suffix on tiny screens */
   }
 
   .normal-input input {
@@ -736,7 +736,7 @@ td {
 
   .kseb-section label,
   .kseb-input label {
-      font-size: 10px; /* Even smaller labels on tiny screens */
+      font-size: 14px; /* Even smaller labels on tiny screens */
       margin-bottom: 4px; /* Minimize margin for tight alignment */
   }
 
@@ -745,7 +745,7 @@ td {
   }
 
   .label-suffix {
-      font-size: 8px; /* Even smaller suffix on tiny screens */
+      font-size: 12px; /* Even smaller suffix on tiny screens */
   }
 
   .kseb-input input {
@@ -983,7 +983,7 @@ td {
   }
 
   .label-suffix {
-      font-size: 8px; /* Even smaller suffix on tiny screens */
+      font-size: 12px; /* Even smaller suffix on tiny screens */
   }
 
   .tod-input input {
