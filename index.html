@@ -78,10 +78,17 @@
                 <input type="number" id="bankedUnitInput" name="bankedUnitInput" value="0" min="0">
             </div>
 
-            <!-- Normal Billing Solar Reading Inputs-->
-            <div class="form-group" id="normalBillingSection">
-                <label style="margin-top: 5px;" for="solarGeneration">Solar Generation Meter Reading (kWh):</label>
-                <input type="number" id="solarGeneration" name="solarGeneration" value="0" required>
+            <!-- Normal Billing Solar Reading Inputs -->
+            <div class="normal-section" id="normalBillingSection">
+                <label style="margin-top: 5px;">
+                    <span class="label-prefix">Solar Generation:</span>
+                    <span class="label-suffix">Meter Reading (kWh)</span>
+                </label>
+                <div class="input-group normal-readings">
+                    <div class="normal-input">
+                        <input type="number" id="solarGeneration" name="solarGeneration" value="0" required>
+                    </div>
+                </div>
             </div>
 
             <!-- ToD Billing Solar Reading Inputs -->
@@ -113,15 +120,24 @@
             </div>
 
             <!-- Normal Billing KSEB Net Reading Inputs -->
-            <div class="form-group" id="normalNetMeterReadingSection">
-                <label style="margin-top: 10px;">KSEB Net Meter Reading:</label>
-                <div class="input-group meter-readings">
-                    <div class="meter-input">
-                        <label for="import">Import Total (kWh):</label>
+            <div class="kseb-section" id="normalNetMeterReadingSection">
+                <label style="margin-top: 10px;">
+                    <span class="label-prefix">KSEB Net:</span>
+                    <span class="label-suffix">Meter Reading</span>
+                </label>
+                <div class="input-group kseb-readings">
+                    <div class="kseb-input">
+                        <label for="import">
+                            <span class="label-prefix">Import</span>
+                            <span class="label-suffix">Total (kWh)</span>
+                        </label>
                         <input type="number" id="import" name="import" value="0" required>
                     </div>
-                    <div class="meter-input">
-                        <label for="export">Export Total (kWh):</label>
+                    <div class="kseb-input">
+                        <label for="export">
+                            <span class="label-prefix">Export</span>
+                            <span class="label-suffix">Total (kWh)</span>
+                        </label>
                         <input type="number" id="export" name="export" value="0" required>
                     </div>
                 </div>

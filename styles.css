@@ -377,86 +377,381 @@ td {
   font-weight: 600;
 }
 
-/* My changes for KSEB normal inputs */
-/* Base styles for the meter readings section */
-.meter-readings {
+/* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&*/
+
+
+
+
+
+
+/*normal billing solar reading*/
+/* Styles for the normal billing section */
+.normal-section {
+  margin-bottom: 30px; /* Space below the section for the button */
+  padding: 20px; /* Increased padding for a more spacious feel */
+  background: linear-gradient(135deg, #f8faf9, #e9f0e9); /* Soft green gradient for a clean, solar-themed look */
+  border-radius: 8px; /* Rounded corners for a modern look */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Enhanced shadow for depth */
+  border-left: 4px solid #28a745; /* Green accent border for solar theme */
+}
+
+/* Styles for Normal Billing meter readings */
+.normal-readings {
   display: flex;
-  flex-wrap: nowrap; /* Prevent wrapping to new lines, keeping inputs horizontal */
-  gap: 5px; /* Space between inputs */
-  margin-top: 10px;
-  justify-content: space-between; /* Evenly distribute inputs horizontally */
+  flex-wrap: nowrap; /* Prevent wrapping to new lines, keeping input horizontal */
+  gap: 10px; /* Increased gap for a more polished look */
+  margin-top: 15px; /* Slightly more margin for better spacing */
+  justify-content: space-between; /* Evenly distribute input horizontally */
+  align-items: flex-start; /* Align items at the top of the flex container */
 }
 
-.meter-input {
-  flex: 1; /* Each meter-input takes equal space */
+.normal-input {
+  flex: 1; /* The input takes full available space */
   min-width: 0; /* Prevent overflow on smaller screens */
+  display: flex; /* Use flex within each normal-input to align input */
+  flex-direction: column; /* Stack label and input vertically within each normal-input */
+  align-items: flex-start; /* Align contents (label and input) to the top within each normal-input */
+  background: #ffffff; /* White background for input to stand out */
+  padding: 10px; /* Padding around the input for a boxed look */
+  border-radius: 6px; /* Rounded corners for input */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
+  transition: box-shadow 0.3s ease; /* Smooth hover effect */
 }
 
-.meter-input label {
-  display: block;
-  margin-bottom: 5px;
-  font-size: 14px;
-  color: #333;
+.normal-input:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Slightly larger shadow on hover for interactivity */
 }
 
-.meter-input input {
-  width: 100%; /* Full width within each meter-input */
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
+.normal-section label {
+  display: flex; /* Use flex to control label line breaks */
+  flex-direction: column; /* Stack label parts vertically */
+  margin-bottom: 8px; /* Increased margin for better spacing between label and input */
+  font-size: 16px; /* Slightly larger font for bold, readable labels */
+  color: #333; /* Dark gray for readability (overridden by specific colors below) */
+  flex-shrink: 0; /* Prevent label from shrinking */
+  font-weight: bold; /* Bold text for emphasis */
+}
+
+.label-prefix,
+.label-suffix {
+  display: block; /* Ensure each span is a block element for stacking */
+  white-space: nowrap; /* Prevent text wrapping within each span */
+  font-weight: bold; /* Bold text for all label parts */
+}
+
+.label-prefix {
+  color: #28a745; /* Green color for the prefix to match solar theme */
+  margin-bottom: 2px; /* Small space between prefix and suffix */
+}
+
+.label-suffix {
+  color: #28a745; /* Green color for the suffix */
+  font-size: 14px; /* Slightly smaller for the second line */
+}
+
+.normal-input input {
+  width: 100%; /* Full width within each normal-input */
+  padding: 10px; /* Increased padding for a larger, more polished input */
+  border: 2px solid #28a745; /* Green border for a solar theme */
+  border-radius: 4px; /* Rounded corners for input */
+  font-size: 14px; /* Readable font size */
   box-sizing: border-box; /* Include padding and border in width */
+  flex-grow: 1; /* Allow input to grow to fill available space */
+  align-self: stretch; /* Ensure input stretches to match container width */
+  background: #f9faf9; /* Light green background for input */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for interactivity */
+}
+
+.normal-input input:focus {
+  border-color: #1e7e34; /* Darker green on focus for emphasis */
+  box-shadow: 0 0 8px rgba(40, 167, 69, 0.3); /* Glow effect on focus */
+  outline: none; /* Remove default outline */
 }
 
 /* Responsive adjustments for smaller screens (e.g., mobile) */
 @media (max-width: 768px) {
-  .meter-readings {
-      gap: 10px; /* Increase gap on smaller screens for readability */
-      justify-content: space-around; /* Evenly space inputs with slight flexibility */
+  .normal-section {
+      margin-bottom: 20px; /* Reduce bottom margin on smaller screens for tighter layout */
+      padding: 15px; /* Reduce padding for compactness */
   }
 
-  .meter-input {
-      flex: 0 1 calc(50% - 10px); /* Each input takes ~50% of the container width, accounting for gap */
+  .normal-readings {
+      gap: 8px; /* Slightly reduce gap on smaller screens for tighter fit */
+      justify-content: space-between; /* Maintain even distribution */
+      align-items: flex-start; /* Ensure input aligns at the top */
   }
 
-  .meter-input input {
+  .normal-input {
+      padding: 8px; /* Reduce padding on mobile for tighter fit */
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05); /* Lighter shadow on mobile */
+  }
+
+  .normal-section label {
+      font-size: 12px; /* Smaller labels on mobile */
+      margin-bottom: 6px; /* Reduce margin for tight alignment */
+  }
+
+  .label-prefix {
+      margin-bottom: 1px; /* Reduce space between lines on mobile */
+  }
+
+  .label-suffix {
+      font-size: 10px; /* Smaller suffix on mobile */
+  }
+
+  .normal-input input {
       font-size: 12px; /* Smaller text on mobile */
-      padding: 6px;
-  }
-
-  .meter-input label {
-      font-size: 10px; /* Smaller labels on mobile */
+      padding: 6px; /* Reduce padding for tighter fit */
+      border-width: 1px; /* Thinner border on mobile */
   }
 }
 
-/* Optional: Ensure inputs look good on very small screens */
+/* Optional: Ensure Normal Billing inputs look good on very small screens */
 @media (max-width: 480px) {
-  .meter-readings {
-      gap: 5px; /* Reduce gap on very small screens */
+  .normal-section {
+      margin-bottom: 15px; /* Further reduce bottom margin on very small screens */
+      padding: 10px; /* Further reduce padding for compactness */
   }
 
-  .meter-input {
-      flex: 0 1 calc(50% - 5px); /* Adjust width for very small screens, maintaining horizontal split */
+  .normal-readings {
+      gap: 4px; /* Further reduce gap on very small screens */
+      justify-content: space-between; /* Maintain even distribution */
+      align-items: flex-start; /* Ensure input aligns at the top */
   }
 
-  .meter-input input {
+  .normal-input {
+      padding: 6px; /* Further reduce padding on mobile for tight fit */
+      box-shadow: none; /* Remove shadow on very small screens for simplicity */
+  }
+
+  .normal-section label {
+      font-size: 10px; /* Even smaller labels on tiny screens */
+      margin-bottom: 4px; /* Minimize margin for tight alignment */
+  }
+
+  .label-prefix {
+      margin-bottom: 0px; /* Minimize space between lines on very small screens */
+  }
+
+  .label-suffix {
+      font-size: 8px; /* Even smaller suffix on tiny screens */
+  }
+
+  .normal-input input {
       font-size: 10px; /* Even smaller text on tiny screens */
-      padding: 6px;
-  }
-
-  .meter-input label {
-      font-size: 13px; /* Even smaller labels on tiny screens */
+      padding: 4px; /* Further reduce padding for tight fit */
+      border-width: 1px; /* Thinner border on very small screens */
   }
 }
 
-/* Optional: For larger screens, ensure inputs don’t stretch too much */
+/* Optional: For larger screens, ensure Normal Billing inputs don’t stretch too much */
 @media (min-width: 1200px) {
-  .meter-input {
-      max-width: 45%; /* Limit width to prevent excessive stretching */
+  .normal-section {
+      margin-bottom: 40px; /* Increase bottom margin on larger screens for more space */
+  }
+
+  .normal-input {
+      max-width: 100%; /* Allow full width but limit stretching if needed */
+  }
+}
+/*normal billing*/
+
+
+
+
+
+
+
+
+
+
+/* My changes for KSEB normal inputs */
+/* Base styles for the meter readings section */
+/* Styles for the KSEB billing section */
+.kseb-section {
+  margin-bottom: 30px; /* Space below the section for the button */
+  padding: 20px; /* Increased padding for a more spacious feel */
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef); /* Soft blue-gray gradient for a clean, KSEB-themed look */
+  border-radius: 8px; /* Rounded corners for a modern look */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Enhanced shadow for depth */
+  border-left: 4px solid #007BFF; /* Blue accent border for KSEB theme */
+}
+
+/* Styles for KSEB Billing meter readings */
+.kseb-readings {
+  display: flex;
+  flex-wrap: nowrap; /* Prevent wrapping to new lines, keeping inputs horizontal */
+  gap: 10px; /* Increased gap for a more polished look */
+  margin-top: 15px; /* Slightly more margin for better spacing */
+  justify-content: space-between; /* Evenly distribute inputs horizontally */
+  align-items: flex-start; /* Align items at the top of the flex container */
+}
+
+.kseb-input {
+  flex: 1; /* Each kseb-input takes equal space */
+  min-width: 0; /* Prevent overflow on smaller screens */
+  display: flex; /* Use flex within each kseb-input to align label and input */
+  flex-direction: column; /* Stack label and input vertically within each kseb-input */
+  align-items: flex-start; /* Align contents (label and input) to the top within each kseb-input */
+  background: #ffffff; /* White background for inputs to stand out */
+  padding: 10px; /* Padding around each input group for a boxed look */
+  border-radius: 6px; /* Rounded corners for inputs */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
+  transition: box-shadow 0.3s ease; /* Smooth hover effect */
+}
+
+.kseb-input:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Slightly larger shadow on hover for interactivity */
+}
+
+.kseb-section label {
+  display: flex; /* Use flex to control label line breaks */
+  flex-direction: column; /* Stack label parts vertically */
+  margin-bottom: 8px; /* Increased margin for better spacing between label and input */
+  font-size: 16px; /* Slightly larger font for bold, readable labels */
+  color: #333; /* Dark gray for readability (overridden by specific colors below) */
+  flex-shrink: 0; /* Prevent label from shrinking */
+  font-weight: bold; /* Bold text for emphasis */
+}
+
+.label-prefix,
+.label-suffix {
+  display: block; /* Ensure each span is a block element for stacking */
+  white-space: nowrap; /* Prevent text wrapping within each span */
+  font-weight: bold; /* Bold text for all label parts */
+}
+
+.label-prefix {
+  color: #007BFF; /* Blue color for the prefix to match KSEB theme */
+  margin-bottom: 2px; /* Small space between prefix and suffix */
+}
+
+.label-suffix {
+  color: #007BFF; /* Blue color for the suffix */
+  font-size: 14px; /* Slightly smaller for the second line */
+}
+
+.kseb-input label {
+  display: flex; /* Use flex to control label line breaks */
+  flex-direction: column; /* Stack label parts vertically */
+  margin-bottom: 8px; /* Increased margin for better spacing between label and input */
+  font-size: 16px; /* Slightly larger font for bold, readable labels */
+  color: #333; /* Dark gray for readability (overridden by specific colors below) */
+  flex-shrink: 0; /* Prevent label from shrinking */
+  font-weight: bold; /* Bold text for emphasis */
+}
+
+.kseb-input input {
+  width: 100%; /* Full width within each kseb-input */
+  padding: 10px; /* Increased padding for a larger, more polished input */
+  border: 2px solid #007BFF; /* Blue border for a KSEB theme */
+  border-radius: 4px; /* Rounded corners for inputs */
+  font-size: 14px; /* Readable font size */
+  box-sizing: border-box; /* Include padding and border in width */
+  flex-grow: 1; /* Allow input to grow to fill available space */
+  align-self: stretch; /* Ensure input stretches to match container width */
+  background: #f0f8ff; /* Light blue background for inputs */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for interactivity */
+}
+
+.kseb-input input:focus {
+  border-color: #0056b3; /* Darker blue on focus for emphasis */
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3); /* Glow effect on focus */
+  outline: none; /* Remove default outline */
+}
+
+/* Responsive adjustments for smaller screens (e.g., mobile) */
+@media (max-width: 768px) {
+  .kseb-section {
+      margin-bottom: 20px; /* Reduce bottom margin on smaller screens for tighter layout */
+      padding: 15px; /* Reduce padding for compactness */
+  }
+
+  .kseb-readings {
+      gap: 8px; /* Slightly reduce gap on smaller screens for tighter fit */
+      justify-content: space-between; /* Maintain even distribution */
+      align-items: flex-start; /* Ensure inputs align at the top */
+  }
+
+  .kseb-input {
+      padding: 8px; /* Reduce padding on mobile for tighter fit */
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05); /* Lighter shadow on mobile */
+  }
+
+  .kseb-section label,
+  .kseb-input label {
+      font-size: 12px; /* Smaller labels on mobile */
+      margin-bottom: 6px; /* Reduce margin for tight alignment */
+  }
+
+  .label-prefix {
+      margin-bottom: 1px; /* Reduce space between lines on mobile */
+  }
+
+  .label-suffix {
+      font-size: 10px; /* Smaller suffix on mobile */
+  }
+
+  .kseb-input input {
+      font-size: 12px; /* Smaller text on mobile */
+      padding: 6px; /* Reduce padding for tighter fit */
+      border-width: 1px; /* Thinner border on mobile */
   }
 }
 
+/* Optional: Ensure KSEB Billing inputs look good on very small screens */
+@media (max-width: 480px) {
+  .kseb-section {
+      margin-bottom: 15px; /* Further reduce bottom margin on very small screens */
+      padding: 10px; /* Further reduce padding for compactness */
+  }
+
+  .kseb-readings {
+      gap: 4px; /* Further reduce gap on very small screens */
+      justify-content: space-between; /* Maintain even distribution */
+      align-items: flex-start; /* Ensure inputs align at the top */
+  }
+
+  .kseb-input {
+      padding: 6px; /* Further reduce padding on mobile for tight fit */
+      box-shadow: none; /* Remove shadow on very small screens for simplicity */
+  }
+
+  .kseb-section label,
+  .kseb-input label {
+      font-size: 10px; /* Even smaller labels on tiny screens */
+      margin-bottom: 4px; /* Minimize margin for tight alignment */
+  }
+
+  .label-prefix {
+      margin-bottom: 0px; /* Minimize space between lines on very small screens */
+  }
+
+  .label-suffix {
+      font-size: 8px; /* Even smaller suffix on tiny screens */
+  }
+
+  .kseb-input input {
+      font-size: 10px; /* Even smaller text on tiny screens */
+      padding: 4px; /* Further reduce padding for tight fit */
+      border-width: 1px; /* Thinner border on very small screens */
+  }
+}
+
+/* Optional: For larger screens, ensure KSEB Billing inputs don’t stretch too much */
+@media (min-width: 1200px) {
+  .kseb-section {
+      margin-bottom: 40px; /* Increase bottom margin on larger screens for more space */
+  }
+
+  .kseb-input {
+      max-width: 45%; /* Limit width to prevent excessive stretching, allowing for gap */
+  }
+}
 /*My changes stopped */
+
+
+
 
 
 
@@ -665,8 +960,6 @@ td {
   }
 }
 /*Tod Billing style end*/
-
-
 
 
 
