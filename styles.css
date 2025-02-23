@@ -379,6 +379,214 @@ td {
 
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&*/
 
+/*DropDowns in a better way*/
+/* Styles for the phase sections */
+.phase-section {
+  margin-bottom: 20px; /* Space between sections */
+  padding: 15px; /* Padding for a spacious feel */
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef); /* Soft blue-gray gradient for a clean look */
+  border-radius: 8px; /* Rounded corners for a modern look */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Enhanced shadow for depth */
+  border-left: 4px solid #007BFF; /* Blue accent border for KSEB theme */
+  display: flex; /* Use flex to align groups horizontally */
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  gap: 20px; /* Space between groups */
+  justify-content: space-between; /* Evenly distribute groups horizontally */
+}
+
+/* Styles for the phase groups */
+.phase-group {
+  flex: 1; /* Each group takes equal space */
+  min-width: 0; /* Prevent overflow on smaller screens */
+  display: flex; /* Use flex to align label and select/input */
+  flex-direction: column; /* Stack label and select/input vertically */
+  align-items: flex-start; /* Align contents to the top */
+  background: #ffffff; /* White background for groups to stand out */
+  padding: 10px; /* Padding around each group for a boxed look */
+  border-radius: 6px; /* Rounded corners for groups */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
+  transition: box-shadow 0.3s ease; /* Smooth hover effect */
+}
+
+.phase-group:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Slightly larger shadow on hover for interactivity */
+}
+
+.phase-group label {
+  display: block; /* Ensure label is a block element */
+  margin-bottom: 8px; /* Space between label and select/input */
+  font-size: 16px; /* Slightly larger font for bold, readable labels */
+  color: #333; /* Dark gray for readability */
+  font-weight: bold; /* Bold text for emphasis */
+  white-space: nowrap; /* Prevent label text from wrapping */
+}
+
+.phase-group select {
+  width: 100%; /* Full width within each group */
+  padding: 10px; /* Increased padding for a larger, more polished select */
+  border: 2px solid #007BFF; /* Blue border for a KSEB theme */
+  border-radius: 4px; /* Rounded corners for select */
+  font-size: 14px; /* Readable font size */
+  box-sizing: border-box; /* Include padding and border in width */
+  background: #f0f8ff; /* Light blue background for select */
+  appearance: none; /* Remove default arrow */
+  background-image: linear-gradient(45deg, transparent 50%, #007BFF 50%), linear-gradient(135deg, #007BFF 50%, transparent 50%);
+  background-position: calc(100% - 15px) calc(1em + 2px), calc(100% - 10px) calc(1em + 2px), calc(100% - 2.5em) 0.5em;
+  background-size: 5px 5px, 5px 5px, 1px 1.5em;
+  background-repeat: no-repeat; /* Custom dropdown arrow */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for interactivity */
+}
+
+.phase-group select:focus {
+  border-color: #0056b3; /* Darker blue on focus for emphasis */
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3); /* Glow effect on focus */
+  outline: none; /* Remove default outline */
+}
+
+/* Styles for the load section (Connected Load) */
+.load-section {
+  margin-bottom: 20px; /* Space between sections */
+  padding: 15px; /* Padding for a spacious feel */
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef); /* Soft blue-gray gradient for a clean look */
+  border-radius: 8px; /* Rounded corners for a modern look */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Enhanced shadow for depth */
+  border-left: 4px solid #007BFF; /* Blue accent border for KSEB theme */
+  display: flex; /* Use flex to align group horizontally */
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  gap: 20px; /* Space between groups */
+  justify-content: space-between; /* Evenly distribute group horizontally */
+}
+
+/* Styles for the banked unit section */
+.banked-section {
+  margin-bottom: 30px; /* Space below the section for the button */
+  padding: 20px; /* Increased padding for a more spacious feel */
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef); /* Soft blue-gray gradient for a clean look */
+  border-radius: 8px; /* Rounded corners for a modern look */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Enhanced shadow for depth */
+  border-left: 4px solid #007BFF; /* Blue accent border for KSEB theme */
+  display: flex; /* Use flex to align label and input */
+  flex-direction: column; /* Stack label and input vertically */
+  align-items: flex-start; /* Align contents to the top */
+}
+
+.banked-section label {
+  display: block; /* Ensure label is a block element */
+  margin-bottom: 8px; /* Space between label and input */
+  font-size: 16px; /* Slightly larger font for bold, readable labels */
+  color: #333; /* Dark gray for readability */
+  font-weight: bold; /* Bold text for emphasis */
+  white-space: nowrap; /* Prevent label text from wrapping */
+}
+
+.banked-section input {
+  width: 100%; /* Full width within the section */
+  padding: 10px; /* Increased padding for a larger, more polished input */
+  border: 2px solid #007BFF; /* Blue border for a KSEB theme */
+  border-radius: 4px; /* Rounded corners for input */
+  font-size: 14px; /* Readable font size */
+  box-sizing: border-box; /* Include padding and border in width */
+  background: #f0f8ff; /* Light blue background for input */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for interactivity */
+}
+
+.banked-section input:focus {
+  border-color: #0056b3; /* Darker blue on focus for emphasis */
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3); /* Glow effect on focus */
+  outline: none; /* Remove default outline */
+}
+
+/* Responsive adjustments for smaller screens (e.g., mobile) */
+@media (max-width: 768px) {
+  .phase-section,
+  .load-section {
+      margin-bottom: 15px; /* Reduce bottom margin on smaller screens for tighter layout */
+      padding: 10px; /* Reduce padding for compactness */
+      gap: 10px; /* Reduce gap between groups */
+  }
+
+  .phase-group,
+  .load-section .phase-group {
+      padding: 8px; /* Reduce padding on mobile for tighter fit */
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05); /* Lighter shadow on mobile */
+  }
+
+  .phase-group label,
+  .load-section .phase-group label,
+  .banked-section label {
+      font-size: 12px; /* Smaller labels on mobile */
+      margin-bottom: 6px; /* Reduce margin for tight alignment */
+  }
+
+  .phase-group select,
+  .banked-section input {
+      font-size: 12px; /* Smaller text on mobile */
+      padding: 6px; /* Reduce padding for tighter fit */
+      border-width: 1px; /* Thinner border on mobile */
+  }
+
+  .banked-section {
+      margin-bottom: 20px; /* Reduce bottom margin on smaller screens */
+      padding: 15px; /* Reduce padding for compactness */
+  }
+}
+
+/* Optional: Ensure inputs look good on very small screens */
+@media (max-width: 480px) {
+  .phase-section,
+  .load-section {
+      margin-bottom: 10px; /* Further reduce bottom margin on very small screens */
+      padding: 5px; /* Further reduce padding for compactness */
+      gap: 5px; /* Further reduce gap between groups */
+  }
+
+  .phase-group,
+  .load-section .phase-group {
+      padding: 6px; /* Further reduce padding on mobile for tight fit */
+      box-shadow: none; /* Remove shadow on very small screens for simplicity */
+  }
+
+  .phase-group label,
+  .load-section .phase-group label,
+  .banked-section label {
+      font-size: 10px; /* Even smaller labels on tiny screens */
+      margin-bottom: 4px; /* Minimize margin for tight alignment */
+  }
+
+  .phase-group select,
+  .banked-section input {
+      font-size: 10px; /* Even smaller text on tiny screens */
+      padding: 4px; /* Further reduce padding for tight fit */
+      border-width: 1px; /* Thinner border on very small screens */
+  }
+
+  .banked-section {
+      margin-bottom: 15px; /* Further reduce bottom margin on very small screens */
+      padding: 10px; /* Further reduce padding for compactness */
+  }
+}
+
+/* Optional: For larger screens, ensure inputs don’t stretch too much */
+@media (min-width: 1200px) {
+  .phase-section,
+  .load-section {
+      margin-bottom: 25px; /* Increase bottom margin on larger screens for more space */
+  }
+
+  .phase-group,
+  .load-section .phase-group {
+      max-width: 45%; /* Limit width to prevent excessive stretching, allowing for gap */
+  }
+
+  .banked-section {
+      margin-bottom: 40px; /* Increase bottom margin on larger screens for more space */
+  }
+}
+/*End of Dropdowns*/
+
+
+
+
 
 
 
