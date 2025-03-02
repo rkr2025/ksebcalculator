@@ -2134,7 +2134,7 @@ const getEnergyCaluculationMessage = (
             document.getElementById('result4').innerHTML = `
                 <h5><u>Bank Adjustment</u></h5>
                 ${(accountBalance || 0) > 0 ? `
-                    <p>Extra Energy Generation = <strong class="green-text">${accountBalance || 0} Unit</strong> will be added to bank</p>
+                    <p>Final Bank Closing = <strong class="green-text">${accountBalance || 0} Unit</strong></p>
                     <p style="font-size: 0.9em;">(Export+Bank(${exportPlusBank || 0}) - Import(${importReading || 0}))</p>
                 ` : `
                     <p>No Energy units to be added to bank 👎</p>
