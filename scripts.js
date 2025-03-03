@@ -2069,7 +2069,7 @@ const getEnergyCaluculationMessage = (
                                 </tr>
                                 <tr>
                                     <td style="border: 1px solid #ddd; padding: 6px;">Adjustment Status</td>
-                                    <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="green-text">Import = Export, No Energy Charge</strong></td>
+                                    <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="green-text">Import = Export, No Energy Charge</strong>😌</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -2109,7 +2109,7 @@ const getEnergyCaluculationMessage = (
                                 </tr>
                                 <tr>
                                     <td style="border: 1px solid #ddd; padding: 6px;">Adjustment Status</td>
-                                    <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="green-text">Export > Import, No Energy Charge</strong></td>
+                                    <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="green-text">Export > Import, No Energy Charge</strong>😌</td>
                                 </tr>
                             </tbody>
                         </table>
