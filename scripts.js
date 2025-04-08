@@ -2262,7 +2262,7 @@ const getEnergyCaluculationMessage = (
         </p>
         <p style="font-size: 13px; color: #666; margin-top: 10px; line-height: 1.6;">
             <em>Note:</em> This information is provided for reference only. For accurate and official details, consult <span style="color: #3498db;">KSEB</span> or other authoritative sources. 
-            <span style="display: block; margin-top: 5px; font-size: 12px; color: #888;">(Version 1.0.20)</span>
+            <span style="display: block; margin-top: 5px; font-size: 12px; color: #888;">(Version 1.0.21: Last updated: 8-Apr-2025) </span>
         </p>
     </div>
 `;
