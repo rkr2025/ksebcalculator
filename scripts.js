@@ -1704,40 +1704,11 @@ const getEnergyCaluculationMessage = (
 };
 
     var duty = 0;
-    //const fuelSurcharge = bankAdjustedUnits * 0.09;
-    const monthlyFuelSurcharge = bankAdjustedUnits * 0.10;
+    const monthlyFuelSurcharge = bankAdjustedUnits * 0.07;
     var totalBillAmount = 0;
     duty = energyCharge * 0.10;
-    //totalBillAmount = fixedCharge + meterRent + energyCharge + duty + fuelSurcharge + monthlyFuelSurcharge;
     totalBillAmount = fixedCharge + meterRent + energyCharge + duty + monthlyFuelSurcharge;
     let billInfo = '';
-
-    // if(bankAdjustedUnits > 0){
-
-    //     const energyChargeToUse = energyCharge;
-    //     const bankAdjustedUnitsToUse = bankAdjustedUnits;
-
-    //     billInfo = `
-    //     <tr><td>Bill Type</td><td><b>${billType}</b></td></tr>
-    //     <tr><td>Fixed Charge</td><td><b>₹${fixedCharge}</b></td></tr>
-    //     <tr><td>Meter Rent</td><td><b>₹${meterRent}</b></td></tr>
-    //     <tr><td>No: of Units Consumed (for Energy calculation)</td><td>${bankAdjustedUnitsToUse.toFixed(2)}</td></tr>
-    //     <tr><td>Unit Charge</td><td>₹${unitRate.toFixed(2)}/Unit</td></tr>
-    //     <tr><td>Energy Charge</td><td><b>₹${energyChargeToUse.toFixed(2)}</b></td></tr>
-    //     <tr><td>Duty</td><td><b>₹${duty.toFixed(2)}</b> (10% of the Energy Charge)</td></tr>
-    //     <tr><td>Fuel Surcharge</td><td><b>₹${fuelSurcharge.toFixed(2)}</b> (Consumption: ${bankAdjustedUnitsToUse.toFixed(2)} Unit x 9ps)</td></tr>
-    //     <tr><td>Monthly Fuel Surcharge</td><td><b>₹${monthlyFuelSurcharge.toFixed(2)}</b> (Consumption: ${bankAdjustedUnitsToUse.toFixed(2)}Unit x 10ps)</td></tr>
-    //     <tr><td>Total Bill Amount</td><td><b>₹${totalBillAmount.toFixed(2)}</b></td></tr>
-    // `;
-    // }
-    // else{
-    //     billInfo = `
-    //     <tr><td>Bill Type</td><td>${billType}</td></tr>
-    //     <tr><td>Fixed Charge</td><td><b>₹${fixedCharge}</b></td></tr>
-    //     <tr><td>Meter Rent</td><td>₹${meterRent}</td></tr>
-    //     <tr><td>Total Bill Amount</td><td><b>₹${totalBillAmount.toFixed(2)}</b></td></tr>
-    // `;
-    // }
 
     if (bankAdjustedUnits > 0) {
         const energyChargeToUse = energyCharge !== undefined && energyCharge !== null ? energyCharge : 0;
@@ -1784,7 +1755,7 @@ const getEnergyCaluculationMessage = (
                             <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(duty || 0).toFixed(2)}</strong></td>
                         </tr>
                         <tr style="background-color: #ecf0f1;">
-                            <td style="border: 1px solid #ddd; padding: 10px;">Monthly Fuel Surcharge<br>(Consumption: ${bankAdjustedUnitsToUse.toFixed(2)} Unit x 10ps)</td>
+                            <td style="border: 1px solid #ddd; padding: 10px;">Monthly Fuel Surcharge<br>(Consumption: ${bankAdjustedUnitsToUse.toFixed(2)} Unit x 7ps)</td>
                             <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(monthlyFuelSurcharge || 0).toFixed(2)}</strong></td>
                         </tr>
                         <tr style="background: linear-gradient(90deg, #2ecc71, #27ae60); color: white;">
@@ -2262,7 +2233,7 @@ const getEnergyCaluculationMessage = (
         </p>
         <p style="font-size: 13px; color: #666; margin-top: 10px; line-height: 1.6;">
             <em>Note:</em> This information is provided for reference only. For accurate and official details, consult <span style="color: #3498db;">KSEB</span> or other authoritative sources. 
-            <span style="display: block; margin-top: 5px; font-size: 12px; color: #888;">(Version 1.0.23: Last updated: 10-Apr-2025) </span>
+            <span style="display: block; margin-top: 5px; font-size: 12px; color: #888;">(Version 1.0.24: Last updated: 17-Apr-2025) </span>
         </p>
     </div>
 `;
