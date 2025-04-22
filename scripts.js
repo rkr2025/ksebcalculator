@@ -1866,7 +1866,7 @@ const getEnergyCaluculationMessage = (
                             <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="red-text">${unitsConsumed} Unit</strong></td>
                         </tr>
                         <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">Fixed Charge for ${unitsConsumed} Unit (${phase})<br>(w.e.f 5/12/2024)</td>
+                            <td style="border: 1px solid #ddd; padding: 6px;">Fixed Charge for ${unitsConsumed} Unit (${phase})<br>(w.e.f 1/4/2025)</td>
                             <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="red-text">₹${fixedCharge}</strong></td>
                         </tr>
                     </tbody>
@@ -2184,7 +2184,7 @@ const getEnergyCaluculationMessage = (
             <hr>
         `;
 //*////
-        document.getElementById('result1').innerHTML = `Fixed charge for ${unitsConsumed} Unit (${phase}) =   <strong class="red-text">₹${fixedCharge}</strong> (w.e.f 5/12/2024)`;
+        document.getElementById('result1').innerHTML = `Fixed charge for ${unitsConsumed} Unit (${phase}) =   <strong class="red-text">₹${fixedCharge}</strong> (w.e.f 1/4/2025)`;
         
         if(todBillingAbove20kW > 0) 
         {
@@ -2225,7 +2225,7 @@ const getEnergyCaluculationMessage = (
     document.getElementById('result6').innerHTML = `
     <div style="background: linear-gradient(135deg, #ffffff, #f2f4f8); padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); margin: 20px auto; max-width: 90%; font-family: 'Georgia', serif; border-left: 4px solid #2ecc71;">
         <p style="font-size: 14px; color: #2c3e50; line-height: 1.6; margin: 0;">
-            <strong style="color: #e67e22;">Tariff Notice:</strong> Tariffs (effective from <span style="font-style: italic;">5/12/2024</span>) are subject to change. For the latest rates, please refer to <span style="color: #3498db; font-weight: bold;">KSEB official sources</span>.
+            <strong style="color: #e67e22;">Tariff Notice:</strong> Tariffs (effective from <span style="font-style: italic;">1/04/2025</span>) are subject to change. For the latest rates, please refer to <span style="color: #3498db; font-weight: bold;">KSEB official sources</span>.
         </p>
         <p style="font-size: 14px; color: #333; line-height: 1.8; margin: 15px 0 0;">
             <strong style="color: #27ae60;">Need Assistance?</strong> If you notice any discrepancies in the calculations, require additional options, or need updates due to calculation mistakes, feel free to contact us at 
