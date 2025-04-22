@@ -191,37 +191,37 @@ function applyNewTariffRules() {
             console.log('Check 6');
             billType = "Telescopic";
             if (bankAdjustedUnits <= 50) {
-                energyCharge = bankAdjustedUnits * 3.30;
-                breakdown = `<p class="calc-step">${bankAdjustedUnits} units * ₹3.30 = ₹${energyCharge.toFixed(2)}</p>`;
+                energyCharge = bankAdjustedUnits * 3.35;
+                breakdown = `<p class="calc-step">${bankAdjustedUnits} units * ₹3.35 = ₹${energyCharge.toFixed(2)}</p>`;
             } else if (bankAdjustedUnits <= 100) {
-                energyCharge = 50 * 3.30 + (bankAdjustedUnits - 50) * 4.15;
+                energyCharge = 50 * 3.35 + (bankAdjustedUnits - 50) * 4.25;
                 breakdown = `
-                <p class="calc-step">50 units * ₹3.30 = ₹${(50 * 3.30).toFixed(2)}</p>
-                <p class="calc-step">${bankAdjustedUnits - 50} units * ₹4.15 = ₹${((bankAdjustedUnits - 50) * 4.15).toFixed(2)}</p>
+                <p class="calc-step">50 units * ₹3.35 = ₹${(50 * 3.35).toFixed(2)}</p>
+                <p class="calc-step">${bankAdjustedUnits - 50} units * ₹4.25 = ₹${((bankAdjustedUnits - 50) * 4.25).toFixed(2)}</p>
             `;
             } else if (bankAdjustedUnits <= 150) {
-                energyCharge = 50 * 3.30 + 50 * 4.15 + (bankAdjustedUnits - 100) * 5.25;
+                energyCharge = 50 * 3.35 + 50 * 4.25 + (bankAdjustedUnits - 100) * 5.35;
                 breakdown = `
-                <p class="calc-step">50 units * ₹3.30 = ₹${(50 * 3.30).toFixed(2)}</p>
-                <p class="calc-step">50 units * ₹4.15 = ₹${(50 * 4.15).toFixed(2)}</p>
-                <p class="calc-step">${bankAdjustedUnits - 100} units * ₹5.25 = ₹${((bankAdjustedUnits - 100) * 5.25).toFixed(2)}</p>
+                <p class="calc-step">50 units * ₹3.35 = ₹${(50 * 3.35).toFixed(2)}</p>
+                <p class="calc-step">50 units * ₹4.25 = ₹${(50 * 4.25).toFixed(2)}</p>
+                <p class="calc-step">${bankAdjustedUnits - 100} units * ₹5.35 = ₹${((bankAdjustedUnits - 100) * 5.35).toFixed(2)}</p>
             `;
             } else if (bankAdjustedUnits <= 200) {
-                energyCharge = 50 * 3.30 + 50 * 4.15 + 50 * 5.25 + (bankAdjustedUnits - 150) * 7.10;
+                energyCharge = 50 * 3.35 + 50 * 4.25 + 50 * 5.35 + (bankAdjustedUnits - 150) * 7.20;
                 breakdown = `
-                <p class="calc-step">50 units * ₹3.30 = ₹${(50 * 3.30).toFixed(2)}</p>
-                <p class="calc-step">50 units * ₹4.15 = ₹${(50 * 4.15).toFixed(2)}</p>
-                <p class="calc-step">50 units * ₹5.25 = ₹${(50 * 5.25).toFixed(2)}</p>
-                <p class="calc-step">${bankAdjustedUnits - 150} units * ₹7.10 = ₹${((bankAdjustedUnits - 150) * 7.10).toFixed(2)}</p>
+                <p class="calc-step">50 units * ₹3.35 = ₹${(50 * 3.35).toFixed(2)}</p>
+                <p class="calc-step">50 units * ₹4.25 = ₹${(50 * 4.25).toFixed(2)}</p>
+                <p class="calc-step">50 units * ₹5.35 = ₹${(50 * 5.35).toFixed(2)}</p>
+                <p class="calc-step">${bankAdjustedUnits - 150} units * ₹7.20 = ₹${((bankAdjustedUnits - 150) * 7.20).toFixed(2)}</p>
             `;
             } else if (bankAdjustedUnits <= 250) {
-                energyCharge = 50 * 3.30 + 50 * 4.15 + 50 * 5.25 + 50 * 7.10 + (bankAdjustedUnits - 200) * 8.35;
+                energyCharge = 50 * 3.35 + 50 * 4.25 + 50 * 5.35 + 50 * 7.20 + (bankAdjustedUnits - 200) * 8.50;
                 breakdown = `
-                <p class="calc-step">50 units * ₹3.30 = ₹${(50 * 3.30).toFixed(2)}</p>
-                <p class="calc-step">50 units * ₹4.15 = ₹${(50 * 4.15).toFixed(2)}</p>
-                <p class="calc-step">50 units * ₹5.25 = ₹${(50 * 5.25).toFixed(2)}</p>
-                <p class="calc-step">50 units * ₹7.10 = ₹${(50 * 7.10).toFixed(2)}</p>
-                <p class="calc-step">${bankAdjustedUnits - 200} units * ₹8.35 = ₹${((bankAdjustedUnits - 200) * 8.35).toFixed(2)}</p>
+                <p class="calc-step">50 units * ₹3.35 = ₹${(50 * 3.35).toFixed(2)}</p>
+                <p class="calc-step">50 units * ₹4.25 = ₹${(50 * 4.25).toFixed(2)}</p>
+                <p class="calc-step">50 units * ₹5.35 = ₹${(50 * 5.35).toFixed(2)}</p>
+                <p class="calc-step">50 units * ₹7.20 = ₹${(50 * 7.20).toFixed(2)}</p>
+                <p class="calc-step">${bankAdjustedUnits - 200} units * ₹8.50 = ₹${((bankAdjustedUnits - 200) * 8.50).toFixed(2)}</p>
             `;
             }
             if (bankAdjustedUnits > 0) {
@@ -235,20 +235,20 @@ function applyNewTariffRules() {
             console.log('Check 7');
             billType = "Non-Telescopic";
             if (bankAdjustedUnits <= 300) {
-                energyCharge = bankAdjustedUnits * 6.55;
-                unitRate = 6.55;
+                energyCharge = bankAdjustedUnits * 6.75;
+                unitRate = 6.75;
             } else if (bankAdjustedUnits <= 350) {
-                energyCharge = bankAdjustedUnits * 7.40;
-                unitRate = 7.40;
+                energyCharge = bankAdjustedUnits * 7.60;
+                unitRate = 7.60;
             } else if (bankAdjustedUnits <= 400) {
-                energyCharge = bankAdjustedUnits * 7.75;
-                unitRate = 7.75;
+                energyCharge = bankAdjustedUnits * 7.95;
+                unitRate = 7.95;
             } else if (bankAdjustedUnits <= 500) {
-                energyCharge = bankAdjustedUnits * 8.05;
-                unitRate = 8.05;
+                energyCharge = bankAdjustedUnits * 8.25;
+                unitRate = 8.25;
             } else {
-                energyCharge = bankAdjustedUnits * 9.00;
-                unitRate = 9.00;
+                energyCharge = bankAdjustedUnits * 9.20;
+                unitRate = 9.20;
             }
         }
     } else {
@@ -326,15 +326,15 @@ function applyNewTariffRules() {
                 console.log('Check 13');
                 billType = "Non-Telescopic-ToD"
                 if (bankAdjustedUnits <= 300) {
-                    unitRate = 6.55;
+                    unitRate = 6.75;
                 } else if (bankAdjustedUnits <= 350) {
-                    unitRate = 7.40;
+                    unitRate = 7.60;
                 } else if (bankAdjustedUnits <= 400) {
-                    unitRate = 7.75;
+                    unitRate = 7.95;
                 } else if (bankAdjustedUnits <= 500) {
-                    unitRate = 8.05;
+                    unitRate = 8.25;
                 } else {
-                    unitRate = 9.00;
+                    unitRate = 9.20;
                 }
 
                 console.log('1 unitRate is : ' + unitRate);            
@@ -361,37 +361,37 @@ function applyNewTariffRules() {
                     billType = "Telescopic-ToD";
                     todType = "normal";
                     if (bankAdjustedUnits <= 50) {
-                        energyCharge = bankAdjustedUnits * 3.30;
-                        breakdown = `<p class="calc-step">${bankAdjustedUnits} units * ₹3.30 = ₹${energyCharge.toFixed(2)}</p>`;
+                        energyCharge = bankAdjustedUnits * 3.35;
+                        breakdown = `<p class="calc-step">${bankAdjustedUnits} units * ₹3.35 = ₹${energyCharge.toFixed(2)}</p>`;
                     } else if (bankAdjustedUnits <= 100) {
-                        energyCharge = 50 * 3.30 + (bankAdjustedUnits - 50) * 4.15;
+                        energyCharge = 50 * 3.35 + (bankAdjustedUnits - 50) * 4.25;
                         breakdown = `
-                        <p class="calc-step">50 units * ₹3.30 = ₹${(50 * 3.30).toFixed(2)}</p>
-                        <p class="calc-step">${bankAdjustedUnits - 50} units * ₹4.15 = ₹${((bankAdjustedUnits - 50) * 4.15).toFixed(2)}</p>
+                        <p class="calc-step">50 units * ₹3.35 = ₹${(50 * 3.35).toFixed(2)}</p>
+                        <p class="calc-step">${bankAdjustedUnits - 50} units * ₹4.25 = ₹${((bankAdjustedUnits - 50) * 4.25).toFixed(2)}</p>
                     `;
                     } else if (bankAdjustedUnits <= 150) {
-                        energyCharge = 50 * 3.30 + 50 * 4.15 + (bankAdjustedUnits - 100) * 5.25;
+                        energyCharge = 50 * 3.35 + 50 * 4.25 + (bankAdjustedUnits - 100) * 5.35;
                         breakdown = `
-                        <p class="calc-step">50 units * ₹3.30 = ₹${(50 * 3.30).toFixed(2)}</p>
-                        <p class="calc-step">50 units * ₹4.15 = ₹${(50 * 4.15).toFixed(2)}</p>
-                        <p class="calc-step">${bankAdjustedUnits - 100} units * ₹5.25 = ₹${((bankAdjustedUnits - 100) * 5.25).toFixed(2)}</p>
+                        <p class="calc-step">50 units * ₹3.35 = ₹${(50 * 3.35).toFixed(2)}</p>
+                        <p class="calc-step">50 units * ₹4.25 = ₹${(50 * 4.25).toFixed(2)}</p>
+                        <p class="calc-step">${bankAdjustedUnits - 100} units * ₹5.35 = ₹${((bankAdjustedUnits - 100) * 5.35).toFixed(2)}</p>
                     `;
                     } else if (bankAdjustedUnits <= 200) {
-                        energyCharge = 50 * 3.30 + 50 * 4.15 + 50 * 5.25 + (bankAdjustedUnits - 150) * 7.10;
+                        energyCharge = 50 * 3.35 + 50 * 4.25 + 50 * 5.35 + (bankAdjustedUnits - 150) * 7.20;
                         breakdown = `
-                        <p class="calc-step">50 units * ₹3.30 = ₹${(50 * 3.30).toFixed(2)}</p>
-                        <p class="calc-step">50 units * ₹4.15 = ₹${(50 * 4.15).toFixed(2)}</p>
-                        <p class="calc-step">50 units * ₹5.25 = ₹${(50 * 5.25).toFixed(2)}</p>
-                        <p class="calc-step">${bankAdjustedUnits - 150} units * ₹7.10 = ₹${((bankAdjustedUnits - 150) * 7.10).toFixed(2)}</p>
+                        <p class="calc-step">50 units * ₹3.35 = ₹${(50 * 3.35).toFixed(2)}</p>
+                        <p class="calc-step">50 units * ₹4.25 = ₹${(50 * 4.25).toFixed(2)}</p>
+                        <p class="calc-step">50 units * ₹5.35 = ₹${(50 * 5.35).toFixed(2)}</p>
+                        <p class="calc-step">${bankAdjustedUnits - 150} units * ₹7.20 = ₹${((bankAdjustedUnits - 150) * 7.20).toFixed(2)}</p>
                     `;
                     } else if (bankAdjustedUnits <= 250) {
-                        energyCharge = 50 * 3.30 + 50 * 4.15 + 50 * 5.25 + 50 * 7.10 + (bankAdjustedUnits - 200) * 8.35;
+                        energyCharge = 50 * 3.35 + 50 * 4.25 + 50 * 5.35 + 50 * 7.20 + (bankAdjustedUnits - 200) * 8.50;
                         breakdown = `
-                        <p class="calc-step">50 units * ₹3.30 = ₹${(50 * 3.30).toFixed(2)}</p>
-                        <p class="calc-step">50 units * ₹4.15 = ₹${(50 * 4.15).toFixed(2)}</p>
-                        <p class="calc-step">50 units * ₹5.25 = ₹${(50 * 5.25).toFixed(2)}</p>
-                        <p class="calc-step">50 units * ₹7.10 = ₹${(50 * 7.10).toFixed(2)}</p>
-                        <p class="calc-step">${bankAdjustedUnits - 200} units * ₹8.35 = ₹${((bankAdjustedUnits - 200) * 8.35).toFixed(2)}</p>
+                        <p class="calc-step">50 units * ₹3.35 = ₹${(50 * 3.35).toFixed(2)}</p>
+                        <p class="calc-step">50 units * ₹4.25 = ₹${(50 * 4.25).toFixed(2)}</p>
+                        <p class="calc-step">50 units * ₹5.35 = ₹${(50 * 5.35).toFixed(2)}</p>
+                        <p class="calc-step">50 units * ₹7.20 = ₹${(50 * 7.20).toFixed(2)}</p>
+                        <p class="calc-step">${bankAdjustedUnits - 200} units * ₹8.50 = ₹${((bankAdjustedUnits - 200) * 8.50).toFixed(2)}</p>
                     `;
                     }
                     if (bankAdjustedUnits > 0) {
@@ -463,15 +463,15 @@ function applyNewTariffRules() {
 
                     billType = "Non-Telescopic-ToD";
                     if (bankAdjustedUnits_Below20kW <= 300) {
-                        unitRate_Below20kW = 6.55;
+                        unitRate_Below20kW = 6.75;
                     } else if (bankAdjustedUnits_Below20kW <= 350) {
-                        unitRate_Below20kW = 7.40;
+                        unitRate_Below20kW = 7.60;
                     } else if (bankAdjustedUnits_Below20kW <= 400) {
-                        unitRate_Below20kW = 7.75; 
+                        unitRate_Below20kW = 7.95; 
                     } else if (bankAdjustedUnits_Below20kW <= 500) {
-                        unitRate_Below20kW = 8.05;
+                        unitRate_Below20kW = 8.25;
                     } else {
-                        unitRate_Below20kW = 9.00;
+                        unitRate_Below20kW = 9.20;
                     }
 
                     NormalConsumptionAdjusted_energy_charge = Normal_NoOfUnitsFor_energy_calculation * unitRate_Below20kW * 0.9;
