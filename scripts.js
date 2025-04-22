@@ -157,28 +157,28 @@ function applyNewTariffRules() {
 
     if (unitsConsumed <= 250) {
         if (unitsConsumed <= 50) {
-            fixedCharge = (phase === 'phase1') ? 45 : 120;
+            fixedCharge = (phase === 'phase1') ? 50 : 130;
         } else if (unitsConsumed <= 100) {
-            fixedCharge = (phase === 'phase1') ? 75 : 160;
+            fixedCharge = (phase === 'phase1') ? 85 : 175;
         } else if (unitsConsumed <= 150) {
-            fixedCharge = (phase === 'phase1') ? 95 : 190;
+            fixedCharge = (phase === 'phase1') ? 105 : 205;
         } else if (unitsConsumed <= 200) {
-            fixedCharge = (phase === 'phase1') ? 130 : 200;
+            fixedCharge = (phase === 'phase1') ? 140 : 215;
         } else {
-            fixedCharge = (phase === 'phase1') ? 145 : 220;
+            fixedCharge = (phase === 'phase1') ? 160 : 235;
         }
     } else {
         console.log('Check 3');
         if (unitsConsumed <= 300) {
-            fixedCharge = (phase === 'phase1') ? 190 : 225;
+            fixedCharge = (phase === 'phase1') ? 220 : 240;
         } else if (unitsConsumed <= 350) {
-            fixedCharge = (phase === 'phase1') ? 215 : 235;
+            fixedCharge = (phase === 'phase1') ? 240 : 250;
         } else if (unitsConsumed <= 400) {
-            fixedCharge = (phase === 'phase1') ? 235 : 240;
+            fixedCharge = (phase === 'phase1') ? 260 : 260;
         } else if (unitsConsumed <= 500) {
-            fixedCharge = (phase === 'phase1') ? 265 : 265;
+            fixedCharge = (phase === 'phase1') ? 285 : 285;
         } else {
-            fixedCharge = (phase === 'phase1') ? 290 : 290;
+            fixedCharge = (phase === 'phase1') ? 310 : 310;
         }
     }
 
@@ -2233,7 +2233,7 @@ const getEnergyCaluculationMessage = (
         </p>
         <p style="font-size: 13px; color: #666; margin-top: 10px; line-height: 1.6;">
             <em>Note:</em> This information is provided for reference only. For accurate and official details, consult <span style="color: #3498db;">KSEB</span> or other authoritative sources. 
-            <span style="display: block; margin-top: 5px; font-size: 12px; color: #888;">(Version 1.0.24: Last updated: 17-Apr-2025) </span>
+            <span style="display: block; margin-top: 5px; font-size: 12px; color: #888;">(Version 1.0.25: Last updated: 22-Apr-2025) </span>
         </p>
     </div>
 `;
