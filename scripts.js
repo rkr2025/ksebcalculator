@@ -1708,6 +1708,10 @@ const getEnergyCaluculationMessage = (
     var totalBillAmount = 0;
     duty = energyCharge * 0.10;
     totalBillAmount = fixedCharge + meterRent + energyCharge + duty + monthlyFuelSurcharge;
+    
+    // Round off based on decimal part
+    totalBillAmount = Math.round(totalBillAmount);
+
     let billInfo = '';
 
     if (bankAdjustedUnits > 0) {
@@ -2233,7 +2237,7 @@ const getEnergyCaluculationMessage = (
         </p>
         <p style="font-size: 13px; color: #666; margin-top: 10px; line-height: 1.6;">
             <em>Note:</em> This information is provided for reference only. For accurate and official details, consult <span style="color: #3498db;">KSEB</span> or other authoritative sources. 
-            <span style="display: block; margin-top: 5px; font-size: 12px; color: #888;">(Version 1.0.26: Last updated: 30-Apr-2025) </span>
+            <span style="display: block; margin-top: 5px; font-size: 12px; color: #888;">(Version 1.0.27: Last updated: 01-May-2025) </span>
         </p>
     </div>
 `;
