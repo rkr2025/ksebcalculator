@@ -36,6 +36,239 @@ h1 {
   transition: transform 0.3s ease;
 }
 
+
+
+/* Header Container for Date/Time and Extra Apps Link */
+.header-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0 15px 0;
+    width: 100%;
+    padding: 0 10px;
+    position: relative;
+}
+
+/* Date/Time Styling */
+.date-time {
+    font-size: 13px;
+    color: #333;
+    text-align: left;
+}
+
+/* Enhanced Blinking Effect for Extra Apps Link */
+@keyframes blink {
+    0% {
+        opacity: 1;
+        color: #e74c3c; /* Bright red */
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        color: #f39c12; /* Orange for pulse effect */
+        transform: scale(1.05);
+    }
+    100% {
+        opacity: 1;
+        color: #e74c3c;
+        transform: scale(1);
+    }
+}
+
+.extra-apps-link {
+    display: inline-block;
+    color: #e74c3c;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 5px;
+    text-decoration: none;
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    animation: blink 1.2s ease-in-out infinite;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.extra-apps-link:hover {
+    background-color: #ecf0f1;
+    color: #c0392b;
+    animation: none;
+    transform: scale(1);
+}
+
+/* Adjust h1 to prevent overlap */
+h1 {
+    text-align: center;
+    font-family: 'Poppins', sans-serif;
+    font-size: 28px;
+    color: #2c3e50;
+    margin: 25px auto 20px; /* Increased top margin */
+    padding: 15px;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    animation: fadeInSlide 1.5s ease-in-out;
+    border-radius: 8px;
+    max-width: 90%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: transform 0.3s ease;
+}
+
+
+/*
+extra apps
+*/
+
+/* Header Container for Date/Time and New!! - Solar Diary Link */
+.header-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0 15px 0;
+    width: 100%;
+    padding: 0 10px;
+    position: relative;
+}
+
+/* Date/Time Styling */
+.date-time {
+    font-size: 13px;
+    color: #333;
+    text-align: left;
+    max-width: 60%; /* Prevent overlap with link */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Enhanced Blinking Effect for New!! - Solar Diary Link */
+@keyframes blink {
+    0% {
+        opacity: 1;
+        color: #e74c3c; /* Bright red */
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        color: #f39c12; /* Orange for pulse effect */
+        transform: scale(1.05);
+    }
+    100% {
+        opacity: 1;
+        color: #e74c3c;
+        transform: scale(1);
+    }
+}
+
+.extra-apps-link {
+    display: inline-block;
+    color: #e74c3c;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 5px;
+    text-decoration: none;
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    animation: blink 1.2s ease-in-out infinite;
+    transition: background-color 0.3s, color 0.3s;
+    white-space: nowrap;
+}
+
+.extra-apps-link:hover {
+    background-color: #ecf0f1;
+    color: #c0392b;
+    animation: none;
+    transform: scale(1);
+}
+
+/* Adjust h1 to prevent overlap */
+h1 {
+    text-align: center;
+    font-family: 'Poppins', sans-serif;
+    font-size: 28px;
+    color: #2c3e50;
+    margin: 25px auto 20px; /* Increased top margin */
+    padding: 15px;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    animation: fadeInSlide 1.5s ease-in-out;
+    border-radius: 8px;
+    max-width: 90%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: transform 0.3s ease;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 480px) {
+    .header-container {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        align-items: center;
+        margin: 8px 0 12px 0;
+        padding: 0 8px;
+    }
+
+    .date-time {
+        font-size: 11px;
+        max-width: 50%; /* Tighter constraint for mobile */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .extra-apps-link {
+        position: absolute;
+        top: 0;
+        right: 8px;
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+
+    h1 {
+        font-size: 22px;
+        margin-top: 35px; /* Increased to avoid overlap with header */
+        padding: 10px;
+    }
+}
+
+@media (max-width: 360px) {
+    .header-container {
+        margin: 6px 0 10px 0;
+        padding: 0 6px;
+    }
+
+    .date-time {
+        font-size: 10px;
+        max-width: 45%;
+    }
+
+    .extra-apps-link {
+        font-size: 10px;
+        padding: 5px 8px;
+        right: 6px;
+    }
+
+    h1 {
+        font-size: 20px;
+        margin-top: 30px;
+        padding: 8px;
+    }
+}
+
+
+
+
+
 @keyframes fadeInSlide {
   from {
       opacity: 0;

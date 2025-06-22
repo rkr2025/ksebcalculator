@@ -1,0 +1,523 @@
+<!DOCTYPE html> 
+
+<html lang="en"> 
+
+<head> 
+
+  <meta charset="UTF-8" /> 
+
+  <title>📘 Solar Diary</title> 
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" /> 
+
+  <style> 
+
+    body { 
+
+      font-family: 'Segoe UI', sans-serif; 
+
+      background: linear-gradient(to right, #2980b9, #6dd5fa); 
+
+      margin: 0; 
+
+      padding: 0; 
+
+    } 
+
+    .container { 
+
+      max-width: 960px; 
+
+      margin: 20px auto; 
+
+      background: white; 
+
+      padding: 20px; 
+
+      border-radius: 12px; 
+
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+
+    } 
+
+    h2, h3 { 
+
+      text-align: center; 
+
+    } 
+
+    form { 
+
+      display: grid; 
+
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+
+      gap: 10px; 
+
+      margin-bottom: 20px; 
+
+    } 
+
+    input { 
+
+      padding: 8px; 
+
+      border: 1px solid #ccc; 
+
+      border-radius: 6px; 
+
+    } 
+
+    button { 
+
+      padding: 10px; 
+
+      background: #3498db; 
+
+      color: white; 
+
+      border: none; 
+
+      border-radius: 6px; 
+
+      cursor: pointer; 
+
+    } 
+
+    table { 
+
+      width: 100%; 
+
+      border-collapse: collapse; 
+
+      margin-top: 20px; 
+
+    } 
+
+    th, td { 
+
+      border: 1px solid #ddd; 
+
+      padding: 6px; 
+
+      text-align: center; 
+
+    } 
+
+    .highlight { 
+
+      background-color: #ecf0f1; 
+
+      font-weight: bold; 
+
+    } 
+
+    .edit-btn, .delete-btn { 
+
+      background: none; 
+
+      border: none; 
+
+      font-size: 16px; 
+
+      cursor: pointer; 
+
+    } 
+
+    .edit-btn { color: #2980b9; } 
+
+    .delete-btn { color: #e74c3c; }
+    
+    .nav-link { 
+
+      display: block; 
+
+      text-align: center; 
+
+      margin-top: 20px; 
+
+      text-decoration: none; 
+
+      color: #3498db; 
+
+    } 
+
+  </style> 
+
+</head> 
+
+<body> 
+
+  <div class="container"> 
+
+    <h2>📘 Solar Diary</h2> 
+
+ 
+
+    <h3>🔑 Initial Readings (optional - Check your previous Bill)</h3> 
+
+    <form id="initialForm"> 
+
+      <input type="number" id="init_solar" placeholder="Initial Solar Gen">
+      
+      <input type="number" id="init_t1" placeholder="Initial T1"> 
+
+      <input type="number" id="init_t2" placeholder="Initial T2"> 
+
+      <input type="number" id="init_t3" placeholder="Initial T3"> 
+
+      <input type="number" id="init_export" placeholder="Initial Export"> 
+
+      <button type="submit">💾 Save Initial</button> 
+
+    </form> 
+
+    <div id="initialValuesDisplay"></div> 
+
+    <div class="center"> 
+
+      <button onclick="deleteInitial()">🗑️ Delete Initial Readings</button> 
+
+    </div> 
+
+ 
+
+    <h3>➕ Current Solar Readings</h3> 
+
+    <form id="diaryForm"> 
+
+      <input type="number" id="solar" placeholder="Solar Gen" required> 
+
+      <input type="number" id="t1" placeholder="T1" required> 
+
+      <input type="number" id="t2" placeholder="T2" required> 
+
+      <input type="number" id="t3" placeholder="T3" required> 
+
+      <input type="number" id="export" placeholder="Export" required> 
+
+      <button type="submit">➕ Add</button> 
+
+    </form> 
+
+ 
+
+    <h3>📋 Entries Log</h3> 
+
+    <table> 
+
+      <thead> 
+
+        <tr> 
+
+          <th>Date</th> 
+
+          <th>Solar</th>
+
+          <th>T1</th> 
+
+          <th>T2</th> 
+
+          <th>T3</th> 
+
+          <th>Export</th> 
+
+          <th>Actions</th> 
+
+        </tr> 
+
+      </thead> 
+
+      <tbody id="entriesBody"></tbody> 
+
+    </table> 
+    
+  <a href="index.html" class="nav-link">← Back to Calculator</a> 
+
+  </div> 
+
+ 
+
+  <script> 
+
+    let initialReadings = JSON.parse(localStorage.getItem("initialReadings")) || null; 
+
+    let entries = JSON.parse(localStorage.getItem("entries")) || []; 
+
+ 
+
+    function displayInitialValues() { 
+
+      const el = document.getElementById("initialValuesDisplay"); 
+
+      if (!initialReadings) { 
+
+        el.innerHTML = '<em>No initial readings saved.</em>'; 
+
+      } else { 
+
+        el.innerHTML = ` 
+
+          <strong>Saved Initial Readings:</strong><br> 
+
+          Solar: ${initialReadings.solar}, T1: ${initialReadings.t1}, 
+
+          T2: ${initialReadings.t2}, T3: ${initialReadings.t3}, Export: ${initialReadings.export} 
+
+        `; 
+
+      } 
+
+    } 
+
+ 
+
+    function updateStorage() { 
+
+      localStorage.setItem("initialReadings", JSON.stringify(initialReadings)); 
+
+      localStorage.setItem("entries", JSON.stringify(entries)); 
+
+    } 
+
+ 
+
+    function renderEntries() { 
+
+      const tbody = document.getElementById("entriesBody"); 
+
+      tbody.innerHTML = ""; 
+
+ 
+
+      let total = { solar: 0, t1: 0, t2: 0, t3: 0, export: 0 }; 
+
+ 
+
+      entries.forEach((e, i) => { 
+
+        const delta = initialReadings ? { 
+
+          solar: e.solar - initialReadings.solar,
+
+          t1: e.t1 - initialReadings.t1, 
+
+          t2: e.t2 - initialReadings.t2, 
+
+          t3: e.t3 - initialReadings.t3, 
+
+          export: e.export - initialReadings.export 
+
+        } : null; 
+
+ 
+
+        total.solar += delta ? delta.solar : e.solar; 
+
+        total.t1 += delta ? delta.t1 : e.t1; 
+
+        total.t2 += delta ? delta.t2 : e.t2; 
+
+        total.t3 += delta ? delta.t3 : e.t3; 
+
+        total.export += delta ? delta.export : e.export; 
+
+ 
+
+        tbody.innerHTML += `<tr> 
+
+          <td>${e.date}</td> 
+
+          <td>${e.solar}</td><td>${e.t1}</td><td>${e.t2}</td><td>${e.t3}</td><td>${e.export}</td> 
+
+          <td> 
+
+            <button class="edit-btn" onclick="editEntry(${i})">✏️</button> 
+
+            <button class="delete-btn" onclick="deleteEntry(${i})">🗑️</button> 
+
+          </td> 
+
+        </tr>`; 
+
+      }); 
+
+ 
+
+      if (entries.length > 0) { 
+
+        const lastEntry = entries[entries.length - 1]; 
+
+        const usage = initialReadings ? { 
+
+          solar: lastEntry.solar - initialReadings.solar, 
+
+          t1: lastEntry.t1 - initialReadings.t1, 
+
+          t2: lastEntry.t2 - initialReadings.t2, 
+
+          t3: lastEntry.t3 - initialReadings.t3, 
+
+          export: lastEntry.export - initialReadings.export 
+
+        } : { 
+
+          solar: lastEntry.solar, 
+
+          t1: lastEntry.t1, 
+
+          t2: lastEntry.t2, 
+
+          t3: lastEntry.t3, 
+
+          export: lastEntry.export 
+
+        }; 
+
+ 
+
+        tbody.innerHTML += `<tr class="highlight"> 
+
+          <td><strong>Total Usage</strong></td> 
+
+          <td>${Math.round(usage.solar)}</td> 
+
+          <td>${Math.round(usage.t1)}</td> 
+
+          <td>${Math.round(usage.t2)}</td> 
+
+          <td>${Math.round(usage.t3)}</td> 
+
+          <td>${Math.round(usage.export)}</td> 
+
+          <td></td> 
+
+        </tr>`; 
+
+      } 
+
+    } 
+
+ 
+
+    function deleteInitial() { 
+
+      initialReadings = null; 
+
+      localStorage.removeItem("initialReadings"); 
+
+      displayInitialValues(); 
+
+      renderEntries(); 
+
+    } 
+
+ 
+
+    document.getElementById("initialForm").addEventListener("submit", e => { 
+
+      e.preventDefault(); 
+
+      initialReadings = { 
+
+        solar: parseFloat(document.getElementById("init_solar").value) || 0, 
+
+        t1: parseFloat(document.getElementById("init_t1").value) || 0, 
+
+        t2: parseFloat(document.getElementById("init_t2").value) || 0, 
+
+        t3: parseFloat(document.getElementById("init_t3").value) || 0, 
+
+        export: parseFloat(document.getElementById("init_export").value) || 0 
+
+      }; 
+
+      updateStorage(); 
+
+      displayInitialValues(); 
+
+      renderEntries(); 
+
+      e.target.reset(); 
+
+    }); 
+
+ 
+
+    document.getElementById("diaryForm").addEventListener("submit", e => { 
+
+      e.preventDefault(); 
+
+      const entry = { 
+
+        date: new Date().toLocaleString(), 
+
+        solar: parseFloat(document.getElementById("solar").value), 
+
+        t1: parseFloat(document.getElementById("t1").value), 
+
+        t2: parseFloat(document.getElementById("t2").value), 
+
+        t3: parseFloat(document.getElementById("t3").value), 
+
+        export: parseFloat(document.getElementById("export").value) 
+
+      }; 
+
+      entries.push(entry); 
+
+      updateStorage(); 
+
+      renderEntries(); 
+
+      e.target.reset(); 
+
+    }); 
+
+ 
+
+    function deleteEntry(i) { 
+
+      entries.splice(i, 1); 
+
+      updateStorage(); 
+
+      renderEntries(); 
+
+    } 
+
+ 
+
+    function editEntry(i) { 
+
+      const e = entries[i]; 
+
+      document.getElementById("solar").value = e.solar; 
+
+      document.getElementById("t1").value = e.t1; 
+
+      document.getElementById("t2").value = e.t2; 
+
+      document.getElementById("t3").value = e.t3; 
+
+      document.getElementById("export").value = e.export; 
+
+      entries.splice(i, 1); 
+
+      updateStorage(); 
+
+      renderEntries(); 
+
+    } 
+
+ 
+
+    displayInitialValues(); 
+
+    renderEntries(); 
+
+  </script> 
+
+</body> 
+
+</html>
