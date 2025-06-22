@@ -1,0 +1,349 @@
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+  <meta charset="UTF-8"> 
+  <title>🗓️ Daily Planner</title> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <style> 
+    :root { 
+      --bg: linear-gradient(to right, #2980b9, #6dd5fa); 
+      --primary: #3498db; 
+      --font: 'Segoe UI', sans-serif; 
+      --container-bg: white; 
+      --text-color: #333; 
+      --section-color: #2c3e50; 
+    } 
+ 
+    body.dark-mode { 
+      --bg: linear-gradient(to right, #2c3e50, #4a5568); 
+      --container-bg: #2d3748; 
+      --text-color: #e2e8f0; 
+      --section-color: #e2e8f0; 
+    } 
+ 
+    body { 
+      margin: 0; 
+      padding: 0; 
+      font-family: var(--font); 
+      background: var(--bg); 
+      min-height: 100vh; 
+      color: var(--text-color); 
+    } 
+ 
+    .container { 
+      background: var(--container-bg); 
+      max-width: 800px; 
+      margin: 40px auto; 
+      padding: 20px; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); 
+    } 
+ 
+    h2 { 
+      text-align: center; 
+      color: var(--section-color); 
+      margin-bottom: 10px; 
+    } 
+ 
+    .date { 
+      font-size: 16px; 
+      color: #555; 
+      text-align: center; 
+      margin-bottom: 20px; 
+    } 
+ 
+    .theme-toggle { 
+      text-align: center; 
+      margin-bottom: 20px; 
+    } 
+ 
+    .section { 
+      margin-bottom: 25px; 
+    } 
+ 
+    .section h3 { 
+      margin-bottom: 10px; 
+      color: #2980b9; 
+    } 
+ 
+    .block { 
+      display: flex; 
+      align-items: center; 
+      margin-bottom: 10px; 
+      padding: 5px; 
+    } 
+ 
+    .block input[type="checkbox"] { 
+      margin-right: 10px; 
+    } 
+ 
+    .block label { 
+      width: 90px; 
+      font-weight: bold; 
+    } 
+ 
+    .block input[type="text"], 
+    .block textarea { 
+      flex-grow: 1; 
+      padding: 8px; 
+      border: 1px solid #ccc; 
+      border-radius: 6px; 
+      font-size: 14px; 
+    } 
+ 
+    .current-slot { 
+      background-color: #e8f4f8; 
+      border-radius: 6px; 
+    } 
+ 
+    .save-btn, .clear-btn, .print-btn, .export-btn, .import-btn { 
+      padding: 10px 20px; 
+      color: white; 
+      border: none; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      display: inline-block; 
+      margin: 10px 5px; 
+    } 
+ 
+    .save-btn { 
+      background-color: var(--primary); 
+    } 
+ 
+    .clear-btn { 
+      background-color: #e74c3c; 
+    } 
+ 
+    .print-btn { 
+      background-color: #2ecc71; 
+    } 
+ 
+    .export-btn { 
+      background-color: #f39c12; 
+    } 
+ 
+    .import-btn { 
+      background-color: #8e44ad; 
+    } 
+ 
+    .nav-link { 
+      display: block; 
+      text-align: center; 
+      margin-top: 20px; 
+      text-decoration: none; 
+      color: #3498db; 
+    } 
+ 
+    @media (max-width: 600px) { 
+      .block label { 
+        width: 70px; 
+        font-size: 13px; 
+      } 
+ 
+      .block input[type="text"], 
+      .block textarea { 
+        font-size: 13px; 
+      } 
+    } 
+ 
+    @media print { 
+      body { 
+        background: white; 
+      } 
+      .container { 
+        box-shadow: none; 
+        margin: 0; 
+        width: 100%; 
+      } 
+      .save-btn, .clear-btn, .print-btn, .export-btn, .import-btn, .nav-link, .theme-toggle { 
+        display: none; 
+      } 
+    } 
+  </style> 
+</head> 
+<body> 
+ 
+<div class="container"> 
+  <div class="theme-toggle"> 
+    <input type="checkbox" id="themeToggle"> 
+    <label for="themeToggle">🌙 Dark Mode</label> 
+  </div> 
+  <h2>🗓️ Daily Planner</h2> 
+  <div class="date" id="currentDate"></div> 
+ 
+  <form id="plannerForm"> 
+    <div class="section"> 
+      <h3>🌅 Morning (6 AM – 12 PM)</h3> 
+      <div class="block"><input type="checkbox" id="morning1-check"><label>6–7 AM</label><input type="text" id="morning1"></div> 
+      <div class="block"><input type="checkbox" id="morning2-check"><label>7–8 AM</label><input type="text" id="morning2"></div> 
+      <div class="block"><input type="checkbox" id="morning3-check"><label>8–9 AM</label><input type="text" id="morning3"></div> 
+      <div class="block"><input type="checkbox" id="morning4-check"><label>9–10 AM</label><input type="text" id="morning4"></div> 
+      <div class="block"><input type="checkbox" id="morning5-check"><label>10–11 AM</label><input type="text" id="morning5"></div> 
+      <div class="block"><input type="checkbox" id="morning6-check"><label>11–12 PM</label><input type="text" id="morning6"></div> 
+    </div> 
+ 
+    <div class="section"> 
+      <h3>🌞 Afternoon (12 PM – 6 PM)</h3> 
+      <div class="block"><input type="checkbox" id="afternoon1-check"><label>12–1 PM</label><input type="text" id="afternoon1"></div> 
+      <div class="block"><input type="checkbox" id="afternoon2-check"><label>1–2 PM</label><input type="text" id="afternoon2"></div> 
+      <div class="block"><input type="checkbox" id="afternoon3-check"><label>2–3 PM</label><input type="text" id="afternoon3"></div> 
+      <div class="block"><input type="checkbox" id="afternoon4-check"><label>3–4 PM</label><input type="text" id="afternoon4"></div> 
+      <div class="block"><input type="checkbox" id="afternoon5-check"><label>4–5 PM</label><input type="text" id="afternoon5"></div> 
+      <div class="block"><input type="checkbox" id="afternoon6-check"><label>5–6 PM</label><input type="text" id="afternoon6"></div> 
+    </div> 
+ 
+    <div class="section"> 
+      <h3>🌙 Evening (6 PM – 10 PM)</h3> 
+      <div class="block"><input type="checkbox" id="evening1-check"><label>6–7 PM</label><input type="text" id="evening1"></div> 
+      <div class="block"><input type="checkbox" id="evening2-check"><label>7–8 PM</label><input type="text" id="evening2"></div> 
+      <div class="block"><input type="checkbox" id="evening3-check"><label>8–9 PM</label><input type="text" id="evening3"></div> 
+      <div class="block"><input type="checkbox" id="evening4-check"><label>9–10 PM</label><input type="text" id="evening4"></div> 
+    </div> 
+ 
+    <div class="section"> 
+      <h3>📝 Daily Notes</h3> 
+      <textarea id="dailyNotes" rows="4" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px;"></textarea> 
+    </div> 
+ 
+    <button type="submit" class="save-btn">💾 Save Plan</button> 
+    <button type="button" class="clear-btn" onclick="clearPlan()">🗑️ Clear Plan</button> 
+    <button type="button" class="print-btn" onclick="window.print()">🖨️ Print Plan</button> 
+    <button type="button" class="export-btn" onclick="exportPlan()">📤 Export Plan</button> 
+    <input type="file" id="importPlan" accept=".json" style="display: none;" onchange="importPlan(event)"> 
+    <button type="button" class="import-btn" onclick="document.getElementById('importPlan').click()">📥 Import Plan</button> 
+  </form> 
+ 
+  <a href="index.html" class="nav-link">← Back to Calculator</a> 
+</div> 
+ 
+<script> 
+  const form = document.getElementById('plannerForm'); 
+  const timeSlots = [ 
+    'morning1','morning2','morning3','morning4','morning5','morning6', 
+    'afternoon1','afternoon2','afternoon3','afternoon4','afternoon5','afternoon6', 
+    'evening1','evening2','evening3','evening4', 'dailyNotes' 
+  ]; 
+  const checkboxes = timeSlots.slice(0, -1).map(slot => `${slot}-check`); 
+ 
+  function loadPlan() { 
+    const saved = JSON.parse(localStorage.getItem('dailyPlanner') || '{}'); 
+    timeSlots.forEach(slot => { 
+      document.getElementById(slot).value = saved[slot] || ''; 
+    }); 
+    checkboxes.forEach(checkbox => { 
+      document.getElementById(checkbox).checked = saved[checkbox] || false; 
+    }); 
+  } 
+ 
+  function savePlan() { 
+    const data = {}; 
+    timeSlots.forEach(slot => { 
+      data[slot] = document.getElementById(slot).value; 
+    }); 
+    checkboxes.forEach(checkbox => { 
+      data[checkbox] = document.getElementById(checkbox).checked; 
+    }); 
+    localStorage.setItem('dailyPlanner', JSON.stringify(data)); 
+    alert('✅ Daily plan saved!'); 
+  } 
+ 
+  function clearPlan() { 
+    if (confirm('Are you sure you want to clear the plan?')) { 
+      timeSlots.forEach(slot => { 
+        document.getElementById(slot).value = ''; 
+      }); 
+      checkboxes.forEach(checkbox => { 
+        document.getElementById(checkbox).checked = false; 
+      }); 
+      localStorage.removeItem('dailyPlanner'); 
+      alert('🗑️ Plan cleared!'); 
+    } 
+  } 
+ 
+  function displayDate() { 
+    const dateElement = document.getElementById('currentDate'); 
+    const today = new Date(); 
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }; 
+    dateElement.textContent = today.toLocaleDateString('en-US', options); 
+  } 
+ 
+  function highlightCurrentSlot() { 
+    const now = new Date(); 
+    const hour = now.getHours(); 
+    const slots = [ 
+      { id: 'morning1', start: 6 }, 
+      { id: 'morning2', start: 7 }, 
+      { id: 'morning3', start: 8 }, 
+      { id: 'morning4', start: 9 }, 
+      { id: 'morning5', start: 10 }, 
+      { id: 'morning6', start: 11 }, 
+      { id: 'afternoon1', start: 12 }, 
+      { id: 'afternoon2', start: 13 }, 
+      { id: 'afternoon3', start: 14 }, 
+      { id: 'afternoon4', start: 15 }, 
+      { id: 'afternoon5', start: 16 }, 
+      { id: 'afternoon6', start: 17 }, 
+      { id: 'evening1', start: 18 }, 
+      { id: 'evening2', start: 19 }, 
+      { id: 'evening3', start: 20 }, 
+      { id: 'evening4', start: 21 } 
+    ]; 
+    slots.forEach(slot => { 
+      const element = document.getElementById(slot.id).parentElement; 
+      if (hour === slot.start) { 
+        element.classList.add('current-slot'); 
+      } else { 
+        element.classList.remove('current-slot'); 
+      } 
+    }); 
+  } 
+ 
+  function exportPlan() { 
+    const data = JSON.parse(localStorage.getItem('dailyPlanner') || '{}'); 
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); 
+    const url = URL.createObjectURL(blob); 
+    const a = document.createElement('a'); 
+    a.href = url; 
+    a.download = `daily_plan_${new Date().toISOString().split('T')[0]}.json`; 
+    a.click(); 
+    URL.revokeObjectURL(url); 
+  } 
+ 
+  function importPlan(event) { 
+    const file = event.target.files[0]; 
+    if (file) { 
+      const reader = new FileReader(); 
+      reader.onload = function(e) { 
+        const data = JSON.parse(e.target.result); 
+        localStorage.setItem('dailyPlanner', JSON.stringify(data)); 
+        loadPlan(); 
+        alert('✅ Plan imported!'); 
+      }; 
+      reader.readAsText(file); 
+    } 
+  } 
+ 
+  form.addEventListener('submit', function(e) { 
+    e.preventDefault(); 
+    savePlan(); 
+  }); 
+ 
+  document.getElementById('themeToggle').addEventListener('change', function() { 
+    document.body.classList.toggle('dark-mode'); 
+    localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light'); 
+  }); 
+ 
+  window.onload = function() { 
+    loadPlan(); 
+    displayDate(); 
+    highlightCurrentSlot(); 
+    setInterval(highlightCurrentSlot, 60000); 
+    if (localStorage.getItem('theme') === 'dark') { 
+      document.body.classList.add('dark-mode'); 
+      document.getElementById('themeToggle').checked = true; 
+    } 
+  }; 
+</script> 
+ 
+</body> 
+</html>
