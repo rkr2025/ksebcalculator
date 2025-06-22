@@ -60,8 +60,14 @@
       font-size: 14px;
       max-width: 100%;
     }
-    button:hover {
+    button:hover:not(.disabled) {
       background: #2980b9;
+    }
+    button.disabled {
+      background: #ccc;
+      opacity: 0.6;
+      cursor: not-allowed;
+      pointer-events: none;
     }
     table {
       width: 100%;
@@ -283,11 +289,11 @@
       <input type="number" id="init_t2" placeholder="Initial T2">
       <input type="number" id="init_t3" placeholder="Initial T3">
       <input type="number" id="init_export" placeholder="Initial Export">
-      <button type="submit">💾 Save Initial</button>
+      <button type="submit" id="saveInitialBtn">💾 Save Initial</button>
     </form>
     <div id="initialValuesDisplay"></div>
     <hr>
-    <h3  style="margin-top: 25px;">➕ Current Solar Readings</h3>
+    <h3 style="margin-top: 25px;">➕ Current Solar Readings</h3>
     <form id="diaryForm">
       <input type="number" id="solar" placeholder="Solar Gen" required>
       <input type="number" id="t1" placeholder="T1" required>
@@ -339,8 +345,11 @@
 
     function displayInitialValues() {
       const el = document.getElementById("initialValuesDisplay");
+      const saveBtn = document.getElementById("saveInitialBtn");
       if (!initialReadings) {
-        el.innerHTML = '<em>No initial readings saved.</em>';
+        el.innerHTML = '<em>No valid initial readings provided. Please enter initial readings to enable usage analysis.</em>';
+        saveBtn.classList.remove('disabled');
+        saveBtn.removeAttribute('disabled');
       } else {
         el.innerHTML = `
           <div class="table-container">
@@ -370,6 +379,8 @@
             </table>
           </div>
         `;
+        saveBtn.classList.add('disabled');
+        saveBtn.setAttribute('disabled', 'disabled');
       }
     }
 
@@ -413,7 +424,7 @@
         </tr>`;
       });
 
-      if (entries.length > 0) {
+      if (entries.length > 0 && initialReadings) {
         const lastEntry = entries[entries.length - 1];
         const usage = initialReadings ? {
           solar: lastEntry.solar - initialReadings.solar,
