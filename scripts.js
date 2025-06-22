@@ -53,7 +53,7 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
             todBillingAbove20kW = 0;
             console.log('ToD Billing Method for Below 20kW');
         }else{
-    
+
             todBillingAbove20kW = 1;
             console.log('ToD Billing Method for Above 20kW');
         }
@@ -307,7 +307,7 @@ function applyNewTariffRules() {
                     OffPeakConsumptionAdjusted = PeakConsumptionAdjusted - importOffPeak;
                     OffPeakConsumptionAdjusted_energy_charge = 0;
                     console.log('VII OffPeakConsumptionAdjusted is : ' + OffPeakConsumptionAdjusted);
-                    
+
                 }else if(PeakConsumptionAdjusted == importOffPeak) {
                     OffPeakConsumptionAdjusted_energy_charge = 0;
                     OffPeakConsumptionAdjusted = 0;
@@ -318,10 +318,10 @@ function applyNewTariffRules() {
                     console.log('IX OffPeak_NoOfUnitsFor_energy_calculation is : ' + OffPeak_NoOfUnitsFor_energy_calculation);
                     console.log('IX OffPeakConsumptionAdjusted is : ' + OffPeakConsumptionAdjusted);
                 }
-            
+
                 bankAdjustedUnits = Normal_NoOfUnitsFor_energy_calculation + Peak_NoOfUnitsFor_energy_calculation + OffPeak_NoOfUnitsFor_energy_calculation;
                 console.log('bankAdjustedUnits is : ' + bankAdjustedUnits);
-                
+
 
                 console.log('Check 13');
                 billType = "Non-Telescopic-ToD"
@@ -337,19 +337,19 @@ function applyNewTariffRules() {
                     unitRate = 9.20;
                 }
 
-                console.log('1 unitRate is : ' + unitRate);            
+                console.log('1 unitRate is : ' + unitRate);
                 NormalConsumptionAdjusted_energy_charge = Normal_NoOfUnitsFor_energy_calculation * unitRate * 0.9;
                 PeakConsumptionAdjusted_energy_charge = Peak_NoOfUnitsFor_energy_calculation * unitRate * 1.25;
                 OffPeakConsumptionAdjusted_energy_charge = OffPeak_NoOfUnitsFor_energy_calculation * unitRate * 1;
-                
+
                 console.log('X NormalConsumptionAdjusted_energy_charge is : ' + NormalConsumptionAdjusted_energy_charge);
                 console.log('X PeakConsumptionAdjusted_energy_charge is : ' + PeakConsumptionAdjusted_energy_charge);
                 console.log('X OffPeakConsumptionAdjusted_energy_charge is : ' + OffPeakConsumptionAdjusted_energy_charge);
-                
+
                 energyCharge = NormalConsumptionAdjusted_energy_charge + PeakConsumptionAdjusted_energy_charge + OffPeakConsumptionAdjusted_energy_charge;
-                console.log('XI energyCharge is : ' + energyCharge);       
+                console.log('XI energyCharge is : ' + energyCharge);
             }
-            else 
+            else
             {
                 console.log('Check 11');
                 console.log('CONNECTED LOAD IS BELOW 20KW');
@@ -423,7 +423,7 @@ function applyNewTariffRules() {
                         console.log('III NormalConsumptionAdjusted is : ' + NormalConsumptionAdjusted);
                     }
 
-                    //Peak Usage calculation for connected Load below 20kW 
+                    //Peak Usage calculation for connected Load below 20kW
                     NormalConsumptionAdjusted_Below20kW = NormalConsumptionAdjusted;
                     if(NormalConsumptionAdjusted_Below20kW > importPeak){
                         PeakConsumptionAdjusted_Below20kW = NormalConsumptionAdjusted_Below20kW - importPeak;
@@ -439,14 +439,14 @@ function applyNewTariffRules() {
                         console.log('VI Peak_NoOfUnitsFor_energy_calculation_Below20kW is : ' + Peak_NoOfUnitsFor_energy_calculation_Below20kW);
                         console.log('VI PeakConsumptionAdjusted_Below20kW is : ' + PeakConsumptionAdjusted_Below20kW);
                     }
-                    
-                    //OffPeak Usage calculation for connected Load below 20kW 
+
+                    //OffPeak Usage calculation for connected Load below 20kW
                     console.log('4 PeakConsumptionAdjusted_Below20kW is : ' + PeakConsumptionAdjusted_Below20kW);
                     if(PeakConsumptionAdjusted_Below20kW > importOffPeak){
                         OffPeakConsumptionAdjusted_Below20kW = PeakConsumptionAdjusted_Below20kW - importOffPeak;
                         OffPeakConsumptionAdjusted_energy_charge_Below20kW = 0;
                         console.log('VII OffPeakConsumptionAdjusted_Below20kW is : ' + OffPeakConsumptionAdjusted_Below20kW);
-                        
+
                     }else if(PeakConsumptionAdjusted_Below20kW == importOffPeak) {
                         OffPeakConsumptionAdjusted_energy_charge_Below20kW = 0;
                         OffPeakConsumptionAdjusted_Below20kW = 0;
@@ -457,7 +457,7 @@ function applyNewTariffRules() {
                         console.log('IX OffPeak_NoOfUnitsFor_energy_calculation_Below20kW is : ' + OffPeak_NoOfUnitsFor_energy_calculation_Below20kW);
                         console.log('IX OffPeakConsumptionAdjusted_Below20kW is : ' + OffPeakConsumptionAdjusted_Below20kW);
                     }
-                    
+
                     bankAdjustedUnits_Below20kW = Normal_NoOfUnitsFor_energy_calculation + Peak_NoOfUnitsFor_energy_calculation_Below20kW + OffPeak_NoOfUnitsFor_energy_calculation_Below20kW;
                     console.log('bankAdjustedUnits_Below20kW is : ' + bankAdjustedUnits_Below20kW);
 
@@ -467,7 +467,7 @@ function applyNewTariffRules() {
                     } else if (bankAdjustedUnits_Below20kW <= 350) {
                         unitRate_Below20kW = 7.60;
                     } else if (bankAdjustedUnits_Below20kW <= 400) {
-                        unitRate_Below20kW = 7.95; 
+                        unitRate_Below20kW = 7.95;
                     } else if (bankAdjustedUnits_Below20kW <= 500) {
                         unitRate_Below20kW = 8.25;
                     } else {
@@ -481,11 +481,11 @@ function applyNewTariffRules() {
 
                     // Update Global variable here
                     energyCharge = energyCharge_Below20kW;
-                    bankAdjustedUnits=bankAdjustedUnits_Below20kW;    
+                    bankAdjustedUnits=bankAdjustedUnits_Below20kW;
                     unitRate = unitRate_Below20kW;
-                    
+
                     //Debug statements
-                    console.log('1 unitRate_Below20kW is : ' + unitRate_Below20kW);  
+                    console.log('1 unitRate_Below20kW is : ' + unitRate_Below20kW);
                     console.log('XI energyCharge_Below20kW is : ' + energyCharge_Below20kW);
                     console.log('X NormalConsumptionAdjusted_energy_charge is : ' + NormalConsumptionAdjusted_energy_charge);
                     console.log('X PeakConsumptionAdjusted_energy_charge_Below20kW is : ' + PeakConsumptionAdjusted_energy_charge_Below20kW);
@@ -585,15 +585,15 @@ const getHeaderMessage = () => {
 //               <p>Normal TimeZone Energy Consumption: <strong class="green-text">${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😌 </strong></p><hr>
 //               <p>Normal hours Adjust ചെയ്തതിനു ശേഷം ഉള്ള Energy <strong class="green-text">${NormalConsumptionAdjusted.toFixed(2)} Unit </strong> (${exportPlusBank.toFixed(2)}-${importNormal.toFixed(2)}) ആകുന്നു. ഇതിൻ്റെ 80% (<strong class="green-text">${PeakConsumptionAdjusted_80_percent.toFixed(2)} Unit</strong>) Peak TimeZone Adjustment ലേക്ക് എടുക്കുന്നതാണ് (for connected Load above 20kW).</p>
 //               <p> Peak TimeZone Energy Adjustment = <strong class="green-text">${Math.abs(exportPlusBank - importNormal).toFixed(2)} Unit </strong>(${exportPlusBank}-${importNormal}) </p>
-//               <p> Effective Energy to transfer=  <strong class="green-text">${PeakConsumptionAdjusted_80_percent.toFixed(2)} Unit </strong> (${NormalConsumptionAdjusted.toFixed(2)} x 80%) </p> 
-              
+//               <p> Effective Energy to transfer=  <strong class="green-text">${PeakConsumptionAdjusted_80_percent.toFixed(2)} Unit </strong> (${NormalConsumptionAdjusted.toFixed(2)} x 80%) </p>
+
 //               <hr>`;
 //     } else if (exportPlusBank == importNormal) {
 //       return `<p>Export+Bank (${exportReading.toFixed(2)} + ${myBankDepositAtKseb.toFixed(2)}) ഉം പകൽ സമയ ഉപയോഗവും (${importNormal.toFixed(2)}) തുല്യമായത് കൊണ്ട് പൂർണമായും അതിൽ Adjust ചെയ്യാൻ കഴിയുന്നതാണ്. <strong class="green-text"> അതിനാൽ Normal TimeZone എനർജി ഇല്ല.👍</strong>  No other Peak TimeZone Adjustment possible further. </p>
 //               <p>Normal TimeZone Energy Consumption: <strong class="green-text">${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😌</p> </strong>`;
 //     } else{
-//       return `<p>താങ്കളുടെ പകൽ സമയ ഉപയോഗം (<strong class="red-text">${importNormal.toFixed(2)} Unit </strong>) ആകുന്നു. Export+Bank: ${(exportReading + myBankDepositAtKseb).toFixed(2)}(<strong class="green-text"> ${exportReading.toFixed(2)} + ${myBankDepositAtKseb.toFixed(2)} Unit  </strong>) 
-//               കുറവാണ് . അതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(exportPlusBank - importNormal).toFixed(2)} Unit</strong>) 
+//       return `<p>താങ്കളുടെ പകൽ സമയ ഉപയോഗം (<strong class="red-text">${importNormal.toFixed(2)} Unit </strong>) ആകുന്നു. Export+Bank: ${(exportReading + myBankDepositAtKseb).toFixed(2)}(<strong class="green-text"> ${exportReading.toFixed(2)} + ${myBankDepositAtKseb.toFixed(2)} Unit  </strong>)
+//               കുറവാണ് . അതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(exportPlusBank - importNormal).toFixed(2)} Unit</strong>)
 //               Normal Rate ൻ്റെ 90%, (അതായത്  ₹${unitRate.toFixed(2)} x 0.9 = ₹${(unitRate * 0.9).toFixed(2)}) നിരക്കിൽ ചാർജ് ചെയ്യുന്നതാണ്. </p>
 //               <p>Normal TimeZone Energy Consumption: <strong class="red-text">${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} Units ⚡</p>  </strong>
 //               <hr>`;
@@ -756,14 +756,14 @@ const getExportNormalAdjustmentMessage = (
 //               <p>Normal TimeZone Energy Consumption: <strong class="green-text">${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😌 </strong></p> <hr>
 //               <p>Normal hours Adjust ചെയ്തതിനു ശേഷം ഉള്ള Energy <strong class="green-text">${NormalConsumptionAdjusted.toFixed(2)} Unit </strong> (${exportPlusBank.toFixed(2)}-${importNormal.toFixed(2)}) ആകുന്നു. ഇത് പൂർണമായും Peak TimeZone Adjustment ലേക്ക് എടുക്കുന്നതാണ് (for connected Load below 20kW).
 //               <p> Peak TimeZone Energy Adjustment = <strong class="green-text">${Math.abs(exportPlusBank - importNormal).toFixed(2)} Unit </strong>(${exportPlusBank}-${importNormal}) </p>
-//               <p> Effective Energy =  <strong class="green-text">${NormalConsumptionAdjusted_Below20kW.toFixed(2)} Unit </strong></p> 
+//               <p> Effective Energy =  <strong class="green-text">${NormalConsumptionAdjusted_Below20kW.toFixed(2)} Unit </strong></p>
 //               <hr>`;
 //     } else if (exportPlusBank == importNormal) {
 //       return `<p>Export+Bank (${exportReading.toFixed(2)} + ${myBankDepositAtKseb.toFixed(2)}) ഉം പകൽ സമയ ഉപയോഗവും (${importNormal.toFixed(2)}) തുല്യമായത് കൊണ്ട് പൂർണമായും അതിൽ Adjust ചെയ്യാൻ കഴിയുന്നതാണ്. <strong class="green-text"> അതിനാൽ Normal TimeZone എനർജി ഇല്ല.👍</strong>  No other Peak TimeZone Adjustment possible further. </p>
 //               <p>Normal TimeZone Energy Consumption: <strong class="green-text">${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😌</p> </strong>`;
 //     } else{
 //       return `<p>താങ്കളുടെ പകൽ സമയ ഉപയോഗം (<strong class="red-text">${importNormal.toFixed(2)} Unit </strong>) ആകുന്നു. Export+Bank: ${(exportReading + myBankDepositAtKseb).toFixed(2)} (<strong class="green-text">${exportReading.toFixed(2)} + ${myBankDepositAtKseb.toFixed(2)} Unit</strong>)
-//               കുറവാണ് . അതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(exportPlusBank - importNormal).toFixed(2)} Unit</strong>) 
+//               കുറവാണ് . അതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(exportPlusBank - importNormal).toFixed(2)} Unit</strong>)
 //               Normal Rate ൻ്റെ 90%, (അതായത്  ₹${unitRate_Below20kW.toFixed(2)} x 0.9 = ₹${(unitRate_Below20kW * 0.9).toFixed(2)}) നിരക്കിൽ ചാർജ് ചെയ്യുന്നതാണ്. </p>
 //               <p>Normal TimeZone Energy Consumption: <strong class="red-text">${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} Units⚡</p>  </strong>
 //               <hr>`;
@@ -789,7 +789,7 @@ const getExportNormalAdjustmentMessage_below20kW = (
     const safeNormal_NoOfUnitsFor_energy_calculation = Normal_NoOfUnitsFor_energy_calculation !== undefined && Normal_NoOfUnitsFor_energy_calculation !== null ? Normal_NoOfUnitsFor_energy_calculation : 0;
     const safeExportReading = exportReading !== undefined && exportReading !== null ? exportReading : 0;
     const safeMyBankDepositAtKseb = myBankDepositAtKseb !== undefined && myBankDepositAtKseb !== null ? myBankDepositAtKseb : 0;
-  
+
     if (safeExportPlusBank > safeImportNormal) {
       return `
         <hr>
@@ -936,7 +936,7 @@ const getExportNormalAdjustmentMessage_below20kW = (
 // const getExportPeakAdjustmentMessage = (PeakConsumptionAdjusted_80_percent, importPeak, PeakConsumptionAdjusted,Peak_NoOfUnitsFor_energy_calculation) => {
 //     if (PeakConsumptionAdjusted_80_percent > importPeak) {
 //       return `<p>ഇവിടെ Peak Hours Adjusted Energy (<strong class="green-text">${PeakConsumptionAdjusted_80_percent.toFixed(2)} Unit</strong>) കൂടുതൽ ആയതുകൊണ്ട് Peak TimeZone (6pm to 10pm) ഉപയോഗം (${importPeak.toFixed(2)}) പൂർണമായും Adjust ചെയ്യാം. <strong class="green-text"> അതിനാൽ Peak TimeZone എനർജി ചാർജ് ഇല്ല 👍</strong></p>
-//               <p>Peak TimeZone Energy Consumption: <strong class="green-text">${Peak_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😌 </strong> </p> 
+//               <p>Peak TimeZone Energy Consumption: <strong class="green-text">${Peak_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😌 </strong> </p>
 //               <p>Left-over Energy : ${(PeakConsumptionAdjusted_80_percent-importPeak).toFixed(2)} Unit (${PeakConsumptionAdjusted_80_percent.toFixed(2)}-${importPeak.toFixed(2)})</p>
 //               <p>Effective Energy to transfer : ${PeakConsumptionAdjusted.toFixed(2)} Unit. (${(PeakConsumptionAdjusted*0.8).toFixed(2)}/0.8) <p> ഇത് പൂർണമായും (${PeakConsumptionAdjusted.toFixed(2)} Unit) Off-Peak TimeZone Adjustment ലേക്ക് എടുക്കുന്നതാണ്.</p>
 //               </p><hr>`;
@@ -944,8 +944,8 @@ const getExportNormalAdjustmentMessage_below20kW = (
 //       return `<p>ബാക്കിയുള്ള Export Energy (${PeakConsumptionAdjusted_80_percent.toFixed(2)} Unit) ഉം Peak TimeZone (6pm to 10pm) ഉപയോഗവും (${importPeak.toFixed(2)}) തുല്യമായത് കൊണ്ട് പൂർണമായും അതിൽ Adjust ചെയ്യാൻ കഴിയുന്നതാണ്. <strong class="green-text">അതിനാൽ Peak TimeZone എനർജി ചാർജ് ഇല്ല 👍 </strong>. No other Peak TimeZone Adjustment possible further.</p>
 //               <p>Peak TimeZone Energy Consumption: <strong class="green-text">${Peak_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😌</p> </strong>`;
 //     } else{
-//       return `<p>താങ്കളുടെ Peak hours (6pm to 10pm) ഉപയോഗം (<strong class="red-text">${importPeak.toFixed(2)} Unit </strong>) ആകുന്നു. Peak Adjusted Energy (<strong class="green-text">${PeakConsumptionAdjusted_80_percent.toFixed(2)} Unit</strong>) 
-//               കുറവാണ്. അതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(importPeak - PeakConsumptionAdjusted_80_percent).toFixed(2)} Unit</strong>) 
+//       return `<p>താങ്കളുടെ Peak hours (6pm to 10pm) ഉപയോഗം (<strong class="red-text">${importPeak.toFixed(2)} Unit </strong>) ആകുന്നു. Peak Adjusted Energy (<strong class="green-text">${PeakConsumptionAdjusted_80_percent.toFixed(2)} Unit</strong>)
+//               കുറവാണ്. അതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(importPeak - PeakConsumptionAdjusted_80_percent).toFixed(2)} Unit</strong>)
 //               Normal Rate ൻ്റെ 125%, (അതായത്  ₹${unitRate.toFixed(2)} x 1.25 = <strong class="red-text">₹${(unitRate * 1.25).toFixed(2)}</strong>) നിരക്കിൽ ചാർജ് ചെയ്യുന്നതാണ് ⚡.</p>
 //               <p>Peak TimeZone Energy Consumption: <strong class="red-text">${Peak_NoOfUnitsFor_energy_calculation.toFixed(2)} Units ⚡</p> </strong><hr>`;
 //     }
@@ -965,7 +965,7 @@ const getExportPeakAdjustmentMessage = (
     const safePeakConsumptionAdjusted = PeakConsumptionAdjusted !== undefined && PeakConsumptionAdjusted !== null ? PeakConsumptionAdjusted : 0;
     const safePeak_NoOfUnitsFor_energy_calculation = Peak_NoOfUnitsFor_energy_calculation !== undefined && Peak_NoOfUnitsFor_energy_calculation !== null ? Peak_NoOfUnitsFor_energy_calculation : 0;
     const safeUnitRate = unitRate !== undefined && unitRate !== null ? unitRate : 0;
-  
+
     if (safePeakConsumptionAdjusted_80_percent > safeImportPeak) {
       return `
         <hr>
@@ -1118,14 +1118,14 @@ const getExportPeakAdjustmentMessage = (
 //               <p>Peak TimeZone Energy Consumption: <strong class="green-text">${Peak_NoOfUnitsFor_energy_calculation_Below20kW.toFixed(2)} Units 😌 </strong></p><hr>
 //               <p>Adjust ചെയ്തതിനു ശേഷം ഉള്ള Energy ${PeakConsumptionAdjusted_Below20kW.toFixed(2)} Unit (${NormalConsumptionAdjusted_Below20kW.toFixed(2)}-${importPeak.toFixed(2)}) ആകുന്നു. ഇത് പൂർണമായും Off-Peak TimeZone Adjustment ലേക്ക് എടുക്കുന്നതാണ്.</p>
 //               <p> Off-Peak TimeZone Energy Adjustment = ${Math.abs(NormalConsumptionAdjusted_Below20kW - importPeak).toFixed(2)} Unit (${NormalConsumptionAdjusted_Below20kW.toFixed(2)}-${importPeak})</p> <hr>
-              
+
 //               `;
 //     } else if (NormalConsumptionAdjusted_Below20kW == importPeak) {
 //       return `<p>ബാക്കിയുള്ള Export Energy (${NormalConsumptionAdjusted_Below20kW.toFixed(2)} Unit) ഉം Peak TimeZone (6pm to 10pm) ഉപയോഗവും (${importPeak.toFixed(2)}) തുല്യമായത് കൊണ്ട് പൂർണമായും അതിൽ Adjust ചെയ്യാൻ കഴിയുന്നതാണ്. <strong class="green-text">അതിനാൽ Peak TimeZone എനർജി ചാർജ് ഇല്ല 👍 </strong>. No other Peak TimeZone Adjustment possible further.</p>
 //               <p>Peak TimeZone Energy Consumption: <strong class="green-text">${Peak_NoOfUnitsFor_energy_calculation_Below20kW.toFixed(2)} Units 😌</p> </strong>`;
 //     } else{
-//       return `<p>താങ്കളുടെ Peak hours (6pm to 10pm) ഉപയോഗം (<strong class="red-text">${importPeak.toFixed(2)} Unit </strong>) ആകുന്നു. Peak Adjusted Energy (<strong class="green-text">${NormalConsumptionAdjusted_Below20kW.toFixed(2)} Unit</strong>) 
-//               കുറവാണ് . അതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(NormalConsumptionAdjusted_Below20kW - importPeak).toFixed(2)} Unit</strong>) 
+//       return `<p>താങ്കളുടെ Peak hours (6pm to 10pm) ഉപയോഗം (<strong class="red-text">${importPeak.toFixed(2)} Unit </strong>) ആകുന്നു. Peak Adjusted Energy (<strong class="green-text">${NormalConsumptionAdjusted_Below20kW.toFixed(2)} Unit</strong>)
+//               കുറവാണ് . അതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(NormalConsumptionAdjusted_Below20kW - importPeak).toFixed(2)} Unit</strong>)
 //               Normal Rate ൻ്റെ 125%, (അതായത്  ₹${unitRate_Below20kW.toFixed(2)} x 1.25 = <strong class="red-text">₹${(unitRate_Below20kW * 1.25).toFixed(2)}</strong>) നിരക്കിൽ ചാർജ് ചെയ്യുന്നതാണ് ⚡.</p>
 //               <p>Peak TimeZone Energy Consumption: <strong class="red-text">${Peak_NoOfUnitsFor_energy_calculation_Below20kW.toFixed(2)} Units⚡</p> </strong><hr>`;
 //     }
@@ -1143,10 +1143,10 @@ const getExportPeakAdjustmentMessage_below20kW = (
     const safeImportPeak = importPeak !== undefined && importPeak !== null ? importPeak : 0;
     const safePeak_NoOfUnitsFor_energy_calculation_Below20kW = Peak_NoOfUnitsFor_energy_calculation_Below20kW !== undefined && Peak_NoOfUnitsFor_energy_calculation_Below20kW !== null ? Peak_NoOfUnitsFor_energy_calculation_Below20kW : 0;
     const safeUnitRate_Below20kW = unitRate_Below20kW !== undefined && unitRate_Below20kW !== null ? unitRate_Below20kW : 0;
-  
+
     // Calculate leftover energy for the first case
     const safePeakConsumptionAdjusted_Below20kW = safeNormalConsumptionAdjusted_Below20kW - safeImportPeak;
-  
+
     if (safeNormalConsumptionAdjusted_Below20kW > safeImportPeak) {
       return `
         <hr>
@@ -1297,8 +1297,8 @@ const getExportPeakAdjustmentMessage_below20kW = (
 //         return `<p>ബാക്കിയുള്ള Export Energy (${PeakConsumptionAdjusted.toFixed(2)} Unit) ഉം Off-Peak TimeZone (10pm to 6am) ഉപയോഗവും (${importOffPeak.toFixed(2)}) തുല്യമായത് കൊണ്ട് പൂർണമായും അതിൽ Adjust ചെയ്യാൻ കഴിയുന്നതാണ്. <strong class="green-text">അതിനാൽ Off-Peak TimeZone എനർജി ഇല്ല </strong>. No other Peak TimeZone Adjustment possible further.</p>
 //                <p>Off-Peak TimeZone Energy Consumption: <strong class="green-text">${OffPeak_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😌</p> </strong>`;
 //     } else{
-//         return `<p>താങ്കളുടെ Off-Peak hours (10pm to 6am) ഉപയോഗം (<strong class="red-text">${importOffPeak.toFixed(1)} Unit </strong>) ആകുന്നു. Off-Peak Adjusted Energy (<strong class="green-text">${PeakConsumptionAdjusted.toFixed(2)} Unit</strong>) 
-//                 കുറവാണ് . അതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(PeakConsumptionAdjusted - importOffPeak).toFixed(2)} Unit</strong>) 
+//         return `<p>താങ്കളുടെ Off-Peak hours (10pm to 6am) ഉപയോഗം (<strong class="red-text">${importOffPeak.toFixed(1)} Unit </strong>) ആകുന്നു. Off-Peak Adjusted Energy (<strong class="green-text">${PeakConsumptionAdjusted.toFixed(2)} Unit</strong>)
+//                 കുറവാണ് . അതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(PeakConsumptionAdjusted - importOffPeak).toFixed(2)} Unit</strong>)
 //                 Normal Rate ൽ , (അതായത്  <strong class="red-text">₹${unitRate.toFixed(2)}</strong>) നിരക്കിൽ ചാർജ് ചെയ്യുന്നതാണ്.</p>
 //                 <p>Off-Peak TimeZone Energy Consumption: <strong class="red-text">${OffPeak_NoOfUnitsFor_energy_calculation.toFixed(2)} Units ⚡</p> </strong> <hr>`;
 //     }
@@ -1317,7 +1317,7 @@ const getExportOffPeakAdjustmentMessage = (
     const safeOffPeakConsumptionAdjusted = OffPeakConsumptionAdjusted !== undefined && OffPeakConsumptionAdjusted !== null ? OffPeakConsumptionAdjusted : 0;
     const safeOffPeak_NoOfUnitsFor_energy_calculation = OffPeak_NoOfUnitsFor_energy_calculation !== undefined && OffPeak_NoOfUnitsFor_energy_calculation !== null ? OffPeak_NoOfUnitsFor_energy_calculation : 0;
     const safeUnitRate = unitRate !== undefined && unitRate !== null ? unitRate : 0;
-  
+
     if (safePeakConsumptionAdjusted > safeImportOffPeak) {
       return `
         <hr>
@@ -1472,8 +1472,8 @@ const getExportOffPeakAdjustmentMessage = (
 //         return `<p>ബാക്കിയുള്ള Export Energy (${PeakConsumptionAdjusted_Below20kW.toFixed(2)} Unit) ഉം Off-Peak TimeZone (10pm to 6am) ഉപയോഗവും (${importOffPeak.toFixed(2)}) തുല്യമായത് കൊണ്ട് പൂർണമായും അതിൽ Adjust ചെയ്യാൻ കഴിയുന്നതാണ്. <strong class="green-text">അതിനാൽ Off-Peak TimeZone എനർജി ഇല്ല </strong>. No other Peak TimeZone Adjustment possible further.</p>
 //                <p>Off-Peak TimeZone Energy Consumption: <strong class="green-text">${OffPeak_NoOfUnitsFor_energy_calculation_Below20kW.toFixed(2)} Units 😌</p> </strong>`;
 //     } else{
-//         return `<p>താങ്കളുടെ Off-Peak hours (10pm to 6am) ഉപയോഗം (<strong class="red-text">${importOffPeak.toFixed(1)} Unit </strong>) ആകുന്നു. Off-Peak Adjusted Energy (<strong class="green-text">${PeakConsumptionAdjusted_Below20kW.toFixed(2)} Unit</strong>) 
-//                 കുറവാണ് . അതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(PeakConsumptionAdjusted_Below20kW - importOffPeak).toFixed(2)} Unit</strong>) 
+//         return `<p>താങ്കളുടെ Off-Peak hours (10pm to 6am) ഉപയോഗം (<strong class="red-text">${importOffPeak.toFixed(1)} Unit </strong>) ആകുന്നു. Off-Peak Adjusted Energy (<strong class="green-text">${PeakConsumptionAdjusted_Below20kW.toFixed(2)} Unit</strong>)
+//                 കുറവാണ് . അതുകൊണ്ട് Adjust ചെയ്യുമ്പോൾ വരുന്ന (<strong class="red-text">${Math.abs(PeakConsumptionAdjusted_Below20kW - importOffPeak).toFixed(2)} Unit</strong>)
 //                 Normal Rate ൽ , (അതായത്  <strong class="red-text">₹${unitRate_Below20kW.toFixed(2)}</strong>) നിരക്കിൽ ചാർജ് ചെയ്യുന്നതാണ്.</p>
 //                 <p>Off-Peak TimeZone Energy Consumption: <strong class="red-text">${OffPeak_NoOfUnitsFor_energy_calculation_Below20kW.toFixed(2)} Units ⚡</p> </strong> <hr>`;
 //     }
@@ -1492,7 +1492,7 @@ const getExportOffPeakAdjustmentMessage_below20kW = (
     const safeOffPeakConsumptionAdjusted_Below20kW = OffPeakConsumptionAdjusted_Below20kW !== undefined && OffPeakConsumptionAdjusted_Below20kW !== null ? OffPeakConsumptionAdjusted_Below20kW : 0;
     const safeUnitRate_Below20kW = unitRate_Below20kW !== undefined && unitRate_Below20kW !== null ? unitRate_Below20kW : 0;
     const safeOffPeak_NoOfUnitsFor_energy_calculation_Below20kW = OffPeak_NoOfUnitsFor_energy_calculation_Below20kW !== undefined && OffPeak_NoOfUnitsFor_energy_calculation_Below20kW !== null ? OffPeak_NoOfUnitsFor_energy_calculation_Below20kW : 0;
-  
+
     if (safePeakConsumptionAdjusted_Below20kW > safeImportOffPeak) {
       return `
         <hr>
@@ -1708,7 +1708,7 @@ const getEnergyCaluculationMessage = (
     var totalBillAmount = 0;
     duty = energyCharge * 0.10;
     totalBillAmount = fixedCharge + meterRent + energyCharge + duty + monthlyFuelSurcharge;
-    
+
     // Round off based on decimal part
     totalBillAmount = Math.round(totalBillAmount);
 
@@ -1717,12 +1717,12 @@ const getEnergyCaluculationMessage = (
     if (bankAdjustedUnits > 0) {
         const energyChargeToUse = energyCharge !== undefined && energyCharge !== null ? energyCharge : 0;
         const bankAdjustedUnitsToUse = bankAdjustedUnits !== undefined && bankAdjustedUnits !== null ? bankAdjustedUnits : 0;
-    
+
         billInfo = `
              <h4 style="position: absolute; left: 50%; transform: translateX(-50%); color: #2c3e50; margin-bottom: 10px; text-align: center;"><u>Bill Summary</u></h4>
             <div style="overflow-x: auto; margin: 20px 0;">
                 <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px; background: linear-gradient(135deg, #ffffff, #f9f9f9); box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 8px;">
-                    
+
                     <thead>
                         <tr style="background: linear-gradient(90deg, #3498db, #2980b9); color: white;">
                             <th style="border: 1px solid #2980b9; padding: 10px; text-align: left; width: 60%; border-top-left-radius: 8px;">Description</th>
@@ -1816,7 +1816,7 @@ const getEnergyCaluculationMessage = (
             </style>
         `;
     }
-          
+
     if(billingType == 'normal' ||  todType == "normal" ){
         console.log('Check 18');
         //NORMAL BILLING HERE
@@ -1825,8 +1825,8 @@ const getEnergyCaluculationMessage = (
         //                                             <p>  Total Export = ${exportReading} Unit</p>
         //                                             <p>Banked Units = ${myBankDepositAtKseb} Unit</p><hr>
         //                                             <p>താങ്കൾ നേരിട്ട് ഉപയോഗിച്ചത് (Direct usage from Solar) = <strong class="red-text">${generationUsage} Unit</strong> <br>(SolarGeneration(${solarGeneration}) - Export(${exportReading})). </p>
-        //                                             <p>KSEB യിൽ നിന്നും ഉപയോഗിച്ചത് = <strong class="red-text">${importReading} Unit</strong></p> 
-                                                    
+        //                                             <p>KSEB യിൽ നിന്നും ഉപയോഗിച്ചത് = <strong class="red-text">${importReading} Unit</strong></p>
+
         //                                             <p>അങ്ങനെ <strong class="red-text">${unitsConsumed}</strong> (${generationUsage}+${importReading}) യൂണിറ്റാണ് താങ്കളുടെ ആകെ വൈദ്യുതി ഉപയോഗം. (Based on this Fixed Charge is calculated)</p>
         //                                             Fixed charge for ${unitsConsumed} Unit (${phase}) = <strong class="red-text">₹${fixedCharge}</strong> (w.e.f 5/12/2024)<hr>`;
         document.getElementById('result').innerHTML = `
@@ -1889,14 +1889,14 @@ const getEnergyCaluculationMessage = (
             <hr>
         `;
 
-        document.getElementById('result1').innerHTML = ` ${importReading > exportPlusBank ? `<p>Energy Consumption for the month is <strong class="red-text">${Math.abs(importReading - exportPlusBank).toFixed(2)} Unit </strong>(${importReading}-${exportPlusBank}) - (Energy charge is calculated based on this consumption)</p>` : 
+        document.getElementById('result1').innerHTML = ` ${importReading > exportPlusBank ? `<p>Energy Consumption for the month is <strong class="red-text">${Math.abs(importReading - exportPlusBank).toFixed(2)} Unit </strong>(${importReading}-${exportPlusBank}) - (Energy charge is calculated based on this consumption)</p>` :
                                                     'Energy consumption for the month is zero as the consumption is adjusted from the export+bank'}`;
 
 
         // if (importReading > exportPlusBank) {
         //     console.log('Check 20');
         //     document.getElementById('result2').innerHTML = `<hr><p>  Total Import = ${importReading} Unit</p>
-        //                                                     <p>  Total Export = ${exportReading} Unit</p> 
+        //                                                     <p>  Total Export = ${exportReading} Unit</p>
         //                                                     <p>Banking Units = ${myBankDepositAtKseb} Unit</p><hr>
         //                                                     <p>വ്യത്യാസം വരുന്ന <strong class="red-text">${bankAdjustedUnits} Unit </strong> (${importReading}-${exportPlusBank}) ചാർജ് ചെയ്യപ്പെടുന്നതാണ്.</p>`;
         //     if (billType === 'Telescopic' || billType === 'Telescopic-ToD')
@@ -1905,29 +1905,29 @@ const getEnergyCaluculationMessage = (
         //         document.getElementById('result3').innerHTML = `താങ്കളുടെ ബില്ലിംഗ് ടൈപ്പ്: ${billType} ആകുന്നു. <hr><p>Energy Charge Calculation (For ${bankAdjustedUnits} Unit):</p>
         //         ${breakdown} `;
         //     }else{
-        //         document.getElementById('result3').innerHTML = `താങ്കളുടെ ബില്ലിംഗ് ടൈപ്പ്: ${billType} ആകുന്നു. നിലവിലെ താരിഫ് അനുസരിച്ചു താങ്കൾ ഒരു യൂണിറ്റിന് ₹${unitRate.toFixed(2)} നൽകണം. 
-        //                                                         <p>Total Engergy Charge: ${bankAdjustedUnits} x ₹${unitRate.toFixed(2)} = <b>₹${energyCharge.toFixed(2)} </b></p> `; 
+        //         document.getElementById('result3').innerHTML = `താങ്കളുടെ ബില്ലിംഗ് ടൈപ്പ്: ${billType} ആകുന്നു. നിലവിലെ താരിഫ് അനുസരിച്ചു താങ്കൾ ഒരു യൂണിറ്റിന് ₹${unitRate.toFixed(2)} നൽകണം.
+        //                                                         <p>Total Engergy Charge: ${bankAdjustedUnits} x ₹${unitRate.toFixed(2)} = <b>₹${energyCharge.toFixed(2)} </b></p> `;
         //     }
 
-        //     document.getElementById('result4').innerHTML = `Total Bill Amount ഏകദേശം  <strong class="red-text">₹${totalBillAmount.toFixed(2)} </strong> 
+        //     document.getElementById('result4').innerHTML = `Total Bill Amount ഏകദേശം  <strong class="red-text">₹${totalBillAmount.toFixed(2)} </strong>
         //                                                     <br><i>(Changes with the GST, Security Deposit interest, Tariff changes, Advance calculation)</i>`;
         // } else {
         //     console.log('Check 21');
         //     if (importReading == exportPlusBank) {
         //         document.getElementById('result2').innerHTML = `<br>  Total Import = ${importReading} Unit
-        //                                                         <br>  Total Export = ${exportReading} Unit 
+        //                                                         <br>  Total Export = ${exportReading} Unit
         //                                                         <br>Banked Unit = ${myBankDepositAtKseb} Unit <hr>
         //                                                         <p><span class="green-text">ഇവിടെ Total Export ഉം Import ഉം തുല്ല്യമാണ്. എനർജി ചാർജ് കൊടുക്കേണ്ടതില്ല</span> </p>`;
         //     } else {
         //         document.getElementById('result2').innerHTML = `<br>  Total Import = ${importReading} Unit
-        //                                                         <br>  Total Export = ${exportReading} Unit 
+        //                                                         <br>  Total Export = ${exportReading} Unit
         //                                                         <br>Banked Unit = ${myBankDepositAtKseb} Unit<hr>
         //                                                         <p><span class="green-text"><b>Export കൂടുതലായതു കൊണ്ട് എനർജി ചാർജ് കൊടുക്കേണ്ടതില്ല.</b></span> </p> `;
         //     }
         //     document.getElementById('result3').innerHTML = `Total Bill Amount ഏകദേശം <strong class="red-text"> ₹${totalBillAmount.toFixed(2)} </strong>
         //                                                     <br><i>(Security Deposit interest, Tariff changes, Advance അനുസരിച്ച് മാറ്റം വരാം)</i>`;
-        //     console.log('Account Balance ' + accountBalance);                                                        
-        //     document.getElementById('result4').innerHTML = (accountBalance > 0) ? `Extra Energy Generation = <strong class="green-text">${accountBalance} Unit</strong> will be added to bank 
+        //     console.log('Account Balance ' + accountBalance);
+        //     document.getElementById('result4').innerHTML = (accountBalance > 0) ? `Extra Energy Generation = <strong class="green-text">${accountBalance} Unit</strong> will be added to bank
         //     <br>(Export+Bank(${exportPlusBank})-Import(${importReading}))`:`No Energy units to be added to bank 👎`;
         // }
         if (importReading > exportPlusBank) {
@@ -1971,7 +1971,7 @@ const getEnergyCaluculationMessage = (
                 </style>
                 <hr>
             `;
-        
+
             if (billType === 'Telescopic' || billType === 'Telescopic-ToD') {
                 console.log('Check 222');
                 document.getElementById('result3').innerHTML = `
@@ -2009,7 +2009,7 @@ const getEnergyCaluculationMessage = (
                     </style>
                 `;
             }
-        
+
             document.getElementById('result4').innerHTML = `
                 <h5><u>Total Bill Amount</u></h5>
                 <p>ഏകദേശം <strong class="red-text">₹${(totalBillAmount || 0).toFixed(2)}</strong></p>
@@ -2098,13 +2098,13 @@ const getEnergyCaluculationMessage = (
                     <hr>
                 `;
             }
-        
+
             document.getElementById('result3').innerHTML = `
                 <h5><u>Total Bill Amount</u></h5>
                 <p>ഏകദേശം <strong class="red-text">₹${(totalBillAmount || 0).toFixed(2)}</strong></p>
                 <p style="font-size: 0.9em; font-style: italic;">(Security Deposit interest, Tariff changes, Advance അനുസരിച്ച് മാറ്റം വരാം)</p>
             `;
-        
+
             console.log('Account Balance ' + accountBalance);
             document.getElementById('result4').innerHTML = `
                 <h5><u>Bank Adjustment</u></h5>
@@ -2116,7 +2116,7 @@ const getEnergyCaluculationMessage = (
                 `}
             `;
         }
-    } 
+    }
     else
     {
         console.log('Check 19');
@@ -2189,8 +2189,8 @@ const getEnergyCaluculationMessage = (
         `;
 //*////
         document.getElementById('result1').innerHTML = `Fixed charge for ${unitsConsumed} Unit (${phase}) =   <strong class="red-text">₹${fixedCharge}</strong> (w.e.f 1/4/2025)`;
-        
-        if(todBillingAbove20kW > 0) 
+
+        if(todBillingAbove20kW > 0)
         {
             // Connected Load Above 20kW
             document.getElementById('result2').innerHTML  = getHeaderMessage();
@@ -2202,7 +2202,7 @@ const getEnergyCaluculationMessage = (
             document.getElementById('result2').innerHTML += getExportOffPeakAdjustmentMessage(importOffPeak,PeakConsumptionAdjusted,OffPeakConsumptionAdjusted, OffPeak_NoOfUnitsFor_energy_calculation, unitRate);
             document.getElementById('result3').innerHTML = getEnergyCaluculationMessage(bankAdjustedUnits, Normal_NoOfUnitsFor_energy_calculation, Peak_NoOfUnitsFor_energy_calculation, OffPeak_NoOfUnitsFor_energy_calculation, unitRate, NormalConsumptionAdjusted_energy_charge, PeakConsumptionAdjusted_energy_charge, OffPeakConsumptionAdjusted_energy_charge,energyCharge);
             document.getElementById('result3').innerHTML += `Total Bill Amount ഏകദേശം <strong class="red-text"> ₹${totalBillAmount.toFixed(2)} </strong>
-                                                            <br><i>(Security Deposit interest, Tariff changes, Advance അനുസരിച്ച് മാറ്റം വരാം)</i>`;        
+                                                            <br><i>(Security Deposit interest, Tariff changes, Advance അനുസരിച്ച് മാറ്റം വരാം)</i>`;
         }
         else
         {
@@ -2232,12 +2232,12 @@ const getEnergyCaluculationMessage = (
             <strong style="color: #e67e22;">Tariff Notice:</strong> Tariffs (effective from <span style="font-style: italic;">1/04/2025</span>) are subject to change. For the latest rates, please refer to <span style="color: #3498db; font-weight: bold;">KSEB official sources</span>.
         </p>
         <p style="font-size: 14px; color: #333; line-height: 1.8; margin: 15px 0 0;">
-            <strong style="color: #27ae60;">Need Assistance?</strong> If you notice any discrepancies in the calculations, require additional options, or need updates due to calculation mistakes, feel free to contact us at 
+            <strong style="color: #27ae60;">Need Assistance?</strong> If you notice any discrepancies in the calculations, require additional options, or need updates due to calculation mistakes, feel free to contact us at
             <a href="mailto:calculatoronline2024@gmail.com" style="color: #2ecc71; font-style: italic; text-decoration: none; transition: color 0.3s ease;">calculatoronline2024@gmail.com</a>
         </p>
         <p style="font-size: 13px; color: #666; margin-top: 10px; line-height: 1.6;">
-            <em>Note:</em> This information is provided for reference only. For accurate and official details, consult <span style="color: #3498db;">KSEB</span> or other authoritative sources. 
-            <span style="display: block; margin-top: 5px; font-size: 12px; color: #888;">(Version 1.0.27: Last updated: 10-Jun-2025) </span>
+            <em>Note:</em> This information is provided for reference only. For accurate and official details, consult <span style="color: #3498db;">KSEB</span> or other authoritative sources.
+            <span style="display: block; margin-top: 5px; font-size: 12px; color: #888;">(Version 2.0.01: Last updated: 22-Jun-2025) </span>
         </p>
     </div>
 `;
@@ -2266,7 +2266,7 @@ document.getElementById('billingType').addEventListener('change', function() {
     var todNetMeterReadingSection = document.getElementById('todNetMeterReadingSection');
 
     // Get the connected load container
-    const connectedLoadContainer = document.getElementById('connectedLoadContainer'); 
+    const connectedLoadContainer = document.getElementById('connectedLoadContainer');
 
     if (billingType === 'normal') {
         normalBillingSection.style.display = 'block';
@@ -2318,10 +2318,10 @@ document.getElementById('resetButton').addEventListener('click', function () {
     document.getElementById('billDetails').style.display = 'none';
     document.getElementById('printButton').style.display = 'none';
     document.getElementById('moveToTop').style.display = 'none';
-    
-    document.getElementById('bankedUnitSection').style.display = 
+
+    document.getElementById('bankedUnitSection').style.display =
         document.getElementById('mybank').value === 'Yes' ? 'block' : 'none';
-    document.getElementById('connectedLoadContainer').style.display = 
+    document.getElementById('connectedLoadContainer').style.display =
         document.getElementById('billingType').value === 'tod' ? 'block' : 'none';
 
     var billingType = document.getElementById('billingType').value;
@@ -2331,7 +2331,7 @@ document.getElementById('resetButton').addEventListener('click', function () {
     var todNetMeterReadingSection = document.getElementById('todNetMeterReadingSection');
 
     // Get the connected load container
-    const connectedLoadContainer = document.getElementById('connectedLoadContainer'); 
+    const connectedLoadContainer = document.getElementById('connectedLoadContainer');
 
     if (billingType === 'normal') {
         normalBillingSection.style.display = 'block';
@@ -3045,21 +3045,21 @@ const quotes = [
 
 ];
 
-// const quotes = [ 
-//     "Success is not final, failure is not fatal: it is the courage to continue that counts. - Winston Churchill", 
-//     "Believe you can and you're halfway there. - Theodore Roosevelt", 
-//     "Your limitation—it's only your imagination. -  ", 
-//     "Push yourself, because no one else is going to do it for you. -  ", 
-//     "Great things never come from comfort zones. - Roy T. Bennett", 
-//     "Success doesn’t just find you. You have to go out and get it. -  ", 
-//     "Dream it. Wish it. Do it. -  ", 
-//     "The harder you work for something, the greater you’ll feel when you achieve it. -  ", 
-//     "Don’t stop when you’re tired. Stop when you’re done. - Marilyn Monroe", 
-//     "Wake up with determination. Go to bed with satisfaction. - George Lorimer", 
-//     "Do something today that your future self will thank you for. - Sean Patrick Flanery", 
-//     "Little things make big days. - John Wooden", 
+// const quotes = [
+//     "Success is not final, failure is not fatal: it is the courage to continue that counts. - Winston Churchill",
+//     "Believe you can and you're halfway there. - Theodore Roosevelt",
+//     "Your limitation—it's only your imagination. -  ",
+//     "Push yourself, because no one else is going to do it for you. -  ",
+//     "Great things never come from comfort zones. - Roy T. Bennett",
+//     "Success doesn’t just find you. You have to go out and get it. -  ",
+//     "Dream it. Wish it. Do it. -  ",
+//     "The harder you work for something, the greater you’ll feel when you achieve it. -  ",
+//     "Don’t stop when you’re tired. Stop when you’re done. - Marilyn Monroe",
+//     "Wake up with determination. Go to bed with satisfaction. - George Lorimer",
+//     "Do something today that your future self will thank you for. - Sean Patrick Flanery",
+//     "Little things make big days. - John Wooden",
 //     "It’s going to be hard, but hard does not mean impossible. -  ",
-// ]; 
+// ];
 
 
 // Function to get a random quote
