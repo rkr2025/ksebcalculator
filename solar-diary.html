@@ -112,6 +112,10 @@
       font-size: 14px;
       margin-bottom: 10px;
     }
+    #initialValuesDisplay .error {
+      color: #e74c3c;
+      font-style: italic;
+    }
     #usageInsights, #usageAnalysis {
       margin-top: 10px;
       text-align: left;
@@ -554,17 +558,27 @@
 
     document.getElementById("initialForm").addEventListener("submit", e => {
       e.preventDefault();
-      initialReadings = {
-        solar: parseFloat(document.getElementById("init_solar").value) || 0,
-        t1: parseFloat(document.getElementById("init_t1").value) || 0,
-        t2: parseFloat(document.getElementById("init_t2").value) || 0,
-        t3: parseFloat(document.getElementById("init_t3").value) || 0,
-        export: parseFloat(document.getElementById("init_export").value) || 0
-      };
-      updateStorage();
-      displayInitialValues();
-      renderEntries();
-      e.target.reset();
+      const solar = parseFloat(document.getElementById("init_solar").value) || 0;
+      const t1 = parseFloat(document.getElementById("init_t1").value) || 0;
+      const t2 = parseFloat(document.getElementById("init_t2").value) || 0;
+      const t3 = parseFloat(document.getElementById("init_t3").value) || 0;
+      const exportVal = parseFloat(document.getElementById("init_export").value) || 0;
+
+      if (solar === 0 && t1 === 0 && t2 === 0 && t3 === 0 && exportVal === 0) {
+        document.getElementById("initialValuesDisplay").innerHTML = '<em class="error">Invalid initial readings. Please check your last bill for the latest readings.</em>';
+      } else {
+        initialReadings = {
+          solar: solar,
+          t1: t1,
+          t2: t2,
+          t3: t3,
+          export: exportVal
+        };
+        updateStorage();
+        displayInitialValues();
+        renderEntries();
+        e.target.reset();
+      }
     });
 
     document.getElementById("diaryForm").addEventListener("submit", e => {
