@@ -1,105 +1,188 @@
-<!DOCTYPE html> 
-<html lang="en"> 
-<head> 
-  <meta charset="UTF-8"> 
-  <title>🔧 Tools Menu</title> 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-  <style> 
-    :root { 
-      --bg: linear-gradient(to right, #2980b9, #6dd5fa); 
-      --card-bg: #ffffff; 
-      --primary: #3498db; 
-      --font: 'Segoe UI', sans-serif; 
-    } 
- 
-    body { 
-      margin: 0; 
-      padding: 0; 
-      font-family: var(--font); 
-      background: var(--bg); 
-      min-height: 100vh; 
-      color: #333; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-    } 
- 
-    .container { 
-      max-width: 1000px; 
-      margin: 40px auto; 
-      padding: 20px; 
-    } 
- 
-    h2 { 
-      text-align: center; 
-      color: #fff; 
-      margin-bottom: 30px; 
-    } 
- 
-    .grid { 
-      display: grid; 
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); 
-      gap: 20px; 
-      padding: 10px; 
-    } 
- 
-    .card { 
-      background: var(--card-bg); 
-      border-radius: 12px; 
-      padding: 20px; 
-      text-align: center; 
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); 
-      transition: transform 0.2s ease; 
-      cursor: pointer; 
-      text-decoration: none; 
-      color: #333; 
-    } 
- 
-    .card:hover { 
-      transform: scale(1.05); 
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25); 
-    } 
- 
-    .card-icon { 
-      font-size: 36px; 
-      margin-bottom: 10px; 
-      color: var(--primary); 
-    } 
- 
-    .back-link { 
-      text-align: center; 
-      margin-top: 30px; 
-      display: block; 
-      color: #fff; 
-      text-decoration: underline; 
-    } 
- 
-    @media (max-width: 600px) { 
-      .card-icon { 
-        font-size: 30px; 
-      } 
-    } 
-  </style> 
-</head> 
-<body> 
- 
-<div class="container"> 
-  <h2>🔧 Extra Tools</h2> 
-  <div class="grid"> 
-    <a class="card" href="solar-diary.html"> 
-      <div class="card-icon">📘</div> 
-      <div>Solar Diary</div> 
-    </a> 
-<!-- 
-    <a class="card" href="weather.html"> 
-      <div class="card-icon">☀️</div> 
-      <div>Weather Info</div> 
-    </a>
--->    
-  </div> 
- 
-  <a class="back-link" href="index.html">← Back to Bill Calculator</a> 
-</div> 
- 
-</body> 
-</html> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔧 Tools Menu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #ff6b6b;
+      --secondary: #4ecdc4;
+      --bg-gradient: linear-gradient(135deg, #1a1a2e, #162447);
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --shadow: rgba(0, 0, 0, 0.2);
+      --text-dark: #1a1a2e;
+      --text-light: #ffffff;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg-gradient);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--text-dark);
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1200px;
+      width: 90%;
+      margin: 40px auto;
+      padding: 20px;
+      position: relative;
+    }
+
+    h2 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      text-align: center;
+      color: var(--text-light);
+      margin-bottom: 40px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 0 2px 4px var(--shadow);
+      animation: fadeIn 1.5s ease-in-out;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 25px;
+      padding: 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 15px;
+      padding: 25px;
+      text-align: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: border-box-shadow 0 8px 20px var(--shadow);
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--text-dark);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: 0.5s;
+      transform: translateX(-100%);
+    }
+
+    .card:hover::before {
+      transform: translateX(100%);
+    }
+
+    .card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 12px 30px var(--shadow);
+    }
+
+    .card-icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      color: var(--primary);
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover .card-icon {
+      transform: scale(1.2);
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 40px;
+      color: var(--text-light);
+      font-size: 1.1rem;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .back-link:hover {
+      color: var(--primary);
+      text-decoration: underline;
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      h2 {
+        font-size: 2.2rem;
+      }
+
+      .grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      }
+
+      .card-icon {
+        font-size: 2.5rem;
+      }
+
+      .card-title {
+        font-size: 1rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h2 {
+        font-size: 1.8rem;
+      }
+
+      .card {
+        padding: 20px;
+      }
+
+      .card-icon {
+        font-size: 2rem;
+      }
+
+      .card-title {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🔧 Extra Tools</h2>
+    <div class="grid">
+      <a class="card" href="solar-diary.html">
+        <div class="card-icon">📘</div>
+        <div class="card-title">Solar Diary</div>
+      </a>
+      <!-- Future tools can be added here -->
+    </div>
+    <a class="back-link" href="index.html">← Back to Bill Calculator</a>
+  </div>
+</body>
+</html>
