@@ -32,6 +32,10 @@
     h3 {
       font-size: 18px;
     }
+    h4 {
+      font-size: 16px;
+      margin: 10px 0;
+    }
     form {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
@@ -153,7 +157,7 @@
         padding: 10px;
         box-shadow: none;
       }
-      h2, h3, form, .center, .nav-link, #backupSection, #initialValuesDisplay, #usageInsights, #usageAnalysis {
+      h2, h3, h4, form, .center, .nav-link, #backupSection, #initialValuesDisplay, #usageInsights, #usageAnalysis {
         display: none;
       }
       .table-container {
@@ -179,6 +183,9 @@
       }
       h3 {
         font-size: 16px;
+      }
+      h4 {
+        font-size: 14px;
       }
       form {
         grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
@@ -227,6 +234,9 @@
       }
       h3 {
         font-size: 14px;
+      }
+      h4 {
+        font-size: 12px;
       }
       form {
         grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
@@ -277,7 +287,7 @@
     </form>
     <div id="initialValuesDisplay"></div>
     <hr>
-    <h3 style="margin-top: 25px;">➕ Current Solar Readings</h3>
+    <h3  style="margin-top: 25px;">➕ Current Solar Readings</h3>
     <form id="diaryForm">
       <input type="number" id="solar" placeholder="Solar Gen" required>
       <input type="number" id="t1" placeholder="T1" required>
@@ -476,37 +486,45 @@
         avgT3 /= entries.length;
         avgExport /= entries.length;
 
+        // Cost-weighted calculations (T1: 0.9, T2: 1.25, T3: 1.0)
         const totalAvgConsumption = avgT1 + avgT2 + avgT3;
+        const costWeightedConsumption = avgT1 * 0.9 + avgT2 * 1.25 + avgT3 * 1.0;
         const contributions = [
-          { meter: 'T1', value: avgT1, percent: (avgT1 / totalAvgConsumption * 100).toFixed(1) },
-          { meter: 'T2', value: avgT2, percent: (avgT2 / totalAvgConsumption * 100).toFixed(1) },
-          { meter: 'T3', value: avgT3, percent: (avgT3 / totalAvgConsumption * 100).toFixed(1) }
+          { meter: 'T1', value: avgT1, costValue: avgT1 * 0.9, percent: costWeightedConsumption ? (avgT1 * 0.9 / costWeightedConsumption * 100).toFixed(1) : 0 },
+          { meter: 'T2', value: avgT2, costValue: avgT2 * 1.25, percent: costWeightedConsumption ? (avgT2 * 1.25 / costWeightedConsumption * 100).toFixed(1) : 0 },
+          { meter: 'T3', value: avgT3, costValue: avgT3 * 1.0, percent: costWeightedConsumption ? (avgT3 * 1.0 / costWeightedConsumption * 100).toFixed(1) : 0 }
         ];
-        const dominantMeter = contributions.reduce((max, curr) => max.value > curr.value ? max : curr);
+        const highestCostMeter = contributions.reduce((max, curr) => max.costValue > curr.costValue ? max : curr);
 
         analysisHTML += '<ul>';
-        analysisHTML += `<li><strong>Usage Pattern</strong>: Your average daily consumption is ${Math.round(totalAvgConsumption)} units (T1: ${Math.round(avgT1)} units, T2: ${Math.round(avgT2)} units, T3: ${Math.round(avgT3)} units), compared to an average export of ${Math.round(avgExport)} units.</li>`;
-        analysisHTML += `<li><strong>Dominant Meter</strong>: ${dominantMeter.meter} contributes ${dominantMeter.percent}% of your total consumption, the highest among T1, T2, and T3.</li>`;
+        analysisHTML += `<li><strong>Usage Pattern</strong>: Your average monthly consumption is ${Math.round(totalAvgConsumption)} units (T1: ${Math.round(avgT1)} units, T2: ${Math.round(avgT2)} units, T3: ${Math.round(avgT3)} units), compared to an average export of ${Math.round(avgExport)} units.</li>`;
+        analysisHTML += `<li><strong>Highest Cost Meter</strong>: ${highestCostMeter.meter} contributes ${highestCostMeter.percent}% to your potential charges (T1: ${contributions.find(c => c.meter === 'T1').percent}%, T2: ${contributions.find(c => c.meter === 'T2').percent}%, T3: ${contributions.find(c => c.meter === 'T3').percent}%).</li>`;
         if (excessCount > entries.length / 2) {
-          analysisHTML += `<li><strong>Trend</strong>: You exceeded export in ${excessCount} of ${entries.length} entries, indicating frequent high usage.</li>`;
+          analysisHTML += `<li><strong>Trend</strong>: You exceeded export in ${excessCount} of ${entries.length} entries, indicating frequent high usage that may lead to higher charges.</li>`;
         } else {
-          analysisHTML += `<li><strong>Trend</strong>: You stayed below or near export in most entries, but recent usage may still require attention.</li>`;
+          analysisHTML += `<li><strong>Trend</strong>: You stayed below or near export in most entries, but monitor usage to avoid charges.</li>`;
         }
 
         analysisHTML += '<li><strong>Recommendations</strong>:';
         analysisHTML += '<ul>';
         if (totalConsumption > exportUnits) {
           const excess = Math.round(totalConsumption - exportUnits);
-          analysisHTML += `<li>Reduce total usage by ${excess} units to match or stay below export levels.</li>`;
-          analysisHTML += `<li>Focus on ${dominantMeter.meter}: Since it accounts for ${dominantMeter.percent}% of usage, reduce high-power appliance use (e.g., AC, heaters) during peak hours.</li>`;
+          analysisHTML += `<li>Reduce total usage by ${excess} units to match or stay below export levels to avoid charges.</li>`;
+          if (highestCostMeter.meter === 'T2') {
+            analysisHTML += `<li><strong>Focus on T2</strong>: T2 is charged at 125% of the prevailing rate and contributes ${highestCostMeter.percent}% to costs. Reduce high-power appliance usage (e.g., air conditioners, heaters) during peak hours or switch to energy-efficient models.</li>`;
+          } else if (highestCostMeter.meter === 'T1') {
+            analysisHTML += `<li><strong>Focus on T1</strong>: T1 contributes ${highestCostMeter.percent}% to costs, despite its lower rate (90%). Optimize usage by turning off unnecessary devices or shifting loads to off-peak times.</li>`;
+          } else {
+            analysisHTML += `<li><strong>Focus on T3</strong>: T3 contributes ${highestCostMeter.percent}% to costs. Check for inefficient devices (e.g., old lighting or appliances) and reduce their usage.</li>`;
+          }
         } else if (totalConsumption > exportUnits * 0.9) {
-          analysisHTML += `<li>Your usage is close to export (${Math.round(totalConsumption/exportUnits*100)}% of export). Turn off unused devices or shift loads to off-peak times to maintain a buffer.</li>`;
+          analysisHTML += `<li>Your usage is close to export (${Math.round(totalConsumption/exportUnits*100)}% of export). Make minor reductions, especially on T2 (125% rate), by turning off unused devices or using energy-saving modes.</li>`;
         } else {
-          analysisHTML += `<li>Your usage is well below export. Maintain efficiency by using energy-saving devices and monitoring ${dominantMeter.meter} usage.</li>`;
+          analysisHTML += `<li>Your usage is well below export. Continue monitoring T2 (125% rate) to maintain cost efficiency.</li>`;
         }
-        analysisHTML += `<li>Optimize export: Ensure solar panels are clean and unobstructed to maximize export units.</li>`;
-        if (dominantMeter.meter !== 'T1') {
-          analysisHTML += `<li>Check T1 usage: If T1 is low (${contributions.find(c => c.meter === 'T1').percent}%), ensure no unnecessary devices are running on Peak (6pm to 10pm) time or Off-peak (10pm to 6am) time</li>`;
+        analysisHTML += `<li>Maximize export: Clean solar panels and ensure they are unobstructed to increase export units, offsetting any charged consumption.</li>`;
+        if (highestCostMeter.meter !== 'T2') {
+          analysisHTML += `<li>Monitor T2: Its high rate (125%) can significantly increase costs if usage rises. Ensure no unnecessary devices are running on T2 circuits.</li>`;
         }
         analysisHTML += '</ul></li>';
         analysisHTML += '</ul>';
