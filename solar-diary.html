@@ -102,6 +102,23 @@
       font-size: 14px;
       margin-bottom: 10px;
     }
+    #usageInsights {
+      margin-top: 10px;
+      text-align: center;
+      font-size: 14px;
+    }
+    #usageInsights .warning {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    #usageInsights .safe {
+      color: #2ecc71;
+      font-weight: bold;
+    }
+    #usageInsights .advice {
+      color: #7f8c8d;
+      font-style: italic;
+    }
     #backupSection {
       display: flex;
       flex-wrap: wrap;
@@ -111,6 +128,10 @@
     #backupSection input[type="file"] {
       font-size: 12px;
       max-width: 150px;
+    }
+    #backupSection button, #backupSection input[type="file"] {
+      width: 100%;
+      max-width: 200px;
     }
     /* Print-specific styles */
     @media print {
@@ -123,7 +144,7 @@
         padding: 10px;
         box-shadow: none;
       }
-      h2, h3, form, .center, .nav-link, #backupSection, #initialValuesDisplay {
+      h2, h3, form, .center, .nav-link, #backupSection, #initialValuesDisplay, #usageInsights {
         display: none;
       }
       .table-container {
@@ -176,8 +197,18 @@
       #initialValuesDisplay {
         font-size: 12px;
       }
+      #usageInsights {
+        font-size: 12px;
+      }
+      #backupSection {
+        flex-direction: column;
+        align-items: center;
+      }
       #backupSection input[type="file"] {
         max-width: 120px;
+      }
+      #backupSection button, #backupSection input[type="file"] {
+        max-width: 150px;
       }
     }
     @media (max-width: 360px) {
@@ -217,8 +248,14 @@
       #initialValuesDisplay {
         font-size: 11px;
       }
+      #usageInsights {
+        font-size: 11px;
+      }
       #backupSection input[type="file"] {
         max-width: 100px;
+      }
+      #backupSection button, #backupSection input[type="file"] {
+        max-width: 120px;
       }
     }
   </style>
@@ -263,6 +300,7 @@
         <tbody id="entriesBody"></tbody>
       </table>
     </div>
+    <div id="usageInsights"></div>
     <div id="backupSection" class="center">
       <button onclick="backupReadings()">💾 Backup Readings</button>
       <input type="file" id="restoreFile" accept=".json" style="margin: 10px;">
@@ -327,7 +365,9 @@
 
     function renderEntries() {
       const tbody = document.getElementById("entriesBody");
+      const insightsEl = document.getElementById("usageInsights");
       tbody.innerHTML = "";
+      insightsEl.innerHTML = "";
 
       let total = { solar: 0, t1: 0, t2: 0, t3: 0, export: 0 };
 
@@ -381,6 +421,22 @@
           <td>${Math.round(usage.export)}</td>
           <td></td>
         </tr>`;
+
+        // Usage Insights
+        const totalConsumption = usage.t1 + usage.t2 + usage.t3;
+        const exportUnits = usage.export;
+        let insightsHTML = '';
+
+        if (totalConsumption > exportUnits) {
+          const difference = Math.round(totalConsumption - exportUnits);
+          insightsHTML += `<p class="warning">Warning: You are using ${difference} units more than exported. These units will be charged. Please reduce your electricity usage.</p>`;
+          insightsHTML += `<p class="advice">Advice: Reduce your usage by ${difference} units to keep T1 + T2 + T3 at or below Export levels.</p>`;
+        } else {
+          const difference = Math.round(exportUnits - totalConsumption);
+          insightsHTML += `<p class="safe">Good: You have ${difference} units available to use safely this month.</p>`;
+        }
+
+        insightsEl.innerHTML = insightsHTML;
       }
     }
 
