@@ -445,8 +445,8 @@
 
         if (totalConsumption > exportUnits) {
           const difference = Math.round(totalConsumption - exportUnits);
-          insightsHTML += `<p class="warning">Warning: You are using ${difference} units more than exported. These units will be charged. Please reduce your electricity usage.</p>`;
-          insightsHTML += `<p class="advice">Advice: Reduce your usage by ${difference} units to keep T1 + T2 + T3 at or below Export levels.</p>`;
+          insightsHTML += `<hr style="margin-top: 20px;"><p class="warning">Warning: You are using ${difference} units more than exported. These units will be charged. Please reduce your electricity usage.</p>`;
+          insightsHTML += `<p class="advice">Advice: Reduce your usage by ${difference} units to keep it below Export levels.</p>`;
         } else {
           const difference = Math.round(exportUnits - totalConsumption);
           insightsHTML += `<p class="safe">Good: You have ${difference} units available to use safely this month.</p>`;
@@ -455,7 +455,7 @@
         insightsEl.innerHTML = insightsHTML;
 
         // Data Analysis and Recommendations
-        let analysisHTML = '<h4>Usage Analysis & Recommendations</h4>';
+        let analysisHTML = '<hr><h4 style="margin-top: 30px;">Usage Analysis & Recommendations</h4>';
         let avgT1 = 0, avgT2 = 0, avgT3 = 0, avgExport = 0;
         let excessCount = 0;
 
