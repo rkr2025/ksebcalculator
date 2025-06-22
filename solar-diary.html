@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     * {
-      box-sizing: border-box; /* Ensure padding/margins don't cause overflow */
+      box-sizing: border-box;
     }
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -16,45 +16,45 @@
     }
     .container {
       max-width: 960px;
-      margin: 10px auto; /* Reduced margin for mobile */
+      margin: 10px auto;
       background: white;
-      padding: 15px; /* Reduced padding */
+      padding: 15px;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      width: 100%; /* Ensure container doesn't exceed viewport */
+      width: 100%;
     }
     h2, h3 {
       text-align: center;
-      font-size: 24px; /* Default for h2 */
+      font-size: 24px;
       margin: 10px 0;
-      overflow-wrap: break-word; /* Prevent long text overflow */
+      overflow-wrap: break-word;
     }
     h3 {
-      font-size: 18px; /* Smaller for h3 */
+      font-size: 18px;
     }
     form {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Reduced min width */
-      gap: 8px; /* Smaller gap for mobile */
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 8px;
       margin-bottom: 15px;
       width: 100%;
     }
     input {
-      padding: 6px; /* Reduced padding */
+      padding: 6px;
       border: 1px solid #ccc;
       border-radius: 6px;
       width: 100%;
       font-size: 14px;
     }
     button {
-      padding: 8px; /* Reduced padding */
+      padding: 8px;
       background: #3498db;
       color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
       font-size: 14px;
-      max-width: 100%; /* Prevent button overflow */
+      max-width: 100%;
     }
     button:hover {
       background: #2980b9;
@@ -100,19 +100,17 @@
     }
     #initialValuesDisplay {
       font-size: 14px;
-      text-align: center;
       margin-bottom: 10px;
-      overflow-wrap: break-word; /* Prevent long text overflow */
     }
     #backupSection {
       display: flex;
-      flex-wrap: wrap; /* Allow wrapping for mobile */
+      flex-wrap: wrap;
       justify-content: center;
-      gap: 8px; /* Space between elements */
+      gap: 8px;
     }
     #backupSection input[type="file"] {
       font-size: 12px;
-      max-width: 150px; /* Limit file input width */
+      max-width: 150px;
     }
     /* Print-specific styles */
     @media print {
@@ -125,7 +123,7 @@
         padding: 10px;
         box-shadow: none;
       }
-      h2, h3, form, .center, .nav-link, #backupSection {
+      h2, h3, form, .center, .nav-link, #backupSection, #initialValuesDisplay {
         display: none;
       }
       .table-container {
@@ -153,7 +151,7 @@
         font-size: 16px;
       }
       form {
-        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); /* Further reduced */
+        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
         gap: 6px;
       }
       input {
@@ -167,7 +165,7 @@
       th, td {
         padding: 4px;
         font-size: 12px;
-        min-width: 55px; /* Slightly reduced */
+        min-width: 55px;
       }
       .edit-btn, .delete-btn {
         font-size: 14px;
@@ -238,9 +236,6 @@
       <button type="submit">💾 Save Initial</button>
     </form>
     <div id="initialValuesDisplay"></div>
-    <div class="center">
-      <button onclick="deleteInitial()">🗑️ Delete Initial Readings</button>
-    </div>
     <h3>➕ Current Solar Readings</h3>
     <form id="diaryForm">
       <input type="number" id="solar" placeholder="Solar Gen" required>
@@ -294,9 +289,32 @@
         el.innerHTML = '<em>No initial readings saved.</em>';
       } else {
         el.innerHTML = `
-          <strong>Saved Initial Readings:</strong><br>
-          Solar: ${initialReadings.solar}, T1: ${initialReadings.t1},
-          T2: ${initialReadings.t2}, T3: ${initialReadings.t3}, Export: ${initialReadings.export}
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Solar</th>
+                  <th>T1</th>
+                  <th>T2</th>
+                  <th>T3</th>
+                  <th>Export</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>${initialReadings.solar}</td>
+                  <td>${initialReadings.t1}</td>
+                  <td>${initialReadings.t2}</td>
+                  <td>${initialReadings.t3}</td>
+                  <td>${initialReadings.export}</td>
+                  <td>
+                    <button class="delete-btn" onclick="deleteInitial()">🗑️</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         `;
       }
     }
