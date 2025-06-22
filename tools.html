@@ -1,207 +1,105 @@
 <!DOCTYPE html> 
-
 <html lang="en"> 
-
 <head> 
-
   <meta charset="UTF-8"> 
-
   <title>🔧 Tools Menu</title> 
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-
   <style> 
-
     :root { 
-
       --bg: linear-gradient(to right, #2980b9, #6dd5fa); 
-
       --card-bg: #ffffff; 
-
       --primary: #3498db; 
-
       --font: 'Segoe UI', sans-serif; 
-
     } 
-
  
-
     body { 
-
       margin: 0; 
-
       padding: 0; 
-
       font-family: var(--font); 
-
       background: var(--bg); 
-
       min-height: 100vh; 
-
       color: #333; 
-
       display: flex; 
-
       align-items: center; 
-
       justify-content: center; 
-
     } 
-
  
-
     .container { 
-
       max-width: 1000px; 
-
       margin: 40px auto; 
-
       padding: 20px; 
-
     } 
-
  
-
     h2 { 
-
       text-align: center; 
-
       color: #fff; 
-
       margin-bottom: 30px; 
-
     } 
-
  
-
     .grid { 
-
       display: grid; 
-
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); 
-
       gap: 20px; 
-
       padding: 10px; 
-
     } 
-
  
-
     .card { 
-
       background: var(--card-bg); 
-
       border-radius: 12px; 
-
       padding: 20px; 
-
       text-align: center; 
-
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); 
-
       transition: transform 0.2s ease; 
-
       cursor: pointer; 
-
       text-decoration: none; 
-
       color: #333; 
-
     } 
-
  
-
     .card:hover { 
-
       transform: scale(1.05); 
-
       box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25); 
-
     } 
-
  
-
     .card-icon { 
-
       font-size: 36px; 
-
       margin-bottom: 10px; 
-
       color: var(--primary); 
-
     } 
-
  
-
     .back-link { 
-
       text-align: center; 
-
       margin-top: 30px; 
-
       display: block; 
-
       color: #fff; 
-
       text-decoration: underline; 
-
     } 
-
  
-
     @media (max-width: 600px) { 
-
       .card-icon { 
-
         font-size: 30px; 
-
       } 
-
     } 
-
   </style> 
-
 </head> 
-
 <body> 
-
  
-
 <div class="container"> 
-
   <h2>🔧 Extra Tools</h2> 
-
   <div class="grid"> 
-
     <a class="card" href="solar-diary.html"> 
-
       <div class="card-icon">📘</div> 
-
       <div>Solar Diary</div> 
-
     </a> 
-
 <!-- 
     <a class="card" href="weather.html"> 
-
       <div class="card-icon">☀️</div> 
-
       <div>Weather Info</div> 
-
     </a>
 -->    
-
   </div> 
-
  
-
   <a class="back-link" href="index.html">← Back to Bill Calculator</a> 
-
 </div> 
-
  
-
 </body> 
-
 </html> 
