@@ -1,0 +1,129 @@
+ 
+<!DOCTYPE html> 
+<html> 
+<head> 
+  <title>To-Do List</title> 
+  <style> 
+    #todoApp { 
+      max-width: 400px; 
+      margin: auto; 
+      padding: 10px; 
+      border: 1px solid #ccc; 
+      border-radius: 10px; 
+      background-color: #f9f9f9; 
+      font-family: Arial, sans-serif; 
+    } 
+ 
+    #todoApp input { 
+      width: 70%; 
+      padding: 8px; 
+      margin-top: 10px; 
+    } 
+ 
+    #todoApp button { 
+      padding: 8px; 
+      margin-left: 5px; 
+      cursor: pointer; 
+    } 
+ 
+    #todoList { 
+      list-style: none; 
+      padding: 0; 
+      margin-top: 10px; 
+    } 
+ 
+    #todoList li { 
+      padding: 8px; 
+      border-bottom: 1px solid #ddd; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+    } 
+ 
+    #todoList li.done span { 
+      text-decoration: line-through; 
+      color: gray; 
+    } 
+ 
+    #todoList li span { 
+      cursor: pointer; 
+    }
+    
+    
+    .nav-link { 
+      display: block; 
+      text-align: center; 
+      margin-top: 20px; 
+      text-decoration: none; 
+      color: #3498db; 
+    } 
+  </style> 
+</head> 
+<body> 
+ 
+<div id="todoApp"> 
+  <h3>📝 To-Do List</h3> 
+  <input type="text" id="todoInput" placeholder="Add a new task..." /> 
+  <button id="addButton">➕ Add</button> 
+  <ul id="todoList"></ul> 
+  
+  <a href="tools.html" class="nav-link">← Back to Tools</a> 
+</div> 
+ 
+<script> 
+  let tasks = JSON.parse(localStorage.getItem('tasks') || '[]'); 
+ 
+  function renderTasks() { 
+    const list = document.getElementById('todoList'); 
+    list.innerHTML = ''; 
+    tasks.forEach((task, index) => { 
+      const li = document.createElement('li'); 
+      li.className = task.done ? 'done' : ''; 
+      li.innerHTML = ` 
+        <span onclick="toggleTask(${index})">${task.text}</span> 
+        <button onclick="deleteTask(${index})">❌</button> 
+      `; 
+      list.appendChild(li); 
+    }); 
+  } 
+ 
+  function addTask() { 
+    const input = document.getElementById('todoInput'); 
+    const text = input.value.trim(); 
+    if (text !== '') { 
+      tasks.push({ text, done: false }); 
+      input.value = ''; 
+      saveTasks(); 
+    } 
+  } 
+ 
+  function toggleTask(index) { 
+    tasks[index].done = !tasks[index].done; 
+    saveTasks(); 
+  } 
+ 
+  function deleteTask(index) { 
+    tasks.splice(index, 1); 
+    saveTasks(); 
+  } 
+ 
+  function saveTasks() { 
+    localStorage.setItem('tasks', JSON.stringify(tasks)); 
+    renderTasks(); 
+  } 
+ 
+  document.getElementById('addButton').addEventListener('click', addTask); 
+ 
+  // Support Enter key 
+  document.getElementById('todoInput').addEventListener('keydown', function(event) { 
+    if (event.key === 'Enter') { 
+      addTask(); 
+    } 
+  }); 
+ 
+  // Load on page load 
+  window.onload = renderTasks; 
+</script> 
+ 
+</body> 
+</html> 
