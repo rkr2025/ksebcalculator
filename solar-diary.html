@@ -5,6 +5,9 @@
   <title>📘 Solar Diary</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
+    * {
+      box-sizing: border-box; /* Ensure padding/margins don't cause overflow */
+    }
     body {
       font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(to right, #2980b9, #6dd5fa);
@@ -13,44 +16,59 @@
     }
     .container {
       max-width: 960px;
-      margin: 20px auto;
+      margin: 10px auto; /* Reduced margin for mobile */
       background: white;
-      padding: 20px;
+      padding: 15px; /* Reduced padding */
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      width: 100%; /* Ensure container doesn't exceed viewport */
     }
     h2, h3 {
       text-align: center;
+      font-size: 24px; /* Default for h2 */
+      margin: 10px 0;
+      overflow-wrap: break-word; /* Prevent long text overflow */
+    }
+    h3 {
+      font-size: 18px; /* Smaller for h3 */
     }
     form {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 10px;
-      margin-bottom: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Reduced min width */
+      gap: 8px; /* Smaller gap for mobile */
+      margin-bottom: 15px;
+      width: 100%;
     }
     input {
-      padding: 8px;
+      padding: 6px; /* Reduced padding */
       border: 1px solid #ccc;
       border-radius: 6px;
+      width: 100%;
+      font-size: 14px;
     }
     button {
-      padding: 10px;
+      padding: 8px; /* Reduced padding */
       background: #3498db;
       color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      font-size: 14px;
+      max-width: 100%; /* Prevent button overflow */
+    }
+    button:hover {
+      background: #2980b9;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
+      margin-top: 15px;
     }
     th, td {
       border: 1px solid #ddd;
       padding: 6px;
       text-align: center;
-      font-size: 14px; /* Default font size */
+      font-size: 14px;
     }
     .highlight {
       background-color: #ecf0f1;
@@ -67,30 +85,126 @@
     .nav-link {
       display: block;
       text-align: center;
-      margin-top: 20px;
+      margin-top: 15px;
       text-decoration: none;
       color: #3498db;
+      font-size: 14px;
     }
-    /* Responsive table for mobile */
+    .center {
+      text-align: center;
+      margin: 8px 0;
+    }
     .table-container {
-      overflow-x: auto; /* Enable horizontal scrolling on mobile */
+      overflow-x: auto;
       width: 100%;
     }
-    @media (max-width: 480px) {
+    #initialValuesDisplay {
+      font-size: 14px;
+      text-align: center;
+      margin-bottom: 10px;
+      overflow-wrap: break-word; /* Prevent long text overflow */
+    }
+    #backupSection {
+      display: flex;
+      flex-wrap: wrap; /* Allow wrapping for mobile */
+      justify-content: center;
+      gap: 8px; /* Space between elements */
+    }
+    #backupSection input[type="file"] {
+      font-size: 12px;
+      max-width: 150px; /* Limit file input width */
+    }
+    /* Print-specific styles */
+    @media print {
+      body {
+        background: none;
+        margin: 0;
+      }
       .container {
-        padding: 15px; /* Reduce padding for mobile */
-        margin: 10px;
+        margin: 0;
+        padding: 10px;
+        box-shadow: none;
+      }
+      h2, h3, form, .center, .nav-link, #backupSection {
+        display: none;
+      }
+      .table-container {
+        overflow-x: visible;
+      }
+      table {
+        width: 100%;
+        font-size: 12px;
       }
       th, td {
-        padding: 4px; /* Smaller padding */
-        font-size: 12px; /* Smaller font size */
-        min-width: 60px; /* Ensure columns don't collapse too much */
+        padding: 4px;
+        border: 1px solid #000;
+      }
+    }
+    /* Responsive styles for mobile */
+    @media (max-width: 480px) {
+      .container {
+        padding: 10px;
+        margin: 5px;
+      }
+      h2 {
+        font-size: 20px;
+      }
+      h3 {
+        font-size: 16px;
+      }
+      form {
+        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); /* Further reduced */
+        gap: 6px;
+      }
+      input {
+        padding: 5px;
+        font-size: 12px;
+      }
+      button {
+        padding: 6px;
+        font-size: 12px;
+      }
+      th, td {
+        padding: 4px;
+        font-size: 12px;
+        min-width: 55px; /* Slightly reduced */
       }
       .edit-btn, .delete-btn {
-        font-size: 14px; /* Slightly smaller buttons */
+        font-size: 14px;
+      }
+      .nav-link {
+        font-size: 12px;
+      }
+      #initialValuesDisplay {
+        font-size: 12px;
+      }
+      #backupSection input[type="file"] {
+        max-width: 120px;
       }
     }
     @media (max-width: 360px) {
+      .container {
+        padding: 8px;
+        margin: 3px;
+      }
+      h2 {
+        font-size: 18px;
+      }
+      h3 {
+        font-size: 14px;
+      }
+      form {
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 5px;
+      }
+      input {
+        padding: 4px;
+        font-size: 11px;
+      }
+      button {
+        padding: 5px;
+        font-size: 11px;
+      }
       th, td {
         padding: 3px;
         font-size: 10px;
@@ -99,9 +213,14 @@
       .edit-btn, .delete-btn {
         font-size: 12px;
       }
-      .container {
-        padding: 10px;
-        margin: 5px;
+      .nav-link {
+        font-size: 11px;
+      }
+      #initialValuesDisplay {
+        font-size: 11px;
+      }
+      #backupSection input[type="file"] {
+        max-width: 100px;
       }
     }
   </style>
@@ -147,6 +266,14 @@
         </thead>
         <tbody id="entriesBody"></tbody>
       </table>
+    </div>
+    <div id="backupSection" class="center">
+      <button onclick="backupReadings()">💾 Backup Readings</button>
+      <input type="file" id="restoreFile" accept=".json" style="margin: 10px;">
+      <button onclick="restoreReadings()">📂 Restore Readings</button>
+    </div>
+    <div class="center">
+      <button onclick="generatePrintableReport()">🖨️ Generate Printable Report</button>
     </div>
     <a href="index.html" class="nav-link">← Back to Calculator</a>
   </div>
@@ -292,6 +419,54 @@
       entries.splice(i, 1);
       updateStorage();
       renderEntries();
+    }
+
+    // Backup Readings
+    function backupReadings() {
+      const data = { initialReadings, entries };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `solar_diary_backup_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Restore Readings
+    function restoreReadings() {
+      const fileInput = document.getElementById('restoreFile');
+      const file = fileInput.files[0];
+      if (!file) {
+        alert('Please select a JSON file to restore.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.initialReadings) {
+            initialReadings = data.initialReadings;
+            localStorage.setItem('initialReadings', JSON.stringify(initialReadings));
+          }
+          if (data.entries) {
+            entries = data.entries;
+            localStorage.setItem('entries', JSON.stringify(entries));
+          }
+          displayInitialValues();
+          renderEntries();
+          alert('Readings restored successfully!');
+        } catch (err) {
+          alert('Error restoring readings: Invalid JSON file.');
+        }
+      };
+      reader.readAsText(file);
+      fileInput.value = '';
+    }
+
+    // Generate Printable Report
+    function generatePrintableReport() {
+      window.print();
     }
 
     displayInitialValues();
