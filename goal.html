@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>90-Day Goal Tracker</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    body { margin: 0; padding: 10px; background: #f2f5f7; }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    }
+    h1 { text-align: center; margin-bottom: 10px; font-size: 1.8em; }
+    input, select, textarea, button {
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      width: 100%;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .goal-header {
+      font-weight: bold;
+      color: #0077b6;
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: 1.2em;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 6px;
+    }
+    .day {
+      background: #e0e0e0;
+      padding: 12px;
+      border-radius: 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      user-select: none;
+      font-size: 12px;
+      touch-action: manipulation;
+    }
+    .day.done {
+      background: #4caf50;
+      color: white;
+    }
+    .progress {
+      margin: 15px 0;
+      text-align: center;
+      font-size: 14px;
+    }
+    .bar-container {
+      height: 18px;
+      background: #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: #4caf50;
+      transition: width 0.3s ease;
+    }
+    .notes-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      display: none;
+      flex-direction: column;
+      width: 80%;
+      max-width: 300px;
+      z-index: 1001;
+    }
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      z-index: 1000;
+    }
+    .flex-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .flex-row select, .flex-row input, .flex-row button {
+      flex: 1;
+      min-width: 0;
+    }
+    .close-btn {
+      background: #ff5252;
+      margin-top: 8px;
+    }
+    button:hover {
+      opacity: 0.9;
+      cursor: pointer;
+    }
+    .nav-link {
+      display: block;
+      text-align: center;
+      margin-top: 15px;
+      text-decoration: none;
+      color: #3498db;
+      font-size: 14px;
+    }
+    @media (max-width: 600px) {
+      body { padding: 8px; }
+      .container { padding: 10px; }
+      h1 { font-size: 1.5em; }
+      .grid { grid-template-columns: repeat(5, 1fr); gap: 4px; }
+      .day { padding: 10px; font-size: 10px; }
+      .flex-row { flex-direction: column; }
+      input, select, textarea, button { padding: 6px; font-size: 12px; }
+      .goal-header { font-size: 1em; }
+      .progress { font-size: 12px; }
+      .bar-container { height: 15px; }
+      .notes-popup { padding: 10px; width: 90%; }
+    }
+    @media print {
+      .no-print { display: none; }
+      .container { box-shadow: none; padding: 10px; }
+      .day { font-size: 10px; padding: 6px; }
+      .grid { gap: 4px; }
+      h1 { font-size: 1.5em; }
+      .goal-header { font-size: 1em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>90-Day Goal Tracker</h1>
+    <div class="flex-row no-print">
+      <input type="text" id="goalInput" placeholder="Add a new goal">
+      <button onclick="addGoal()">Add</button>
+      <button onclick="editGoal()">Edit</button>
+      <button onclick="deleteGoal()">Delete</button>
+      <button onclick="printTracker()">Print</button>
+    </div>
+    <select id="goalSelector" onchange="loadGoal()" class="no-print"></select>
+    <div class="goal-header" id="goalTitle"></div>
+    <div class="grid" id="dayGrid"></div>
+    <div class="progress">
+      Progress: <span id="progressPercent">0%</span>
+      <div class="bar-container"><div class="bar" id="progressBar"></div></div>
+    </div>
+    <a href="tools.html" class="nav-link no-print">← Back to Tools</a>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+  <div class="notes-popup" id="notePopup">
+    <h3>Day <span id="noteDayNum"></span> - Reflection</h3>
+    <textarea id="noteText" rows="4" placeholder="Write your thoughts..."></textarea>
+    <button onclick="saveNote()">Save Note</button>
+    <button class="close-btn" onclick="closeNote()">Close</button>
+  </div>
+
+  <script>
+    const goalInput = document.getElementById("goalInput");
+    const goalSelector = document.getElementById("goalSelector");
+    const goalTitle = document.getElementById("goalTitle");
+    const grid = document.getElementById("dayGrid");
+    const progressBar = document.getElementById("progressBar");
+    const progressPercent = document.getElementById("progressPercent");
+
+    const notePopup = document.getElementById("notePopup");
+    const overlay = document.getElementById("overlay");
+    const noteText = document.getElementById("noteText");
+    const noteDayNum = document.getElementById("noteDayNum");
+
+    let goals = JSON.parse(localStorage.getItem("goals") || "{}");
+    let currentGoal = null;
+    let days = [];
+
+    // Function to format dates starting from current date
+    function getFormattedDate(offset) {
+      const date = new Date(2025, 5, 23 + offset); // June 23, 2025 + offset
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function renderGoalSelector() {
+      goalSelector.innerHTML = "";
+      Object.keys(goals).forEach(goal => {
+        const opt = document.createElement("option");
+        opt.value = goal;
+        opt.textContent = goal;
+        goalSelector.appendChild(opt);
+      });
+      if (currentGoal) {
+        goalSelector.value = currentGoal;
+      }
+    }
+
+    function addGoal() {
+      const goalName = goalInput.value.trim();
+      if (goalName && !goals[goalName]) {
+        goals[goalName] = { done: Array(90).fill(false), notes: Array(90).fill("") };
+        currentGoal = goalName;
+        saveGoals();
+        renderGoalSelector();
+        loadGoal();
+      }
+      goalInput.value = '';
+    }
+
+    function editGoal() {
+      if (!currentGoal) return;
+      const newName = prompt("Enter new goal name:", currentGoal);
+      if (newName && newName.trim() && !goals[newName.trim()]) {
+        goals[newName.trim()] = goals[currentGoal];
+        delete goals[currentGoal];
+        currentGoal = newName.trim();
+        saveGoals();
+        renderGoalSelector();
+        loadGoal();
+      }
+    }
+
+    function deleteGoal() {
+      if (!currentGoal) return;
+      if (confirm(`Are you sure you want to delete "${currentGoal}"?`)) {
+        delete goals[currentGoal];
+        currentGoal = Object.keys(goals)[0] || null;
+        saveGoals();
+        renderGoalSelector();
+        if (currentGoal) loadGoal();
+        else {
+          goalTitle.textContent = "";
+          grid.innerHTML = "";
+          progressBar.style.width = "0%";
+          progressPercent.textContent = "0%";
+        }
+      }
+    }
+
+    function saveGoals() {
+      localStorage.setItem("goals", JSON.stringify(goals));
+    }
+
+    function loadGoal() {
+      currentGoal = goalSelector.value;
+      if (!currentGoal || !goals[currentGoal]) return;
+      goalTitle.textContent = "Goal: " + currentGoal;
+      renderDays();
+      updateProgress();
+    }
+
+    function renderDays() {
+      grid.innerHTML = '';
+      days = [];
+      for (let i = 0; i < 90; i++) {
+        const day = document.createElement("div");
+        day.className = "day";
+        day.textContent = getFormattedDate(i);
+        if (goals[currentGoal].done[i]) day.classList.add("done");
+        day.onclick = () => toggleDay(i);
+        day.oncontextmenu = (e) => { e.preventDefault(); openNote(i); };
+        grid.appendChild(day);
+        days.push(day);
+      }
+    }
+
+    function toggleDay(i) {
+      goals[currentGoal].done[i] = !goals[currentGoal].done[i];
+      saveGoals();
+      renderDays();
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const doneCount = goals[currentGoal].done.filter(Boolean).length;
+      const percent = Math.round((doneCount / 90) * 100);
+      progressBar.style.width = percent + '%';
+      progressPercent.textContent = percent + '%';
+    }
+
+    function openNote(index) {
+      overlay.style.display = "block";
+      notePopup.style.display = "flex";
+      noteDayNum.textContent = getFormattedDate(index);
+      noteText.value = goals[currentGoal].notes[index] || "";
+      noteText.dataset.index = index;
+    }
+
+    function saveNote() {
+      const i = parseInt(noteText.dataset.index);
+      goals[currentGoal].notes[i] = noteText.value;
+      saveGoals();
+      closeNote();
+    }
+
+    function closeNote() {
+      overlay.style.display = "none";
+      notePopup.style.display = "none";
+    }
+
+    function printTracker() {
+      window.print();
+    }
+
+    // Initial load
+    if (Object.keys(goals).length > 0) {
+      currentGoal = Object.keys(goals)[0];
+    }
+    renderGoalSelector();
+    if (currentGoal) loadGoal();
+  </script>
+</body>
+</html>
