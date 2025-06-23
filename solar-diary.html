@@ -573,7 +573,7 @@
         const highestCostMeter = contributions.reduce((max, curr) => max.costValue > curr.costValue ? max : curr);
 
         analysisHTML += '<ul>';
-        analysisHTML += `<li><strong>Usage Pattern:</strong> Your average monthly consumption is ${Math.round(totalAvgConsumption)} units (T1: ${Math.round(avgT1)} units, T2: ${Math.round(avgT2)} units, T3: ${Math.round(avgT3)} units), compared to an average export of ${Math.round(avgExport)} units.</li>`;
+        analysisHTML += `<li><strong>Usage Pattern:</strong> Your average monthly consumption is ~${Math.round(totalAvgConsumption)} units (T1: ${Math.round(usage.t1)} units, T2: ${Math.round(usage.t2)} units, T3: ${Math.round(usage.t3)} units), compared to an average export of ${Math.round(usage.export)} units.</li>`;
         analysisHTML += `<li><strong>Highest Cost Meter:</strong> ${highestCostMeter.meter} contributes ${highestCostMeter.percent}% to your potential costs (T1: ${contributions.find(c => c.meter === 'T1').percent}%, T2: ${contributions.find(c => c.meter === 'T2').percent}%, T3: ${contributions.find(c => c.meter === 'T3').percent}%).</li>`;
         if (excessCount > entries.length / 2) {
           analysisHTML += `<li><strong>Trend:</strong> You exceeded export in ${excessCount} of ${entries.length} entries, indicating frequent high usage that may lead to higher charges.</li>`;
