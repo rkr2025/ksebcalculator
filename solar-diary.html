@@ -156,6 +156,31 @@
       width: 100%;
       max-width: 200px;
     }
+    /* Instructions styles */
+    details {
+      margin: 10px 0;
+      border: 1px solid #3498db;
+      border-radius: 6px;
+      background: #f9f9f9;
+    }
+    summary {
+      padding: 10px;
+      font-size: 14px;
+      font-weight: bold;
+      color: #3498db;
+      cursor: pointer;
+      outline: none;
+    }
+    .instructions {
+      padding: 10px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #333;
+    }
+    .instructions ul {
+      margin: 5px 0;
+      padding-left: 20px;
+    }
     /* Print-specific styles */
     @media print {
       body {
@@ -167,7 +192,7 @@
         padding: 10px;
         box-shadow: none;
       }
-      h2, h3, h4, form, .center, .nav-link, #backupSection, #initialValuesDisplay, #usageInsights, #usageAnalysis {
+      h2, h3, h4, form, details, .center, .nav-link, #backupSection, #initialValuesDisplay, #usageInsights, #usageAnalysis {
         display: none;
       }
       .table-container {
@@ -234,6 +259,12 @@
       #backupSection button, #backupSection input[type="file"] {
         max-width: 160px;
       }
+      summary {
+        font-size: 14px;
+      }
+      .instructions {
+        font-size: 14px;
+      }
     }
     /* Responsive styles for small mobile (360px) */
     @media (max-width: 360px) {
@@ -283,11 +314,33 @@
       #backupSection button, #backupSection input[type="file"] {
         max-width: 140px;
       }
+      summary {
+        font-size: 13px;
+      }
+      .instructions {
+        font-size: 13px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
+    <details>
+      <summary>📖 How to Use Solar Diary</summary>
+      <div class="instructions">
+        <p>Welcome to Solar Diary! Follow these steps to track your solar energy and electricity usage:</p>
+        <ul>
+          <li><strong>Set Initial Readings</strong>: Enter your starting values for Solar, T1, T2, T3, and Export from your last bill in the "Initial Reading" section. At least one value must be non-zero. Click 💾 Save Initial.</li>
+          <li><strong>Add Current Readings</strong>: Input current readings in the "Current Solar Readings" section and click ➕ Add. Add entries daily or weekly.</li>
+          <li><strong>View Insights & Analysis</strong>: After initial readings, see usage warnings (red) or safe messages (green) and cost-saving tips below the "Entries Log".</li>
+          <li><strong>Edit/Delete Entries</strong>: Use ✏️ to edit or 🗑️ to delete entries in the log table.</li>
+          <li><strong>Backup/Restore</strong>: Save data with 💾 Backup Readings or restore from a JSON file using 📂 Restore Readings.</li>
+          <li><strong>Print Report</strong>: Click 🖨️ Generate Printable Report to print the entries log.</li>
+          <li><strong>Mobile Tips</strong>: Swipe tables left/right and toggle these instructions on small screens.</li>
+        </ul>
+        <p><em>Tip</em>: Minimize T2 (6pm-10pm) usage to reduce costs due to its high rate (125%). Check your bill for accurate initial values.</p>
+      </div>
+    </details>
     <h2>📘 Solar Diary</h2>
     <h3 id="initialReadingHeading">🔑 June month Initial Reading</h3>
     <form id="initialForm">
@@ -406,24 +459,28 @@
 
       let total = { solar: 0, t1: 0, t2: 0, t3: 0, export: 0 };
 
-      entries.forEach((e, i) => {
+      entries.forEach((entry, i) => {
         const delta = initialReadings ? {
-          solar: e.solar - initialReadings.solar,
-          t1: e.t1 - initialReadings.t1,
-          t2: e.t2 - initialReadings.t2,
-          t3: e.t3 - initialReadings.t3,
-          export: e.export - initialReadings.export
+          solar: entry.solar - initialReadings.solar,
+          t1: entry.t1 - initialReadings.t1,
+          t2: entry.t2 - initialReadings.t2,
+          t3: entry.t3 - initialReadings.t3,
+          export: entry.export - initialReadings.export
         } : null;
 
-        total.solar += delta ? delta.solar : e.solar;
-        total.t1 += delta ? delta.t1 : e.t1;
-        total.t2 += delta ? delta.t2 : e.t2;
-        total.t3 += delta ? delta.t3 : e.t3;
-        total.export += delta ? delta.export : e.export;
+        total.solar += delta ? delta.solar : entry.solar;
+        total.t1 += delta ? delta.t1 : entry.t1;
+        total.t2 += delta ? delta.t2 : entry.t2;
+        total.t3 += delta ? delta.t3 : entry.t3;
+        total.export += delta ? delta.export : entry.export;
 
         tbody.innerHTML += `<tr>
-          <td>${e.date}</td>
-          <td>${e.solar}</td><td>${e.t1}</td><td>${e.t2}</td><td>${e.t3}</td><td>${e.export}</td>
+          <td>${entry.date}</td>
+          <td>${entry.solar}</td>
+          <td>${entry.t1}</td>
+          <td>${entry.t2}</td>
+          <td>${entry.t3}</td>
+          <td>${entry.export}</td>
           <td>
             <button class="edit-btn" onclick="editEntry(${i})">✏️</button>
             <button class="delete-btn" onclick="deleteEntry(${i})">🗑️</button>
@@ -448,7 +505,7 @@
         };
 
         tbody.innerHTML += `<tr class="highlight">
-          <td><strong>Total Usage</strong></td>
+          <td><strong>Total</strong></td>
           <td>${Math.round(usage.solar)}</td>
           <td>${Math.round(usage.t1)}</td>
           <td>${Math.round(usage.t2)}</td>
@@ -479,17 +536,17 @@
         let excessCount = 0;
 
         // Calculate averages and track excess consumption
-        entries.forEach(e => {
+        entries.forEach(entry => {
           const eUsage = initialReadings ? {
-            t1: e.t1 - initialReadings.t1,
-            t2: e.t2 - initialReadings.t2,
-            t3: e.t3 - initialReadings.t3,
-            export: e.export - initialReadings.export
+            t1: entry.t1 - initialReadings.t1,
+            t2: entry.t2 - initialReadings.t2,
+            t3: entry.t3 - initialReadings.t3,
+            export: entry.export - initialReadings.export
           } : {
-            t1: e.t1,
-            t2: e.t2,
-            t3: e.t3,
-            export: e.export
+            t1: entry.t1,
+            t2: entry.t2,
+            t3: entry.t3,
+            export: entry.export
           };
           avgT1 += eUsage.t1;
           avgT2 += eUsage.t2;
@@ -507,34 +564,34 @@
 
         // Cost-weighted calculations (T1: 0.9, T2: 1.25, T3: 1.0)
         const totalAvgConsumption = avgT1 + avgT2 + avgT3;
-        const costWeightedConsumption = avgT1 * 0.9 + avgT2 * 1.25 + avgT3 * 1.0;
+        const costWeighted = avgT1 * 0.9 + avgT2 * 1.25 + avgT3 * 1.0;
         const contributions = [
-          { meter: 'T1', value: avgT1, costValue: avgT1 * 0.9, percent: costWeightedConsumption ? (avgT1 * 0.9 / costWeightedConsumption * 100).toFixed(1) : 0 },
-          { meter: 'T2', value: avgT2, costValue: avgT2 * 1.25, percent: costWeightedConsumption ? (avgT2 * 1.25 / costWeightedConsumption * 100).toFixed(1) : 0 },
-          { meter: 'T3', value: avgT3, costValue: avgT3 * 1.0, percent: costWeightedConsumption ? (avgT3 * 1.0 / costWeightedConsumption * 100).toFixed(1) : 0 }
+          { meter: 'T1', value: avgT1, costValue: avgT1 * 0.9, percent: costWeighted ? (avgT1 * 0.9 / costWeighted * 100).toFixed(1) : 0 },
+          { meter: 'T2', value: avgT2, costValue: avgT2 * 1.25, percent: costWeighted ? (avgT2 * 1.25 / costWeighted * 100).toFixed(1) : 0 },
+          { meter: 'T3', value: avgT3, costValue: avgT3 * 1.0, percent: costWeighted ? (avgT3 * 1.0 / costWeighted * 100).toFixed(1) : 0 }
         ];
         const highestCostMeter = contributions.reduce((max, curr) => max.costValue > curr.costValue ? max : curr);
 
         analysisHTML += '<ul>';
-        analysisHTML += `<li><strong>Usage Pattern</strong>: Your average monthly consumption is ${Math.round(totalAvgConsumption)} units (T1: ${Math.round(avgT1)} units, T2: ${Math.round(avgT2)} units, T3: ${Math.round(avgT3)} units), compared to an average export of ${Math.round(avgExport)} units.</li>`;
-        analysisHTML += `<li><strong>Highest Cost Meter</strong>: ${highestCostMeter.meter} contributes ${highestCostMeter.percent}% to your potential charges (T1: ${contributions.find(c => c.meter === 'T1').percent}%, T2: ${contributions.find(c => c.meter === 'T2').percent}%, T3: ${contributions.find(c => c.meter === 'T3').percent}%).</li>`;
+        analysisHTML += `<li><strong>Usage Pattern:</strong> Your average monthly consumption is ${Math.round(totalAvgConsumption)} units (T1: ${Math.round(avgT1)} units, T2: ${Math.round(avgT2)} units, T3: ${Math.round(avgT3)} units), compared to an average export of ${Math.round(avgExport)} units.</li>`;
+        analysisHTML += `<li><strong>Highest Cost Meter:</strong> ${highestCostMeter.meter} contributes ${highestCostMeter.percent}% to your potential costs (T1: ${contributions.find(c => c.meter === 'T1').percent}%, T2: ${contributions.find(c => c.meter === 'T2').percent}%, T3: ${contributions.find(c => c.meter === 'T3').percent}%).</li>`;
         if (excessCount > entries.length / 2) {
-          analysisHTML += `<li><strong>Trend</strong>: You exceeded export in ${excessCount} of ${entries.length} entries, indicating frequent high usage that may lead to higher charges.</li>`;
+          analysisHTML += `<li><strong>Trend:</strong> You exceeded export in ${excessCount} of ${entries.length} entries, indicating frequent high usage that may lead to higher charges.</li>`;
         } else {
-          analysisHTML += `<li><strong>Trend</strong>: You stayed below or near export in most entries, but monitor usage to avoid charges.</li>`;
+          analysisHTML += `<li><strong>Trend:</strong> You stayed below or near export in most entries, but monitor usage to avoid charges.</li>`;
         }
 
-        analysisHTML += '<li><strong>Recommendations</strong>:';
+        analysisHTML += '<li><strong>Recommendations:</strong>';
         analysisHTML += '<ul>';
         if (totalConsumption > exportUnits) {
           const excess = Math.round(totalConsumption - exportUnits);
           analysisHTML += `<li>Reduce total usage by ${excess} units to match or stay below export levels to avoid charges.</li>`;
           if (highestCostMeter.meter === 'T2') {
-            analysisHTML += `<li><strong>Focus on T2</strong>: T2 is charged at 125% of the prevailing rate and contributes ${highestCostMeter.percent}% to costs. Reduce high-power appliance usage (e.g., air conditioners, heaters) during peak hours or switch to energy-efficient models.</li>`;
+            analysisHTML += `<li><strong>Focus on T2:</strong> T2 is charged at 125% of the prevailing rate and contributes ${highestCostMeter.percent}% to costs. Reduce high-power appliance usage (e.g., air conditioners, heaters) during peak hours or switch to energy-efficient models.</li>`;
           } else if (highestCostMeter.meter === 'T1') {
-            analysisHTML += `<li><strong>Focus on T1</strong>: T1 contributes ${highestCostMeter.percent}% to costs, despite its lower rate (90%). Optimize usage by turning off unnecessary devices or shifting loads to off-peak times.</li>`;
+            analysisHTML += `<li><strong>Focus on T1:</strong> T1 contributes ${highestCostMeter.percent}% to costs, despite its lower rate (90%). Optimize usage by turning off unnecessary devices or shifting loads to off-peak times.</li>`;
           } else {
-            analysisHTML += `<li><strong>Focus on T3</strong>: T3 contributes ${highestCostMeter.percent}% to costs. Check for inefficient devices (e.g., old lighting or appliances) and reduce their usage.</li>`;
+            analysisHTML += `<li><strong>Focus on T3:</strong> T3 contributes ${highestCostMeter.percent}% to costs. Check for inefficient devices (e.g., old lighting or appliances) and reduce their usage.</li>`;
           }
         } else if (totalConsumption > exportUnits * 0.9) {
           analysisHTML += `<li>Your usage is close to export (${Math.round(totalConsumption/exportUnits*100)}% of export). Make minor reductions, especially on T2 (125% rate), by turning off unused devices or using energy-saving modes.</li>`;
@@ -607,12 +664,12 @@
     }
 
     function editEntry(i) {
-      const e = entries[i];
-      document.getElementById("solar").value = e.solar;
-      document.getElementById("t1").value = e.t1;
-      document.getElementById("t2").value = e.t2;
-      document.getElementById("t3").value = e.t3;
-      document.getElementById("export").value = e.export;
+      const entry = entries[i];
+      document.getElementById("solar").value = entry.solar;
+      document.getElementById("t1").value = entry.t1;
+      document.getElementById("t2").value = entry.t2;
+      document.getElementById("t3").value = entry.t3;
+      document.getElementById("export").value = entry.export;
       entries.splice(i, 1);
       updateStorage();
       renderEntries();
