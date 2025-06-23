@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Log Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for Inter font */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 bg-gray-100">
+    <div class="bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-2xl border border-gray-200">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800 text-center mb-6">
+            <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600">Work Log Tracker</span>
+        </h1>
+
+        <!-- Control Panel -->
+        <div class="mb-6 flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
+            <input type="text" id="taskInput" placeholder="Enter current task..."
+                   class="flex-grow p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg w-full md:w-auto">
+            <button id="addButton"
+                    class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-md shadow-lg transition duration-300 ease-in-out transform hover:scale-105 w-full md:w-auto">
+                Add Task
+            </button>
+            <button id="startButton"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md shadow-lg transition duration-300 ease-in-out transform hover:scale-105 w-full md:w-auto">
+                Start
+            </button>
+            <button id="stopButton"
+                    class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-md shadow-lg transition duration-300 ease-in-out transform hover:scale-105 w-full md:w-auto" disabled>
+                Stop
+            </button>
+        </div>
+
+        <!-- Current Status -->
+        <div class="bg-blue-50 p-4 rounded-md shadow-inner mb-6 text-center border border-blue-200">
+            <p class="text-gray-700 text-sm md:text-base font-medium">Current Task:</p>
+            <p id="currentTaskDisplay" class="text-blue-700 text-xl md:text-2xl font-bold mt-1 mb-2">Not Started</p>
+            <p class="text-gray-700 text-sm md:text-base font-medium">Time Elapsed:</p>
+            <p id="timeElapsedDisplay" class="text-blue-700 text-3xl md:text-4xl font-extrabold">00:00:00</p>
+        </div>
+
+        <!-- Task Log Display -->
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 text-center">Work Log Summary</h2>
+        <div id="taskLogList" class="bg-gray-50 p-4 rounded-md shadow-inner border border-gray-200 min-h-[150px] overflow-y-auto">
+            <p class="text-gray-500 text-center" id="noLogsMessage">No work logs yet. Start tracking!</p>
+        </div>
+
+        <!-- Backup/Restore Controls -->
+        <div class="mt-6 flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
+            <button id="backupButton"
+                    class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-md shadow-lg transition duration-300 ease-in-out transform hover:scale-105 w-full md:w-auto">
+                Backup Data
+            </button>
+            <button id="restoreButton"
+                    class="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-3 px-6 rounded-md shadow-lg transition duration-300 ease-in-out transform hover:scale-105 w-full md:w-auto">
+                Restore Data
+            </button>
+            <input type="file" id="restoreFileInput" accept=".json" class="hidden">
+        </div>
+
+    </div>
+
+    <script>
+        // DOM Elements
+        const taskInput = document.getElementById('taskInput');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const addButton = document.getElementById('addButton');
+        const currentTaskDisplay = document.getElementById('currentTaskDisplay');
+        const timeElapsedDisplay = document.getElementById('timeElapsedDisplay');
+        const taskLogList = document.getElementById('taskLogList');
+        const noLogsMessage = document.getElementById('noLogsMessage');
+        const backupButton = document.getElementById('backupButton'); // New backup button
+        const restoreButton = document.getElementById('restoreButton'); // New restore button
+        const restoreFileInput = document.getElementById('restoreFileInput'); // Hidden file input for restore
+
+        // State Variables
+        let isTimerRunning = false;
+        let currentTask = '';
+        let startTime = null; // Timestamp when the current task started
+        let taskLogs = {}; // Stores { "Task Name": total_milliseconds_spent }
+        let timerInterval = null;
+        let lastActivityTime = null; // Timestamp of the last time the app was active or state was saved
+
+        // --- Utility Functions ---
+
+        /**
+         * Formats milliseconds into HH:MM:SS format.
+         * @param {number} ms - Time in milliseconds.
+         * @returns {string} Formatted time string.
+         */
+        function formatTime(ms) {
+            if (isNaN(ms) || ms < 0) return '00:00:00';
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            const pad = (num) => String(num).padStart(2, '0');
+            return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+        }
+
+        /**
+         * Saves the current application state to local storage.
+         */
+        function saveState() {
+            const dataToSave = {
+                isTimerRunning,
+                currentTask,
+                startTime,
+                taskLogs,
+                lastActivityTime: Date.now()
+            };
+            try {
+                localStorage.setItem('workLogData', JSON.stringify(dataToSave));
+                // console.log('State saved:', dataToSave); // For debugging
+            } catch (e) {
+                console.error("Error saving to local storage:", e);
+            }
+        }
+
+        /**
+         * Loads the application state from local storage.
+         */
+        function loadState() {
+            try {
+                const storedData = localStorage.getItem('workLogData');
+                if (storedData) {
+                    const parsedData = JSON.parse(storedData);
+                    isTimerRunning = parsedData.isTimerRunning || false;
+                    currentTask = parsedData.currentTask || '';
+                    startTime = parsedData.startTime || null;
+                    taskLogs = parsedData.taskLogs || {};
+                    lastActivityTime = parsedData.lastActivityTime || null;
+
+                    if (isTimerRunning && startTime && lastActivityTime) {
+                        const timeInBackground = Date.now() - lastActivityTime;
+                        if (timeInBackground > 0 && currentTask) {
+                            taskLogs[currentTask] = (taskLogs[currentTask] || 0) + timeInBackground;
+                            console.log(`Added ${formatTime(timeInBackground)} for ${currentTask} due to background activity.`);
+                        }
+                        startTime = Date.now(); // Reset startTime to now to continue counting
+                        startTimerInterval(); // Restart the interval
+                    }
+                }
+            } catch (e) {
+                console.error("Error loading from local storage:", e);
+                localStorage.removeItem('workLogData'); // Clear corrupted data
+            }
+            updateUI();
+        }
+
+        /**
+         * Updates the display for the current task's elapsed time.
+         */
+        function updateTimerDisplay() {
+            if (isTimerRunning && startTime) {
+                const elapsed = Date.now() - startTime;
+                timeElapsedDisplay.textContent = formatTime(elapsed);
+            } else {
+                timeElapsedDisplay.textContent = '00:00:00';
+            }
+            saveState(); // Save state frequently
+        }
+
+        /**
+         * Deletes a task entry from the log.
+         * @param {string} taskName - The name of the task to delete.
+         */
+        function deleteTaskEntry(taskName) {
+            // Check if the task being deleted is the current running task
+            if (isTimerRunning && currentTask === taskName) {
+                // If it is, stop the timer first
+                stopButton.click(); // Programmatically click stop to save current task's time and stop timer
+            }
+            
+            if (taskLogs.hasOwnProperty(taskName)) {
+                delete taskLogs[taskName];
+                saveState();
+                renderTaskLogs(); // Re-render the list after deletion
+                updateUI(); // Update UI to reflect potential changes in currentTask display if it was deleted
+            }
+        }
+
+        /**
+         * Renders the list of accumulated task times.
+         */
+        function renderTaskLogs() {
+            taskLogList.innerHTML = ''; // Clear existing list
+            // Sort tasks by time spent, but include tasks with 0 time now
+            const sortedTasks = Object.keys(taskLogs).sort((a, b) => taskLogs[b] - taskLogs[a]);
+
+            if (sortedTasks.length === 0) {
+                noLogsMessage.style.display = 'block';
+            } else {
+                noLogsMessage.style.display = 'none';
+                sortedTasks.forEach(task => {
+                    const totalMs = taskLogs[task];
+                    // Removed the totalMs > 0 check to display tasks with 0 time
+                    const listItem = document.createElement('div');
+                    listItem.className = 'flex justify-between items-center py-2 px-3 border-b border-gray-200 last:border-b-0 rounded-md bg-white mb-2 shadow-sm';
+                    listItem.innerHTML = `
+                        <span class="text-gray-800 font-medium text-base">${task}</span>
+                        <span class="text-blue-600 font-bold text-lg mr-4">${formatTime(totalMs)}</span>
+                        <button class="delete-task-button bg-red-500 hover:bg-red-600 text-white text-xs font-semibold py-1 px-2 rounded-md transition duration-200 ease-in-out" data-task="${task}">Delete</button>
+                    `;
+                    taskLogList.appendChild(listItem);
+                });
+                // Attach event listeners to newly created delete buttons
+                document.querySelectorAll('.delete-task-button').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const taskToDelete = event.target.dataset.task;
+                        deleteTaskEntry(taskToDelete);
+                    });
+                });
+            }
+        }
+
+        /**
+         * Updates the UI elements based on the current state.
+         */
+        function updateUI() {
+            taskInput.value = currentTask;
+            currentTaskDisplay.textContent = currentTask || 'Not Started';
+
+            // Start button: Enabled only if timer is NOT running AND there is a task entered in the input field.
+            startButton.disabled = isTimerRunning || !currentTask;
+            // Stop button: Enabled only if the timer IS running.
+            stopButton.disabled = !isTimerRunning;
+            // Add Task button: Enabled only if there is text in the input field.
+            addButton.disabled = !taskInput.value.trim();
+
+            if (isTimerRunning) {
+                taskInput.classList.remove('bg-gray-200');
+                taskInput.classList.add('bg-white');
+            } else {
+                taskInput.classList.add('bg-white');
+                taskInput.classList.remove('bg-gray-200');
+            }
+            
+            updateTimerDisplay();
+            renderTaskLogs();
+        }
+
+        /**
+         * Starts the setInterval timer.
+         */
+        function startTimerInterval() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimerDisplay, 1000);
+        }
+
+        /**
+         * Displays a temporary message in the current task display area.
+         * @param {string} message - The message to display.
+         * @param {string} colorClass - Tailwind CSS class for text color (e.g., 'text-green-500').
+         */
+        function showTempMessage(message, colorClass = 'text-green-500') {
+            const originalText = currentTaskDisplay.textContent;
+            const originalColorClasses = Array.from(currentTaskDisplay.classList); // Store original classes
+            
+            currentTaskDisplay.textContent = message;
+            currentTaskDisplay.classList.add(colorClass); // Add new color class
+            
+            // Remove all other text-color classes that might be present
+            currentTaskDisplay.classList.forEach(cls => {
+                if (cls.startsWith('text-') && cls !== colorClass) {
+                    currentTaskDisplay.classList.remove(cls);
+                }
+            });
+
+            setTimeout(() => {
+                currentTaskDisplay.textContent = originalText;
+                // Restore original color classes, removing the temporary one
+                currentTaskDisplay.className = originalColorClasses.join(' ');
+                currentTaskDisplay.classList.remove(colorClass);
+            }, 2000);
+        }
+
+        // --- Event Handlers ---
+
+        startButton.addEventListener('click', () => {
+            if (isTimerRunning) return;
+
+            const task = taskInput.value.trim();
+            if (!task) {
+                showTempMessage('Please enter a task before starting!', 'text-red-500');
+                return;
+            }
+
+            isTimerRunning = true;
+            currentTask = task;
+            startTime = Date.now();
+            lastActivityTime = Date.now();
+            startTimerInterval();
+            saveState();
+            updateUI();
+        });
+
+        stopButton.addEventListener('click', () => {
+            if (!isTimerRunning) return;
+
+            if (startTime && currentTask) {
+                const elapsed = Date.now() - startTime;
+                taskLogs[currentTask] = (taskLogs[currentTask] || 0) + elapsed;
+            }
+
+            isTimerRunning = false;
+            currentTask = '';
+            startTime = null;
+            lastActivityTime = null;
+            clearInterval(timerInterval);
+            timerInterval = null;
+            saveState();
+            updateUI();
+        });
+
+        addButton.addEventListener('click', () => {
+            const newTask = taskInput.value.trim();
+
+            if (!newTask) {
+                showTempMessage('Please enter a task to add!', 'text-red-500');
+                return;
+            }
+
+            if (isTimerRunning) {
+                if (newTask !== currentTask) {
+                    if (startTime && currentTask) {
+                        const elapsed = Date.now() - startTime;
+                        taskLogs[currentTask] = (taskLogs[currentTask] || 0) + elapsed;
+                        console.log(`Accumulated ${formatTime(elapsed)} for previous task: "${currentTask}"`);
+                    }
+                    currentTask = newTask;
+                    startTime = Date.now();
+                    lastActivityTime = Date.now();
+                    showTempMessage(`Task added: ${currentTask}`, 'text-green-600');
+                    saveState();
+                } else {
+                    // If the task is the same, just indicate it's already active/added
+                    showTempMessage(`Task already active: ${currentTask}`, 'text-yellow-600');
+                }
+            } else {
+                currentTask = newTask;
+                taskLogs[currentTask] = taskLogs[currentTask] || 0; // Initialize task time to 0 if new
+                showTempMessage(`Task added: ${currentTask}`, 'text-green-600');
+                saveState();
+            }
+            updateUI(); // Call updateUI to reflect changes immediately
+        });
+
+        taskInput.addEventListener('input', () => {
+            currentTask = taskInput.value.trim();
+            updateUI();
+        });
+
+        backupButton.addEventListener('click', () => {
+            const dataStr = JSON.stringify(taskLogs, null, 2); // Pretty print JSON
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'work_log_backup.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showTempMessage('Work log backed up!', 'text-purple-600');
+        });
+
+        restoreButton.addEventListener('click', () => {
+            restoreFileInput.click(); // Trigger the hidden file input click
+        });
+
+        restoreFileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                showTempMessage('No file selected for restore.', 'text-red-500');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const restoredLogs = JSON.parse(e.target.result);
+                    if (typeof restoredLogs === 'object' && restoredLogs !== null) {
+                        // Merge or replace existing taskLogs
+                        // For this implementation, we'll replace existing tasks with same name, and add new ones.
+                        // You could modify this to sum times if needed: taskLogs[key] = (taskLogs[key] || 0) + restoredLogs[key];
+                        taskLogs = { ...taskLogs, ...restoredLogs }; 
+                        saveState();
+                        loadState(); // Reload state to update UI and restart timer if needed
+                        showTempMessage('Work log restored successfully!', 'text-yellow-600');
+                    } else {
+                        showTempMessage('Invalid JSON format in file.', 'text-red-500');
+                    }
+                } catch (error) {
+                    console.error("Error parsing JSON:", error);
+                    showTempMessage('Error restoring data: Invalid JSON file.', 'text-red-500');
+                }
+            };
+            reader.onerror = () => {
+                console.error("Error reading file:", reader.error);
+                showTempMessage('Error reading file.', 'text-red-500');
+            };
+            reader.readAsText(file);
+        });
+
+
+        // --- Initialization ---
+        window.addEventListener('load', () => {
+            loadState();
+            updateUI();
+        });
+
+        // Handle page visibility changes to accurately track time spent in background
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                saveState();
+            } else {
+                loadState();
+            }
+        });
+
+    </script>
+</body>
+</html>
