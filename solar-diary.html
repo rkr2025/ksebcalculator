@@ -182,32 +182,85 @@
         border: 1px solid #000;
       }
     }
-    /* Responsive styles for mobile */
+    /* Responsive styles for mobile (480px) */
     @media (max-width: 480px) {
       .container {
         padding: 10px;
         margin: 5px;
       }
       h2 {
-        font-size: 20px;
+        font-size: 24px;
       }
       h3 {
+        font-size: 20px;
+      }
+      h4 {
         font-size: 16px;
+      }
+      form {
+        grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
+        gap: 6px;
+      }
+      input {
+        padding: 6px;
+        font-size: 14px;
+      }
+      button {
+        padding: 7px;
+        font-size: 14px;
+      }
+      th, td {
+        padding: 5px;
+        font-size: 14px;
+        min-width: 60px;
+      }
+      .edit-btn, .delete-btn {
+        font-size: 16px;
+      }
+      .nav-link {
+        font-size: 14px;
+      }
+      #initialValuesDisplay, #usageInsights, #usageAnalysis {
+        font-size: 14px;
+      }
+      #backupSection {
+        flex-direction: column;
+        align-items: center;
+      }
+      #backupSection input[type="file"] {
+        font-size: 13px;
+        max-width: 130px;
+      }
+      #backupSection button, #backupSection input[type="file"] {
+        max-width: 160px;
+      }
+    }
+    /* Responsive styles for small mobile (360px) */
+    @media (max-width: 360px) {
+      .container {
+        padding: 8px;
+        margin: 3px;
+      }
+      h2 {
+        font-size: 22px;
+      }
+      h3 {
+        font-size: 18px;
       }
       h4 {
         font-size: 14px;
       }
       form {
-        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-        gap: 6px;
+        grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
+        gap: 5px;
       }
       input {
         padding: 5px;
-        font-size: 12px;
+        font-size: 13px;
       }
       button {
         padding: 6px;
-        font-size: 12px;
+        font-size: 13px;
       }
       th, td {
         padding: 4px;
@@ -218,67 +271,17 @@
         font-size: 14px;
       }
       .nav-link {
-        font-size: 12px;
+        font-size: 13px;
       }
       #initialValuesDisplay, #usageInsights, #usageAnalysis {
-        font-size: 12px;
-      }
-      #backupSection {
-        flex-direction: column;
-        align-items: center;
+        font-size: 13px;
       }
       #backupSection input[type="file"] {
-        max-width: 120px;
+        font-size: 12px;
+        max-width: 110px;
       }
       #backupSection button, #backupSection input[type="file"] {
-        max-width: 150px;
-      }
-    }
-    @media (max-width: 360px) {
-      .container {
-        padding: 8px;
-        margin: 3px;
-      }
-      h2 {
-        font-size: 18px;
-      }
-      h3 {
-        font-size: 14px;
-      }
-      h4 {
-        font-size: 12px;
-      }
-      form {
-        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-        gap: 5px;
-      }
-      input {
-        padding: 4px;
-        font-size: 11px;
-      }
-      button {
-        padding: 5px;
-        font-size: 11px;
-      }
-      th, td {
-        padding: 3px;
-        font-size: 10px;
-        min-width: 50px;
-      }
-      .edit-btn, .delete-btn {
-        font-size: 12px;
-      }
-      .nav-link {
-        font-size: 11px;
-      }
-      #initialValuesDisplay, #usageInsights, #usageAnalysis {
-        font-size: 11px;
-      }
-      #backupSection input[type="file"] {
-        max-width: 100px;
-      }
-      #backupSection button, #backupSection input[type="file"] {
-        max-width: 120px;
+        max-width: 140px;
       }
     }
   </style>
@@ -540,7 +543,7 @@
         }
         analysisHTML += `<li>Maximize export: Clean solar panels and ensure they are unobstructed to increase export units, offsetting any charged consumption.</li>`;
         if (highestCostMeter.meter !== 'T2') {
-          analysisHTML += `<li>Monitor T2: Its high rate (125%) can significantly increase costs if usage rises. Ensure no unnecessary devices are running on Peak Time (6pm to 10pm) </li>`;
+          analysisHTML += `<li>Monitor T2: Its high rate (125%) can significantly increase costs if usage rises. Ensure no unnecessary devices are running on Peak Time (6pm to 10pm).</li>`;
         }
         analysisHTML += '</ul></li>';
         analysisHTML += '</ul>';
