@@ -1704,7 +1704,7 @@ const getEnergyCaluculationMessage = (
 };
 
     var duty = 0;
-    const monthlyFuelSurcharge = bankAdjustedUnits * 0.05;
+    const monthlyFuelSurcharge = bankAdjustedUnits * 0.06;
     var totalBillAmount = 0;
     duty = energyCharge * 0.10;
     totalBillAmount = fixedCharge + meterRent + energyCharge + duty + monthlyFuelSurcharge;
@@ -1759,7 +1759,7 @@ const getEnergyCaluculationMessage = (
                             <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(duty || 0).toFixed(2)}</strong></td>
                         </tr>
                         <tr style="background-color: #ecf0f1;">
-                            <td style="border: 1px solid #ddd; padding: 10px;">Monthly Fuel Surcharge<br>(Consumption: ${bankAdjustedUnitsToUse.toFixed(2)} Unit x 5ps)</td>
+                            <td style="border: 1px solid #ddd; padding: 10px;">Monthly Fuel Surcharge<br>(Consumption: ${bankAdjustedUnitsToUse.toFixed(2)} Unit x 6ps)</td>
                             <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(monthlyFuelSurcharge || 0).toFixed(2)}</strong></td>
                         </tr>
                         <tr style="background: linear-gradient(90deg, #2ecc71, #27ae60); color: white;">
@@ -2237,7 +2237,7 @@ const getEnergyCaluculationMessage = (
         </p>
         <p style="font-size: 13px; color: #666; margin-top: 10px; line-height: 1.6;">
             <em>Note:</em> This information is provided for reference only. For accurate and official details, consult <span style="color: #3498db;">KSEB</span> or other authoritative sources.
-            <span style="display: block; margin-top: 5px; font-size: 12px; color: #888;">(Version 2.0.01: Last updated: 22-Jun-2025) </span>
+            <span style="display: block; margin-top: 5px; font-size: 12px; color: #888;">(Version 2.0.02: Last updated: 27-Jun-2025) </span>
         </p>
     </div>
 `;
