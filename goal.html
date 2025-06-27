@@ -195,9 +195,10 @@
     let currentGoal = null;
     let days = [];
 
-    // Function to format dates and days starting from current date
-    function getFormattedDate(offset) {
-      const date = new Date(2025, 5, 23 + offset); // June 23, 2025 + offset
+    // Function to format dates and days based on goal's start date
+    function getFormattedDate(goalName, offset) {
+      const startDate = goals[goalName]?.startDate ? new Date(goals[goalName].startDate) : new Date();
+      const date = new Date(startDate.getTime() + offset * 24 * 60 * 60 * 1000);
       const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
       const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       return { date: `${dateStr}\n${dayName}`, isWeekend: dayName === 'Sat' || dayName === 'Sun' };
@@ -219,7 +220,11 @@
     function addGoal() {
       const goalName = goalInput.value.trim();
       if (goalName && !goals[goalName]) {
-        goals[goalName] = { done: Array(90).fill(false), notes: Array(90).fill("") };
+        goals[goalName] = {
+          startDate: new Date().toISOString(),
+          done: Array(90).fill(false),
+          notes: Array(90).fill("")
+        };
         currentGoal = goalName;
         saveGoals();
         renderGoalSelector();
@@ -275,7 +280,7 @@
       days = [];
       for (let i = 0; i < 90; i++) {
         const day = document.createElement("div");
-        const { date, isWeekend } = getFormattedDate(i);
+        const { date, isWeekend } = getFormattedDate(currentGoal, i);
         day.className = `day ${isWeekend ? 'weekend' : ''}`;
         day.textContent = date;
         if (goals[currentGoal].done[i]) day.classList.add("done");
@@ -303,7 +308,7 @@
     function openNote(index) {
       overlay.style.display = "block";
       notePopup.style.display = "flex";
-      const { date } = getFormattedDate(index);
+      const { date } = getFormattedDate(currentGoal, index);
       noteDayNum.textContent = date;
       noteText.value = goals[currentGoal].notes[index] || "";
       noteText.dataset.index = index;
