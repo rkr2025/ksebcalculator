@@ -38,18 +38,25 @@
     }
     .day {
       background: #e0e0e0;
-      padding: 12px;
+      padding: 10px;
       border-radius: 6px;
       text-align: center;
       cursor: pointer;
       transition: background 0.3s ease;
       user-select: none;
-      font-size: 12px;
+      font-size: 11px;
       touch-action: manipulation;
+      line-height: 1.2;
     }
     .day.done {
       background: #4caf50;
       color: white;
+    }
+    .day.weekend {
+      color: red;
+    }
+    .day.done.weekend {
+      color: #ff6666; /* Lighter red for better contrast on green background */
     }
     .progress {
       margin: 15px 0;
@@ -125,7 +132,7 @@
       .container { padding: 10px; }
       h1 { font-size: 1.5em; }
       .grid { grid-template-columns: repeat(5, 1fr); gap: 4px; }
-      .day { padding: 10px; font-size: 10px; }
+      .day { padding: 8px; font-size: 9px; }
       .flex-row { flex-direction: column; }
       input, select, textarea, button { padding: 6px; font-size: 12px; }
       .goal-header { font-size: 1em; }
@@ -136,7 +143,7 @@
     @media print {
       .no-print { display: none; }
       .container { box-shadow: none; padding: 10px; }
-      .day { font-size: 10px; padding: 6px; }
+      .day { font-size: 9px; padding: 6px; }
       .grid { gap: 4px; }
       h1 { font-size: 1.5em; }
       .goal-header { font-size: 1em; }
@@ -188,10 +195,12 @@
     let currentGoal = null;
     let days = [];
 
-    // Function to format dates starting from current date
+    // Function to format dates and days starting from current date
     function getFormattedDate(offset) {
       const date = new Date(2025, 5, 23 + offset); // June 23, 2025 + offset
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+      const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return { date: `${dateStr}\n${dayName}`, isWeekend: dayName === 'Sat' || dayName === 'Sun' };
     }
 
     function renderGoalSelector() {
@@ -266,8 +275,9 @@
       days = [];
       for (let i = 0; i < 90; i++) {
         const day = document.createElement("div");
-        day.className = "day";
-        day.textContent = getFormattedDate(i);
+        const { date, isWeekend } = getFormattedDate(i);
+        day.className = `day ${isWeekend ? 'weekend' : ''}`;
+        day.textContent = date;
         if (goals[currentGoal].done[i]) day.classList.add("done");
         day.onclick = () => toggleDay(i);
         day.oncontextmenu = (e) => { e.preventDefault(); openNote(i); };
@@ -293,7 +303,8 @@
     function openNote(index) {
       overlay.style.display = "block";
       notePopup.style.display = "flex";
-      noteDayNum.textContent = getFormattedDate(index);
+      const { date } = getFormattedDate(index);
+      noteDayNum.textContent = date;
       noteText.value = goals[currentGoal].notes[index] || "";
       noteText.dataset.index = index;
     }
