@@ -195,9 +195,27 @@
     let currentGoal = null;
     let days = [];
 
+    // Function to initialize goals with startDate if missing
+    function initializeGoals() {
+      Object.keys(goals).forEach(goal => {
+        if (!goals[goal].startDate) {
+          goals[goal].startDate = '2025-06-23'; // Default for existing goals
+        }
+        // Ensure done and notes arrays exist
+        if (!goals[goal].done) goals[goal].done = Array(90).fill(false);
+        if (!goals[goal].notes) goals[goal].notes = Array(90).fill("");
+      });
+      saveGoals();
+    }
+
     // Function to format dates and days based on goal's start date
     function getFormattedDate(goalName, offset) {
-      const startDate = goals[goalName]?.startDate ? new Date(goals[goalName].startDate) : new Date();
+      const startDateStr = goals[goalName]?.startDate || '2025-06-23';
+      const startDate = new Date(startDateStr);
+      if (isNaN(startDate.getTime())) {
+        console.error(`Invalid start date for goal ${goalName}: ${startDateStr}`);
+        return { date: 'Invalid Date', isWeekend: false };
+      }
       const date = new Date(startDate.getTime() + offset * 24 * 60 * 60 * 1000);
       const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
       const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -205,15 +223,17 @@
     }
 
     function renderGoalSelector() {
-      goalSelector.innerHTML = "";
+      goalSelector.innerHTML = '<option value="" disabled selected>Select a goal</option>';
       Object.keys(goals).forEach(goal => {
         const opt = document.createElement("option");
         opt.value = goal;
         opt.textContent = goal;
         goalSelector.appendChild(opt);
       });
-      if (currentGoal) {
+      if (currentGoal && goals[currentGoal]) {
         goalSelector.value = currentGoal;
+      } else {
+        goalSelector.value = "";
       }
     }
 
@@ -221,7 +241,7 @@
       const goalName = goalInput.value.trim();
       if (goalName && !goals[goalName]) {
         goals[goalName] = {
-          startDate: new Date().toISOString(),
+          startDate: new Date().toISOString().split('T')[0], // Store date as YYYY-MM-DD
           done: Array(90).fill(false),
           notes: Array(90).fill("")
         };
@@ -234,7 +254,10 @@
     }
 
     function editGoal() {
-      if (!currentGoal) return;
+      if (!currentGoal) {
+        alert("Please select a goal to edit.");
+        return;
+      }
       const newName = prompt("Enter new goal name:", currentGoal);
       if (newName && newName.trim() && !goals[newName.trim()]) {
         goals[newName.trim()] = goals[currentGoal];
@@ -247,7 +270,10 @@
     }
 
     function deleteGoal() {
-      if (!currentGoal) return;
+      if (!currentGoal) {
+        alert("Please select a goal to delete.");
+        return;
+      }
       if (confirm(`Are you sure you want to delete "${currentGoal}"?`)) {
         delete goals[currentGoal];
         currentGoal = Object.keys(goals)[0] || null;
@@ -269,7 +295,13 @@
 
     function loadGoal() {
       currentGoal = goalSelector.value;
-      if (!currentGoal || !goals[currentGoal]) return;
+      if (!currentGoal || !goals[currentGoal]) {
+        goalTitle.textContent = "";
+        grid.innerHTML = "";
+        progressBar.style.width = "0%";
+        progressPercent.textContent = "0%";
+        return;
+      }
       goalTitle.textContent = "Goal: " + currentGoal;
       renderDays();
       updateProgress();
@@ -331,6 +363,7 @@
     }
 
     // Initial load
+    initializeGoals();
     if (Object.keys(goals).length > 0) {
       currentGoal = Object.keys(goals)[0];
     }
