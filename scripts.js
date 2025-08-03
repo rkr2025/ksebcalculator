@@ -2014,6 +2014,31 @@ const getEnergyCaluculationMessage = (
                 <h5><u>Total Bill Amount</u></h5>
                 <p>ഏകദേശം <strong class="red-text">₹${(totalBillAmount || 0).toFixed(2)}</strong></p>
                 <p style="font-size: 0.9em; font-style: italic;">(GST, Security Deposit interest, Tariff changes, Advance calculation എന്നിവയിൽ മാറ്റങ്ങൾ വരാം)</p>
+                    <p style="font-size: 16px; color: #333; line-height: 1.8; margin: 15px 0 0; background: linear-gradient(90deg, #fff3e0, #e6fffa); padding: 10px; border-radius: 5px; font-weight: bold; animation: glow 1.5s ease-in-out infinite alternate;">
+                        <span style="font-size: 18px; color: #e74c3c;">🌞 New Release:</span> New <a href="solar-diary.html" style="color: #2ecc71; font-style: italic; text-decoration: none; font-weight: bold; position: relative; transition: color 0.3s ease;" class="solar-diary-link">Solar Diary</a> app released! Try it out and track your energy usage.
+                    </p>
+                    <style>
+                        @keyframes glow {
+                            0% { box-shadow: 0 0 5px rgba(46, 204, 113, 0.3); }
+                            100% { box-shadow: 0 0 15px rgba(46, 204, 113, 0.7); }
+                        }
+                        .solar-diary-link::after {
+                            content: '';
+                            position: absolute;
+                            width: 0;
+                            height: 2px;
+                            bottom: -2px;
+                            left: 0;
+                            background-color: #27ae60;
+                            transition: width 0.3s ease;
+                        }
+                        .solar-diary-link:hover::after {
+                            width: 100%;
+                        }
+                        .solar-diary-link:hover {
+                            color: #27ae60;
+                        }
+                    </style>
             `;
         } else {
             console.log('Check 21');
@@ -2111,8 +2136,58 @@ const getEnergyCaluculationMessage = (
                 ${(accountBalance || 0) > 0 ? `
                     <p>Final Bank Closing = <strong class="green-text">${accountBalance || 0} Unit</strong></p>
                     <p style="font-size: 0.9em;">(Export+Bank(${exportPlusBank || 0}) - Import(${importReading || 0}))</p>
+                    <p style="font-size: 16px; color: #333; line-height: 1.8; margin: 15px 0 0; background: linear-gradient(90deg, #fff3e0, #e6fffa); padding: 10px; border-radius: 5px; font-weight: bold; animation: glow 1.5s ease-in-out infinite alternate;">
+                        <span style="font-size: 18px; color: #e74c3c;">🌞 New Release:</span> New <a href="solar-diary.html" style="color: #2ecc71; font-style: italic; text-decoration: none; font-weight: bold; position: relative; transition: color 0.3s ease;" class="solar-diary-link">Solar Diary</a> app released! Try it out and track your energy usage.
+                    </p>
+                    <style>
+                        @keyframes glow {
+                            0% { box-shadow: 0 0 5px rgba(46, 204, 113, 0.3); }
+                            100% { box-shadow: 0 0 15px rgba(46, 204, 113, 0.7); }
+                        }
+                        .solar-diary-link::after {
+                            content: '';
+                            position: absolute;
+                            width: 0;
+                            height: 2px;
+                            bottom: -2px;
+                            left: 0;
+                            background-color: #27ae60;
+                            transition: width 0.3s ease;
+                        }
+                        .solar-diary-link:hover::after {
+                            width: 100%;
+                        }
+                        .solar-diary-link:hover {
+                            color: #27ae60;
+                        }
+                    </style>
                 ` : `
                     <p>No Energy units to be added to bank 👎</p>
+                    <p style="font-size: 16px; color: #333; line-height: 1.8; margin: 15px 0 0; background: linear-gradient(90deg, #fff3e0, #e6fffa); padding: 10px; border-radius: 5px; font-weight: bold; animation: glow 1.5s ease-in-out infinite alternate;">
+                        <span style="font-size: 18px; color: #e74c3c;">🌞 New Release:</span> New <a href="solar-diary.html" style="color: #2ecc71; font-style: italic; text-decoration: none; font-weight: bold; position: relative; transition: color 0.3s ease;" class="solar-diary-link">Solar Diary</a> app released! Try it out and track your energy usage.
+                    </p>
+                    <style>
+                        @keyframes glow {
+                            0% { box-shadow: 0 0 5px rgba(46, 204, 113, 0.3); }
+                            100% { box-shadow: 0 0 15px rgba(46, 204, 113, 0.7); }
+                        }
+                        .solar-diary-link::after {
+                            content: '';
+                            position: absolute;
+                            width: 0;
+                            height: 2px;
+                            bottom: -2px;
+                            left: 0;
+                            background-color: #27ae60;
+                            transition: width 0.3s ease;
+                        }
+                        .solar-diary-link:hover::after {
+                            width: 100%;
+                        }
+                        .solar-diary-link:hover {
+                            color: #27ae60;
+                        }
+                    </style>
                 `}
             `;
         }
