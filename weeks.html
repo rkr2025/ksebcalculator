@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Life in Weeks</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 20px;
+      font-size: 16px;
+    }
+    .input-section {
+      margin-bottom: 15px;
+    }
+    .grid {
+      display: inline-block;
+      border: 2px solid #000;
+      position: relative;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+    .year-row {
+      display: flex;
+      align-items: center;
+    }
+    .week-box {
+      width: 2.5vw;
+      height: 2.5vw;
+      min-width: 12px;
+      min-height: 12px;
+      border: 1px solid #ccc;
+      margin: 1px;
+      background-color: #fff;
+      cursor: pointer;
+      position: relative;
+      font-size: 0.6em;
+      line-height: 1;
+      padding-top: 2px;
+    }
+    .week-box span.week-number {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.7em;
+    }
+    .week-box span.age {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.5em;
+      color: #333;
+    }
+    .lived {
+      background-color: #4CAF50;
+    }
+    .future {
+      background-color: #B0BEC5;
+    }
+    .goal-set {
+      background-color: #FFCA28;
+    }
+    .current-week {
+      border: 2px solid red;
+    }
+    .year-label {
+      width: 5vw;
+      min-width: 30px;
+      margin-right: 5px;
+      text-align: right;
+      font-size: 0.9em;
+    }
+    #goalModal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 15px;
+      border: 1px solid #ccc;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      max-width: 90vw;
+      text-align: left;
+      font-size: 0.9em;
+    }
+    #goalInput, .day-goal {
+      width: 100%;
+      margin: 5px 0;
+      font-size: 0.9em;
+    }
+    .info {
+      margin-bottom: 5px;
+    }
+    .day-goals {
+      margin-top: 10px;
+    }
+    button {
+      margin: 5px;
+      padding: 5px 10px;
+      font-size: 0.9em;
+    }
+
+    @media (max-width: 600px) {
+      .week-box {
+        width: 4vw;
+        height: 4vw;
+      }
+      .week-box span.week-number {
+        font-size: 0.6em;
+      }
+      .week-box span.age {
+        font-size: 0.4em;
+      }
+      .year-label {
+        width: 8vw;
+        font-size: 0.8em;
+      }
+      #goalModal {
+        max-width: 85vw;
+        padding: 10px;
+      }
+      button {
+        padding: 3px 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Your Life in Weeks</h1>
+  <div class="input-section">
+    <label for="dob">Date of Birth:</label>
+    <input type="date" id="dob" required>
+    <label for="lifespan">Lifespan (Years):</label>
+    <select id="lifespan">
+      <option value="50">50</option>
+      <option value="55">55</option>
+      <option value="60">60</option>
+      <option value="65">65</option>
+      <option value="70">70</option>
+      <option value="75">75</option>
+      <option value="80">80</option>
+      <option value="85">85</option>
+      <option value="90" selected>90</option>
+      <option value="95">95</option>
+      <option value="100">100</option>
+    </select>
+    <button onclick="generateGrid()">Generate</button>
+  </div>
+  <div id="gridContainer"></div>
+
+  <div id="goalModal">
+    <h3>Week Details</h3>
+    <div class="info" id="weekNumberInfo"></div>
+    <div class="info" id="dateRangeInfo"></div>
+    <div class="info" id="currentWeekInfo"></div>
+    <div class="info" id="timePassedInfo"></div>
+    <div class="info" id="timeLeftInfo"></div>
+    <div class="day-goals" id="dayGoals"></div>
+    <button onclick="saveGoals()">Save All</button>
+    <button onclick="deleteGoals()">Delete</button>
+    <button onclick="closeModal()">Close</button>
+  </div>
+
+  <script>
+    function generateGrid() {
+      const dobInput = document.getElementById('dob').value;
+      const lifespan = parseInt(document.getElementById('lifespan').value);
+      const gridContainer = document.getElementById('gridContainer');
+      gridContainer.innerHTML = '';
+
+      if (!dobInput) {
+        alert('Please enter your date of birth.');
+        return;
+      }
+
+      const dob = new Date(dobInput);
+      const today = new Date(); // Dynamic current date and time
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const msPerWeek = 7 * msPerDay;
+      const totalWeeks = lifespan * 52;
+      const msLived = today - dob;
+      const daysLived = Math.floor(msLived / msPerDay);
+      const weeksLived = Math.floor(daysLived / 7);
+      // Calculate current week by finding the week containing today
+      const daysSinceBirth = Math.floor((today - dob) / msPerDay);
+      const currentWeek = Math.floor(daysSinceBirth / 7) + 1; // Week containing today
+      const nextWeek = currentWeek + 1; // Highlight the next week
+      const startYear = dob.getFullYear();
+      const endYear = startYear + lifespan - 1;
+
+      for (let year = startYear; year <= endYear; year++) {
+        const yearRow = document.createElement('div');
+        yearRow.className = 'year-row';
+        const yearLabel = document.createElement('div');
+        yearLabel.className = 'year-label';
+        yearLabel.textContent = year;
+        yearRow.appendChild(yearLabel);
+
+        for (let week = 1; week <= 52; week++) {
+          const weekIndex = ((year - startYear) * 52) + week;
+          const weekBox = document.createElement('div');
+          weekBox.className = 'week-box';
+          const weekSpan = document.createElement('span');
+          weekSpan.className = 'week-number';
+          weekSpan.textContent = weekIndex;
+          weekBox.appendChild(weekSpan);
+          // Calculate age for this week
+          const startDate = new Date(dob);
+          startDate.setDate(dob.getDate() + (weekIndex - 1) * 7);
+          const dayOfWeek = startDate.getDay();
+          const daysToMonday = (dayOfWeek === 0 ? -6 : 1 - dayOfWeek);
+          startDate.setDate(startDate.getDate() + daysToMonday);
+          const age = new Date(startDate).getFullYear() - dob.getFullYear() - (new Date(startDate) < new Date(dob.getFullYear() + 1, dob.getMonth(), dob.getDate()) ? 1 : 0);
+          const ageSpan = document.createElement('span');
+          ageSpan.className = 'age';
+          ageSpan.textContent = age >= 0 ? age : 0;
+          weekBox.appendChild(ageSpan);
+          weekBox.dataset.week = weekIndex;
+          weekBox.dataset.year = year;
+          if (weekIndex <= weeksLived) {
+            weekBox.classList.add('lived');
+          } else if (weekIndex > totalWeeks) {
+            break;
+          } else {
+            weekBox.classList.add('future');
+          }
+          const savedGoal = localStorage.getItem(`goal_${weekIndex}_weekly`) || localStorage.getItem(`goal_${weekIndex}`);
+          if (savedGoal) weekBox.classList.add('goal-set');
+          if (weekIndex === nextWeek) {
+            weekBox.classList.add('current-week'); // Highlight the next week
+          }
+          weekBox.addEventListener('click', showGoalModal);
+          yearRow.appendChild(weekBox);
+        }
+        gridContainer.appendChild(yearRow);
+      }
+    }
+
+    function showGoalModal(event) {
+      const weekBox = event.target.closest('.week-box'); // Ensure we get the box even if span is clicked
+      const weekNumber = parseInt(weekBox.dataset.week);
+      const dob = new Date(document.getElementById('dob').value);
+      const lifespan = parseInt(document.getElementById('lifespan').value);
+      const today = new Date(); // Dynamic current date and time
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const msPerWeek = 7 * msPerDay;
+      const daysLived = Math.floor((today - dob) / msPerDay);
+      const weeksLived = Math.floor(daysLived / 7);
+      const currentWeek = Math.floor(daysLived / 7) + 1; // Week containing today
+      const nextWeek = currentWeek + 1; // Next week for reference
+
+      // Calculate start and end dates for the week (starting on Monday)
+      const startDate = new Date(dob);
+      startDate.setDate(dob.getDate() + (weekNumber - 1) * 7);
+      const dayOfWeek = startDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const daysToMonday = (dayOfWeek === 0 ? -6 : 1 - dayOfWeek); // Adjust to previous Monday
+      startDate.setDate(startDate.getDate() + daysToMonday);
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 6);
+
+      // Time passed
+      const msPassed = Math.max(0, startDate - dob); // Ensure no negative time
+      const yearsPassed = Math.floor(msPassed / (1000 * 60 * 60 * 24 * 365.25));
+      const daysPassed = Math.floor(msPassed / msPerDay);
+      const hoursPassed = Math.floor(msPassed / (1000 * 60 * 60));
+      const minutesPassed = Math.floor(msPassed / (1000 * 60));
+
+      // Time until end of life expectancy
+      const endOfLife = new Date(dob);
+      endOfLife.setFullYear(dob.getFullYear() + lifespan);
+      const msLeft = Math.max(0, endOfLife - startDate); // Ensure no negative time
+      const yearsLeft = Math.floor(msLeft / (1000 * 60 * 60 * 24 * 365.25));
+      const daysLeft = Math.floor(msLeft / msPerDay);
+      const hoursLeft = Math.floor(msLeft / (1000 * 60 * 60));
+      const minutesLeft = Math.floor(msLeft / (1000 * 60));
+
+      document.getElementById('weekNumberInfo').textContent = `Week Number: ${weekNumber}`;
+      document.getElementById('dateRangeInfo').textContent = `Date Range: ${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
+      document.getElementById('currentWeekInfo').textContent = `Current Week: ${currentWeek} (as of ${today.toLocaleDateString()} ${today.toLocaleTimeString()})`;
+      document.getElementById('timePassedInfo').textContent = `Time Passed: ${yearsPassed} yrs, ${daysPassed % 365} days (${hoursPassed} hrs, ${minutesPassed} mins)`;
+      document.getElementById('timeLeftInfo').textContent = `Time Left: ${yearsLeft} yrs, ${daysLeft % 365} days (${hoursLeft} hrs, ${minutesLeft} mins) until ${endOfLife.toLocaleDateString()}`;
+
+      // Daily and weekly goals
+      const dayGoalsContainer = document.getElementById('dayGoals');
+      dayGoalsContainer.innerHTML = '';
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      // Add weekly goal input
+      const weeklyInput = document.createElement('input');
+      weeklyInput.type = 'text';
+      weeklyInput.className = 'day-goal';
+      weeklyInput.placeholder = `Your goal for this week (${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()})`;
+      weeklyInput.value = localStorage.getItem(`goal_${weekNumber}_weekly`) || '';
+      dayGoalsContainer.appendChild(weeklyInput);
+      // Add daily goal inputs
+      for (let i = 0; i < 7; i++) {
+        const dayDate = new Date(startDate);
+        dayDate.setDate(startDate.getDate() + i);
+        const dayKey = `goal_${weekNumber}_${days[i]}`;
+        const savedGoal = localStorage.getItem(dayKey) || '';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'day-goal';
+        input.placeholder = `${days[i]} (${dayDate.toLocaleDateString()})`;
+        input.value = savedGoal;
+        dayGoalsContainer.appendChild(input);
+      }
+
+      document.getElementById('goalModal').style.display = 'block';
+    }
+
+    function saveGoals() {
+      const weekNumber = document.getElementById('weekNumberInfo').textContent.split(': ')[1];
+      const dayInputs = document.querySelectorAll('.day-goal');
+      // Save weekly goal
+      const weeklyInput = dayInputs[0]; // First input is the weekly goal
+      const weeklyKey = `goal_${weekNumber}_weekly`;
+      localStorage.setItem(weeklyKey, weeklyInput.value);
+      // Save daily goals
+      for (let i = 1; i < dayInputs.length; i++) {
+        const input = dayInputs[i];
+        const dayName = input.placeholder.split(' (')[0];
+        const dayKey = `goal_${weekNumber}_${dayName}`;
+        localStorage.setItem(dayKey, input.value);
+      }
+      const weekBox = document.querySelector(`.week-box[data-week="${weekNumber}"]`);
+      const hasGoals = Array.from(dayInputs).some(input => input.value);
+      if (hasGoals) {
+        weekBox.classList.add('goal-set');
+        weekBox.classList.remove('lived', 'future', 'current-week');
+      } else {
+        weekBox.classList.remove('goal-set');
+        const dob = new Date(document.getElementById('dob').value);
+        const today = new Date();
+        const msPerDay = 1000 * 60 * 60 * 24;
+        const daysLived = Math.floor((today - dob) / msPerDay);
+        const weeksLived = Math.floor(daysLived / 7);
+        if (weekNumber <= weeksLived) weekBox.classList.add('lived');
+        else weekBox.classList.add('future');
+        const currentWeek = Math.floor(daysLived / 7) + 1;
+        if (weekNumber === currentWeek + 1) weekBox.classList.add('current-week');
+      }
+      closeModal();
+    }
+
+    function deleteGoals() {
+      const weekNumber = document.getElementById('weekNumberInfo').textContent.split(': ')[1];
+      const dayInputs = document.querySelectorAll('.day-goal');
+      // Delete weekly goal
+      const weeklyKey = `goal_${weekNumber}_weekly`;
+      localStorage.removeItem(weeklyKey);
+      dayInputs[0].value = ''; // Clear weekly input
+      // Delete daily goals
+      for (let i = 1; i < dayInputs.length; i++) {
+        const input = dayInputs[i];
+        const dayName = input.placeholder.split(' (')[0];
+        const dayKey = `goal_${weekNumber}_${dayName}`;
+        localStorage.removeItem(dayKey);
+        input.value = '';
+      }
+      const weekBox = document.querySelector(`.week-box[data-week="${weekNumber}"]`);
+      weekBox.classList.remove('goal-set');
+      const dob = new Date(document.getElementById('dob').value);
+      const today = new Date();
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const daysLived = Math.floor((today - dob) / msPerDay);
+      const weeksLived = Math.floor(daysLived / 7);
+      if (weekNumber <= weeksLived) weekBox.classList.add('lived');
+      else weekBox.classList.add('future');
+      const currentWeek = Math.floor(daysLived / 7) + 1;
+      if (weekNumber === currentWeek + 1) weekBox.classList.add('current-week');
+      closeModal();
+    }
+
+    function closeModal() {
+      document.getElementById('goalModal').style.display = 'none';
+    }
+
+    // Initialize with a default date if needed
+    document.getElementById('dob').value = '';
+    generateGrid();
+  </script>
+</body>
+</html>
