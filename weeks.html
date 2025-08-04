@@ -166,6 +166,28 @@
   </div>
 
   <script>
+    // Load or prompt for date of birth on initial load
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedDob = localStorage.getItem('dob');
+      const dobInput = document.getElementById('dob');
+      if (!savedDob) {
+        let userDob = prompt('Please enter your date of birth (YYYY-MM-DD):');
+        while (userDob && isNaN(new Date(userDob))) {
+          alert('Invalid date format. Please enter a valid date (YYYY-MM-DD).');
+          userDob = prompt('Please enter your date of birth (YYYY-MM-DD):');
+        }
+        if (userDob) {
+          dobInput.value = userDob;
+          localStorage.setItem('dob', userDob);
+        } else {
+          alert('A date of birth is required to proceed.');
+          return; // Prevent further execution until valid input
+        }
+      } else {
+        dobInput.value = savedDob; // Load the last saved date
+      }
+    });
+
     function generateGrid() {
       const dobInput = document.getElementById('dob').value;
       const lifespan = parseInt(document.getElementById('lifespan').value);
@@ -177,8 +199,11 @@
         return;
       }
 
+      // Save the new dob to localStorage
+      localStorage.setItem('dob', dobInput);
+
       const dob = new Date(dobInput);
-      const today = new Date(); // Dynamic current date and time
+      const today = new Date(); // Dynamic current date and time: 03:05 PM IST, August 04, 2025
       const msPerDay = 1000 * 60 * 60 * 24;
       const msPerWeek = 7 * msPerDay;
       const totalWeeks = lifespan * 52;
@@ -245,12 +270,13 @@
       const weekNumber = parseInt(weekBox.dataset.week);
       const dob = new Date(document.getElementById('dob').value);
       const lifespan = parseInt(document.getElementById('lifespan').value);
-      const today = new Date(); // Dynamic current date and time
+      const today = new Date(); // Dynamic current date and time: 03:05 PM IST, August 04, 2025
       const msPerDay = 1000 * 60 * 60 * 24;
       const msPerWeek = 7 * msPerDay;
       const daysLived = Math.floor((today - dob) / msPerDay);
       const weeksLived = Math.floor(daysLived / 7);
-      const currentWeek = Math.floor(daysLived / 7) + 1; // Week containing today
+      const daysSinceBirth = Math.floor((today - dob) / msPerDay); // Recalculate here
+      const currentWeek = Math.floor(daysSinceBirth / 7) + 1; // Week containing today
       const nextWeek = currentWeek + 1; // Next week for reference
 
       // Calculate start and end dates for the week (starting on Monday)
@@ -315,16 +341,17 @@
     function saveGoals() {
       const weekNumber = document.getElementById('weekNumberInfo').textContent.split(': ')[1];
       const dayInputs = document.querySelectorAll('.day-goal');
+      if (dayInputs.length === 0) return; // Safeguard if no inputs are found
       // Save weekly goal
       const weeklyInput = dayInputs[0]; // First input is the weekly goal
       const weeklyKey = `goal_${weekNumber}_weekly`;
-      localStorage.setItem(weeklyKey, weeklyInput.value);
+      localStorage.setItem(weeklyKey, weeklyInput.value || '');
       // Save daily goals
       for (let i = 1; i < dayInputs.length; i++) {
         const input = dayInputs[i];
         const dayName = input.placeholder.split(' (')[0];
         const dayKey = `goal_${weekNumber}_${dayName}`;
-        localStorage.setItem(dayKey, input.value);
+        localStorage.setItem(dayKey, input.value || '');
       }
       const weekBox = document.querySelector(`.week-box[data-week="${weekNumber}"]`);
       const hasGoals = Array.from(dayInputs).some(input => input.value);
@@ -349,6 +376,7 @@
     function deleteGoals() {
       const weekNumber = document.getElementById('weekNumberInfo').textContent.split(': ')[1];
       const dayInputs = document.querySelectorAll('.day-goal');
+      if (dayInputs.length === 0) return; // Safeguard if no inputs are found
       // Delete weekly goal
       const weeklyKey = `goal_${weekNumber}_weekly`;
       localStorage.removeItem(weeklyKey);
@@ -378,10 +406,6 @@
     function closeModal() {
       document.getElementById('goalModal').style.display = 'none';
     }
-
-    // Initialize with a default date if needed
-    document.getElementById('dob').value = '1980-01-01';
-    generateGrid();
   </script>
 </body>
 </html>
