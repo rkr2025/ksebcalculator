@@ -1704,7 +1704,7 @@ const getEnergyCaluculationMessage = (
 };
 
     var duty = 0;
-    const monthlyFuelSurcharge = bankAdjustedUnits * 0.01;
+    const monthlyFuelSurcharge = bankAdjustedUnits * 0.02;
     var totalBillAmount = 0;
     duty = energyCharge * 0.10;
     totalBillAmount = fixedCharge + meterRent + energyCharge + duty + monthlyFuelSurcharge;
@@ -1759,7 +1759,7 @@ const getEnergyCaluculationMessage = (
                             <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(duty || 0).toFixed(2)}</strong></td>
                         </tr>
                         <tr style="background-color: #ecf0f1;">
-                            <td style="border: 1px solid #ddd; padding: 10px;">Monthly Fuel Surcharge<br>(Consumption: ${bankAdjustedUnitsToUse.toFixed(2)} Unit x 1ps)</td>
+                            <td style="border: 1px solid #ddd; padding: 10px;">Monthly Fuel Surcharge<br>(Consumption: ${bankAdjustedUnitsToUse.toFixed(2)} Unit x 2ps)</td>
                             <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(monthlyFuelSurcharge || 0).toFixed(2)}</strong></td>
                         </tr>
                         <tr style="background: linear-gradient(90deg, #2ecc71, #27ae60); color: white;">
