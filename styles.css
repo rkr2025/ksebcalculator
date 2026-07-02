@@ -1,1737 +1,594 @@
-/* General Styles */
+/* ==========================================================================
+   Solar Prosumers Electricity Bill Calculator -- design tokens & layout
+   Modern card-dashboard theme. Category colors match the validated palette
+   already used by js/render-chart.js (blue/aqua/yellow/green/violet/red),
+   so the form and the result charts read as one system.
+   ========================================================================== */
+
+:root {
+  --primary: #2a78d6;
+  --primary-dark: #1f5fac;
+  --primary-light: #eaf2fc;
+
+  --solar: #1baf7a;
+  --solar-light: #e7f8f1;
+
+  --import: #e34948;
+  --import-light: #fdeceb;
+
+  --export: #008300;
+  --export-light: #e8f5e8;
+
+  --bank: #4a3aa7;
+  --bank-light: #efecfb;
+
+  --load: #c97e00;
+  --load-light: #fdf1de;
+
+  --page-bg: #eef1f7;
+  --surface: #ffffff;
+  --surface-muted: #f6f8fb;
+  --border: #e3e7ef;
+
+  --text-primary: #17203a;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+
+  --radius-lg: 16px;
+  --radius: 12px;
+  --radius-sm: 8px;
+
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px rgba(16, 24, 40, 0.08);
+  --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  font-family: "Roboto", sans-serif;
-  background: linear-gradient(135deg, #74ebd5, #acb6e5);
+  font-family: "Roboto", -apple-system, "Segoe UI", sans-serif;
+  background: var(--page-bg);
   margin: 0;
-  padding: 5px;
-  color: #333;
+  padding: 16px 12px 40px;
+  color: var(--text-primary);
 }
 
 .container {
-  max-width: 700px;
+  max-width: 720px;
   margin: 0 auto;
-  padding: 25px;
-  background-color: #ffffff;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
   position: relative;
+}
+
+/* ---------------------------------- Header ---------------------------- */
+
+.header-container {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.date-time {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.extra-apps-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary-dark);
+  background: var(--primary-light);
+  padding: 7px 12px;
+  border-radius: 999px;
+  text-decoration: none;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition: border-color 0.2s ease, transform 0.15s ease;
+}
+
+.extra-apps-link::before {
+  content: "\2600";
+  font-size: 13px;
+}
+
+.extra-apps-link:hover {
+  border-color: var(--primary);
+  transform: translateY(-1px);
 }
 
 h1 {
   text-align: center;
-  font-family: 'Poppins', sans-serif;
-  font-size: 28px;
-  color: #2c3e50;
-  margin: 20px auto;
-  padding: 15px;
-  background: linear-gradient(135deg, #3498db, #2980b9);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  animation: fadeInSlide 1.5s ease-in-out;
-  border-radius: 8px;
-  max-width: 90%;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  transition: transform 0.3s ease;
-}
-
-
-
-/* Header Container for Date/Time and Extra Apps Link */
-.header-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    margin: 10px 0 15px 0;
-    width: 100%;
-    padding: 0 10px;
-    position: relative;
-}
-
-/* Date/Time Styling */
-.date-time {
-    font-size: 13px;
-    color: #333;
-    text-align: left;
-}
-
-/* Enhanced Blinking Effect for Extra Apps Link */
-@keyframes blink {
-    0% {
-        opacity: 1;
-        color: #e74c3c; /* Bright red */
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.7;
-        color: #f39c12; /* Orange for pulse effect */
-        transform: scale(1.05);
-    }
-    100% {
-        opacity: 1;
-        color: #e74c3c;
-        transform: scale(1);
-    }
-}
-
-.extra-apps-link {
-    display: inline-block;
-    color: #e74c3c;
-    font-size: 14px;
-    font-weight: 600;
-    padding: 8px 12px;
-    border-radius: 5px;
-    text-decoration: none;
-    background-color: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    animation: blink 1.2s ease-in-out infinite;
-    transition: background-color 0.3s, color 0.3s;
-}
-
-.extra-apps-link:hover {
-    background-color: #ecf0f1;
-    color: #c0392b;
-    animation: none;
-    transform: scale(1);
-}
-
-/* Adjust h1 to prevent overlap */
-h1 {
-    text-align: center;
-    font-family: 'Poppins', sans-serif;
-    font-size: 28px;
-    color: #2c3e50;
-    margin: 25px auto 20px; /* Increased top margin */
-    padding: 15px;
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    animation: fadeInSlide 1.5s ease-in-out;
-    border-radius: 8px;
-    max-width: 90%;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    transition: transform 0.3s ease;
-}
-
-
-/*
-extra apps
-*/
-
-/* Header Container for Date/Time and New!! - Solar Diary Link */
-.header-container {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    justify-content: space-between;
-    align-items: center;
-    margin: 10px 0 15px 0;
-    width: 100%;
-    padding: 0 10px;
-    position: relative;
-}
-
-/* Date/Time Styling */
-.date-time {
-    font-size: 13px;
-    color: #333;
-    text-align: left;
-    max-width: 60%; /* Prevent overlap with link */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Enhanced Blinking Effect for New!! - Solar Diary Link */
-@keyframes blink {
-    0% {
-        opacity: 1;
-        color: #e74c3c; /* Bright red */
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.7;
-        color: #f39c12; /* Orange for pulse effect */
-        transform: scale(1.30);
-    }
-    100% {
-        opacity: 1;
-        color: #e74c3c;
-        transform: scale(1);
-    }
-}
-
-.extra-apps-link {
-    display: inline-block;
-    color: #e74c3c;
-    font-size: 14px;
-    font-weight: 600;
-    padding: 8px 12px;
-    border-radius: 5px;
-    text-decoration: none;
-    background-color: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    animation: blink 1.2s ease-in-out infinite;
-    transition: background-color 0.3s, color 0.3s;
-    white-space: nowrap;
-}
-
-.extra-apps-link:hover {
-    background-color: #ecf0f1;
-    color: #c0392b;
-    animation: none;
-    transform: scale(1);
-}
-
-/* Adjust h1 to prevent overlap */
-h1 {
-    text-align: center;
-    font-family: 'Poppins', sans-serif;
-    font-size: 28px;
-    color: #2c3e50;
-    margin: 25px auto 20px; /* Increased top margin */
-    padding: 15px;
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    animation: fadeInSlide 1.5s ease-in-out;
-    border-radius: 8px;
-    max-width: 90%;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    transition: transform 0.3s ease;
-}
-
-/* Responsive adjustments for mobile */
-@media (max-width: 480px) {
-    .header-container {
-        flex-direction: row;
-        flex-wrap: nowrap;
-        justify-content: space-between;
-        align-items: center;
-        margin: 8px 0 12px 0;
-        padding: 0 8px;
-    }
-
-    .date-time {
-        font-size: 11px;
-        max-width: 50%; /* Tighter constraint for mobile */
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .extra-apps-link {
-        position: absolute;
-        top: 0;
-        right: 8px;
-        font-size: 12px;
-        padding: 6px 10px;
-    }
-
-    h1 {
-        font-size: 22px;
-        margin-top: 35px; /* Increased to avoid overlap with header */
-        padding: 10px;
-    }
-}
-
-@media (max-width: 360px) {
-    .header-container {
-        margin: 6px 0 10px 0;
-        padding: 0 6px;
-    }
-
-    .date-time {
-        font-size: 10px;
-        max-width: 45%;
-    }
-
-    .extra-apps-link {
-        font-size: 10px;
-        padding: 5px 8px;
-        right: 6px;
-    }
-
-    h1 {
-        font-size: 20px;
-        margin-top: 30px;
-        padding: 8px;
-    }
-}
-
-
-
-
-
-@keyframes fadeInSlide {
-  from {
-      opacity: 0;
-      transform: translateY(-20px);
-  }
-  to {
-      opacity: 1;
-      transform: translateY(0);
-  }
-}
-
-@media (max-width: 480px) {
-  h1 {
-      font-size: 22px;
-      padding: 10px;
-      margin: 15px auto;
-  }
-}
-
-h1:hover {
-  transform: scale(1.02);
-}
-
-@font-face {
-  font-family: 'Poppins';
-  src: url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap') format('woff2');
+  font-family: "Poppins", sans-serif;
+  font-size: 22px;
   font-weight: 600;
-  font-style: normal;
+  color: var(--text-primary);
+  margin: 4px auto 6px;
+  line-height: 1.35;
 }
 
-/* Instructions Link */
-.instructions-link-container {
-  position: absolute;
-  top: 1px;
-  right: 1px;
-}
-
-.instructions-link {
-  color: #3498db;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 5px 10px;
-  border-radius: 5px;
-  transition: background-color 0.3s;
-}
-
-.instructions-link:hover {
-  background-color: #ecf0f1;
-  text-decoration: none;
-}
-
-/* Form Styling */
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  color: #2c3e50;
-  font-weight: 500;
-  font-size: 14px;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 12px;
-  box-sizing: border-box;
-  border: 1px solid #dcdcdc;
-  border-radius: 6px;
-  font-size: 14px;
-  background-color: #fafafa;
-  transition: border-color 0.3s, box-shadow 0.3s;
-}
-
-.form-group select {
-  width: 150px; /* Fixed width for dropdowns */
-  padding: 8px;
-  box-sizing: border-box;
-  border: 1px solid #dcdcdc;
-  border-radius: 6px;
+.app-subtitle {
+  text-align: center;
   font-size: 13px;
-  background-color: #fafafa;
-  transition: border-color 0.3s, box-shadow 0.3s;
-  appearance: none;
-  background-image: url('data:image/svg+xml;utf8,<svg fill="%23333" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 12px;
+  color: var(--text-muted);
+  margin: 0 0 16px;
 }
 
-.form-group input:focus,
-.form-group select:focus {
-  border-color: #3498db;
-  box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
-  outline: none;
+#quote {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-style: italic;
+  text-align: center;
+  padding: 10px 16px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  margin: 0 auto 18px;
+  max-width: 420px;
+  border-left: 3px solid var(--primary);
 }
 
-/* Inline Form Groups (Dropdowns) */
-.form-group-inline {
+/* ---------------------------------- Quick nav --------------------------- */
+
+.quick-nav {
   display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  gap: 15px; /* Increased gap for better spacing between pairs */
-  margin-bottom: 2px; /* Reduced margin to keep lines closer */
-  justify-content: flex-start;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 14px;
+  margin-bottom: 4px;
+  scrollbar-width: thin;
 }
 
-.form-group-inline .form-group {
-  flex: 0 0 auto; /* Fixed width, no growing/shrinking */
-  min-width: 0;
+.quick-nav a {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 7px 12px;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
 
-/* Input Groups */
-.input-group {
+.quick-nav a:hover {
+  color: var(--primary-dark);
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+/* ---------------------------------- Cards ------------------------------- */
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 18px 18px 20px;
+  margin-bottom: 16px;
+  border-top: 3px solid var(--card-accent, var(--primary));
+}
+
+.card--account,
+.card--billing {
+  --card-accent: var(--primary);
+}
+
+.card--solar {
+  --card-accent: var(--solar);
+}
+
+.card--meter {
+  --card-accent: var(--import);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  font-size: 16px;
+  background: color-mix(in srgb, var(--card-accent, var(--primary)) 14%, white);
+  flex: none;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.card-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: -8px 0 12px 42px;
+}
+
+/* Field grid shared by every card's inputs */
+
+.field-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
 }
 
-.input-group .sub-group label {
-  color: #2c3e50;
-  font-weight: 500;
+.field-grid--2 {
+  grid-template-columns: repeat(2, 1fr);
 }
 
-/* Section Headers */
-.form-group > label[style*="margin-top"] {
-  font-size: 16px;
-  color: #2980b9;
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.field label {
+  font-size: 12.5px;
   font-weight: 600;
-  margin-bottom: 5px;
+  color: var(--text-secondary);
 }
 
-/* Buttons */
-button {
-  width: 100%;
-  padding: 12px;
-  background-color: #27ae60;
-  border: none;
-  color: white;
-  font-size: 16px;
+.field label .field-tag {
+  display: block;
+  font-size: 10.5px;
   font-weight: 500;
-  border-radius: 6px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  padding: 10px 11px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  background: var(--surface-muted);
+  color: var(--text-primary);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+select {
+  appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg fill="%2352514e" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 30px !important;
+}
+
+/* Import/export accent on individual field labels (ToD readings) */
+
+.field--import label {
+  color: var(--import);
+}
+
+.field--export label {
+  color: var(--export);
+}
+
+.field--import input {
+  border-color: color-mix(in srgb, var(--import) 35%, var(--border));
+  background: var(--import-light);
+}
+
+.field--export input {
+  border-color: color-mix(in srgb, var(--export) 35%, var(--border));
+  background: var(--export-light);
+}
+
+.field--import input:focus,
+.field--export input:focus {
+  background: var(--surface);
+}
+
+/* Conditional sub-row (Connected Load / Banked Units) nested inside a card */
+
+.sub-row {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border);
+}
+
+.sub-row-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--load);
+  background: var(--load-light);
+  padding: 3px 9px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
+
+.sub-row--bank .sub-row-badge {
+  color: var(--bank);
+  background: var(--bank-light);
+}
+
+.solar-block + .solar-block,
+.meter-block + .meter-block {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border);
+}
+
+.block-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin: 0 0 10px;
+}
+
+/* ---------------------------------- Buttons ----------------------------- */
+
+.calc-button-container {
+  display: flex;
+  gap: 10px;
+  margin: 4px 0 6px;
+}
+
+button {
+  font-family: inherit;
+}
+
+.calc-button,
+.reset-button {
+  flex: 1;
+  padding: 13px 18px;
+  font-size: 14.5px;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background-color 0.3s, transform 0.2s;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
 }
 
-button:hover {
-  background-color: #219653;
-  transform: translateY(-2px);
+.calc-button {
+  color: #ffffff;
+  background: var(--primary);
+  box-shadow: 0 4px 12px rgba(42, 120, 214, 0.3);
 }
 
-button:active {
+.calc-button:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.reset-button {
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+}
+
+.reset-button:hover {
+  border-color: var(--import);
+  color: var(--import);
+}
+
+.calc-button:active,
+.reset-button:active {
   transform: translateY(0);
 }
 
-#resetButton {
-  background-color: #e74c3c;
+/* ---------------------------------- Results ----------------------------- */
+
+#billDetails {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  margin-top: 22px;
+  position: relative;
 }
 
-#resetButton:hover {
-  background-color: #c0392b;
-}
-
-/* Results and Tables */
 .result {
-  margin-top: 25px;
-  padding: 15px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border-left: 4px solid #3498db;
-  font-size: 16px;
-  color: #2c3e50;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  margin-top: 16px;
+  font-size: 15px;
+  color: var(--text-primary);
   display: none;
+}
+
+.result h4,
+.result h5,
+#billDetails h4 {
+  color: var(--text-primary);
+  font-family: "Poppins", sans-serif;
+}
+
+.result h5 {
+  font-size: 14.5px;
+  margin: 16px 0 10px;
+}
+
+.result h5:first-child {
+  margin-top: 0;
+}
+
+.result h5 u,
+#billDetails h4 u {
+  text-decoration: none;
+  border-bottom: 2px solid var(--primary-light);
+  padding-bottom: 2px;
+}
+
+.result hr,
+#billDetails hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 16px 0;
+}
+
+.result p {
+  color: var(--text-secondary);
+  line-height: 1.65;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 25px;
-  background-color: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-th, td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #eee;
-  text-align: left;
 }
 
 th {
-  background-color: #3498db;
+  background-color: var(--primary);
   color: white;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 td {
-  color: #555;
+  color: var(--text-secondary);
 }
 
-/* Print and Move to Top */
+/* Print / move-to-top */
+
 #printButton {
   display: none;
-  margin: 20px auto;
+  margin: 18px auto 0;
   width: 200px;
-  background-color: #8e44ad;
+  background: var(--bank);
+  color: #fff;
 }
 
 #printButton:hover {
-  background-color: #732d91;
+  background: #3a2f86;
 }
 
 #moveToTop {
   display: none;
-  margin: 20px auto;
+  margin: 14px auto 0;
   text-align: center;
-  color: #3498db;
-  font-weight: 500;
+  color: var(--primary);
+  font-weight: 600;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 #moveToTop:hover {
-  color: #2980b9;
+  color: var(--primary-dark);
   text-decoration: underline;
 }
 
-/* Banked Unit Section */
-#bankedUnitSection {
-  margin-top: 20px;
-  padding: 15px;
-  background-color: #f5f6fa;
-  border-radius: 8px;
-}
-
-/* Responsive Design */
-@media (min-width: 768px) {
-  .input-group {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-  }
-
-  button {
-    width: 48%;
-    margin: 10px 1%;
-  }
-
-  .container {
-    max-width: 800px;
-  }
-
-  h1 {
-    font-size: 32px;
-  }
-
-  .form-group-inline {
-    gap: 15px;
-  }
-}
-
-@media (max-width: 480px) {
-  .container {
-    padding: 15px;
-    margin: 10px;
-  }
-
-  h1 {
-    font-size: 24px;
-  }
-
-  button {
-    padding: 10px;
-    font-size: 14px;
-  }
-
-  .form-group-inline {
-    flex-wrap: nowrap;
-    gap: 10px; /* Slightly smaller gap */
-  }
-
-  .form-group-inline .form-group {
-    flex: 0 0 auto;
-  }
-
-  .form-group select {
-    width: 120px; /* Smaller width for small screens */
-    padding: 6px;
-    font-size: 12px;
-  }
-
-  .input-group {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-  }
-
-  .form-group input {
-    padding: 8px;
-    font-size: 12px;
-  }
-}
-
-@media (max-width: 360px) {
-  .form-group-inline {
-    flex-wrap: nowrap;
-    gap: 8px; /* Tighter gap for tiny screens */
-  }
-
-  .form-group-inline .form-group {
-    flex: 0 0 auto;
-  }
-
-  .form-group select {
-    width: 100px; /* Even smaller width */
-    padding: 5px;
-    font-size: 11px;
-  }
-
-  .input-group {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 5px;
-  }
-
-  .form-group input {
-    padding: 6px;
-    font-size: 11px;
-  }
-}
-
-/* Additional Utility Styles */
 .green-text {
-  color: #27ae60;
+  color: #1e9e5a;
   font-weight: 600;
 }
 
 .red-text {
-  color: #e74c3c;
+  color: #d9433f;
   font-weight: 600;
 }
 
+/* ---------------------------------- Responsive --------------------------- */
 
-/* Buttons new design*/
-/* Styles for the button container */
-/* Styles for the button container */
-.calc-button-container {
-  margin: 20px 0; /* Space above and below the buttons */
-  display: flex; /* Use flex to align buttons horizontally */
-  flex-wrap: wrap; /* Allow wrapping on smaller screens */
-  gap: 15px; /* Space between buttons */
-  justify-content: center; /* Center buttons horizontally */
-  align-items: center; /* Align buttons vertically */
-}
-
-/* Styles for the Bill Calculation button */
-.calc-button {
-  padding: 12px 24px; /* Increased padding for a larger, more polished button */
-  font-size: 16px; /* Slightly larger font for bold, readable text */
-  font-weight: bold; /* Bold text for emphasis */
-  color: #ffffff; /* White text for contrast */
-  background: linear-gradient(135deg, #007BFF, #0056b3); /* Blue gradient for a vibrant look */
-  border: none; /* Remove default border */
-  border-radius: 8px; /* Rounded corners for a modern look */
-  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3); /* Enhanced shadow for depth */
-  cursor: pointer; /* Hand cursor on hover */
-  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease; /* Smooth transitions for interactivity */
-  min-width: 150px; /* Minimum width for consistency */
-  text-transform: uppercase; /* Uppercase text for emphasis */
-}
-
-/* Hover effect for Bill Calculation button */
-.calc-button:hover {
-  background: linear-gradient(135deg, #0056b3, #003d7a); /* Darker blue gradient on hover */
-  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4); /* Larger shadow on hover */
-  transform: translateY(-2px); /* Slight lift effect on hover */
-}
-
-/* Focus effect for Bill Calculation button */
-.calc-button:focus {
-  outline: none; /* Remove default outline */
-  box-shadow: 0 0 8px rgba(0, 123, 255, 0.5); /* Glow effect on focus */
-}
-
-/* Active effect for Bill Calculation button */
-.calc-button:active {
-  transform: translateY(1px); /* Slight press effect on click */
-  box-shadow: 0 2px 10px rgba(0, 123, 255, 0.2); /* Reduced shadow on click */
-}
-
-/* Styles for the Reset button */
-.reset-button {
-  padding: 12px 24px; /* Increased padding for a larger, more polished button */
-  font-size: 16px; /* Slightly larger font for bold, readable text */
-  font-weight: bold; /* Bold text for emphasis */
-  color: #ffffff; /* White text for contrast */
-  background: linear-gradient(135deg, #6c757d, #495057); /* Gray gradient for a neutral look */
-  border: none; /* Remove default border */
-  border-radius: 8px; /* Rounded corners for a modern look */
-  box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3); /* Enhanced shadow for depth */
-  cursor: pointer; /* Hand cursor on hover */
-  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease; /* Smooth transitions for interactivity */
-  min-width: 150px; /* Minimum width for consistency */
-  text-transform: uppercase; /* Uppercase text for emphasis */
-}
-
-/* Hover effect for Reset button */
-.reset-button:hover {
-  background: linear-gradient(135deg, #495057, #343a40); /* Darker gray gradient on hover */
-  box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4); /* Larger shadow on hover */
-  transform: translateY(-2px); /* Slight lift effect on hover */
-}
-
-/* Focus effect for Reset button */
-.reset-button:focus {
-  outline: none; /* Remove default outline */
-  box-shadow: 0 0 8px rgba(108, 117, 125, 0.5); /* Glow effect on focus */
-}
-
-/* Active effect for Reset button */
-.reset-button:active {
-  transform: translateY(1px); /* Slight press effect on click */
-  box-shadow: 0 2px 10px rgba(108, 117, 125, 0.2); /* Reduced shadow on click */
-}
-
-/* Responsive adjustments for smaller screens (e.g., mobile) */
-@media (max-width: 768px) {
-  .calc-button-container {
-      margin: 15px 0; /* Reduce margin on smaller screens for tighter layout */
-      gap: 10px; /* Reduce gap between buttons */
-      flex-direction: column; /* Stack buttons vertically on mobile */
-      align-items: center; /* Center buttons vertically */
+@media (min-width: 600px) {
+  body {
+    padding: 28px 16px 48px;
   }
 
-  .calc-button,
-  .reset-button {
-      padding: 10px 20px; /* Reduce padding on mobile for tighter fit */
-      font-size: 14px; /* Smaller text on mobile */
-      min-width: 120px; /* Reduce minimum width for mobile */
+  h1 {
+    font-size: 26px;
+  }
+
+  .card {
+    padding: 22px 24px 24px;
   }
 }
 
-/* Optional: Ensure buttons look good on very small screens */
 @media (max-width: 480px) {
-  .calc-button-container {
-      margin: 10px 0; /* Further reduce margin on very small screens */
-      gap: 5px; /* Further reduce gap between buttons */
+  .field-grid,
+  .field-grid--2 {
+    grid-template-columns: 1fr;
   }
 
-  .calc-button,
-  .reset-button {
-      padding: 8px 16px; /* Further reduce padding on mobile for tight fit */
-      font-size: 12px; /* Even smaller text on tiny screens */
-      min-width: 100px; /* Further reduce minimum width for mobile */
+  .card-subtitle {
+    margin-left: 0;
   }
-}
-/*Button new design ends */
-
-/* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&*/
-
-/*DropDowns in a better way*/
-/* Styles for the phase sections */
-.phase-section {
-  margin-bottom: 20px; /* Space between sections */
-  padding: 15px; /* Padding for a spacious feel */
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef); /* Soft blue-gray gradient for a clean look */
-  border-radius: 8px; /* Rounded corners for a modern look */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Enhanced shadow for depth */
-  border-left: 4px solid #007BFF; /* Blue accent border for KSEB theme */
-  display: flex; /* Use flex to align groups horizontally */
-  flex-wrap: wrap; /* Allow wrapping on smaller screens */
-  gap: 20px; /* Space between groups */
-  justify-content: space-between; /* Evenly distribute groups horizontally */
-}
-
-/* Styles for the phase groups */
-.phase-group {
-  flex: 1; /* Each group takes equal space */
-  min-width: 0; /* Prevent overflow on smaller screens */
-  display: flex; /* Use flex to align label and select/input */
-  flex-direction: column; /* Stack label and select/input vertically */
-  align-items: flex-start; /* Align contents to the top */
-  background: #ffffff; /* White background for groups to stand out */
-  padding: 10px; /* Padding around each group for a boxed look */
-  border-radius: 6px; /* Rounded corners for groups */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
-  transition: box-shadow 0.3s ease; /* Smooth hover effect */
-}
-
-.phase-group:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Slightly larger shadow on hover for interactivity */
-}
-
-.phase-group label {
-  display: block; /* Ensure label is a block element */
-  margin-bottom: 8px; /* Space between label and select/input */
-  font-size: 16px; /* Slightly larger font for bold, readable labels */
-  color: #333; /* Dark gray for readability */
-  font-weight: bold; /* Bold text for emphasis */
-  white-space: nowrap; /* Prevent label text from wrapping */
-}
-
-.phase-group select {
-  width: 100%; /* Full width within each group */
-  padding: 10px; /* Increased padding for a larger, more polished select */
-  border: 2px solid #007BFF; /* Blue border for a KSEB theme */
-  border-radius: 4px; /* Rounded corners for select */
-  font-size: 14px; /* Readable font size */
-  box-sizing: border-box; /* Include padding and border in width */
-  background: #f0f8ff; /* Light blue background for select */
-  appearance: none; /* Remove default arrow */
-  background-image: linear-gradient(45deg, transparent 50%, #007BFF 50%), linear-gradient(135deg, #007BFF 50%, transparent 50%);
-  background-position: calc(100% - 15px) calc(1em + 2px), calc(100% - 10px) calc(1em + 2px), calc(100% - 2.5em) 0.5em;
-  background-size: 5px 5px, 5px 5px, 1px 1.5em;
-  background-repeat: no-repeat; /* Custom dropdown arrow */
-  transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for interactivity */
-}
-
-.phase-group select:focus {
-  border-color: #0056b3; /* Darker blue on focus for emphasis */
-  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3); /* Glow effect on focus */
-  outline: none; /* Remove default outline */
-}
-
-/* Styles for the load section (Connected Load) */
-.load-section {
-  margin-bottom: 20px; /* Space between sections */
-  padding: 15px; /* Padding for a spacious feel */
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef); /* Soft blue-gray gradient for a clean look */
-  border-radius: 8px; /* Rounded corners for a modern look */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Enhanced shadow for depth */
-  border-left: 4px solid #007BFF; /* Blue accent border for KSEB theme */
-  display: flex; /* Use flex to align group horizontally */
-  flex-wrap: wrap; /* Allow wrapping on smaller screens */
-  gap: 20px; /* Space between groups */
-  justify-content: space-between; /* Evenly distribute group horizontally */
-}
-
-/* Styles for the banked unit section */
-.banked-section {
-  margin-bottom: 30px; /* Space below the section for the button */
-  padding: 20px; /* Increased padding for a more spacious feel */
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef); /* Soft blue-gray gradient for a clean look */
-  border-radius: 8px; /* Rounded corners for a modern look */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Enhanced shadow for depth */
-  border-left: 4px solid #007BFF; /* Blue accent border for KSEB theme */
-  display: flex; /* Use flex to align label and input */
-  flex-direction: column; /* Stack label and input vertically */
-  align-items: flex-start; /* Align contents to the top */
-}
-
-.banked-section label {
-  display: block; /* Ensure label is a block element */
-  margin-bottom: 8px; /* Space between label and input */
-  font-size: 16px; /* Slightly larger font for bold, readable labels */
-  color: #333; /* Dark gray for readability */
-  font-weight: bold; /* Bold text for emphasis */
-  white-space: nowrap; /* Prevent label text from wrapping */
-}
-
-.banked-section input {
-  width: 100%; /* Full width within the section */
-  padding: 10px; /* Increased padding for a larger, more polished input */
-  border: 2px solid #007BFF; /* Blue border for a KSEB theme */
-  border-radius: 4px; /* Rounded corners for input */
-  font-size: 14px; /* Readable font size */
-  box-sizing: border-box; /* Include padding and border in width */
-  background: #f0f8ff; /* Light blue background for input */
-  transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for interactivity */
-}
-
-.banked-section input:focus {
-  border-color: #0056b3; /* Darker blue on focus for emphasis */
-  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3); /* Glow effect on focus */
-  outline: none; /* Remove default outline */
-}
-
-/* Responsive adjustments for smaller screens (e.g., mobile) */
-@media (max-width: 768px) {
-  .phase-section,
-  .load-section {
-      margin-bottom: 15px; /* Reduce bottom margin on smaller screens for tighter layout */
-      padding: 10px; /* Reduce padding for compactness */
-      gap: 10px; /* Reduce gap between groups */
-  }
-
-  .phase-group,
-  .load-section .phase-group {
-      padding: 8px; /* Reduce padding on mobile for tighter fit */
-      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05); /* Lighter shadow on mobile */
-  }
-
-  .phase-group label,
-  .load-section .phase-group label,
-  .banked-section label {
-      font-size: 12px; /* Smaller labels on mobile */
-      margin-bottom: 6px; /* Reduce margin for tight alignment */
-  }
-
-  .phase-group select,
-  .banked-section input {
-      font-size: 12px; /* Smaller text on mobile */
-      padding: 6px; /* Reduce padding for tighter fit */
-      border-width: 1px; /* Thinner border on mobile */
-  }
-
-  .banked-section {
-      margin-bottom: 20px; /* Reduce bottom margin on smaller screens */
-      padding: 15px; /* Reduce padding for compactness */
-  }
-}
-
-/* Optional: Ensure inputs look good on very small screens */
-@media (max-width: 480px) {
-  .phase-section,
-  .load-section {
-      margin-bottom: 10px; /* Further reduce bottom margin on very small screens */
-      padding: 5px; /* Further reduce padding for compactness */
-      gap: 5px; /* Further reduce gap between groups */
-  }
-
-  .phase-group,
-  .load-section .phase-group {
-      padding: 6px; /* Further reduce padding on mobile for tight fit */
-      box-shadow: none; /* Remove shadow on very small screens for simplicity */
-  }
-
-  .phase-group label,
-  .load-section .phase-group label,
-  .banked-section label {
-      font-size: 10px; /* Even smaller labels on tiny screens */
-      margin-bottom: 4px; /* Minimize margin for tight alignment */
-  }
-
-  .phase-group select,
-  .banked-section input {
-      font-size: 10px; /* Even smaller text on tiny screens */
-      padding: 4px; /* Further reduce padding for tight fit */
-      border-width: 1px; /* Thinner border on very small screens */
-  }
-
-  .banked-section {
-      margin-bottom: 15px; /* Further reduce bottom margin on very small screens */
-      padding: 10px; /* Further reduce padding for compactness */
-  }
-}
-
-/* Optional: For larger screens, ensure inputs don’t stretch too much */
-@media (min-width: 1200px) {
-  .phase-section,
-  .load-section {
-      margin-bottom: 25px; /* Increase bottom margin on larger screens for more space */
-  }
-
-  .phase-group,
-  .load-section .phase-group {
-      max-width: 45%; /* Limit width to prevent excessive stretching, allowing for gap */
-  }
-
-  .banked-section {
-      margin-bottom: 40px; /* Increase bottom margin on larger screens for more space */
-  }
-}
-/*End of Dropdowns*/
-
-
-
-
-
-
-
-
-
-/*Normal sectionnormal billing solar reading*/
-/* Styles for the normal billing section */
-/* Styles for the normal billing section */
-/* Styles for the normal billing section */
-.normal-section {
-  margin-bottom: 30px; /* Space below the section for the button */
-  padding: 20px; /* Increased padding for a more spacious feel */
-  background: linear-gradient(135deg, #f8faf9, #e9f0e9); /* Soft green gradient for a clean, solar-themed look */
-  border-radius: 8px; /* Rounded corners for a modern look */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Enhanced shadow for depth */
-  border-left: 4px solid #28a745; /* Green accent border for solar theme */
-}
-
-/* Styles for Normal Billing meter readings */
-.normal-readings {
-  display: flex;
-  flex-wrap: nowrap; /* Prevent wrapping to new lines, keeping input horizontal */
-  gap: 10px; /* Increased gap for a more polished look */
-  margin-top: 15px; /* Slightly more margin for better spacing */
-  justify-content: space-between; /* Evenly distribute input horizontally */
-  align-items: flex-start; /* Align items at the top of the flex container */
-}
-
-.normal-input {
-  flex: 1; /* The input takes full available space */
-  min-width: 0; /* Prevent overflow on smaller screens */
-  display: flex; /* Use flex within each normal-input to align input */
-  flex-direction: column; /* Stack label and input vertically within each normal-input */
-  align-items: flex-start; /* Align contents (label and input) to the top within each normal-input */
-  background: #ffffff; /* White background for input to stand out */
-  padding: 10px; /* Padding around the input for a boxed look */
-  border-radius: 6px; /* Rounded corners for input */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
-  transition: box-shadow 0.3s ease; /* Smooth hover effect */
-}
-
-.normal-input:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Slightly larger shadow on hover for interactivity */
-}
-
-.normal-section label {
-  display: flex; /* Use flex to control label line breaks */
-  flex-direction: column; /* Stack label parts vertically */
-  margin-bottom: 8px; /* Increased margin for better spacing between label and input */
-  font-size: 16px; /* Slightly larger font for bold, readable labels */
-  color: #333; /* Dark gray for readability (overridden by specific colors below) */
-  flex-shrink: 0; /* Prevent label from shrinking */
-  font-weight: bold; /* Bold text for emphasis */
-  /* Debug: Ensure label is visible and takes full space */
-  width: 100%;
-}
-
-.label-prefix,
-.label-suffix {
-  display: block; /* Ensure each span is a block element for stacking */
-  white-space: nowrap; /* Prevent text wrapping within each span */
-  font-weight: bold; /* Bold text for all label parts */
-  color: #28a745; /* Green color for both prefix and suffix to match solar theme */
-}
-
-.label-prefix {
-  margin-bottom: 4px; /* Increased space between prefix and suffix for clearer two-line effect */
-  /* Debug: Ensure prefix is visible */
-  visibility: visible !important;
-}
-
-.label-suffix {
-  /* Removed visibility: hidden and height: 0 to make the text visible */
-  margin-bottom: 0; /* No additional margin below suffix */
-  font-size: 14px; /* Slightly smaller for the second line */
-  /* Debug: Ensure suffix is visible and takes full space */
-  visibility: visible !important;
-  height: auto !important; /* Ensure the height adjusts to content */
-}
-
-/* Debug: Override any potential conflicting styles */
-.label-suffix, .label-prefix {
-  opacity: 1 !important; /* Ensure no transparency */
-  display: block !important; /* Force block display */
-  position: static !important; /* Prevent any positioning issues */
-}
-
-.normal-input input {
-  width: 100%; /* Full width within each normal-input */
-  padding: 10px; /* Increased padding for a larger, more polished input */
-  border: 2px solid #28a745; /* Green border for a solar theme */
-  border-radius: 4px; /* Rounded corners for input */
-  font-size: 14px; /* Readable font size */
-  box-sizing: border-box; /* Include padding and border in width */
-  flex-grow: 1; /* Allow input to grow to fill available space */
-  align-self: stretch; /* Ensure input stretches to match container width */
-  background: #f9faf9; /* Light green background for input */
-  transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for interactivity */
-}
-
-.normal-input input:focus {
-  border-color: #1e7e34; /* Darker green on focus for emphasis */
-  box-shadow: 0 0 8px rgba(40, 167, 69, 0.3); /* Glow effect on focus */
-  outline: none; /* Remove default outline */
-}
-
-/* Responsive adjustments for smaller screens (e.g., mobile) */
-@media (max-width: 768px) {
-  .normal-section {
-      margin-bottom: 20px; /* Reduce bottom margin on smaller screens for tighter layout */
-      padding: 15px; /* Reduce padding for compactness */
-  }
-
-  .normal-readings {
-      gap: 8px; /* Slightly reduce gap on smaller screens for tighter fit */
-      justify-content: space-between; /* Maintain even distribution */
-      align-items: flex-start; /* Ensure input aligns at the top */
-  }
-
-  .normal-input {
-      padding: 8px; /* Reduce padding on mobile for tighter fit */
-      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05); /* Lighter shadow on mobile */
-  }
-
-  .normal-section label {
-      font-size: 12px; /* Smaller labels on mobile */
-      margin-bottom: 6px; /* Reduce margin for tight alignment */
-  }
-
-  .label-prefix {
-      margin-bottom: 2px; /* Reduce space between lines on mobile */
-  }
-
-  .label-suffix {
-      font-size: 10px; /* Smaller suffix on mobile */
-  }
-
-  .normal-input input {
-      font-size: 12px; /* Smaller text on mobile */
-      padding: 6px; /* Reduce padding for tighter fit */
-      border-width: 1px; /* Thinner border on mobile */
-  }
-}
-
-/* Optional: Ensure Normal Billing inputs look good on very small screens */
-@media (max-width: 480px) {
-  .normal-section {
-      margin-bottom: 15px; /* Further reduce bottom margin on very small screens */
-      padding: 10px; /* Further reduce padding for compactness */
-  }
-
-  .normal-readings {
-      gap: 4px; /* Further reduce gap on very small screens */
-      justify-content: space-between; /* Maintain even distribution */
-      align-items: flex-start; /* Ensure input aligns at the top */
-  }
-
-  .normal-input {
-      padding: 6px; /* Further reduce padding on mobile for tight fit */
-      box-shadow: none; /* Remove shadow on very small screens for simplicity */
-  }
-
-  .normal-section label {
-      font-size: 14px; /* Even smaller labels on tiny screens */
-      margin-bottom: 4px; /* Minimize margin for tight alignment */
-  }
-
-  .label-prefix {
-      margin-bottom: 0px; /* Minimize space between lines on very small screens */
-  }
-
-  .label-suffix {
-      font-size: 12px; /* Even smaller suffix on tiny screens */
-  }
-
-  .normal-input input {
-      font-size: 10px; /* Even smaller text on tiny screens */
-      padding: 4px; /* Further reduce padding for tight fit */
-      border-width: 1px; /* Thinner border on very small screens */
-  }
-}
-
-/* Optional: For larger screens, ensure Normal Billing inputs don’t stretch too much */
-@media (min-width: 1200px) {
-  .normal-section {
-      margin-bottom: 40px; /* Increase bottom margin on larger screens for more space */
-  }
-
-  .normal-input {
-      max-width: 100%; /* Allow full width but limit stretching if needed */
-  }
-}
-/*normal billing*/
-
-
-
-
-
-
-
-
-
-
-/* My changes for KSEB normal inputs */
-/* Base styles for the meter readings section */
-/* Styles for the KSEB billing section */
-.kseb-section {
-  margin-bottom: 30px; /* Space below the section for the button */
-  padding: 20px; /* Increased padding for a more spacious feel */
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef); /* Soft blue-gray gradient for a clean, KSEB-themed look */
-  border-radius: 8px; /* Rounded corners for a modern look */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Enhanced shadow for depth */
-  border-left: 4px solid #007BFF; /* Blue accent border for KSEB theme */
-}
-
-/* Styles for KSEB Billing meter readings */
-.kseb-readings {
-  display: flex;
-  flex-wrap: nowrap; /* Prevent wrapping to new lines, keeping inputs horizontal */
-  gap: 10px; /* Increased gap for a more polished look */
-  margin-top: 15px; /* Slightly more margin for better spacing */
-  justify-content: space-between; /* Evenly distribute inputs horizontally */
-  align-items: flex-start; /* Align items at the top of the flex container */
-}
-
-.kseb-input {
-  flex: 1; /* Each kseb-input takes equal space */
-  min-width: 0; /* Prevent overflow on smaller screens */
-  display: flex; /* Use flex within each kseb-input to align label and input */
-  flex-direction: column; /* Stack label and input vertically within each kseb-input */
-  align-items: flex-start; /* Align contents (label and input) to the top within each kseb-input */
-  background: #ffffff; /* White background for inputs to stand out */
-  padding: 10px; /* Padding around each input group for a boxed look */
-  border-radius: 6px; /* Rounded corners for inputs */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
-  transition: box-shadow 0.3s ease; /* Smooth hover effect */
-}
-
-.kseb-input:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Slightly larger shadow on hover for interactivity */
-}
-
-.kseb-section label {
-  display: flex; /* Use flex to control label line breaks */
-  flex-direction: column; /* Stack label parts vertically */
-  margin-bottom: 8px; /* Increased margin for better spacing between label and input */
-  font-size: 16px; /* Slightly larger font for bold, readable labels */
-  color: #333; /* Dark gray for readability (overridden by specific colors below) */
-  flex-shrink: 0; /* Prevent label from shrinking */
-  font-weight: bold; /* Bold text for emphasis */
-}
-
-.label-prefix,
-.label-suffix {
-  display: block; /* Ensure each span is a block element for stacking */
-  white-space: nowrap; /* Prevent text wrapping within each span */
-  font-weight: bold; /* Bold text for all label parts */
-}
-
-.label-prefix {
-  color: #007BFF; /* Blue color for the prefix to match KSEB theme */
-  margin-bottom: 2px; /* Small space between prefix and suffix */
-}
-
-.label-suffix {
-  color: #007BFF; /* Blue color for the suffix */
-  font-size: 14px; /* Slightly smaller for the second line */
-}
-
-.kseb-input label {
-  display: flex; /* Use flex to control label line breaks */
-  flex-direction: column; /* Stack label parts vertically */
-  margin-bottom: 8px; /* Increased margin for better spacing between label and input */
-  font-size: 16px; /* Slightly larger font for bold, readable labels */
-  color: #333; /* Dark gray for readability (overridden by specific colors below) */
-  flex-shrink: 0; /* Prevent label from shrinking */
-  font-weight: bold; /* Bold text for emphasis */
-}
-
-.kseb-input input {
-  width: 100%; /* Full width within each kseb-input */
-  padding: 10px; /* Increased padding for a larger, more polished input */
-  border: 2px solid #007BFF; /* Blue border for a KSEB theme */
-  border-radius: 4px; /* Rounded corners for inputs */
-  font-size: 14px; /* Readable font size */
-  box-sizing: border-box; /* Include padding and border in width */
-  flex-grow: 1; /* Allow input to grow to fill available space */
-  align-self: stretch; /* Ensure input stretches to match container width */
-  background: #f0f8ff; /* Light blue background for inputs */
-  transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for interactivity */
-}
-
-.kseb-input input:focus {
-  border-color: #0056b3; /* Darker blue on focus for emphasis */
-  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3); /* Glow effect on focus */
-  outline: none; /* Remove default outline */
-}
-
-/* Responsive adjustments for smaller screens (e.g., mobile) */
-@media (max-width: 768px) {
-  .kseb-section {
-      margin-bottom: 20px; /* Reduce bottom margin on smaller screens for tighter layout */
-      padding: 15px; /* Reduce padding for compactness */
-  }
-
-  .kseb-readings {
-      gap: 8px; /* Slightly reduce gap on smaller screens for tighter fit */
-      justify-content: space-between; /* Maintain even distribution */
-      align-items: flex-start; /* Ensure inputs align at the top */
-  }
 
-  .kseb-input {
-      padding: 8px; /* Reduce padding on mobile for tighter fit */
-      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05); /* Lighter shadow on mobile */
+  .quick-nav {
+    padding-bottom: 12px;
   }
 
-  .kseb-section label,
-  .kseb-input label {
-      font-size: 12px; /* Smaller labels on mobile */
-      margin-bottom: 6px; /* Reduce margin for tight alignment */
+  #billDetails,
+  .result {
+    padding: 14px;
   }
-
-  .label-prefix {
-      margin-bottom: 1px; /* Reduce space between lines on mobile */
-  }
-
-  .label-suffix {
-      font-size: 10px; /* Smaller suffix on mobile */
-  }
-
-  .kseb-input input {
-      font-size: 12px; /* Smaller text on mobile */
-      padding: 6px; /* Reduce padding for tighter fit */
-      border-width: 1px; /* Thinner border on mobile */
-  }
-}
-
-/* Optional: Ensure KSEB Billing inputs look good on very small screens */
-@media (max-width: 480px) {
-  .kseb-section {
-      margin-bottom: 15px; /* Further reduce bottom margin on very small screens */
-      padding: 10px; /* Further reduce padding for compactness */
-  }
-
-  .kseb-readings {
-      gap: 4px; /* Further reduce gap on very small screens */
-      justify-content: space-between; /* Maintain even distribution */
-      align-items: flex-start; /* Ensure inputs align at the top */
-  }
-
-  .kseb-input {
-      padding: 6px; /* Further reduce padding on mobile for tight fit */
-      box-shadow: none; /* Remove shadow on very small screens for simplicity */
-  }
-
-  .kseb-section label,
-  .kseb-input label {
-      font-size: 14px; /* Even smaller labels on tiny screens */
-      margin-bottom: 4px; /* Minimize margin for tight alignment */
-  }
-
-  .label-prefix {
-      margin-bottom: 0px; /* Minimize space between lines on very small screens */
-  }
-
-  .label-suffix {
-      font-size: 12px; /* Even smaller suffix on tiny screens */
-  }
-
-  .kseb-input input {
-      font-size: 10px; /* Even smaller text on tiny screens */
-      padding: 4px; /* Further reduce padding for tight fit */
-      border-width: 1px; /* Thinner border on very small screens */
-  }
-}
-
-/* Optional: For larger screens, ensure KSEB Billing inputs don’t stretch too much */
-@media (min-width: 1200px) {
-  .kseb-section {
-      margin-bottom: 40px; /* Increase bottom margin on larger screens for more space */
-  }
-
-  .kseb-input {
-      max-width: 45%; /* Limit width to prevent excessive stretching, allowing for gap */
-  }
-}
-/*My changes stopped */
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*Billing section Tod Billing Styles*/
-/* Styles for the billing sections */
-/* Styles for the billing sections */
-.billing-section {
-  margin-bottom: 30px; /* Space below the section for the button */
-  padding: 20px; /* Increased padding for a more spacious feel */
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef); /* Soft blue-gray gradient for a clean, KSEB-themed look */
-  border-radius: 8px; /* Rounded corners for a modern look */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Enhanced shadow for depth */
-  border-left: 4px solid #007BFF; /* Blue accent border for KSEB theme */
-}
-
-/* Styles for ToD Billing meter readings */
-.tod-readings {
-  display: flex;
-  flex-wrap: nowrap; /* Prevent wrapping to new lines, keeping inputs horizontal */
-  gap: 10px; /* Increased gap for a more polished look */
-  margin-top: 15px; /* Slightly more margin for better spacing */
-  justify-content: space-between; /* Evenly distribute inputs horizontally */
-  align-items: flex-start; /* Align items at the top of the flex container */
-}
-
-.tod-input {
-  flex: 1; /* Each tod-input takes equal space */
-  min-width: 0; /* Prevent overflow on smaller screens */
-  display: flex; /* Use flex within each tod-input to align label and input */
-  flex-direction: column; /* Stack label and input vertically within each tod-input */
-  align-items: flex-start; /* Align contents (label and input) to the top within each tod-input */
-  background: #ffffff; /* White background for inputs to stand out */
-  padding: 10px; /* Padding around each input group for a boxed look */
-  border-radius: 6px; /* Rounded corners for inputs */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
-  transition: box-shadow 0.3s ease; /* Smooth hover effect */
-}
-
-.tod-input:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Slightly larger shadow on hover for interactivity */
-}
-
-.tod-input label {
-  display: flex; /* Use flex to control label line breaks */
-  flex-direction: column; /* Stack label parts vertically */
-  margin-bottom: 8px; /* Increased margin for better spacing between label and input */
-  font-size: 16px; /* Slightly larger font for bold, readable labels */
-  color: #333; /* Dark gray for readability (overridden by specific colors below) */
-  flex-shrink: 0; /* Prevent label from shrinking */
-  font-weight: bold; /* Bold text for emphasis */
-  /* Debug: Ensure label is visible and takes full space */
-  width: 100%;
-}
-
-.label-prefix,
-.label-suffix {
-  display: block; /* Ensure each span is a block element for stacking */
-  white-space: nowrap; /* Prevent text wrapping within each span */
-  font-weight: bold; /* Bold text for all label parts */
-}
-
-.label-prefix {
-  margin-bottom: 4px; /* Increased space between prefix and suffix for clearer two-line effect */
-  /* Debug: Ensure prefix is visible */
-  visibility: visible !important;
-}
-
-/* Fix for .label-suffix to ensure visibility */
-.label-suffix {
-  /* Removed any potential hidden styles (e.g., visibility: hidden, height: 0) */
-  margin-bottom: 0; /* No additional margin below suffix */
-  font-size: 14px; /* Slightly smaller for the second line */
-  /* Debug: Ensure suffix is visible and takes full space */
-  visibility: visible !important;
-  height: auto !important; /* Ensure the height adjusts to content */
-  opacity: 1 !important; /* Ensure no transparency */
-  display: block !important; /* Force block display */
-  position: static !important; /* Prevent any positioning issues */
-  color: inherit; /* Inherit color from parent label or specific styles below */
-}
-
-/* Specific styling for Import labels */
-.tod-input[for="importOffPeak"] .label-prefix,
-.tod-input[for="importNormal"] .label-prefix,
-.tod-input[for="importPeak"] .label-prefix {
-  color: #007BFF; /* Blue color for Import prefix */
-}
-
-.tod-input[for="importOffPeak"] .label-suffix,
-.tod-input[for="importNormal"] .label-suffix,
-.tod-input[for="importPeak"] .label-suffix {
-  color: #007BFF; /* Blue color for Import suffix */
-}
-
-/* Specific styling for Export labels */
-.tod-input[for="exportOffPeak"] .label-prefix,
-.tod-input[for="exportNormal"] .label-prefix,
-.tod-input[for="exportPeak"] .label-prefix {
-  color: #e11eba; /* Pink color for Export prefix */
-}
-
-.tod-input[for="exportOffPeak"] .label-suffix,
-.tod-input[for="exportNormal"] .label-suffix,
-.tod-input[for="exportPeak"] .label-suffix {
-  color: #e11eba; /* Pink color for Export suffix */
-}
-
-.tod-input input {
-  width: 100%; /* Full width within each tod-input */
-  padding: 10px; /* Increased padding for a larger, more polished input */
-  border: 2px solid #007BFF; /* Blue border for Import inputs */
-  border-radius: 4px; /* Rounded corners for inputs */
-  font-size: 14px; /* Readable font size */
-  box-sizing: border-box; /* Include padding and border in width */
-  flex-grow: 1; /* Allow input to grow to fill available space */
-  align-self: stretch; /* Ensure input stretches to match container width */
-  background: #f0f8ff; /* Light blue background for Import inputs */
-  transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for interactivity */
-}
-
-.tod-input input:focus {
-  border-color: #0056b3; /* Darker blue on focus for emphasis */
-  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3); /* Glow effect on focus */
-  outline: none; /* Remove default outline */
-}
-
-/* Specific styling for Export inputs */
-.tod-input[for="exportOffPeak"] input,
-.tod-input[for="exportNormal"] input,
-.tod-input[for="exportPeak"] input {
-  border-color: #e11eba; /* Pink border for Export inputs */
-  background: #fff0f6; /* Light pink background for Export inputs */
-}
-
-.tod-input[for="exportOffPeak"] input:focus,
-.tod-input[for="exportNormal"] input:focus,
-.tod-input[for="exportPeak"] input:focus {
-  border-color: #c1157a; /* Darker pink on focus for emphasis */
-  box-shadow: 0 0 8px rgba(225, 30, 186, 0.3); /* Glow effect on focus */
-}
-
-/* Responsive adjustments for smaller screens (e.g., mobile) */
-@media (max-width: 768px) {
-  .billing-section {
-      margin-bottom: 20px; /* Reduce bottom margin on smaller screens for tighter layout */
-      padding: 15px; /* Reduce padding for compactness */
-  }
-
-  .tod-readings {
-      gap: 8px; /* Slightly reduce gap on smaller screens for tighter fit */
-      justify-content: space-around; /* Evenly space inputs with slight flexibility */
-      align-items: flex-start; /* Ensure all inputs align at the top */
-  }
-
-  .tod-input {
-      padding: 8px; /* Reduce padding on mobile for tighter fit */
-      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05); /* Lighter shadow on mobile */
-  }
-
-  .tod-input label {
-      font-size: 12px; /* Smaller labels on mobile */
-      margin-bottom: 6px; /* Reduce margin for tight alignment */
-  }
-
-  .label-prefix {
-      margin-bottom: 2px; /* Reduce space between lines on mobile */
-  }
-
-  .label-suffix {
-      font-size: 10px; /* Smaller suffix on mobile */
-  }
-
-  .tod-input input {
-      font-size: 12px; /* Smaller text on mobile */
-      padding: 6px; /* Reduce padding for tighter fit */
-      border-width: 1px; /* Thinner border on mobile */
-  }
-}
-
-/* Optional: Ensure ToD Billing inputs look good on very small screens */
-@media (max-width: 480px) {
-  .billing-section {
-      margin-bottom: 15px; /* Further reduce bottom margin on very small screens */
-      padding: 10px; /* Further reduce padding for compactness */
-  }
-
-  .tod-readings {
-      gap: 4px; /* Further reduce gap on very small screens */
-      justify-content: space-around; /* Evenly space inputs with slight flexibility */
-      align-items: flex-start; /* Ensure all inputs align at the top */
-  }
-
-  .tod-input {
-      padding: 6px; /* Further reduce padding on mobile for tight fit */
-      box-shadow: none; /* Remove shadow on very small screens for simplicity */
-  }
-
-  .tod-input label {
-      font-size: 10px; /* Even smaller labels on tiny screens */
-      margin-bottom: 4px; /* Minimize margin for tight alignment */
-  }
-
-  .label-prefix {
-      margin-bottom: 0px; /* Minimize space between lines on very small screens */
-  }
-
-  .label-suffix {
-      font-size: 12px; /* Even smaller suffix on tiny screens */
-  }
-
-  .tod-input input {
-      font-size: 10px; /* Even smaller text on tiny screens */
-      padding: 4px; /* Further reduce padding for tight fit */
-      border-width: 1px; /* Thinner border on very small screens */
-  }
-}
-
-/* Optional: For larger screens, ensure ToD Billing inputs don’t stretch too much */
-@media (min-width: 1200px) {
-  .billing-section {
-      margin-bottom: 40px; /* Increase bottom margin on larger screens for more space */
-  }
-
-  .tod-input {
-      max-width: 30%; /* Limit width to prevent excessive stretching, allowing for gap */
-  }
-}
-/*Billing secton Tod Billing style end*/
-
-
-
-
-
-
-
-
-/* Solar Tod Side changes*/
-/* Styles for the solar billing section */
-/* Styles for the solar billing section */
-.solar-section {
-  margin-bottom: 30px; /* Space below the section for the button */
-  padding: 20px; /* Increased padding for a more spacious feel */
-  background: linear-gradient(135deg, #f8faf9, #e9f0e9); /* Soft green gradient for a clean, solar-themed look */
-  border-radius: 8px; /* Rounded corners for a modern look */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Enhanced shadow for depth */
-  border-left: 4px solid #28a745; /* Green accent border for solar theme */
 }
 
-/* Styles for Solar Billing meter readings */
-.solar-readings {
-  display: flex;
-  flex-wrap: nowrap; /* Prevent wrapping to new lines, keeping inputs horizontal */
-  gap: 10px; /* Increased gap for a more polished look */
-  margin-top: 15px; /* Slightly more margin for better spacing */
-  justify-content: space-between; /* Evenly distribute inputs horizontally */
-  align-items: flex-start; /* Align items at the top of the flex container */
-}
-
-.solar-input {
-  flex: 1; /* Each solar-input takes equal space */
-  min-width: 0; /* Prevent overflow on smaller screens */
-  display: flex; /* Use flex within each solar-input to align label and input */
-  flex-direction: column; /* Stack label and input vertically within each solar-input */
-  align-items: flex-start; /* Align contents (label and input) to the top within each solar-input */
-  background: #ffffff; /* White background for inputs to stand out */
-  padding: 10px; /* Padding around each input group for a boxed look */
-  border-radius: 6px; /* Rounded corners for inputs */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
-  transition: box-shadow 0.3s ease; /* Smooth hover effect */
-}
-
-.solar-input:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Slightly larger shadow on hover for interactivity */
-}
-
-.solar-input label {
-  display: flex; /* Use flex to control label line breaks */
-  flex-direction: column; /* Stack label parts vertically */
-  margin-bottom: 8px; /* Increased margin for better spacing between label and input */
-  font-size: 16px; /* Slightly larger font for bold, readable labels */
-  color: #333; /* Dark gray for readability */
-  flex-shrink: 0; /* Prevent label from shrinking */
-  font-weight: bold; /* Bold text for emphasis */
-}
-
-.label-prefix,
-.label-suffix {
-  display: block; /* Ensure each span is a block element for stacking */
-  white-space: nowrap; /* Prevent text wrapping within each span */
-  font-weight: bold; /* Bold text for all label parts */
-}
+/* ---------------------------------- instructions.html -------------------- */
 
-.label-prefix {
-  color: #28a745; /* Green color for the prefix to match solar theme */
-  margin-bottom: 2px; /* Small space between prefix and suffix (or empty line) */
+.container1 {
+  max-width: 720px;
+  margin: 20px auto;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  color: var(--text-primary);
 }
 
-.label-suffix {
-  color: #28a745; /* Green color for the suffix (empty in this case) */
-  visibility: hidden; /* Hide the empty suffix to maintain two-line spacing without content */
-  height: 0; /* Ensure no extra height from the hidden suffix */
+.container1 li {
+  margin-bottom: 8px;
+  line-height: 1.6;
+  color: var(--text-secondary);
 }
-
-.solar-input input {
-  width: 100%; /* Full width within each solar-input */
-  padding: 10px; /* Increased padding for a larger, more polished input */
-  border: 2px solid #28a745; /* Green border for a solar theme */
-  border-radius: 4px; /* Rounded corners for inputs */
-  font-size: 14px; /* Readable font size */
-  box-sizing: border-box; /* Include padding and border in width */
-  flex-grow: 1; /* Allow input to grow to fill available space */
-  align-self: stretch; /* Ensure input stretches to match container width */
-  background: #f9faf9; /* Light green background for inputs */
-  transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for interactivity */
-}
-
-.solar-input input:focus {
-  border-color: #1e7e34; /* Darker green on focus for emphasis */
-  box-shadow: 0 0 8px rgba(40, 167, 69, 0.3); /* Glow effect on focus */
-  outline: none; /* Remove default outline */
-}
-
-/* Responsive adjustments for smaller screens (e.g., mobile) */
-@media (max-width: 768px) {
-  .solar-section {
-      margin-bottom: 20px; /* Reduce bottom margin on smaller screens for tighter layout */
-      padding: 15px; /* Reduce padding for compactness */
-  }
-
-  .solar-readings {
-      gap: 8px; /* Slightly reduce gap on smaller screens for tighter fit */
-      justify-content: space-around; /* Evenly space inputs with slight flexibility */
-      align-items: flex-start; /* Ensure all inputs align at the top */
-  }
-
-  .solar-input {
-      padding: 8px; /* Reduce padding on mobile for tighter fit */
-      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05); /* Lighter shadow on mobile */
-  }
 
-  .solar-input label {
-      font-size: 12px; /* Smaller labels on mobile */
-      margin-bottom: 6px; /* Reduce margin for tight alignment */
-  }
-
-  .label-prefix {
-      margin-bottom: 1px; /* Reduce space between lines on mobile */
-  }
-
-  .solar-input input {
-      font-size: 12px; /* Smaller text on mobile */
-      padding: 6px; /* Reduce padding for tighter fit */
-      border-width: 1px; /* Thinner border on mobile */
-  }
+.tariff-image {
+  max-width: 100%;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  margin: 12px 0 20px;
 }
-
-/* Optional: Ensure Solar Billing inputs look good on very small screens */
-@media (max-width: 480px) {
-  .solar-section {
-      margin-bottom: 15px; /* Further reduce bottom margin on very small screens */
-      padding: 10px; /* Further reduce padding for compactness */
-  }
-
-  .solar-readings {
-      gap: 4px; /* Further reduce gap on very small screens */
-      justify-content: space-around; /* Evenly space inputs with slight flexibility */
-      align-items: flex-start; /* Ensure all inputs align at the top */
-  }
-
-  .solar-input {
-      padding: 6px; /* Further reduce padding on mobile for tight fit */
-      box-shadow: none; /* Remove shadow on very small screens for simplicity */
-  }
-
-  .solar-input label {
-      font-size: 10px; /* Even smaller labels on tiny screens */
-      margin-bottom: 4px; /* Minimize margin for tight alignment */
-  }
-
-  .label-prefix {
-      margin-bottom: 0px; /* Minimize space between lines on very small screens */
-  }
 
-  .solar-input input {
-      font-size: 10px; /* Even smaller text on tiny screens */
-      padding: 4px; /* Further reduce padding for tight fit */
-      border-width: 1px; /* Thinner border on very small screens */
-  }
+.return-link {
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
 }
-
-/* Optional: For larger screens, ensure Solar Billing inputs don’t stretch too much */
-@media (min-width: 1200px) {
-  .solar-section {
-      margin-bottom: 40px; /* Increase bottom margin on larger screens for more space */
-  }
 
-  .solar-input {
-      max-width: 30%; /* Limit width to prevent excessive stretching, allowing for gap */
-  }
+.return-link:hover {
+  text-decoration: underline;
 }
-/* Solar ToD side End*/
-

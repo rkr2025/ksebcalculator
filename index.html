@@ -20,188 +20,186 @@
     <div class="container">
         <div class="header-container">
             <div id="current-date-time" class="date-time"></div>
-            <a href="tools.html" class="extra-apps-link">New!! - Solar Diary</a>
+            <a href="tools.html" class="extra-apps-link">Solar Diary</a>
         </div>
 
-        <div id="current-date-time" style="position: absolute; top: 1px; left: 1px; width: 100%; text-align: center; font-size: 13px; color: #333;"></div>
-        <!-- <h1>Solar Prosumers Electricity Bill Calculator</h1> -->
-        <h1 style="text-align: center; font-family: 'Poppins', sans-serif; font-size: 19px; color: #2980b9; margin: 5px auto; padding: 5px 15px; border-radius: 8px; max-width: 90%; animation: none !important; transition: none !important; transform: none !important; background: linear-gradient(135deg, #ecf0f1, #dfe4ea); border: 2px solid #3498db; box-shadow: 0 3px 6px rgba(0,0,0,0.1); letter-spacing: 0.5px; font-weight: 600; @media print { background: none !important; border: 1px solid #2980b9 !important; box-shadow: none !important; }">
-            Solar Prosumers Electricity Bill Calculator
-        </h1>
-        <!-- <div id="quote" style="left: 50%; font-size: 14px; color: #666; font-style: italic; text-align: center; padding: 10px; background-color: #f9f9f9; border-radius: 2px; box-shadow: 0 0 10px rgba(0,0,0,0.1); top: -10px;"></div> -->
-        <div id="quote" style="position: relative; margin: 20px auto; font-size: 12px; color: #444; font-style: italic; text-align: center; padding: 1px 1px; background: linear-gradient(135deg, #ffffff, #f0f4f8); border-radius: 6px; box-shadow: 0 3px 12px rgba(0,0,0,0.15); font-family: 'Georgia', serif; border-left: 3px solid #1e90ff; width: 90%; max-width: 320px; line-height: 1.5; transition: all 0.3s ease;"></div>
-        <div style="height: 5px;"></div>
+        <h1>Solar Prosumers Electricity Bill Calculator</h1>
+        <p class="app-subtitle">Estimate your KSEB bill from your solar &amp; net meter readings</p>
+        <div id="quote"></div>
+
+        <nav class="quick-nav" aria-label="Jump to section">
+            <a href="#accountCard">🏠 Account</a>
+            <a href="#billingCard">📊 Billing</a>
+            <a href="#solarCard">☀️ Solar</a>
+            <a href="#meterCard">⚡ Meter</a>
+        </nav>
+
         <form id="billCalculator">
 
-        <!-- Adding Phase -->
-        <div class="phase-section">
-            <div class="phase-group">
-                <label for="phase">Phase:</label>
-                <select id="phase" name="phase">
-                    <option value="phase1">Phase 1</option>
-                    <option value="phase3">Phase 3</option>
-                </select>
-            </div>
-            <div class="phase-group">
-                <label for="meterOwner">Meter Owner:</label>
-                <select id="meterOwner" name="meterOwner">
-                    <option value="kseb">KSEB</option>
-                    <option value="consumer">Consumer</option>
-                </select>
-            </div>
-        </div>
-        <div class="phase-section">
-            <div class="phase-group">
-                <label for="billingType">Billing Type:</label>
-                <select id="billingType" name="billingType">
-                    <option value="normal">Normal</option>
-                    <option value="tod" selected>ToD</option>
-                </select>
-            </div>
-            <div class="phase-group">
-                <label for="mybank">Banked Units:</label>
-                <select id="mybank" name="mybank">
-                    <option value="No">No</option>
-                    <option value="Yes">Yes</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Connected Load stays separate as it’s conditional -->
-        <div class="load-section" id="connectedLoadContainer" style="display: block;">
-            <div class="phase-group">
-                <label for="load">Connected Load (for ToD):</label>
-                <select id="load" name="load">
-                    <option value="below20k">Below 20kW</option>
-                    <option value="above20k">Above 20kW</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Banked Unit Section -->
-        <div class="banked-section" id="bankedUnitSection" style="display: none;">
-            <label for="bankedUnitInput">Enter Banked Units (kWh):</label>
-            <input type="number" id="bankedUnitInput" name="bankedUnitInput" value="0" min="0">
-        </div>
-
-            <!-- Normal Billing Solar Reading Inputs -->
-            <div class="normal-section" id="normalBillingSection" style="display: none;">
-                <label style="margin-top: 5px;">
-                    <span class="label-prefix">Solar Generation: (kWh)</span>
-                </label>
-                <div class="input-group normal-readings">
-                    <div class="normal-input">
-                        <input type="number" id="solarGeneration" name="solarGeneration" value="0" required>
+            <!-- Account Details -->
+            <section class="card card--account" id="accountCard">
+                <div class="card-header">
+                    <span class="card-icon">🏠</span>
+                    <h2 class="card-title">Account Details</h2>
+                </div>
+                <div class="field-grid field-grid--2">
+                    <div class="field">
+                        <label for="phase">Phase</label>
+                        <select id="phase" name="phase">
+                            <option value="phase1">Phase 1</option>
+                            <option value="phase3">Phase 3</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="meterOwner">Meter Owner</label>
+                        <select id="meterOwner" name="meterOwner">
+                            <option value="kseb">KSEB</option>
+                            <option value="consumer">Consumer</option>
+                        </select>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- ToD Billing Solar Reading Inputs -->
-            <div class="solar-section" id="todBillingSection" style="display: block;">
-                <label style="margin-top: 30px;color: #28a745; font-weight: bold;">Solar Generation (kWh):</label>
-                <div class="input-group solar-readings">
-                    <div class="solar-input">
-                        <label for="solarNormal">
-                            <span class="label-prefix">Normal:</span>
-                            <span class="label-suffix"></span>
-                        </label>
-                        <input type="number" id="solarNormal" name="solarNormal" value="0" min="0">
+            <!-- Billing Setup -->
+            <section class="card card--billing" id="billingCard">
+                <div class="card-header">
+                    <span class="card-icon">📊</span>
+                    <h2 class="card-title">Billing Setup</h2>
+                </div>
+                <div class="field-grid field-grid--2">
+                    <div class="field">
+                        <label for="billingType">Billing Type</label>
+                        <select id="billingType" name="billingType">
+                            <option value="normal">Normal</option>
+                            <option value="tod" selected>ToD</option>
+                        </select>
                     </div>
-                    <div class="solar-input">
-                        <label for="solarOffPeak">
-                            <span class="label-prefix">Off Peak:</span>
-                            <span class="label-suffix"></span>
-                        </label>
-                        <input type="number" id="solarOffPeak" name="solarOffPeak" value="0" min="0">
-                    </div>
-                    <div class="solar-input">
-                        <label for="solarPeak">
-                            <span class="label-prefix">Peak:</span>
-                            <span class="label-suffix"></span>
-                        </label>
-                        <input type="number" id="solarPeak" name="solarPeak" value="0" min="0">
+                    <div class="field">
+                        <label for="mybank">Banked Units?</label>
+                        <select id="mybank" name="mybank">
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
+                        </select>
                     </div>
                 </div>
-            </div>
 
-            <!-- Normal Billing KSEB Net Reading Inputs -->
-            <div class="kseb-section" id="normalNetMeterReadingSection" style="display: none;">
-                <label style="margin-top: 10px;">
-                    <span class="label-prefix" style="color: #007BFF; font-weight: bold;">KSEB Net</span>
-                    <span class="label-suffix" style="color: #007BFF; font-weight: bold;">Meter Consumption (kWh)</span>
-                </label>
-                <div class="input-group kseb-readings">
-                    <div class="kseb-input">
-                        <label for="import">
-                            <span class="label-prefix" style="color: #ff0000; font-weight: bold;">Import</span>
-                            <span class="label-suffix" style="color: #ff0000; font-weight: bold;">Total (kWh)</span>
-                        </label>
-                        <input type="number" id="import" name="import" value="0" required>
-                    </div>
-                    <div class="kseb-input">
-                        <label for="export">
-                            <span class="label-prefix" style="color: #28a745; font-weight: bold;">Export</span>
-                            <span class="label-suffix" style="color: #28a745; font-weight: bold;">Total (kWh)</span>
-                        </label>
-                        <input type="number" id="export" name="export" value="0" required>
+                <!-- Connected Load stays separate as it's conditional -->
+                <div class="sub-row" id="connectedLoadContainer" style="display: block;">
+                    <span class="sub-row-badge">🔌 Connected Load</span>
+                    <div class="field">
+                        <label for="load">Connected Load (for ToD)</label>
+                        <select id="load" name="load">
+                            <option value="below20k">Below 20kW</option>
+                            <option value="above20k">Above 20kW</option>
+                        </select>
                     </div>
                 </div>
-            </div>
 
-
-            <!-- ToD Billing KSEB Net Reading Inputs -->
-            <div class="billing-section" id="todNetMeterReadingSection" style="display: block;">
-                <label style="margin-top: 20px; color: #007BFF; font-weight: bold;">KSEB Net Meter Consumption (kWh):</label>
-                <div class="input-group tod-readings">
-                    <div class="tod-input">
-                        <label for="importNormal">
-                            <span class="label-prefix" style="color: #ff0000; font-weight: bold;">Import -</span>
-                            <span class="label-suffix" style="color: #ff0000; font-weight: bold;">Normal</span>
-                        </label>
-                        <input type="number" id="importNormal" name="importNormal" value="0" min="0">
-                    </div>
-                    <div class="tod-input">
-                        <label for="importOffPeak">
-                            <span class="label-prefix" style="color: #ff0000; font-weight: bold;">Import -</span>
-                            <span class="label-suffix" style="color: #ff0000; font-weight: bold;">OFF Peak</span>
-                        </label>
-                        <input type="number" id="importOffPeak" name="importOffPeak" value="0" min="0">
-                    </div>
-                    <div class="tod-input">
-                        <label for="importPeak">
-                            <span class="label-prefix" style="color: #ff0000; font-weight: bold;">Import -</span>
-                            <span class="label-suffix" style="color: #ff0000; font-weight: bold;">PEAK</span>
-                        </label>
-                        <input type="number" id="importPeak" name="importPeak" value="0" min="0">
+                <!-- Banked Unit Section -->
+                <div class="sub-row sub-row--bank" id="bankedUnitSection" style="display: none;">
+                    <span class="sub-row-badge">💰 Banked Units</span>
+                    <div class="field">
+                        <label for="bankedUnitInput">Enter Banked Units (kWh)</label>
+                        <input type="number" id="bankedUnitInput" name="bankedUnitInput" value="0" min="0">
                     </div>
                 </div>
-                <div style="margin-top: 30px;" class="input-group tod-readings">
-                    <div class="tod-input">
-                        <label for="exportNormal">
-                            <span class="label-prefix" style="color: #28a745; font-weight: bold;">Export -</span>
-                            <span class="label-suffix" style="color: #28a745; font-weight: bold;">Normal</span>
-                        </label>
-                        <input type="number" id="exportNormal" name="exportNormal" value="0" min="0">
-                    </div>
-                    <div class="tod-input">
-                        <label for="exportOffPeak">
-                            <span class="label-prefix" style="color: #28a745; font-weight: bold;">Export -</span>
-                            <span class="label-suffix" style="color: #28a745; font-weight: bold;">OFF Peak</span>
-                        </label>
-                        <input type="number" id="exportOffPeak" name="exportOffPeak" value="0" min="0">
-                    </div>
-                    <div class="tod-input">
-                        <label for="exportPeak">
-                            <span class="label-prefix" style="color: #28a745; font-weight: bold;">Export -</span>
-                            <span class="label-suffix" style="color: #28a745; font-weight: bold;">PEAK</span>
-                        </label>
-                        <input type="number" id="exportPeak" name="exportPeak" value="0" min="0">
+            </section>
+
+            <!-- Solar Generation -->
+            <section class="card card--solar" id="solarCard">
+                <div class="card-header">
+                    <span class="card-icon">☀️</span>
+                    <h2 class="card-title">Solar Generation</h2>
+                </div>
+
+                <!-- Normal Billing Solar Reading Inputs -->
+                <div id="normalBillingSection" style="display: none;">
+                    <div class="field-grid">
+                        <div class="field">
+                            <label for="solarGeneration">Solar Generation (kWh)</label>
+                            <input type="number" id="solarGeneration" name="solarGeneration" value="0" required>
+                        </div>
                     </div>
                 </div>
-            </div>
+
+                <!-- ToD Billing Solar Reading Inputs -->
+                <div id="todBillingSection" style="display: block;">
+                    <div class="field-grid">
+                        <div class="field">
+                            <label for="solarNormal">Normal <span class="field-tag">6am–6pm</span></label>
+                            <input type="number" id="solarNormal" name="solarNormal" value="0" min="0">
+                        </div>
+                        <div class="field">
+                            <label for="solarOffPeak">Off Peak <span class="field-tag">10pm–6am</span></label>
+                            <input type="number" id="solarOffPeak" name="solarOffPeak" value="0" min="0">
+                        </div>
+                        <div class="field">
+                            <label for="solarPeak">Peak <span class="field-tag">6pm–10pm</span></label>
+                            <input type="number" id="solarPeak" name="solarPeak" value="0" min="0">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- KSEB Net Meter Consumption -->
+            <section class="card card--meter" id="meterCard">
+                <div class="card-header">
+                    <span class="card-icon">⚡</span>
+                    <h2 class="card-title">KSEB Net Meter Consumption</h2>
+                </div>
+
+                <!-- Normal Billing KSEB Net Reading Inputs -->
+                <div id="normalNetMeterReadingSection" style="display: none;">
+                    <div class="field-grid field-grid--2">
+                        <div class="field field--import">
+                            <label for="import">Import Total (kWh)</label>
+                            <input type="number" id="import" name="import" value="0" required>
+                        </div>
+                        <div class="field field--export">
+                            <label for="export">Export Total (kWh)</label>
+                            <input type="number" id="export" name="export" value="0" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ToD Billing KSEB Net Reading Inputs -->
+                <div id="todNetMeterReadingSection" style="display: block;">
+                    <p class="block-label">Import</p>
+                    <div class="field-grid">
+                        <div class="field field--import">
+                            <label for="importNormal">Normal <span class="field-tag">6am–6pm</span></label>
+                            <input type="number" id="importNormal" name="importNormal" value="0" min="0">
+                        </div>
+                        <div class="field field--import">
+                            <label for="importOffPeak">Off Peak <span class="field-tag">10pm–6am</span></label>
+                            <input type="number" id="importOffPeak" name="importOffPeak" value="0" min="0">
+                        </div>
+                        <div class="field field--import">
+                            <label for="importPeak">Peak <span class="field-tag">6pm–10pm</span></label>
+                            <input type="number" id="importPeak" name="importPeak" value="0" min="0">
+                        </div>
+                    </div>
+
+                    <p class="block-label" style="margin-top: 16px;">Export</p>
+                    <div class="field-grid">
+                        <div class="field field--export">
+                            <label for="exportNormal">Normal <span class="field-tag">6am–6pm</span></label>
+                            <input type="number" id="exportNormal" name="exportNormal" value="0" min="0">
+                        </div>
+                        <div class="field field--export">
+                            <label for="exportOffPeak">Off Peak <span class="field-tag">10pm–6am</span></label>
+                            <input type="number" id="exportOffPeak" name="exportOffPeak" value="0" min="0">
+                        </div>
+                        <div class="field field--export">
+                            <label for="exportPeak">Peak <span class="field-tag">6pm–10pm</span></label>
+                            <input type="number" id="exportPeak" name="exportPeak" value="0" min="0">
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             <div class="calc-button-container">
-                <button type="submit" class="calc-button">Bill Calculation</button>
+                <button type="submit" class="calc-button">Calculate Bill</button>
                 <button type="button" id="resetButton" class="reset-button">Reset</button>
             </div>
 
