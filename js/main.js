@@ -5,7 +5,7 @@ import { computeBill, BILL_ERRORS } from './calculator.js';
 import { renderBillResults } from './render-results.js';
 import { getRandomQuote } from './quotes.js';
 
-const RESULT_PANEL_IDS = ['result', 'result1', 'result2', 'result3', 'result4', 'result6'];
+const RESULT_PANEL_IDS = ['billChart', 'billAnalysis', 'result', 'result1', 'result2', 'result3', 'result4', 'result6'];
 
 function num(id) {
     return parseFloat(document.getElementById(id).value) || 0;

@@ -14,6 +14,8 @@ import {
     getEnergyCaluculationMessage,
     renderTelescopicBreakdown,
 } from './render-tables.js';
+import { renderBillBreakdownChart, renderTodComparisonChart } from './render-chart.js';
+import { renderBillAnalysis } from './render-insights.js';
 
 const SOLAR_DIARY_PROMO_HTML = `
                     <p style="font-size: 16px; color: #333; line-height: 1.8; margin: 15px 0 0; background: linear-gradient(90deg, #fff3e0, #e6fffa); padding: 10px; border-radius: 5px; font-weight: bold; animation: glow 1.5s ease-in-out infinite alternate;">
@@ -480,8 +482,13 @@ export function renderBillResults(bill) {
     const isNormalPath = bill.billingType === 'normal' || bill.todType === 'normal';
     const panels = isNormalPath ? buildNormalBillingResult(bill) : buildTodSplitResult(bill);
 
+    const billChart = renderBillBreakdownChart(bill) + renderTodComparisonChart(bill);
+    const billAnalysis = renderBillAnalysis(bill);
+
     return {
         billInfo,
+        billChart,
+        billAnalysis,
         result: panels.result,
         result1: panels.result1,
         result2: panels.result2,
