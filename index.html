@@ -124,7 +124,15 @@
 
                 <!-- ToD Billing Solar Reading Inputs -->
                 <div id="todBillingSection" style="display: block;">
-                    <div class="field-grid">
+                    <div class="reading-mode-toggle">
+                        <label class="switch">
+                            <input type="checkbox" id="solarReadingModeToggle">
+                            <span class="switch-slider"></span>
+                        </label>
+                        <span>Calculate from Initial &amp; Final meter readings</span>
+                    </div>
+
+                    <div class="field-grid" id="solarDirectFields">
                         <div class="field">
                             <label for="solarNormal">Normal <span class="field-tag">6am–6pm</span></label>
                             <input type="number" id="solarNormal" name="solarNormal" value="0" min="0">
@@ -136,6 +144,36 @@
                         <div class="field">
                             <label for="solarPeak">Peak <span class="field-tag">6pm–10pm</span></label>
                             <input type="number" id="solarPeak" name="solarPeak" value="0" min="0">
+                        </div>
+                    </div>
+
+                    <div class="field-grid" id="solarReadingFields" style="display: none;">
+                        <div class="field">
+                            <label>Normal <span class="field-tag">6am–6pm</span></label>
+                            <div class="reading-pair">
+                                <input type="number" id="solarNormal_initial" placeholder="Initial" min="0">
+                                <input type="number" id="solarNormal_final" placeholder="Final" min="0">
+                            </div>
+                            <div class="reading-computed" id="solarNormal_computed">= 0.00 kWh</div>
+                            <div class="reading-warn" id="solarNormal_warn">Final should be ≥ Initial</div>
+                        </div>
+                        <div class="field">
+                            <label>Off Peak <span class="field-tag">10pm–6am</span></label>
+                            <div class="reading-pair">
+                                <input type="number" id="solarOffPeak_initial" placeholder="Initial" min="0">
+                                <input type="number" id="solarOffPeak_final" placeholder="Final" min="0">
+                            </div>
+                            <div class="reading-computed" id="solarOffPeak_computed">= 0.00 kWh</div>
+                            <div class="reading-warn" id="solarOffPeak_warn">Final should be ≥ Initial</div>
+                        </div>
+                        <div class="field">
+                            <label>Peak <span class="field-tag">6pm–10pm</span></label>
+                            <div class="reading-pair">
+                                <input type="number" id="solarPeak_initial" placeholder="Initial" min="0">
+                                <input type="number" id="solarPeak_final" placeholder="Final" min="0">
+                            </div>
+                            <div class="reading-computed" id="solarPeak_computed">= 0.00 kWh</div>
+                            <div class="reading-warn" id="solarPeak_warn">Final should be ≥ Initial</div>
                         </div>
                     </div>
                 </div>
@@ -165,7 +203,15 @@
                 <!-- ToD Billing KSEB Net Reading Inputs -->
                 <div id="todNetMeterReadingSection" style="display: block;">
                     <p class="block-label">Import</p>
-                    <div class="field-grid">
+                    <div class="reading-mode-toggle">
+                        <label class="switch">
+                            <input type="checkbox" id="importReadingModeToggle">
+                            <span class="switch-slider"></span>
+                        </label>
+                        <span>Calculate from Initial &amp; Final meter readings</span>
+                    </div>
+
+                    <div class="field-grid" id="importDirectFields">
                         <div class="field field--import">
                             <label for="importNormal">Normal <span class="field-tag">6am–6pm</span></label>
                             <input type="number" id="importNormal" name="importNormal" value="0" min="0">
@@ -180,8 +226,46 @@
                         </div>
                     </div>
 
+                    <div class="field-grid" id="importReadingFields" style="display: none;">
+                        <div class="field field--import">
+                            <label>Normal <span class="field-tag">6am–6pm</span></label>
+                            <div class="reading-pair">
+                                <input type="number" id="importNormal_initial" placeholder="Initial" min="0">
+                                <input type="number" id="importNormal_final" placeholder="Final" min="0">
+                            </div>
+                            <div class="reading-computed" id="importNormal_computed">= 0.00 kWh</div>
+                            <div class="reading-warn" id="importNormal_warn">Final should be ≥ Initial</div>
+                        </div>
+                        <div class="field field--import">
+                            <label>Off Peak <span class="field-tag">10pm–6am</span></label>
+                            <div class="reading-pair">
+                                <input type="number" id="importOffPeak_initial" placeholder="Initial" min="0">
+                                <input type="number" id="importOffPeak_final" placeholder="Final" min="0">
+                            </div>
+                            <div class="reading-computed" id="importOffPeak_computed">= 0.00 kWh</div>
+                            <div class="reading-warn" id="importOffPeak_warn">Final should be ≥ Initial</div>
+                        </div>
+                        <div class="field field--import">
+                            <label>Peak <span class="field-tag">6pm–10pm</span></label>
+                            <div class="reading-pair">
+                                <input type="number" id="importPeak_initial" placeholder="Initial" min="0">
+                                <input type="number" id="importPeak_final" placeholder="Final" min="0">
+                            </div>
+                            <div class="reading-computed" id="importPeak_computed">= 0.00 kWh</div>
+                            <div class="reading-warn" id="importPeak_warn">Final should be ≥ Initial</div>
+                        </div>
+                    </div>
+
                     <p class="block-label" style="margin-top: 16px;">Export</p>
-                    <div class="field-grid">
+                    <div class="reading-mode-toggle">
+                        <label class="switch">
+                            <input type="checkbox" id="exportReadingModeToggle">
+                            <span class="switch-slider"></span>
+                        </label>
+                        <span>Calculate from Initial &amp; Final meter readings</span>
+                    </div>
+
+                    <div class="field-grid" id="exportDirectFields">
                         <div class="field field--export">
                             <label for="exportNormal">Normal <span class="field-tag">6am–6pm</span></label>
                             <input type="number" id="exportNormal" name="exportNormal" value="0" min="0">
@@ -193,6 +277,36 @@
                         <div class="field field--export">
                             <label for="exportPeak">Peak <span class="field-tag">6pm–10pm</span></label>
                             <input type="number" id="exportPeak" name="exportPeak" value="0" min="0">
+                        </div>
+                    </div>
+
+                    <div class="field-grid" id="exportReadingFields" style="display: none;">
+                        <div class="field field--export">
+                            <label>Normal <span class="field-tag">6am–6pm</span></label>
+                            <div class="reading-pair">
+                                <input type="number" id="exportNormal_initial" placeholder="Initial" min="0">
+                                <input type="number" id="exportNormal_final" placeholder="Final" min="0">
+                            </div>
+                            <div class="reading-computed" id="exportNormal_computed">= 0.00 kWh</div>
+                            <div class="reading-warn" id="exportNormal_warn">Final should be ≥ Initial</div>
+                        </div>
+                        <div class="field field--export">
+                            <label>Off Peak <span class="field-tag">10pm–6am</span></label>
+                            <div class="reading-pair">
+                                <input type="number" id="exportOffPeak_initial" placeholder="Initial" min="0">
+                                <input type="number" id="exportOffPeak_final" placeholder="Final" min="0">
+                            </div>
+                            <div class="reading-computed" id="exportOffPeak_computed">= 0.00 kWh</div>
+                            <div class="reading-warn" id="exportOffPeak_warn">Final should be ≥ Initial</div>
+                        </div>
+                        <div class="field field--export">
+                            <label>Peak <span class="field-tag">6pm–10pm</span></label>
+                            <div class="reading-pair">
+                                <input type="number" id="exportPeak_initial" placeholder="Initial" min="0">
+                                <input type="number" id="exportPeak_final" placeholder="Final" min="0">
+                            </div>
+                            <div class="reading-computed" id="exportPeak_computed">= 0.00 kWh</div>
+                            <div class="reading-warn" id="exportPeak_warn">Final should be ≥ Initial</div>
                         </div>
                     </div>
                 </div>

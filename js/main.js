@@ -1,9 +1,13 @@
 // Entry point: wires up DOM events to the pure calculator/render layers
-// (js/main.js). This is the only file that touches document/window.
+// (js/main.js). Besides reading-inputs.js (a self-contained DOM-only
+// widget), this is the only file that touches document/window.
 
 import { computeBill, BILL_ERRORS } from './calculator.js';
 import { renderBillResults } from './render-results.js';
 import { getRandomQuote } from './quotes.js';
+import { initReadingGroups } from './reading-inputs.js';
+
+const resetReadingGroups = initReadingGroups();
 
 const RESULT_PANEL_IDS = ['billChart', 'billAnalysis', 'result', 'result1', 'result2', 'result3', 'result4', 'result6'];
 
@@ -180,6 +184,7 @@ applyBillHandoff();
 
 document.getElementById('resetButton').addEventListener('click', function () {
     document.getElementById('billCalculator').reset();
+    resetReadingGroups();
     hideResultPanels();
 
     document.getElementById('bankedUnitSection').style.display =

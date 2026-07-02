@@ -344,18 +344,96 @@ select {
   background: var(--bank-light);
 }
 
-.solar-block + .solar-block,
-.meter-block + .meter-block {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px dashed var(--border);
-}
-
 .block-label {
   font-size: 12.5px;
   font-weight: 700;
   color: var(--text-secondary);
   margin: 0 0 10px;
+}
+
+/* Initial/Final meter-reading toggle (Solar / Import / Export blocks) */
+
+.reading-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 21px;
+  flex: none;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.switch-slider::before {
+  content: "";
+  position: absolute;
+  height: 15px;
+  width: 15px;
+  left: 3px;
+  top: 3px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.switch input:checked + .switch-slider {
+  background: var(--primary);
+}
+
+.switch input:checked + .switch-slider::before {
+  transform: translateX(15px);
+}
+
+.reading-mode-toggle span {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.reading-pair {
+  display: flex;
+  gap: 6px;
+}
+
+.reading-pair input {
+  min-width: 0;
+  padding: 8px 8px;
+  font-size: 13px;
+}
+
+.reading-computed {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-top: 5px;
+}
+
+.reading-warn {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--import);
+  margin-top: 3px;
+  display: none;
 }
 
 /* ---------------------------------- Buttons ----------------------------- */
