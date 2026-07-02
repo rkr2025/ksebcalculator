@@ -142,6 +142,54 @@
     #usageAnalysis li {
       margin-bottom: 5px;
     }
+    #billingProfile {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+    #billingProfile label {
+      font-size: 13px;
+      color: #555;
+      display: block;
+      margin-bottom: 3px;
+    }
+    #billingProfile select, #billingProfile input {
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      width: 100%;
+      font-size: 14px;
+    }
+    #estimatedBill {
+      margin-top: 15px;
+      text-align: left;
+      font-size: 14px;
+    }
+    #estimatedBill table {
+      margin-top: 8px;
+    }
+    #estimatedBill .bill-total td {
+      background: linear-gradient(90deg, #2ecc71, #27ae60);
+      color: white;
+      font-weight: bold;
+    }
+    #estimatedBill .projected {
+      opacity: 0.85;
+    }
+    #estimatedBill .note {
+      font-size: 12px;
+      color: #7f8c8d;
+      font-style: italic;
+      margin-top: 6px;
+    }
+    #viewFullBreakdownBtn {
+      background: #27ae60;
+      margin-top: 10px;
+    }
+    #viewFullBreakdownBtn:hover {
+      background: #219150;
+    }
     #backupSection {
       display: flex;
       flex-wrap: wrap;
@@ -192,7 +240,7 @@
         padding: 10px;
         box-shadow: none;
       }
-      h2, h3, h4, form, details, .center, .nav-link, #backupSection, #initialValuesDisplay, #usageInsights, #usageAnalysis {
+      h2, h3, h4, form, details, .center, .nav-link, #backupSection, #initialValuesDisplay, #usageInsights, #usageAnalysis, #billingProfile, #estimatedBill, #viewFullBreakdownBtn {
         display: none;
       }
       .table-container {
@@ -330,9 +378,11 @@
       <div class="instructions">
         <p>Welcome to Solar Diary! Follow these steps to track your solar energy and electricity usage:</p>
         <ul>
+          <li><strong>Set Billing Profile</strong>: Choose your Phase, Meter Owner, Connected Load, and any Banked Units once at the top — this is used to estimate your bill.</li>
           <li><strong>Set Initial Readings</strong>: Enter your starting values for Solar, T1, T2, T3, and Export from your last bill in the "Initial Reading" section. At least one value must be non-zero. Click 💾 Save Initial.</li>
           <li><strong>Add Current Readings</strong>: Input current readings in the "Current Solar Readings" section and click ➕ Add. Add entries daily or weekly.</li>
           <li><strong>View Insights & Analysis</strong>: After initial readings, see usage warnings (red) or safe messages (green) and cost-saving tips below the "Entries Log".</li>
+          <li><strong>Estimated Bill</strong>: See your estimated bill so far and a projected month-end total, calculated with the same tariff rules as the main Bill Calculator. Click 📊 View Full Bill Breakdown for the detailed T1/T2/T3 breakdown.</li>
           <li><strong>Edit/Delete Entries</strong>: Use ✏️ to edit or 🗑️ to delete entries in the log table.</li>
           <li><strong>Backup/Restore</strong>: Save data with 💾 Backup Readings or restore from a JSON file using 📂 Restore Readings.</li>
           <li><strong>Print Report</strong>: Click 🖨️ Generate Printable Report to print the entries log.</li>
@@ -342,6 +392,41 @@
       </div>
     </details>
     <h2>📘 Solar Diary</h2>
+    <h3>⚙️ Billing Profile</h3>
+    <div id="billingProfile">
+      <div>
+        <label for="profile_phase">Phase</label>
+        <select id="profile_phase">
+          <option value="phase1">Phase 1</option>
+          <option value="phase3">Phase 3</option>
+        </select>
+      </div>
+      <div>
+        <label for="profile_meterOwner">Meter Owner</label>
+        <select id="profile_meterOwner">
+          <option value="kseb">KSEB</option>
+          <option value="consumer">Consumer</option>
+        </select>
+      </div>
+      <div>
+        <label for="profile_connectedLoad">Connected Load</label>
+        <select id="profile_connectedLoad">
+          <option value="below20k">Below 20kW</option>
+          <option value="above20k">Above 20kW</option>
+        </select>
+      </div>
+      <div>
+        <label for="profile_hasBank">Banked Units?</label>
+        <select id="profile_hasBank">
+          <option value="No">No</option>
+          <option value="Yes">Yes</option>
+        </select>
+      </div>
+      <div id="profile_bankedUnitsWrap" style="display: none;">
+        <label for="profile_bankedUnits">Banked Units (kWh) — carried over from your last KSEB bill</label>
+        <input type="number" id="profile_bankedUnits" value="0" min="0">
+      </div>
+    </div>
     <h3 id="initialReadingHeading">🔑 June month Initial Reading</h3>
     <form id="initialForm">
       <input type="number" id="init_solar" placeholder="Initial Solar Gen">
@@ -381,6 +466,10 @@
     </div>
     <div id="usageInsights"></div>
     <div id="usageAnalysis"></div>
+    <div id="estimatedBill"></div>
+    <div class="center">
+      <button type="button" id="viewFullBreakdownBtn" style="display: none;">📊 View Full Bill Breakdown</button>
+    </div>
     <hr style="margin-top: 25px;">
     <div id="backupSection" class="center">
       <button onclick="backupReadings()">💾 Backup Readings</button>
@@ -392,7 +481,9 @@
     </div>
     <a href="index.html" class="nav-link">← Back to Calculator</a>
   </div>
-  <script>
+  <script type="module">
+    import { computeBill, BILL_ERRORS } from './js/calculator.js';
+
     // Set current month in the initial reading heading
     document.addEventListener('DOMContentLoaded', () => {
       const monthHeading = document.getElementById('initialReadingHeading');
@@ -402,6 +493,38 @@
 
     let initialReadings = JSON.parse(localStorage.getItem("initialReadings")) || null;
     let entries = JSON.parse(localStorage.getItem("entries")) || [];
+
+    // --- Billing Profile: phase/meterOwner/connectedLoad/bank, used only to
+    // estimate the bill from tracked readings -- separate from the reading
+    // data itself so it can default sensibly and persist independently.
+    const DEFAULT_BILLING_PROFILE = { phase: 'phase1', meterOwner: 'kseb', connectedLoad: 'below20k', hasBankBalance: false, bankedUnits: 0 };
+    let billingProfile = { ...DEFAULT_BILLING_PROFILE, ...(JSON.parse(localStorage.getItem("billingProfile")) || {}) };
+
+    function loadBillingProfileIntoForm() {
+      document.getElementById('profile_phase').value = billingProfile.phase;
+      document.getElementById('profile_meterOwner').value = billingProfile.meterOwner;
+      document.getElementById('profile_connectedLoad').value = billingProfile.connectedLoad;
+      document.getElementById('profile_hasBank').value = billingProfile.hasBankBalance ? 'Yes' : 'No';
+      document.getElementById('profile_bankedUnits').value = billingProfile.bankedUnits;
+      document.getElementById('profile_bankedUnitsWrap').style.display = billingProfile.hasBankBalance ? 'block' : 'none';
+    }
+
+    function saveBillingProfileFromForm() {
+      billingProfile = {
+        phase: document.getElementById('profile_phase').value,
+        meterOwner: document.getElementById('profile_meterOwner').value,
+        connectedLoad: document.getElementById('profile_connectedLoad').value,
+        hasBankBalance: document.getElementById('profile_hasBank').value === 'Yes',
+        bankedUnits: parseFloat(document.getElementById('profile_bankedUnits').value) || 0,
+      };
+      document.getElementById('profile_bankedUnitsWrap').style.display = billingProfile.hasBankBalance ? 'block' : 'none';
+      localStorage.setItem("billingProfile", JSON.stringify(billingProfile));
+      renderEntries();
+    }
+
+    ['profile_phase', 'profile_meterOwner', 'profile_connectedLoad', 'profile_hasBank', 'profile_bankedUnits'].forEach((id) => {
+      document.getElementById(id).addEventListener('change', saveBillingProfileFromForm);
+    });
 
     function displayInitialValues() {
       const el = document.getElementById("initialValuesDisplay");
@@ -528,6 +651,14 @@
           insightsHTML += `<p class="safe">Good: You have ${difference} units available to use safely this month.</p>`;
         }
 
+        // Daily average needs a start date. Older initial readings saved
+        // before this field existed won't have one -- fall back to the
+        // first entry's timestamp, and skip day-based figures entirely if
+        // neither is available rather than showing a bogus number.
+        const startTimestamp = initialReadings.timestamp || (entries[0] && entries[0].timestamp);
+        const latestTimestamp = lastEntry.timestamp || Date.now();
+        const uniqueDays = startTimestamp ? Math.max(1, Math.round((latestTimestamp - startTimestamp) / 86400000)) : null;
+
         try {
             const directUsage = Math.round(usage.solar - usage.export);
             const totalUsage = Math.round(totalConsumption + (usage.solar - usage.export));
@@ -535,10 +666,16 @@
             insightsHTML += '<hr style="margin-top: 20px;">';
             insightsHTML += `<p><strong>Direct usage from solar:</strong> ${Math.round(usage.solar)} - ${Math.round(usage.export)} = ${directUsage} units</p>`;
             insightsHTML += `<p><strong>Total Electricity usage for this month (for Fixed Charge):</strong> (${Math.round(usage.t1)} + ${Math.round(usage.t2)} + ${Math.round(usage.t3)}) + (${directUsage}) = ${totalUsage} units</p>`;
-            insightsHTML += `<p><strong>Daily Energy usage:</strong> ${totalUsage} / ${uniqueDays} = ${dailyUsage} units/day</p>`;
+
+            if (uniqueDays) {
+              const dailyUsage = (totalUsage / uniqueDays).toFixed(2);
+              insightsHTML += `<p><strong>Daily Energy usage:</strong> ${totalUsage} / ${uniqueDays} day(s) = ${dailyUsage} units/day</p>`;
+            } else {
+              insightsHTML += `<p class="advice">Daily Energy usage: unavailable -- re-save your Initial Reading to start tracking dates.</p>`;
+            }
         } catch (err) {
             console.error('Error generating usage insights:', err);
-            insightsEl.innerHTML = '<p class="error">Error generating usage insights. Please check your data.</p>';
+            insightsHTML += '<p class="error">Error generating usage insights. Please check your data.</p>';
         }
 
         insightsEl.innerHTML = insightsHTML;
@@ -619,7 +756,127 @@
         analysisHTML += '</ul>';
 
         analysisEl.innerHTML = analysisHTML;
+
+        renderEstimatedBill(usage, startTimestamp, latestTimestamp, uniqueDays);
+      } else {
+        document.getElementById('estimatedBill').innerHTML = '';
+        document.getElementById('viewFullBreakdownBtn').style.display = 'none';
       }
+    }
+
+    // Maps tracked cumulative-reading deltas onto the same computeBill()
+    // used by the main calculator (index.html) -- one tariff implementation,
+    // not a second copy. Solar generation and export both happen during
+    // daylight, so they're treated as Normal-timezone (T1) figures; this is
+    // an approximation since the diary doesn't split export by timezone.
+    function billInputsFromUsage(usage) {
+      return {
+        phase: billingProfile.phase,
+        meterOwner: billingProfile.meterOwner,
+        billingType: 'tod',
+        connectedLoad: billingProfile.connectedLoad,
+        hasBankBalance: billingProfile.hasBankBalance,
+        bankedUnits: billingProfile.bankedUnits,
+        solarNormal: Math.max(0, usage.solar),
+        solarOffPeak: 0,
+        solarPeak: 0,
+        importNormal: Math.max(0, usage.t1),
+        importOffPeak: Math.max(0, usage.t3),
+        importPeak: Math.max(0, usage.t2),
+        exportNormal: Math.max(0, usage.export),
+        exportOffPeak: 0,
+        exportPeak: 0,
+      };
+    }
+
+    function billSummaryRows(bill) {
+      // Banked units don't get their own line in energyCharge/total -- they
+      // reduce bankAdjustedUnits before energyCharge is computed. Show them
+      // explicitly so it's visible they were actually applied, not silently
+      // ignored.
+      const bankRow = bill.myBankDepositAtKseb > 0
+        ? `<tr><td>Banked Units Applied (from Billing Profile)</td><td>${bill.myBankDepositAtKseb.toFixed(2)} Unit</td></tr>`
+        : '';
+      const remainingBankRow = bill.myBankDepositAtKseb > 0 && bill.accountBalance > 0
+        ? `<tr><td>Remaining in Bank After This Bill</td><td>${bill.accountBalance.toFixed(2)} Unit</td></tr>`
+        : '';
+
+      return `
+        <table>
+          <tbody>
+            <tr><td>Bill Type</td><td>${bill.billType || 'N/A'}</td></tr>
+            ${bankRow}
+            <tr><td>Fixed Charge</td><td>₹${bill.fixedCharge.toFixed(2)}</td></tr>
+            <tr><td>Meter Rent</td><td>₹${bill.meterRent.toFixed(2)}</td></tr>
+            <tr><td>Energy Charge (${bill.bankAdjustedUnits.toFixed(2)} units @ ₹${bill.unitRate.toFixed(2)})</td><td>₹${bill.energyCharge.toFixed(2)}</td></tr>
+            <tr><td>Duty (10%)</td><td>₹${bill.duty.toFixed(2)}</td></tr>
+            <tr><td>Fuel Surcharge</td><td>₹${bill.monthlyFuelSurcharge.toFixed(2)}</td></tr>
+            ${remainingBankRow}
+            <tr class="bill-total"><td>Total</td><td>₹${bill.totalBillAmount.toFixed(2)}</td></tr>
+          </tbody>
+        </table>`;
+    }
+
+    function renderEstimatedBill(usage, startTimestamp, latestTimestamp, uniqueDays) {
+      const el = document.getElementById('estimatedBill');
+      const viewBtn = document.getElementById('viewFullBreakdownBtn');
+      let html = '<hr style="margin-top: 20px;"><h4>💰 Estimated Bill</h4>';
+
+      const bill = computeBill(billInputsFromUsage(usage));
+      if (bill.error) {
+        html += `<p class="advice">Estimated bill unavailable: ${BILL_ERRORS[bill.error]}</p>`;
+        el.innerHTML = html;
+        viewBtn.style.display = 'none';
+        return;
+      }
+
+      html += '<p>Based on your tracked readings so far:</p>';
+      html += billSummaryRows(bill);
+
+      // Connected Load only changes the bill when there's an export surplus
+      // to carry from Normal into Peak hours (see js/calculator.js,
+      // computeTodAbove20kW) -- with no surplus, below/above 20kW produce an
+      // identical total. Flag that explicitly so it doesn't look broken.
+      const altLoad = billingProfile.connectedLoad === 'below20k' ? 'above20k' : 'below20k';
+      const altBill = computeBill({ ...billInputsFromUsage(usage), connectedLoad: altLoad });
+      if (!altBill.error && altBill.totalBillAmount === bill.totalBillAmount) {
+        html += `<p class="note">Note: Connected Load (below vs. above 20kW) only changes your bill when you have surplus export to carry from Normal into Peak hours. With your current readings there's no surplus, so both settings give the same total.</p>`;
+      }
+
+      // Project a month-end total by scaling today's usage pattern up to a
+      // full calendar month -- only meaningful once we know how many days
+      // the current readings actually span.
+      if (uniqueDays) {
+        const monthDate = new Date(startTimestamp);
+        const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
+        if (uniqueDays < daysInMonth) {
+          const scale = daysInMonth / uniqueDays;
+          const projectedUsage = {
+            solar: usage.solar * scale,
+            t1: usage.t1 * scale,
+            t2: usage.t2 * scale,
+            t3: usage.t3 * scale,
+            export: usage.export * scale,
+          };
+          const projectedBill = computeBill(billInputsFromUsage(projectedUsage));
+          if (!projectedBill.error) {
+            html += `<div class="projected"><h4>📅 Projected Month-End (at current daily rate)</h4>`;
+            html += billSummaryRows(projectedBill);
+            html += `<p class="note">Projected by scaling ${uniqueDays} day(s) of tracked usage up to ${daysInMonth} days in the month. Actual usage may vary.</p></div>`;
+          }
+        }
+      } else {
+        html += '<p class="note">Add another entry (or re-save your Initial Reading) to unlock a projected month-end total.</p>';
+      }
+
+      el.innerHTML = html;
+      viewBtn.style.display = 'block';
+      viewBtn.onclick = () => viewFullBreakdown(usage);
+    }
+
+    function viewFullBreakdown(usage) {
+      localStorage.setItem('kseb_bill_handoff', JSON.stringify(billInputsFromUsage(usage)));
+      window.location.href = 'index.html';
     }
 
     function deleteInitial() {
@@ -645,7 +902,8 @@
           t1: t1,
           t2: t2,
           t3: t3,
-          export: exportVal
+          export: exportVal,
+          timestamp: Date.now()
         };
         updateStorage();
         displayInitialValues();
@@ -658,6 +916,7 @@
       e.preventDefault();
       const entry = {
         date: new Date().toLocaleString(),
+        timestamp: Date.now(),
         solar: parseFloat(document.getElementById("solar").value),
         t1: parseFloat(document.getElementById("t1").value),
         t2: parseFloat(document.getElementById("t2").value),
@@ -690,7 +949,7 @@
 
     // Backup Readings
     function backupReadings() {
-      const data = { initialReadings, entries };
+      const data = { initialReadings, entries, billingProfile };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -720,6 +979,11 @@
             entries = data.entries;
             localStorage.setItem('entries', JSON.stringify(entries));
           }
+          if (data.billingProfile) {
+            billingProfile = { ...DEFAULT_BILLING_PROFILE, ...data.billingProfile };
+            localStorage.setItem('billingProfile', JSON.stringify(billingProfile));
+            loadBillingProfileIntoForm();
+          }
           displayInitialValues();
           renderEntries();
           alert('Readings restored successfully!');
@@ -736,6 +1000,16 @@
       window.print();
     }
 
+    // This page's markup calls these via inline onclick="..." attributes;
+    // module-scope functions aren't global, so expose the ones it needs.
+    window.backupReadings = backupReadings;
+    window.restoreReadings = restoreReadings;
+    window.generatePrintableReport = generatePrintableReport;
+    window.deleteInitial = deleteInitial;
+    window.deleteEntry = deleteEntry;
+    window.editEntry = editEntry;
+
+    loadBillingProfileIntoForm();
     displayInitialValues();
     renderEntries();
   </script>

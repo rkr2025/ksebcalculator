@@ -125,6 +125,59 @@ document.getElementById('mybank').addEventListener('change', function () {
 document.getElementById('billingType').dispatchEvent(new Event('change'));
 document.getElementById('mybank').dispatchEvent(new Event('change'));
 
+// Solar Diary (solar-diary.html) hands off its tracked readings here via
+// localStorage so the user can see the full T1/T2/T3 breakdown without that
+// page having to duplicate this whole render layer. The stashed object is
+// already shaped exactly like readFormInputs()'s output.
+function setFieldValue(id, value) {
+    document.getElementById(id).value = value;
+}
+
+function applyBillHandoff() {
+    const raw = localStorage.getItem('kseb_bill_handoff');
+    if (!raw) return;
+    localStorage.removeItem('kseb_bill_handoff');
+
+    let inputs;
+    try {
+        inputs = JSON.parse(raw);
+    } catch {
+        return;
+    }
+
+    setFieldValue('phase', inputs.phase);
+    setFieldValue('meterOwner', inputs.meterOwner);
+    setFieldValue('billingType', inputs.billingType);
+    document.getElementById('billingType').dispatchEvent(new Event('change'));
+
+    setFieldValue('mybank', inputs.hasBankBalance ? 'Yes' : 'No');
+    document.getElementById('mybank').dispatchEvent(new Event('change'));
+    if (inputs.hasBankBalance) {
+        setFieldValue('bankedUnitInput', inputs.bankedUnits);
+    }
+
+    if (inputs.billingType === 'tod') {
+        setFieldValue('load', inputs.connectedLoad);
+        setFieldValue('solarNormal', inputs.solarNormal);
+        setFieldValue('solarOffPeak', inputs.solarOffPeak);
+        setFieldValue('solarPeak', inputs.solarPeak);
+        setFieldValue('importNormal', inputs.importNormal);
+        setFieldValue('importOffPeak', inputs.importOffPeak);
+        setFieldValue('importPeak', inputs.importPeak);
+        setFieldValue('exportNormal', inputs.exportNormal);
+        setFieldValue('exportOffPeak', inputs.exportOffPeak);
+        setFieldValue('exportPeak', inputs.exportPeak);
+    } else if (inputs.billingType === 'normal') {
+        setFieldValue('solarGeneration', inputs.solarGeneration);
+        setFieldValue('import', inputs.importReading);
+        setFieldValue('export', inputs.exportReading);
+    }
+
+    document.getElementById('billCalculator').scrollIntoView({ behavior: 'smooth' });
+}
+
+applyBillHandoff();
+
 document.getElementById('resetButton').addEventListener('click', function () {
     document.getElementById('billCalculator').reset();
     hideResultPanels();
