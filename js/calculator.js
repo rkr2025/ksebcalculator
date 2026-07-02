@@ -190,6 +190,62 @@ function computeTodBelow20kWAbove250({ exportPlusBank, importNormal, importPeak,
     };
 }
 
+// Reusable pieces for js/wheeling-calculator.js -- billing a wheeled site's
+// consumption uses exactly the same slab/ToD rate logic as a normal bill,
+// just applied to a standalone units figure rather than the prosumer's own
+// solar/import/export readings.
+
+// Same telescopic (<=250 units) vs non-telescopic (>250 units) dispatch as
+// applyTariffRules' 'normal' branch, factored out so it can be billed twice
+// (before/after wheeling) for a site that has no ToD meter.
+export function computeEnergyChargeForUnits(units) {
+    if (units <= 250) {
+        return { billType: 'Telescopic', ...computeTelescopicCharge(units) };
+    }
+    return { billType: 'Non-Telescopic', ...computeNonTelescopicCharge(units) };
+}
+
+// Real T1/T2/T3 charge for an already-netted Normal/Peak/Off-Peak split,
+// factored out of computeTodAbove20kW/computeTodBelow20kWAbove250 (which
+// also do export-vs-import netting that doesn't apply to a wheeled site).
+export function computeTodEnergyChargeForSplit({ normalUnits, peakUnits, offPeakUnits }) {
+    const totalUnits = normalUnits + peakUnits + offPeakUnits;
+    const unitRate = pickNonTelescopicRate(totalUnits);
+    const normalCharge = normalUnits * unitRate * TOD_MULTIPLIERS.normal;
+    const peakCharge = peakUnits * unitRate * TOD_MULTIPLIERS.peak;
+    const offPeakCharge = offPeakUnits * unitRate * TOD_MULTIPLIERS.offPeak;
+    return {
+        billType: 'Non-Telescopic-ToD',
+        unitRate,
+        normalCharge,
+        peakCharge,
+        offPeakCharge,
+        energyCharge: normalCharge + peakCharge + offPeakCharge,
+    };
+}
+
+// Nets `offsetUnits` (wheeled-in units) against a site's own T1/T2/T3 import,
+// Normal first then Peak then Off-Peak -- the same offset order the app
+// already uses elsewhere for export-vs-import netting (see
+// computeTodAbove20kW/computeTodBelow20kWAbove250 above). Returns what's
+// left to bill in each zone after the offset is applied.
+export function netTodAgainstOffset({ offsetUnits, importNormal, importPeak, importOffPeak }) {
+    let remaining = Math.max(offsetUnits, 0);
+
+    const normalOffset = Math.min(remaining, importNormal);
+    const normalUnits = importNormal - normalOffset;
+    remaining -= normalOffset;
+
+    const peakOffset = Math.min(remaining, importPeak);
+    const peakUnits = importPeak - peakOffset;
+    remaining -= peakOffset;
+
+    const offPeakOffset = Math.min(remaining, importOffPeak);
+    const offPeakUnits = importOffPeak - offPeakOffset;
+
+    return { normalUnits, peakUnits, offPeakUnits };
+}
+
 function emptyTariffFields(bankAdjustedUnits) {
     return {
         billType: '',

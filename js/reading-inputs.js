@@ -9,7 +9,10 @@ function clampNonNegative(n) {
     return n > 0 ? n : 0;
 }
 
-function setupReadingGroup(toggleId, directContainerId, readingContainerId, fieldIds) {
+// Exported so wheeling-ui.js can wire up the same Initial/Final toggle for
+// dynamically-created wheeling-site TOD field groups, which don't exist at
+// page load and so can't go through initReadingGroups() below.
+export function setupReadingGroup(toggleId, directContainerId, readingContainerId, fieldIds) {
     const toggle = document.getElementById(toggleId);
     const directContainer = document.getElementById(directContainerId);
     const readingContainer = document.getElementById(readingContainerId);

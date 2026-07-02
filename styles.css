@@ -197,6 +197,10 @@ h1 {
   --card-accent: var(--import);
 }
 
+.card--wheeling {
+  --card-accent: var(--bank);
+}
+
 .card-header {
   display: flex;
   align-items: center;
@@ -436,6 +440,55 @@ select {
   display: none;
 }
 
+/* Wheeling: repeatable per-site sub-block */
+
+.wheeling-site {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px 14px;
+  margin-bottom: 12px;
+}
+
+.wheeling-site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.wheeling-remove-btn {
+  background: none;
+  border: none;
+  color: var(--import);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.wheeling-remove-btn:hover {
+  text-decoration: underline;
+}
+
+.add-site-button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 4px;
+  background: var(--bank-light);
+  color: var(--bank);
+  border: 1.5px dashed var(--bank);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.add-site-button:hover {
+  background: #e3ddf7;
+}
+
 /* ---------------------------------- Buttons ----------------------------- */
 
 .calc-button-container {
@@ -507,6 +560,10 @@ button {
   font-size: 15px;
   color: var(--text-primary);
   display: none;
+}
+
+.result:empty {
+  display: none !important;
 }
 
 .result h4,

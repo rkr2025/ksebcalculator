@@ -32,6 +32,7 @@
             <a href="#billingCard">📊 Billing</a>
             <a href="#solarCard">☀️ Solar</a>
             <a href="#meterCard">⚡ Meter</a>
+            <a href="#wheelingCard">🔗 Wheeling</a>
         </nav>
 
         <form id="billCalculator">
@@ -312,6 +313,32 @@
                 </div>
             </section>
 
+            <!-- Wheeling Charge -->
+            <section class="card card--wheeling" id="wheelingCard">
+                <div class="card-header">
+                    <span class="card-icon">🔗</span>
+                    <h2 class="card-title">Wheel Banked Units to Other Sites</h2>
+                </div>
+                <p class="card-subtitle" style="margin-left: 0;">
+                    Transfer your surplus banked export units to another KSEB connection to offset its bill. A distribution loss and a wheeling charge apply.
+                </p>
+
+                <div class="field-grid field-grid--2">
+                    <div class="field">
+                        <label for="isWheeling">Enable Wheeling?</label>
+                        <select id="isWheeling" name="isWheeling">
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="wheelingSitesWrapper" style="display: none; margin-top: 14px;">
+                    <div id="wheelingSitesContainer"></div>
+                    <button type="button" id="addWheelingSiteButton" class="add-site-button">+ Add Wheeling Site</button>
+                </div>
+            </section>
+
             <div class="calc-button-container">
                 <button type="submit" class="calc-button">Calculate Bill</button>
                 <button type="button" id="resetButton" class="reset-button">Reset</button>
@@ -327,6 +354,7 @@
         </div>
         <div id="billChart" class="result"></div>
         <div id="billAnalysis" class="result"></div>
+        <div id="wheelingBreakdown" class="result"></div>
         <div id="result" class="result"></div>
         <div id="result1" class="result"></div>
         <div id="result2" class="result"></div>

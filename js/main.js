@@ -6,10 +6,13 @@ import { computeBill, BILL_ERRORS } from './calculator.js';
 import { renderBillResults } from './render-results.js';
 import { getRandomQuote } from './quotes.js';
 import { initReadingGroups } from './reading-inputs.js';
+import { initWheelingUI } from './wheeling-ui.js';
+import { computeWheelingResult } from './wheeling-calculator.js';
 
 const resetReadingGroups = initReadingGroups();
+const wheelingUI = initWheelingUI();
 
-const RESULT_PANEL_IDS = ['billChart', 'billAnalysis', 'result', 'result1', 'result2', 'result3', 'result4', 'result6'];
+const RESULT_PANEL_IDS = ['billChart', 'billAnalysis', 'wheelingBreakdown', 'result', 'result1', 'result2', 'result3', 'result4', 'result6'];
 
 function num(id) {
     return parseFloat(document.getElementById(id).value) || 0;
@@ -105,6 +108,18 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
         return;
     }
 
+    if (wheelingUI.isEnabled()) {
+        const wheelingResult = computeWheelingResult(bill.accountBalance, wheelingUI.getSites());
+        if (wheelingResult.sites.length > 0) {
+            bill.wheelingResult = wheelingResult;
+            bill.totalBillAmount = Math.round((bill.totalBillAmount + wheelingResult.wheelingCharge) * 100) / 100;
+            // accountBalance is "what carries forward as banked units" --
+            // after wheeling, that's whatever's left post-loss, not the
+            // pre-wheeling surplus.
+            bill.accountBalance = wheelingResult.finalBankBalance;
+        }
+    }
+
     const panels = renderBillResults(bill);
     RESULT_PANEL_IDS.forEach((id) => {
         document.getElementById(id).innerHTML = panels[id];
@@ -185,6 +200,7 @@ applyBillHandoff();
 document.getElementById('resetButton').addEventListener('click', function () {
     document.getElementById('billCalculator').reset();
     resetReadingGroups();
+    wheelingUI.reset();
     hideResultPanels();
 
     document.getElementById('bankedUnitSection').style.display =

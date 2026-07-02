@@ -56,3 +56,33 @@ export const METER_RENT = {
 
 export const DUTY_RATE = 0.10;
 export const FUEL_SURCHARGE_PER_UNIT = 0.02; // 2 paise/unit, w.e.f. 01-Jun-2026
+
+// Wheeling: transferring banked export units to another KSEB connection to
+// offset its bill. Distribution loss % depends on whether the receiving
+// site shares a transformer with the generation site; the wheeling charge
+// is billed on both the units actually transferred AND the units lost in
+// transit (see js/wheeling-calculator.js).
+export const DIST_LOSS_SAME_TRANSFORMER = 4.99; // %
+export const DIST_LOSS_DIFFERENT_TRANSFORMER = 7.14; // %
+export const WHEELING_RATE_PER_UNIT = 0.64; // Rs per unit
+
+// LT7A/LT7B commercial tariffs, used only for wheeled sites (a wheeled site
+// may be a different connection type than the prosumer's own LT-I(a)
+// domestic connection above). Flat lookup only -- unlike TELESCOPIC_SLABS,
+// the whole quantity bills at a single rate chosen by which band the total
+// falls in, same shape as NON_TELESCOPIC_SLABS.
+export const LT7A_SLABS = [
+    { maxUnits: 100, rate: 6.05 },
+    { maxUnits: 200, rate: 6.80 },
+    { maxUnits: 300, rate: 7.50 },
+    { maxUnits: 500, rate: 8.15 },
+    { maxUnits: Infinity, rate: 9.40 },
+];
+
+export const LT7B_SLABS = [
+    { maxUnits: 100, rate: 5.40 },
+    { maxUnits: 200, rate: 6.25 },
+    { maxUnits: 300, rate: 6.90 },
+    { maxUnits: 500, rate: 8.15 },
+    { maxUnits: Infinity, rate: 9.40 },
+];

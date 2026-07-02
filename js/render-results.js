@@ -16,6 +16,7 @@ import {
 } from './render-tables.js';
 import { renderBillBreakdownChart, renderTodComparisonChart } from './render-chart.js';
 import { renderBillAnalysis } from './render-insights.js';
+import { renderWheelingResult } from './render-wheeling.js';
 
 const SOLAR_DIARY_PROMO_HTML = `
                     <p style="font-size: 16px; color: #333; line-height: 1.8; margin: 15px 0 0; background: linear-gradient(90deg, #fff3e0, #e6fffa); padding: 10px; border-radius: 5px; font-weight: bold; animation: glow 1.5s ease-in-out infinite alternate;">
@@ -87,6 +88,12 @@ function buildBillSummaryTable(bill) {
                             <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(monthlyFuelSurcharge || 0).toFixed(2)}</strong></td>
                         </tr>` : '';
 
+    const wheelingRow = bill.wheelingResult && bill.wheelingResult.wheelingCharge > 0 ? `
+                        <tr style="background-color: #efecfb;">
+                            <td style="border: 1px solid #ddd; padding: 10px;">Wheeling Charge<br>(to ${bill.wheelingResult.sites.length} site${bill.wheelingResult.sites.length > 1 ? 's' : ''})</td>
+                            <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #4a3aa7;"><strong>₹${bill.wheelingResult.wheelingCharge.toFixed(2)}</strong></td>
+                        </tr>` : '';
+
     return `
              <h4 style="position: absolute; left: 50%; transform: translateX(-50%); color: #2c3e50; margin-bottom: 10px; text-align: center;"><u>Bill Summary</u></h4>
             <div style="overflow-x: auto; margin: 20px 0;">
@@ -110,7 +117,7 @@ function buildBillSummaryTable(bill) {
                         <tr style="background-color: #ecf0f1;">
                             <td style="border: 1px solid #ddd; padding: 10px;">Meter Rent</td>
                             <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(meterRent || 0).toFixed(2)}</strong></td>
-                        </tr>${detailRows}
+                        </tr>${detailRows}${wheelingRow}
                         <tr style="background: linear-gradient(90deg, #2ecc71, #27ae60); color: white;">
                             <td style="border: 1px solid #27ae60; padding: 10px; font-weight: bold; border-bottom-left-radius: 8px;">Total Bill Amount</td>
                             <td style="border: 1px solid #27ae60; padding: 10px; text-align: right; font-weight: bold; border-bottom-right-radius: 8px;">₹${(totalBillAmount || 0).toFixed(2)}</td>
@@ -484,11 +491,13 @@ export function renderBillResults(bill) {
 
     const billChart = renderBillBreakdownChart(bill) + renderTodComparisonChart(bill);
     const billAnalysis = renderBillAnalysis(bill);
+    const wheelingBreakdown = renderWheelingResult(bill.wheelingResult);
 
     return {
         billInfo,
         billChart,
         billAnalysis,
+        wheelingBreakdown,
         result: panels.result,
         result1: panels.result1,
         result2: panels.result2,
