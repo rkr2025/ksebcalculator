@@ -55,7 +55,7 @@
                 <label for="billingType">Billing Type:</label>
                 <select id="billingType" name="billingType">
                     <option value="normal">Normal</option>
-                    <option value="tod">ToD</option>
+                    <option value="tod" selected>ToD</option>
                 </select>
             </div>
             <div class="phase-group">
@@ -68,7 +68,7 @@
         </div>
 
         <!-- Connected Load stays separate as it’s conditional -->
-        <div class="load-section" id="connectedLoadContainer" style="display: none;">
+        <div class="load-section" id="connectedLoadContainer" style="display: block;">
             <div class="phase-group">
                 <label for="load">Connected Load (for ToD):</label>
                 <select id="load" name="load">
@@ -85,7 +85,7 @@
         </div>
 
             <!-- Normal Billing Solar Reading Inputs -->
-            <div class="normal-section" id="normalBillingSection">
+            <div class="normal-section" id="normalBillingSection" style="display: none;">
                 <label style="margin-top: 5px;">
                     <span class="label-prefix">Solar Generation: (kWh)</span>
                 </label>
@@ -97,7 +97,7 @@
             </div>
 
             <!-- ToD Billing Solar Reading Inputs -->
-            <div class="solar-section" id="todBillingSection" style="display: none;">
+            <div class="solar-section" id="todBillingSection" style="display: block;">
                 <label style="margin-top: 30px;color: #28a745; font-weight: bold;">Solar Generation (kWh):</label>
                 <div class="input-group solar-readings">
                     <div class="solar-input">
@@ -125,7 +125,7 @@
             </div>
 
             <!-- Normal Billing KSEB Net Reading Inputs -->
-            <div class="kseb-section" id="normalNetMeterReadingSection">
+            <div class="kseb-section" id="normalNetMeterReadingSection" style="display: none;">
                 <label style="margin-top: 10px;">
                     <span class="label-prefix" style="color: #007BFF; font-weight: bold;">KSEB Net</span>
                     <span class="label-suffix" style="color: #007BFF; font-weight: bold;">Meter Consumption (kWh)</span>
@@ -150,7 +150,7 @@
 
 
             <!-- ToD Billing KSEB Net Reading Inputs -->
-            <div class="billing-section" id="todNetMeterReadingSection" style="display: none;">
+            <div class="billing-section" id="todNetMeterReadingSection" style="display: block;">
                 <label style="margin-top: 20px; color: #007BFF; font-weight: bold;">KSEB Net Meter Consumption (kWh):</label>
                 <div class="input-group tod-readings">
                     <div class="tod-input">
@@ -222,6 +222,6 @@
         <button type="button" id="printButton" style="display: none;">Print</button>
         <a href="#top" id="moveToTop" style="display: none;">Move to Top</a>
     </div>
-    <script src="scripts.js"></script>
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>
