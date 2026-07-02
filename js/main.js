@@ -5,6 +5,7 @@
 import { computeBill, BILL_ERRORS } from './calculator.js';
 import { renderBillResults } from './render-results.js';
 import { getRandomQuote } from './quotes.js';
+import { fetchOnlineQuote } from './quote-service.js';
 import { initReadingGroups } from './reading-inputs.js';
 import { initWheelingUI } from './wheeling-ui.js';
 import { computeWheelingResult } from './wheeling-calculator.js';
@@ -216,15 +217,29 @@ document.getElementById('printButton').addEventListener('click', function () {
 });
 
 function updateCurrentDateTime() {
-    const currentDateTimeElement = document.getElementById('current-date-time');
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
-    currentDateTimeElement.textContent = new Date().toLocaleString('en-US', options);
+    const clockTimeElement = document.getElementById('clockTime');
+    const clockDateElement = document.getElementById('clockDate');
+    const now = new Date();
+
+    const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    clockTimeElement.innerHTML = timeString.replace(/:/g, '<span class="digital-clock-colon">:</span>');
+
+    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    clockDateElement.textContent = now.toLocaleDateString('en-US', dateOptions);
 }
 
 document.addEventListener('DOMContentLoaded', function () {
     updateCurrentDateTime();
     setInterval(updateCurrentDateTime, 1000);
 
+    // Show a static quote immediately (instant, no network wait), then
+    // swap it for a live motivational quote if one arrives in time. Any
+    // fetch failure just leaves the static quote in place.
     const quoteElement = document.getElementById('quote');
     quoteElement.textContent = getRandomQuote();
+    fetchOnlineQuote().then((onlineQuote) => {
+        if (onlineQuote) {
+            quoteElement.textContent = onlineQuote;
+        }
+    });
 });

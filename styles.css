@@ -64,23 +64,73 @@ body {
   position: relative;
 }
 
+/* ---------------------------------- Digital clock ----------------------- */
+
+.digital-clock {
+  background: linear-gradient(160deg, #0c1826, #16273d 60%, #0e1c2e);
+  border-radius: var(--radius-lg);
+  padding: 16px 12px 14px;
+  margin-bottom: 14px;
+  text-align: center;
+  box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.digital-clock::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.025) 0px,
+    rgba(255, 255, 255, 0.025) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
+}
+
+.digital-clock-time {
+  font-family: "Share Tech Mono", "Courier New", monospace;
+  font-size: clamp(22px, 7.2vw, 44px);
+  font-weight: 400;
+  letter-spacing: clamp(0.5px, 0.7vw, 4px);
+  color: #5fe0ff;
+  text-shadow: 0 0 6px rgba(95, 224, 255, 0.7), 0 0 20px rgba(95, 224, 255, 0.35);
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.digital-clock-colon {
+  animation: digital-clock-blink 1s step-start infinite;
+}
+
+.digital-clock-date {
+  margin-top: 4px;
+  font-family: "Share Tech Mono", "Courier New", monospace;
+  font-size: clamp(10px, 2.6vw, 13px);
+  letter-spacing: clamp(0.5px, 0.4vw, 2px);
+  text-transform: uppercase;
+  color: #7ba3c4;
+  white-space: nowrap;
+}
+
+@keyframes digital-clock-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
 /* ---------------------------------- Header ---------------------------- */
 
 .header-container {
   display: flex;
   flex-wrap: nowrap;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   gap: 10px;
   margin-bottom: 14px;
-}
-
-.date-time {
-  font-size: 12px;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .extra-apps-link {

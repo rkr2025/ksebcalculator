@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solar Prosumers Electricity Bill Calculator</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-JFG7JRVYNV"></script>
     <script>
@@ -18,8 +18,12 @@
 </head>
 <body>
     <div class="container">
+        <div class="digital-clock" id="digitalClock">
+            <div class="digital-clock-time" id="clockTime">--:--:--</div>
+            <div class="digital-clock-date" id="clockDate">&nbsp;</div>
+        </div>
+
         <div class="header-container">
-            <div id="current-date-time" class="date-time"></div>
             <a href="tools.html" class="extra-apps-link">Solar Diary</a>
         </div>
 
