@@ -6,6 +6,8 @@
    ========================================================================== */
 
 :root {
+  color-scheme: light;
+
   --primary: #2a78d6;
   --primary-dark: #1f5fac;
   --primary-light: #eaf2fc;
@@ -40,6 +42,51 @@
 
   --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px rgba(16, 24, 40, 0.08);
   --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.08);
+
+  --icon-tint-base: white;
+}
+
+/* Dark theme -- same tokens, re-picked for a dark surface (not just an
+   inverted light palette). Category hues are brightened slightly so they
+   still read clearly against the darker backgrounds; result-panel content
+   from render-*.js keeps its own light card styling either way (those
+   panels carry full inline styles, including the validated chart palette,
+   which is out of scope here -- see js/render-chart.js). */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --primary: #5b9ee8;
+  --primary-dark: #86b9ee;
+  --primary-light: #16324f;
+
+  --solar: #33d497;
+  --solar-light: #123527;
+
+  --import: #f2726f;
+  --import-light: #3a1e1d;
+
+  --export: #3ecf5f;
+  --export-light: #123018;
+
+  --bank: #9a8bec;
+  --bank-light: #292048;
+
+  --load: #f2a94a;
+  --load-light: #3a2a11;
+
+  --page-bg: #0f1420;
+  --surface: #1a2130;
+  --surface-muted: #232b3d;
+  --border: #313b52;
+
+  --text-primary: #eef1f8;
+  --text-secondary: #b7c0d3;
+  --text-muted: #8792a8;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+
+  --icon-tint-base: #0f1420;
 }
 
 * {
@@ -48,6 +95,13 @@
 
 html {
   scroll-behavior: smooth;
+}
+
+body,
+.card,
+.result,
+#billDetails {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 body {
@@ -127,10 +181,21 @@ body {
 .header-container {
   display: flex;
   flex-wrap: nowrap;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   gap: 10px;
   margin-bottom: 14px;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.theme-toggle-icon {
+  font-size: 13px;
+  line-height: 1;
 }
 
 .extra-apps-link {
@@ -266,7 +331,7 @@ h1 {
   height: 32px;
   border-radius: 9px;
   font-size: 16px;
-  background: color-mix(in srgb, var(--card-accent, var(--primary)) 14%, white);
+  background: color-mix(in srgb, var(--card-accent, var(--primary)) 14%, var(--icon-tint-base));
   flex: none;
 }
 
@@ -323,16 +388,20 @@ h1 {
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 14px;
-  background: var(--surface-muted);
+  /* background-color (longhand), not background (shorthand) -- the
+     shorthand would implicitly reset background-repeat/-position/-size to
+     their initial values at this selector's specificity, which beats the
+     base `select` rule's no-repeat and re-tiles its arrow icon. */
+  background-color: var(--surface-muted);
   color: var(--text-primary);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
 .field input:focus,
 .field select:focus {
   outline: none;
   border-color: var(--primary);
-  background: var(--surface);
+  background-color: var(--surface);
   box-shadow: 0 0 0 3px var(--primary-light);
 }
 
@@ -343,6 +412,10 @@ select {
   background-position: right 8px center;
   background-size: 16px;
   padding-right: 30px !important;
+}
+
+:root[data-theme="dark"] select {
+  background-image: url('data:image/svg+xml;utf8,<svg fill="%23b7c0d3" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
 }
 
 /* Import/export accent on individual field labels (ToD readings) */

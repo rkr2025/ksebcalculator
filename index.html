@@ -6,6 +6,19 @@
     <title>Solar Prosumers Electricity Bill Calculator</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- Applies the saved/system theme before first paint, so there's no
+         flash of the light theme while js/main.js (a deferred module)
+         loads. main.js owns the toggle switch itself; this only sets the
+         initial state. -->
+    <script>
+        (function () {
+            var saved = localStorage.getItem('theme');
+            var theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-JFG7JRVYNV"></script>
     <script>
@@ -24,6 +37,14 @@
         </div>
 
         <div class="header-container">
+            <div class="theme-toggle">
+                <span class="theme-toggle-icon">☀️</span>
+                <label class="switch">
+                    <input type="checkbox" id="themeToggle">
+                    <span class="switch-slider"></span>
+                </label>
+                <span class="theme-toggle-icon">🌙</span>
+            </div>
             <a href="tools.html" class="extra-apps-link">Solar Diary</a>
         </div>
 

@@ -464,6 +464,10 @@
         <tbody id="entriesBody"></tbody>
       </table>
     </div>
+    <div class="center" style="margin: 10px 0;">
+      <label for="totalDaysInput" style="font-weight: bold; margin-right: 8px;">Total Number of Days (for Daily Energy usage):</label>
+      <input type="number" id="totalDaysInput" min="1" step="1" value="30" style="width: 80px;">
+    </div>
     <div id="usageInsights"></div>
     <div id="usageAnalysis"></div>
     <div id="estimatedBill"></div>
@@ -572,6 +576,21 @@
       localStorage.setItem("entries", JSON.stringify(entries));
     }
 
+    // "Daily Energy usage" divides by a day count the user enters directly
+    // (#totalDaysInput) rather than one computed automatically -- persisted
+    // across reloads the same way initialReadings/entries are.
+    function getTotalDaysInput() {
+      const input = document.getElementById("totalDaysInput");
+      const days = parseInt(input.value, 10);
+      return days > 0 ? days : null;
+    }
+
+    document.getElementById("totalDaysInput").value = localStorage.getItem("totalDaysForUsage") || 30;
+    document.getElementById("totalDaysInput").addEventListener("input", function () {
+      localStorage.setItem("totalDaysForUsage", this.value);
+      renderEntries();
+    });
+
     function renderEntries() {
       const tbody = document.getElementById("entriesBody");
       const insightsEl = document.getElementById("usageInsights");
@@ -651,14 +670,6 @@
           insightsHTML += `<p class="safe">Good: You have ${difference} units available to use safely this month.</p>`;
         }
 
-        // Daily average needs a start date. Older initial readings saved
-        // before this field existed won't have one -- fall back to the
-        // first entry's timestamp, and skip day-based figures entirely if
-        // neither is available rather than showing a bogus number.
-        const startTimestamp = initialReadings.timestamp || (entries[0] && entries[0].timestamp);
-        const latestTimestamp = lastEntry.timestamp || Date.now();
-        const uniqueDays = startTimestamp ? Math.max(1, Math.round((latestTimestamp - startTimestamp) / 86400000)) : null;
-
         try {
             const directUsage = Math.round(usage.solar - usage.export);
             const totalUsage = Math.round(totalConsumption + (usage.solar - usage.export));
@@ -667,11 +678,12 @@
             insightsHTML += `<p><strong>Direct usage from solar:</strong> ${Math.round(usage.solar)} - ${Math.round(usage.export)} = ${directUsage} units</p>`;
             insightsHTML += `<p><strong>Total Electricity usage for this month (for Fixed Charge):</strong> (${Math.round(usage.t1)} + ${Math.round(usage.t2)} + ${Math.round(usage.t3)}) + (${directUsage}) = ${totalUsage} units</p>`;
 
-            if (uniqueDays) {
-              const dailyUsage = (totalUsage / uniqueDays).toFixed(2);
-              insightsHTML += `<p><strong>Daily Energy usage:</strong> ${totalUsage} / ${uniqueDays} day(s) = ${dailyUsage} units/day</p>`;
+            const totalDays = getTotalDaysInput();
+            if (totalDays) {
+              const dailyUsage = (totalUsage / totalDays).toFixed(2);
+              insightsHTML += `<p><strong>Daily Energy usage:</strong> ${totalUsage} / ${totalDays} day(s) = ${dailyUsage} units/day</p>`;
             } else {
-              insightsHTML += `<p class="advice">Daily Energy usage: unavailable -- re-save your Initial Reading to start tracking dates.</p>`;
+              insightsHTML += `<p class="advice">Daily Energy usage: enter the total number of days above to calculate.</p>`;
             }
         } catch (err) {
             console.error('Error generating usage insights:', err);
@@ -757,7 +769,7 @@
 
         analysisEl.innerHTML = analysisHTML;
 
-        renderEstimatedBill(usage, startTimestamp, latestTimestamp, uniqueDays);
+        renderEstimatedBill(usage, getTotalDaysInput());
       } else {
         document.getElementById('estimatedBill').innerHTML = '';
         document.getElementById('viewFullBreakdownBtn').style.display = 'none';
@@ -817,7 +829,9 @@
         </table>`;
     }
 
-    function renderEstimatedBill(usage, startTimestamp, latestTimestamp, uniqueDays) {
+    const PROJECTION_TARGET_DAYS = 30;
+
+    function renderEstimatedBill(usage, totalDays) {
       const el = document.getElementById('estimatedBill');
       const viewBtn = document.getElementById('viewFullBreakdownBtn');
       let html = '<hr style="margin-top: 20px;"><h4>💰 Estimated Bill</h4>';
@@ -843,30 +857,26 @@
         html += `<p class="note">Note: Connected Load (below vs. above 20kW) only changes your bill when you have surplus export to carry from Normal into Peak hours. With your current readings there's no surplus, so both settings give the same total.</p>`;
       }
 
-      // Project a month-end total by scaling today's usage pattern up to a
-      // full calendar month -- only meaningful once we know how many days
-      // the current readings actually span.
-      if (uniqueDays) {
-        const monthDate = new Date(startTimestamp);
-        const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
-        if (uniqueDays < daysInMonth) {
-          const scale = daysInMonth / uniqueDays;
-          const projectedUsage = {
-            solar: usage.solar * scale,
-            t1: usage.t1 * scale,
-            t2: usage.t2 * scale,
-            t3: usage.t3 * scale,
-            export: usage.export * scale,
-          };
-          const projectedBill = computeBill(billInputsFromUsage(projectedUsage));
-          if (!projectedBill.error) {
-            html += `<div class="projected"><h4>📅 Projected Month-End (at current daily rate)</h4>`;
-            html += billSummaryRows(projectedBill);
-            html += `<p class="note">Projected by scaling ${uniqueDays} day(s) of tracked usage up to ${daysInMonth} days in the month. Actual usage may vary.</p></div>`;
-          }
+      // Project a month-end total using the same daily rate as "Daily
+      // Energy usage" above (total usage / totalDays, the user-entered
+      // #totalDaysInput), scaled to a fixed 30-day month.
+      if (totalDays) {
+        const scale = PROJECTION_TARGET_DAYS / totalDays;
+        const projectedUsage = {
+          solar: usage.solar * scale,
+          t1: usage.t1 * scale,
+          t2: usage.t2 * scale,
+          t3: usage.t3 * scale,
+          export: usage.export * scale,
+        };
+        const projectedBill = computeBill(billInputsFromUsage(projectedUsage));
+        if (!projectedBill.error) {
+          html += `<div class="projected"><h4>📅 Projected Month-End (at current daily rate)</h4>`;
+          html += billSummaryRows(projectedBill);
+          html += `<p class="note">Projected by applying your current daily rate (based on ${totalDays} day(s), from Daily Energy usage above) to a ${PROJECTION_TARGET_DAYS}-day month. Actual usage may vary.</p></div>`;
         }
       } else {
-        html += '<p class="note">Add another entry (or re-save your Initial Reading) to unlock a projected month-end total.</p>';
+        html += '<p class="note">Enter the total number of days above to unlock a projected month-end total.</p>';
       }
 
       el.innerHTML = html;

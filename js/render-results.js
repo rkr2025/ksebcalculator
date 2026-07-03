@@ -17,6 +17,9 @@ import {
 import { renderBillBreakdownChart, renderTodComparisonChart } from './render-chart.js';
 import { renderBillAnalysis } from './render-insights.js';
 import { renderWheelingResult } from './render-wheeling.js';
+import { FUEL_SURCHARGE_PER_UNIT } from './tariff-rates.js';
+
+const FUEL_SURCHARGE_PAISE_LABEL = `${Math.round(FUEL_SURCHARGE_PER_UNIT * 100)}ps`;
 
 const SOLAR_DIARY_PROMO_HTML = `
                     <p style="font-size: 16px; color: #333; line-height: 1.8; margin: 15px 0 0; background: linear-gradient(90deg, #fff3e0, #e6fffa); padding: 10px; border-radius: 5px; font-weight: bold; animation: glow 1.5s ease-in-out infinite alternate;">
@@ -48,15 +51,12 @@ const SOLAR_DIARY_PROMO_HTML = `
 const ENDING_NOTE_HTML = `
     <div style="background: linear-gradient(135deg, #ffffff, #f2f4f8); padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); margin: 20px auto; max-width: 90%; font-family: 'Georgia', serif; border-left: 4px solid #2ecc71;">
         <p style="font-size: 14px; color: #2c3e50; line-height: 1.6; margin: 0;">
-            <strong style="color: #e67e22;">Tariff Notice:</strong> Tariffs (effective from <span style="font-style: italic;">1/04/2025</span>) are subject to change. For the latest rates, please refer to <span style="color: #3498db; font-weight: bold;">KSEB official sources</span>.
+            <strong style="color: #e67e22;">Rates:</strong> Tariffs (effective 1/04/2025) are subject to change. For reference only; consult official <span style="color: #3498db; font-weight: bold;">KSEB</span> sources for authoritative, accurate details.
         </p>
         <p style="font-size: 14px; color: #333; line-height: 1.8; margin: 15px 0 0;">
-            <strong style="color: #27ae60;">Need Assistance?</strong> If you notice any discrepancies in the calculations, require additional options, or need updates due to calculation mistakes, feel free to contact us at
-            <a href="mailto:calculatoronline2024@gmail.com" style="color: #2ecc71; font-style: italic; text-decoration: none; transition: color 0.3s ease;">calculatoronline2024@gmail.com</a>
-        </p>
-        <p style="font-size: 13px; color: #666; margin-top: 10px; line-height: 1.6;">
-            <em>Note:</em> This information is provided for reference only. For accurate and official details, consult <span style="color: #3498db;">KSEB</span> or other authoritative sources.
-            <span style="display: block; margin-top: 5px; font-size: 12px; color: #888;">(Version 3.0.01: Last updated: 03-July-2026) </span>
+            <strong style="color: #27ae60;">Support:</strong> For calculation discrepancies, mistakes, or additional options, contact
+            <a href="mailto:calculatoronline2024@gmail.com" style="color: #2ecc71; font-style: italic; text-decoration: none; transition: color 0.3s ease;">calculatoronline2024@gmail.com</a>.
+            <span style="display: block; margin-top: 8px; font-size: 12px; color: #888;">(Version 3.0.05: Last updated: 03-July-2026) </span>
         </p>
     </div>
 `;
@@ -84,7 +84,7 @@ function buildBillSummaryTable(bill) {
                             <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(duty || 0).toFixed(2)}</strong></td>
                         </tr>
                         <tr style="background-color: #ecf0f1;">
-                            <td style="border: 1px solid #ddd; padding: 10px;">Monthly Fuel Surcharge<br>(Consumption: ${bankAdjustedUnitsToUse.toFixed(2)} Unit x 2ps)</td>
+                            <td style="border: 1px solid #ddd; padding: 10px;">Monthly Fuel Surcharge<br>(Consumption: ${bankAdjustedUnitsToUse.toFixed(2)} Unit x ${FUEL_SURCHARGE_PAISE_LABEL})</td>
                             <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(monthlyFuelSurcharge || 0).toFixed(2)}</strong></td>
                         </tr>` : '';
 

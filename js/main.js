@@ -13,6 +13,22 @@ import { computeWheelingResult } from './wheeling-calculator.js';
 const resetReadingGroups = initReadingGroups();
 const wheelingUI = initWheelingUI();
 
+// Theme toggle. The initial dark/light state is already applied by the
+// inline script in index.html's <head> (before first paint, to avoid a
+// flash of the wrong theme) -- this just syncs the switch to match and
+// wires up future changes.
+const themeToggle = document.getElementById('themeToggle');
+themeToggle.checked = document.documentElement.getAttribute('data-theme') === 'dark';
+themeToggle.addEventListener('change', function () {
+    if (this.checked) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'light');
+    }
+});
+
 const RESULT_PANEL_IDS = ['billChart', 'billAnalysis', 'wheelingBreakdown', 'result', 'result1', 'result2', 'result3', 'result4', 'result6'];
 
 function num(id) {

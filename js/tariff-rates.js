@@ -55,7 +55,7 @@ export const METER_RENT = {
 };
 
 export const DUTY_RATE = 0.10;
-export const FUEL_SURCHARGE_PER_UNIT = 0.02; // 2 paise/unit, w.e.f. 01-Jun-2026
+export const FUEL_SURCHARGE_PER_UNIT = 0.00;
 
 // Wheeling: transferring banked export units to another KSEB connection to
 // offset its bill. Distribution loss % depends on whether the receiving
