@@ -4,8 +4,12 @@
 // resolves to null rather than throwing, so main.js can just fall back to
 // the bundled static list (quotes.js) with no special-casing. No DOM
 // access here -- this only fetches and validates data.
-
-const QUOTE_API_URL = 'https://zenquotes.io/api/random';
+//
+// zenquotes.io does not send Access-Control-Allow-Origin for browser
+// requests (their free API is documented as server-side-only), so it
+// always fails here with a CORS error -- dummyjson.com's quotes endpoint
+// returns a compatible {quote, author} shape and does support CORS.
+const QUOTE_API_URL = 'https://dummyjson.com/quotes/random';
 const FETCH_TIMEOUT_MS = 4000;
 const MAX_QUOTE_LENGTH = 300;
 
