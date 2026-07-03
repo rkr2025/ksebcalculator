@@ -56,7 +56,7 @@ const ENDING_NOTE_HTML = `
         </p>
         <p style="font-size: 13px; color: #666; margin-top: 10px; line-height: 1.6;">
             <em>Note:</em> This information is provided for reference only. For accurate and official details, consult <span style="color: #3498db;">KSEB</span> or other authoritative sources.
-            <span style="display: block; margin-top: 5px; font-size: 12px; color: #888;">(Version 3.0.00: Last updated: 02-July-2026) </span>
+            <span style="display: block; margin-top: 5px; font-size: 12px; color: #888;">(Version 3.0.01: Last updated: 03-July-2026) </span>
         </p>
     </div>
 `;
