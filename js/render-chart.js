@@ -17,8 +17,8 @@ const COLOR = {
     red: '#e34948',
 };
 
-const TEXT_SECONDARY = '#52514e';
-const TEXT_MUTED = '#898781';
+const TEXT_SECONDARY = 'var(--text-secondary)';
+const TEXT_MUTED = 'var(--text-muted)';
 
 function money(n) {
     return `₹${n.toFixed(2)}`;
@@ -36,18 +36,18 @@ const CHART_STYLE = `
         .bd-segment rect { transition: filter 0.15s ease; cursor: default; }
         .bd-segment:hover rect, .bd-segment:focus rect { filter: brightness(1.12); }
         .bd-segment:focus { outline: none; }
-        .bd-segment:focus rect { stroke: #0b0b0b; stroke-width: 1.5; }
+        .bd-segment:focus rect { stroke: var(--text-primary); stroke-width: 1.5; }
         .bd-legend { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 12px; font-size: 13px; }
         .bd-legend-item { display: flex; align-items: center; gap: 6px; color: ${TEXT_SECONDARY}; }
         .bd-swatch { width: 10px; height: 10px; border-radius: 2px; flex: none; }
-        .bd-legend-value { color: #0b0b0b; font-weight: 600; margin-left: 2px; }
+        .bd-legend-value { color: var(--text-primary); font-weight: 600; margin-left: 2px; }
         .bd-legend-pct { color: ${TEXT_MUTED}; }
         .tod-bars { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
         .tod-bar-row { display: grid; grid-template-columns: 130px 1fr auto; align-items: center; gap: 10px; font-size: 13px; }
         .tod-bar-label { color: ${TEXT_SECONDARY}; }
-        .tod-bar-track { background: #e1e0d9; border-radius: 4px; height: 20px; overflow: hidden; }
+        .tod-bar-track { background: var(--surface-muted); border-radius: 4px; height: 20px; overflow: hidden; }
         .tod-bar-fill { display: block; height: 100%; border-radius: 4px; min-width: 2px; }
-        .tod-bar-value { color: #0b0b0b; font-weight: 600; text-align: right; white-space: nowrap; }
+        .tod-bar-value { color: var(--text-primary); font-weight: 600; text-align: right; white-space: nowrap; }
         @media (max-width: 600px) {
             .tod-bar-row { grid-template-columns: 90px 1fr auto; font-size: 12px; }
         }

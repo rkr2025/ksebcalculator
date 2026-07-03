@@ -4,7 +4,7 @@
 // (renderInfoTable) plus small row-data builders -- the rendered HTML is
 // unchanged, only the duplication is gone.
 
-const CELL = 'border: 1px solid #ddd; padding: 6px;';
+const CELL = 'border: 1px solid var(--border); padding: 6px;';
 const CELL_RIGHT = `${CELL} text-align: right;`;
 
 const green = (html) => `<strong class="green-text">${html}</strong>`;
@@ -27,9 +27,9 @@ function renderInfoTable(title, rows) {
         <div style="overflow-x: auto; margin: 20px 0;">
           <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px;">
             <thead>
-              <tr style="background-color: #f2f2f2;">
-                <th style="border: 1px solid #ddd; padding: 6px; text-align: left; width: 60%;">Description</th>
-                <th style="border: 1px solid #ddd; padding: 6px; text-align: right; width: 40%;">Details</th>
+              <tr style="background-color: var(--surface-muted);">
+                <th style="border: 1px solid var(--border); padding: 6px; text-align: left; width: 60%;">Description</th>
+                <th style="border: 1px solid var(--border); padding: 6px; text-align: right; width: 40%;">Details</th>
               </tr>
             </thead>
             <tbody>${rowsHtml}
@@ -48,26 +48,26 @@ function renderInfoTable(title, rows) {
 
 export function getHeaderMessage({ importNormal, importPeak, importOffPeak, exportNormal, myBankDepositAtKseb }) {
     const rows = [
-        ['#e6ffe6', 'Normal Hours Import <span style="font-style: italic; color: #666;">(6am to 6pm)</span>', '#008000', unit(importNormal)],
-        ['#fff0e6', 'Peak Hours Import <span style="font-style: italic; color: #666;">(6pm to 10pm)</span>', '#ff4500', unit(importPeak)],
-        ['#e6f2ff', 'Off-Peak Import <span style="font-style: italic; color: #666;">(10pm to 6am)</span>', '#1e90ff', unit(importOffPeak)],
-        ['#f0f0ff', 'Normal Hour Export', '#0000cd', unit(exportNormal)],
-        ['#f2e6ff', 'Banked Units', '#800080', unit(myBankDepositAtKseb)],
-    ].map(([bg, label, color, value]) => `
-                    <tr style="background-color: ${bg};">
-                        <td style="border: 1px solid #ddd; padding: 8px;">${label}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px; text-align: right; color: ${color};"><strong>${value}</strong></td>
+        ['var(--export)', 'Normal Hours Import <span style="font-style: italic; color: var(--text-muted);">(6am to 6pm)</span>', unit(importNormal)],
+        ['var(--load)', 'Peak Hours Import <span style="font-style: italic; color: var(--text-muted);">(6pm to 10pm)</span>', unit(importPeak)],
+        ['var(--primary)', 'Off-Peak Import <span style="font-style: italic; color: var(--text-muted);">(10pm to 6am)</span>', unit(importOffPeak)],
+        ['var(--bank)', 'Normal Hour Export', unit(exportNormal)],
+        ['var(--import)', 'Banked Units', unit(myBankDepositAtKseb)],
+    ].map(([color, label, value]) => `
+                    <tr style="background-color: color-mix(in srgb, ${color} 14%, var(--surface));">
+                        <td style="border: 1px solid var(--border); padding: 8px;">${label}</td>
+                        <td style="border: 1px solid var(--border); padding: 8px; text-align: right; color: ${color};"><strong>${value}</strong></td>
                     </tr>`).join('');
 
     return `
         <hr>
-        <h5 style="text-align: center; color: #333;"><u><strong>ToD Billing Based on T1, T2, T3 (w.e.f 01-02-2025)</strong></u></h5>
+        <h5 style="text-align: center; color: var(--text-primary);"><u><strong>ToD Billing Based on T1, T2, T3 (w.e.f 01-02-2025)</strong></u></h5>
         <div style="overflow-x: auto; margin: 20px 0;">
             <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                 <thead>
-                    <tr style="background-color: #f2f2f2; color: #333;">
-                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left; width: 60%;">Description</th>
-                        <th style="border: 1px solid #ddd; padding: 8px; text-align: right; width: 40%;">Details</th>
+                    <tr style="background-color: var(--surface-muted); color: var(--text-primary);">
+                        <th style="border: 1px solid var(--border); padding: 8px; text-align: left; width: 60%;">Description</th>
+                        <th style="border: 1px solid var(--border); padding: 8px; text-align: right; width: 40%;">Details</th>
                     </tr>
                 </thead>
                 <tbody>${rows}
@@ -320,37 +320,37 @@ export function getEnergyCaluculationMessage({
         <div style="overflow-x: auto; margin: 20px 0;">
             <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px;">
                 <thead>
-                    <tr style="background-color: #f2f2f2;">
-                        <th style="border: 1px solid #ddd; padding: 6px; text-align: left; width: 40%;">Description</th>
-                        <th style="border: 1px solid #ddd; padding: 6px; text-align: right; width: 20%;">Units</th>
-                        <th style="border: 1px solid #ddd; padding: 6px; text-align: right; width: 20%;">Rate</th>
-                        <th style="border: 1px solid #ddd; padding: 6px; text-align: right; width: 20%;">Charge (₹)</th>
+                    <tr style="background-color: var(--surface-muted);">
+                        <th style="border: 1px solid var(--border); padding: 6px; text-align: left; width: 40%;">Description</th>
+                        <th style="border: 1px solid var(--border); padding: 6px; text-align: right; width: 20%;">Units</th>
+                        <th style="border: 1px solid var(--border); padding: 6px; text-align: right; width: 20%;">Rate</th>
+                        <th style="border: 1px solid var(--border); padding: 6px; text-align: right; width: 20%;">Charge (₹)</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td style="border: 1px solid #ddd; padding: 6px;">Normal TimeZone (90%)</td>
-                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)}</td>
-                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${(unitRate * 0.9).toFixed(2)}</td>
-                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${red(NormalConsumptionAdjusted_energy_charge.toFixed(2))}</td>
+                        <td style="border: 1px solid var(--border); padding: 6px;">Normal TimeZone (90%)</td>
+                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)}</td>
+                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${(unitRate * 0.9).toFixed(2)}</td>
+                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${red(NormalConsumptionAdjusted_energy_charge.toFixed(2))}</td>
                     </tr>
                     <tr>
-                        <td style="border: 1px solid #ddd; padding: 6px;">Peak TimeZone (125%)</td>
-                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${Peak_NoOfUnitsFor_energy_calculation.toFixed(2)}</td>
-                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${(unitRate * 1.25).toFixed(2)}</td>
-                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${red(PeakConsumptionAdjusted_energy_charge.toFixed(2))}</td>
+                        <td style="border: 1px solid var(--border); padding: 6px;">Peak TimeZone (125%)</td>
+                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${Peak_NoOfUnitsFor_energy_calculation.toFixed(2)}</td>
+                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${(unitRate * 1.25).toFixed(2)}</td>
+                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${red(PeakConsumptionAdjusted_energy_charge.toFixed(2))}</td>
                     </tr>
                     <tr>
-                        <td style="border: 1px solid #ddd; padding: 6px;">Off-Peak TimeZone (100%)</td>
-                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${OffPeak_NoOfUnitsFor_energy_calculation.toFixed(2)}</td>
-                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${unitRate.toFixed(2)}</td>
-                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${red(OffPeakConsumptionAdjusted_energy_charge.toFixed(2))}</td>
+                        <td style="border: 1px solid var(--border); padding: 6px;">Off-Peak TimeZone (100%)</td>
+                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${OffPeak_NoOfUnitsFor_energy_calculation.toFixed(2)}</td>
+                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${unitRate.toFixed(2)}</td>
+                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${red(OffPeakConsumptionAdjusted_energy_charge.toFixed(2))}</td>
                     </tr>
-                    <tr style="background-color: #f9f9f9;">
-                        <td style="border: 1px solid #ddd; padding: 6px;"><strong>Total Energy Consumption</strong></td>
-                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong>${bankAdjustedUnits.toFixed(2)}</strong></td>
-                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">-</td>
-                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${red(energyCharge.toFixed(2))}</td>
+                    <tr style="background-color: var(--surface-muted);">
+                        <td style="border: 1px solid var(--border); padding: 6px;"><strong>Total Energy Consumption</strong></td>
+                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong>${bankAdjustedUnits.toFixed(2)}</strong></td>
+                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">-</td>
+                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${red(energyCharge.toFixed(2))}</td>
                     </tr>
                 </tbody>
             </table>

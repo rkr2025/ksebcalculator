@@ -22,7 +22,7 @@ import { FUEL_SURCHARGE_PER_UNIT } from './tariff-rates.js';
 const FUEL_SURCHARGE_PAISE_LABEL = `${Math.round(FUEL_SURCHARGE_PER_UNIT * 100)}ps`;
 
 const SOLAR_DIARY_PROMO_HTML = `
-                    <p style="font-size: 16px; color: #333; line-height: 1.8; margin: 15px 0 0; background: linear-gradient(90deg, #fff3e0, #e6fffa); padding: 10px; border-radius: 5px; font-weight: bold; animation: glow 1.5s ease-in-out infinite alternate;">
+                    <p style="font-size: 16px; color: var(--text-secondary); line-height: 1.8; margin: 15px 0 0; background: var(--surface-muted); padding: 10px; border-radius: 5px; font-weight: bold; animation: glow 1.5s ease-in-out infinite alternate;">
                         <span style="font-size: 18px; color: #e74c3c;">🌞 New Release:</span> New <a href="solar-diary.html" style="color: #2ecc71; font-style: italic; text-decoration: none; font-weight: bold; position: relative; transition: color 0.3s ease;" class="solar-diary-link">Solar Diary</a> app released! Try it out and track your energy usage.
                     </p>
                     <style>
@@ -49,14 +49,14 @@ const SOLAR_DIARY_PROMO_HTML = `
                     </style>`;
 
 const ENDING_NOTE_HTML = `
-    <div style="background: linear-gradient(135deg, #ffffff, #f2f4f8); padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); margin: 20px auto; max-width: 90%; font-family: 'Georgia', serif; border-left: 4px solid #2ecc71;">
-        <p style="font-size: 14px; color: #2c3e50; line-height: 1.6; margin: 0;">
+    <div style="background: var(--surface-muted); padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); margin: 20px auto; max-width: 90%; font-family: 'Georgia', serif; border-left: 4px solid #2ecc71;">
+        <p style="font-size: 14px; color: var(--text-primary); line-height: 1.6; margin: 0;">
             <strong style="color: #e67e22;">Rates:</strong> Tariffs (effective 1/04/2025) are subject to change. For reference only; consult official <span style="color: #3498db; font-weight: bold;">KSEB</span> sources for authoritative, accurate details.
         </p>
-        <p style="font-size: 14px; color: #333; line-height: 1.8; margin: 15px 0 0;">
+        <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.8; margin: 15px 0 0;">
             <strong style="color: #27ae60;">Support:</strong> For calculation discrepancies, mistakes, or additional options, contact
             <a href="mailto:calculatoronline2024@gmail.com" style="color: #2ecc71; font-style: italic; text-decoration: none; transition: color 0.3s ease;">calculatoronline2024@gmail.com</a>.
-            <span style="display: block; margin-top: 8px; font-size: 12px; color: #888;">(Version 3.0.05: Last updated: 03-July-2026) </span>
+            <span style="display: block; margin-top: 8px; font-size: 12px; color: var(--text-muted);">(Version 3.0.06: Last updated: 03-July-2026) </span>
         </p>
     </div>
 `;
@@ -67,37 +67,37 @@ function buildBillSummaryTable(bill) {
     const bankAdjustedUnitsToUse = bill.bankAdjustedUnits || 0;
 
     const detailRows = bankAdjustedUnitsToUse > 0 ? `
-                        <tr style="background-color: #ffffff;">
-                            <td style="border: 1px solid #ddd; padding: 10px;">No: of Units Consumed<br>(for Energy Calculation)</td>
-                            <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #2ecc71;">${bankAdjustedUnitsToUse.toFixed(2)} Unit</td>
+                        <tr style="background-color: var(--surface);">
+                            <td style="border: 1px solid var(--border); padding: 10px;">No: of Units Consumed<br>(for Energy Calculation)</td>
+                            <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #2ecc71;">${bankAdjustedUnitsToUse.toFixed(2)} Unit</td>
                         </tr>
-                        <tr style="background-color: #ecf0f1;">
-                            <td style="border: 1px solid #ddd; padding: 10px;">Unit Charge</td>
-                            <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #3498db;">₹${(unitRate || 0).toFixed(2)}/Unit</td>
+                        <tr style="background-color: var(--surface-muted);">
+                            <td style="border: 1px solid var(--border); padding: 10px;">Unit Charge</td>
+                            <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #3498db;">₹${(unitRate || 0).toFixed(2)}/Unit</td>
                         </tr>
-                        <tr style="background-color: #ffffff;">
-                            <td style="border: 1px solid #ddd; padding: 10px;">Energy Charge</td>
-                            <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #e74c3c;"><strong>₹${energyChargeToUse.toFixed(2)}</strong></td>
+                        <tr style="background-color: var(--surface);">
+                            <td style="border: 1px solid var(--border); padding: 10px;">Energy Charge</td>
+                            <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #e74c3c;"><strong>₹${energyChargeToUse.toFixed(2)}</strong></td>
                         </tr>
-                        <tr style="background-color: #ecf0f1;">
-                            <td style="border: 1px solid #ddd; padding: 10px;">Duty<br>(10% of Energy Charge)</td>
-                            <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(duty || 0).toFixed(2)}</strong></td>
+                        <tr style="background-color: var(--surface-muted);">
+                            <td style="border: 1px solid var(--border); padding: 10px;">Duty<br>(10% of Energy Charge)</td>
+                            <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(duty || 0).toFixed(2)}</strong></td>
                         </tr>
-                        <tr style="background-color: #ecf0f1;">
-                            <td style="border: 1px solid #ddd; padding: 10px;">Monthly Fuel Surcharge<br>(Consumption: ${bankAdjustedUnitsToUse.toFixed(2)} Unit x ${FUEL_SURCHARGE_PAISE_LABEL})</td>
-                            <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(monthlyFuelSurcharge || 0).toFixed(2)}</strong></td>
+                        <tr style="background-color: var(--surface-muted);">
+                            <td style="border: 1px solid var(--border); padding: 10px;">Monthly Fuel Surcharge<br>(Consumption: ${bankAdjustedUnitsToUse.toFixed(2)} Unit x ${FUEL_SURCHARGE_PAISE_LABEL})</td>
+                            <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(monthlyFuelSurcharge || 0).toFixed(2)}</strong></td>
                         </tr>` : '';
 
     const wheelingRow = bill.wheelingResult && bill.wheelingResult.wheelingCharge > 0 ? `
-                        <tr style="background-color: #efecfb;">
-                            <td style="border: 1px solid #ddd; padding: 10px;">Wheeling Charge<br>(to ${bill.wheelingResult.sites.length} site${bill.wheelingResult.sites.length > 1 ? 's' : ''})</td>
-                            <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #4a3aa7;"><strong>₹${bill.wheelingResult.wheelingCharge.toFixed(2)}</strong></td>
+                        <tr style="background-color: var(--bank-light);">
+                            <td style="border: 1px solid var(--border); padding: 10px;">Wheeling Charge<br>(to ${bill.wheelingResult.sites.length} site${bill.wheelingResult.sites.length > 1 ? 's' : ''})</td>
+                            <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #4a3aa7;"><strong>₹${bill.wheelingResult.wheelingCharge.toFixed(2)}</strong></td>
                         </tr>` : '';
 
     return `
-             <h4 style="position: absolute; left: 50%; transform: translateX(-50%); color: #2c3e50; margin-bottom: 10px; text-align: center;"><u>Bill Summary</u></h4>
+             <h4 style="position: absolute; left: 50%; transform: translateX(-50%); color: var(--text-primary); margin-bottom: 10px; text-align: center;"><u>Bill Summary</u></h4>
             <div style="overflow-x: auto; margin: 20px 0;">
-                <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px; background: linear-gradient(135deg, #ffffff, #f9f9f9); box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 8px;">
+                <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px; background: var(--surface); box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 8px;">
 
                     <thead>
                         <tr style="background: linear-gradient(90deg, #3498db, #2980b9); color: white;">
@@ -106,17 +106,17 @@ function buildBillSummaryTable(bill) {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr style="background-color: #ecf0f1;">
-                            <td style="border: 1px solid #ddd; padding: 10px;">Bill Type</td>
-                            <td style="border: 1px solid #ddd; padding: 10px; text-align: right;"><strong>${billType || 'N/A'}</strong></td>
+                        <tr style="background-color: var(--surface-muted);">
+                            <td style="border: 1px solid var(--border); padding: 10px;">Bill Type</td>
+                            <td style="border: 1px solid var(--border); padding: 10px; text-align: right;"><strong>${billType || 'N/A'}</strong></td>
                         </tr>
-                        <tr style="background-color: #ffffff;">
-                            <td style="border: 1px solid #ddd; padding: 10px;">Fixed Charge</td>
-                            <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(fixedCharge || 0).toFixed(2)}</strong></td>
+                        <tr style="background-color: var(--surface);">
+                            <td style="border: 1px solid var(--border); padding: 10px;">Fixed Charge</td>
+                            <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(fixedCharge || 0).toFixed(2)}</strong></td>
                         </tr>
-                        <tr style="background-color: #ecf0f1;">
-                            <td style="border: 1px solid #ddd; padding: 10px;">Meter Rent</td>
-                            <td style="border: 1px solid #ddd; padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(meterRent || 0).toFixed(2)}</strong></td>
+                        <tr style="background-color: var(--surface-muted);">
+                            <td style="border: 1px solid var(--border); padding: 10px;">Meter Rent</td>
+                            <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(meterRent || 0).toFixed(2)}</strong></td>
                         </tr>${detailRows}${wheelingRow}
                         <tr style="background: linear-gradient(90deg, #2ecc71, #27ae60); color: white;">
                             <td style="border: 1px solid #27ae60; padding: 10px; font-weight: bold; border-bottom-left-radius: 8px;">Total Bill Amount</td>
@@ -151,43 +151,43 @@ function buildNormalBillingResult(bill) {
             <div style="overflow-x: auto; margin: 16px 0;">
                 <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px;">
                     <thead>
-                        <tr style="background-color: #f2f2f2;">
-                            <th style="border: 1px solid #ddd; padding: 6px; text-align: left; width: 60%;">Description</th>
-                            <th style="border: 1px solid #ddd; padding: 6px; text-align: right; width: 40%;">Details</th>
+                        <tr style="background-color: var(--surface-muted);">
+                            <th style="border: 1px solid var(--border); padding: 6px; text-align: left; width: 60%;">Description</th>
+                            <th style="border: 1px solid var(--border); padding: 6px; text-align: right; width: 40%;">Details</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">Total Solar Generation</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="green-text">${solarGeneration} Unit</strong></td>
+                            <td style="border: 1px solid var(--border); padding: 6px;">Total Solar Generation</td>
+                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="green-text">${solarGeneration} Unit</strong></td>
                         </tr>
                         <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">  Total Import</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${importReading} Unit</td>
+                            <td style="border: 1px solid var(--border); padding: 6px;">  Total Import</td>
+                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${importReading} Unit</td>
                         </tr>
                         <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">  Total Export</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${exportReading} Unit</td>
+                            <td style="border: 1px solid var(--border); padding: 6px;">  Total Export</td>
+                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${exportReading} Unit</td>
                         </tr>
                         <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">Banked Units</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${myBankDepositAtKseb} Unit</td>
+                            <td style="border: 1px solid var(--border); padding: 6px;">Banked Units</td>
+                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${myBankDepositAtKseb} Unit</td>
                         </tr>
                         <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">Direct energy usage from Solar<br>(SolarGeneration(${solarGeneration}) - Export(${exportReading}))</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="red-text">${generationUsage} Unit</strong></td>
+                            <td style="border: 1px solid var(--border); padding: 6px;">Direct energy usage from Solar<br>(SolarGeneration(${solarGeneration}) - Export(${exportReading}))</td>
+                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="red-text">${generationUsage} Unit</strong></td>
                         </tr>
                         <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">Energy Usage from KSEB</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="red-text">${importReading} Unit</strong></td>
+                            <td style="border: 1px solid var(--border); padding: 6px;">Energy Usage from KSEB</td>
+                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="red-text">${importReading} Unit</strong></td>
                         </tr>
-                        <tr style="background-color: #f9f9f9;">
-                            <td style="border: 1px solid #ddd; padding: 6px;">Total Consumption<br>(${generationUsage} + ${importReading})</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="red-text">${unitsConsumed} Unit</strong></td>
+                        <tr style="background-color: var(--surface-muted);">
+                            <td style="border: 1px solid var(--border); padding: 6px;">Total Consumption<br>(${generationUsage} + ${importReading})</td>
+                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="red-text">${unitsConsumed} Unit</strong></td>
                         </tr>
                         <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">Fixed Charge for ${unitsConsumed} Unit (${phase})<br>(w.e.f 1/4/2025)</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="red-text">₹${fixedCharge}</strong></td>
+                            <td style="border: 1px solid var(--border); padding: 6px;">Fixed Charge for ${unitsConsumed} Unit (${phase})<br>(w.e.f 1/4/2025)</td>
+                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="red-text">₹${fixedCharge}</strong></td>
                         </tr>
                     </tbody>
                 </table>
@@ -220,27 +220,27 @@ function buildNormalBillingResult(bill) {
                 <div style="overflow-x: auto; margin: 20px 0;">
                     <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px;">
                         <thead>
-                            <tr style="background-color: #f2f2f2;">
-                                <th style="border: 1px solid #ddd; padding: 6px; text-align: left; width: 60%;">Description</th>
-                                <th style="border: 1px solid #ddd; padding: 6px; text-align: right; width: 40%;">Details</th>
+                            <tr style="background-color: var(--surface-muted);">
+                                <th style="border: 1px solid var(--border); padding: 6px; text-align: left; width: 60%;">Description</th>
+                                <th style="border: 1px solid var(--border); padding: 6px; text-align: right; width: 40%;">Details</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="border: 1px solid #ddd; padding: 6px;">  Total Import</td>
-                                <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${importReading || 0} Unit</td>
+                                <td style="border: 1px solid var(--border); padding: 6px;">  Total Import</td>
+                                <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${importReading || 0} Unit</td>
                             </tr>
                             <tr>
-                                <td style="border: 1px solid #ddd; padding: 6px;">  Total Export</td>
-                                <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${exportReading || 0} Unit</td>
+                                <td style="border: 1px solid var(--border); padding: 6px;">  Total Export</td>
+                                <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${exportReading || 0} Unit</td>
                             </tr>
                             <tr>
-                                <td style="border: 1px solid #ddd; padding: 6px;">Banking Units</td>
-                                <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${myBankDepositAtKseb || 0} Unit</td>
+                                <td style="border: 1px solid var(--border); padding: 6px;">Banking Units</td>
+                                <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${myBankDepositAtKseb || 0} Unit</td>
                             </tr>
                             <tr>
-                                <td style="border: 1px solid #ddd; padding: 6px;">Difference to be Charged<br>(${importReading || 0} - ${exportPlusBank || 0})</td>
-                                <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="red-text">${bankAdjustedUnits || 0} Unit</strong></td>
+                                <td style="border: 1px solid var(--border); padding: 6px;">Difference to be Charged<br>(${importReading || 0} - ${exportPlusBank || 0})</td>
+                                <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="red-text">${bankAdjustedUnits || 0} Unit</strong></td>
                             </tr>
                         </tbody>
                     </table>
@@ -272,15 +272,15 @@ function buildNormalBillingResult(bill) {
                     <div style="overflow-x: auto; margin: 20px 0;">
                         <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px;">
                             <thead>
-                                <tr style="background-color: #f2f2f2;">
-                                    <th style="border: 1px solid #ddd; padding: 6px; text-align: left; width: 60%;">Description</th>
-                                    <th style="border: 1px solid #ddd; padding: 6px; text-align: right; width: 40%;">Details</th>
+                                <tr style="background-color: var(--surface-muted);">
+                                    <th style="border: 1px solid var(--border); padding: 6px; text-align: left; width: 60%;">Description</th>
+                                    <th style="border: 1px solid var(--border); padding: 6px; text-align: right; width: 40%;">Details</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td style="border: 1px solid #ddd; padding: 6px;">Total Energy Charge<br>(${bankAdjustedUnits || 0} x ₹${(unitRate || 0).toFixed(2)})</td>
-                                    <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong>₹${(energyCharge || 0).toFixed(2)}</strong></td>
+                                    <td style="border: 1px solid var(--border); padding: 6px;">Total Energy Charge<br>(${bankAdjustedUnits || 0} x ₹${(unitRate || 0).toFixed(2)})</td>
+                                    <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong>₹${(energyCharge || 0).toFixed(2)}</strong></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -337,27 +337,27 @@ function buildEqualOrSurplusSummary(bill, statusText) {
                     <div style="overflow-x: auto; margin: 20px 0;">
                         <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px;">
                             <thead>
-                                <tr style="background-color: #f2f2f2;">
-                                    <th style="border: 1px solid #ddd; padding: 6px; text-align: left; width: 60%;">Description</th>
-                                    <th style="border: 1px solid #ddd; padding: 6px; text-align: right; width: 40%;">Details</th>
+                                <tr style="background-color: var(--surface-muted);">
+                                    <th style="border: 1px solid var(--border); padding: 6px; text-align: left; width: 60%;">Description</th>
+                                    <th style="border: 1px solid var(--border); padding: 6px; text-align: right; width: 40%;">Details</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td style="border: 1px solid #ddd; padding: 6px;">  Total Import</td>
-                                    <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${importReading || 0} Unit</td>
+                                    <td style="border: 1px solid var(--border); padding: 6px;">  Total Import</td>
+                                    <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${importReading || 0} Unit</td>
                                 </tr>
                                 <tr>
-                                    <td style="border: 1px solid #ddd; padding: 6px;">  Total Export</td>
-                                    <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${exportReading || 0} Unit</td>
+                                    <td style="border: 1px solid var(--border); padding: 6px;">  Total Export</td>
+                                    <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${exportReading || 0} Unit</td>
                                 </tr>
                                 <tr>
-                                    <td style="border: 1px solid #ddd; padding: 6px;">Banked Unit</td>
-                                    <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${myBankDepositAtKseb || 0} Unit</td>
+                                    <td style="border: 1px solid var(--border); padding: 6px;">Banked Unit</td>
+                                    <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${myBankDepositAtKseb || 0} Unit</td>
                                 </tr>
                                 <tr>
-                                    <td style="border: 1px solid #ddd; padding: 6px;">Adjustment Status</td>
-                                    <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="green-text">${statusText}</strong>😌</td>
+                                    <td style="border: 1px solid var(--border); padding: 6px;">Adjustment Status</td>
+                                    <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="green-text">${statusText}</strong>😌</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -388,39 +388,39 @@ function buildTodSplitResult(bill) {
             <div style="overflow-x: auto; margin: 20px 0;">
                 <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px;">
                     <thead>
-                        <tr style="background-color: #f2f2f2;">
-                            <th style="border: 1px solid #ddd; padding: 6px; text-align: left; width: 60%;">Description</th>
-                            <th style="border: 1px solid #ddd; padding: 6px; text-align: right; width: 40%;">Details</th>
+                        <tr style="background-color: var(--surface-muted);">
+                            <th style="border: 1px solid var(--border); padding: 6px; text-align: left; width: 60%;">Description</th>
+                            <th style="border: 1px solid var(--border); padding: 6px; text-align: right; width: 40%;">Details</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">Total Solar Generation</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="green-text">${solarGeneration} Unit</strong></td>
+                            <td style="border: 1px solid var(--border); padding: 6px;">Total Solar Generation</td>
+                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="green-text">${solarGeneration} Unit</strong></td>
                         </tr>
                         <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">  Total Import<br>(T1 (${importNormal.toFixed(2)}) + T2 (${importPeak.toFixed(2)}) + T3 (${importOffPeak.toFixed(2)}))</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${importReading} Unit</td>
+                            <td style="border: 1px solid var(--border); padding: 6px;">  Total Import<br>(T1 (${importNormal.toFixed(2)}) + T2 (${importPeak.toFixed(2)}) + T3 (${importOffPeak.toFixed(2)}))</td>
+                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${importReading} Unit</td>
                         </tr>
                         <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">  Total Export<br>(T1 (${exportNormal.toFixed(2)}) + T2 (${exportPeak}) + T3 (${exportOffPeak}))</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${exportReading} Unit</td>
+                            <td style="border: 1px solid var(--border); padding: 6px;">  Total Export<br>(T1 (${exportNormal.toFixed(2)}) + T2 (${exportPeak}) + T3 (${exportOffPeak}))</td>
+                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${exportReading} Unit</td>
                         </tr>
                         <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">Banked Units</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${myBankDepositAtKseb} Unit</td>
+                            <td style="border: 1px solid var(--border); padding: 6px;">Banked Units</td>
+                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${myBankDepositAtKseb} Unit</td>
                         </tr>
                         <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">Direct energy Usage from solar<br>(SolarGeneration(${solarGeneration}) - Export(${exportReading}))</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="red-text">${generationUsage} Unit</strong></td>
+                            <td style="border: 1px solid var(--border); padding: 6px;">Direct energy Usage from solar<br>(SolarGeneration(${solarGeneration}) - Export(${exportReading}))</td>
+                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="red-text">${generationUsage} Unit</strong></td>
                         </tr>
                         <tr>
-                            <td style="border: 1px solid #ddd; padding: 6px;">KSEB യിൽ നിന്നും ഉപയോഗിച്ചത് (From KSEB)</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="red-text">${importReading} Unit</strong></td>
+                            <td style="border: 1px solid var(--border); padding: 6px;">KSEB യിൽ നിന്നും ഉപയോഗിച്ചത് (From KSEB)</td>
+                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="red-text">${importReading} Unit</strong></td>
                         </tr>
-                        <tr style="background-color: #f9f9f9;">
-                            <td style="border: 1px solid #ddd; padding: 6px;">ആകെ വൈദ്യുതി ഉപയോഗം (Total Consumption)<br>(${generationUsage} + ${importReading})</td>
-                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right;"><strong class="red-text">${unitsConsumed} Unit</strong></td>
+                        <tr style="background-color: var(--surface-muted);">
+                            <td style="border: 1px solid var(--border); padding: 6px;">ആകെ വൈദ്യുതി ഉപയോഗം (Total Consumption)<br>(${generationUsage} + ${importReading})</td>
+                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="red-text">${unitsConsumed} Unit</strong></td>
                         </tr>
                     </tbody>
                 </table>
