@@ -12,8 +12,149 @@
       font-size: 16px;
     }
     .input-section {
-      margin-bottom: 15px;
+      margin: 0 auto 20px;
+      max-width: 480px;
+      background: #f7f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 18px 20px;
     }
+    .input-section label {
+      display: inline-block;
+      margin: 6px 8px 6px 0;
+      font-weight: bold;
+    }
+    .input-section input,
+    .input-section select {
+      margin: 6px 12px 6px 0;
+      padding: 6px 8px;
+      font-size: 0.95em;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .setup-intro {
+      margin: 0 0 12px;
+      color: #555;
+      font-size: 0.9em;
+    }
+    #countdownTimer {
+      display: none;
+      max-width: 480px;
+      margin: 0 auto 20px;
+      background: #111;
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .countdown-label {
+      font-size: 0.75em;
+      color: #999;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .countdown-digits {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 4px;
+      font-family: 'Courier New', monospace;
+    }
+    .countdown-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 3.4em;
+    }
+    .countdown-unit span {
+      font-size: 1.8em;
+      font-weight: bold;
+      color: #4CAF50;
+      text-shadow: 0 0 6px rgba(76, 175, 80, 0.6);
+      line-height: 1.1;
+    }
+    .countdown-unit small {
+      font-size: 0.6em;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 2px;
+    }
+    .countdown-colon {
+      font-size: 1.8em;
+      font-weight: bold;
+      color: #4CAF50;
+      margin-top: 0.05em;
+    }
+    @media (max-width: 600px) {
+      .countdown-unit span,
+      .countdown-colon {
+        font-size: 1.3em;
+      }
+      .countdown-unit {
+        min-width: 2.6em;
+      }
+    }
+    .input-section button {
+      background: #4CAF50;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 8px 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .input-section button:hover {
+      background: #43a047;
+    }
+    #summaryBar {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px 16px;
+      max-width: 720px;
+      margin: 0 auto 14px;
+      padding: 10px 16px;
+      background: #f0f4f8;
+      border-radius: 8px;
+      font-size: 0.9em;
+    }
+    #summaryBar button {
+      background: none;
+      border: 1px solid #999;
+      border-radius: 5px;
+      padding: 4px 10px;
+      font-size: 0.85em;
+      cursor: pointer;
+    }
+    #summaryBar button:hover {
+      background: #e6e6e6;
+    }
+    .legend {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 4px 16px;
+      margin-bottom: 14px;
+      font-size: 0.8em;
+      color: #444;
+    }
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .legend-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+    .legend-swatch.lived { background-color: #4CAF50; }
+    .legend-swatch.future { background-color: #B0BEC5; }
+    .legend-swatch.goal-set { background-color: #FFCA28; }
+    .legend-swatch.current-week-swatch { background-color: #fff; border: 2px solid red; }
     .grid {
       display: inline-block;
       border: 2px solid #000;
@@ -131,7 +272,22 @@
 </head>
 <body>
   <h1>Your Life in Weeks</h1>
-  <div class="input-section">
+
+  <div id="countdownTimer">
+    <div class="countdown-label">⏳ Estimated Time Remaining</div>
+    <div class="countdown-digits">
+      <div class="countdown-unit"><span id="cdDays">0</span><small>Days</small></div>
+      <span class="countdown-colon">:</span>
+      <div class="countdown-unit"><span id="cdHours">00</span><small>Hours</small></div>
+      <span class="countdown-colon">:</span>
+      <div class="countdown-unit"><span id="cdMinutes">00</span><small>Minutes</small></div>
+      <span class="countdown-colon">:</span>
+      <div class="countdown-unit"><span id="cdSeconds">00</span><small>Seconds</small></div>
+    </div>
+  </div>
+
+  <div class="input-section" id="setupSection">
+    <p class="setup-intro">Enter your date of birth once to generate your chart -- it's remembered on this device, so you won't be asked again.</p>
     <label for="dob">Date of Birth:</label>
     <input type="date" id="dob" required>
     <label for="lifespan">Lifespan (Years):</label>
@@ -148,8 +304,22 @@
       <option value="95">95</option>
       <option value="100">100</option>
     </select>
-    <button onclick="generateGrid()">Generate</button>
+    <br>
+    <button onclick="generateGrid()">Save &amp; Generate</button>
   </div>
+
+  <div id="summaryBar">
+    <span id="summaryText"></span>
+    <button onclick="editSetup()">✏️ Edit</button>
+  </div>
+
+  <div class="legend" id="legend">
+    <span class="legend-item"><span class="legend-swatch lived"></span> Lived</span>
+    <span class="legend-item"><span class="legend-swatch current-week-swatch"></span> Current Week</span>
+    <span class="legend-item"><span class="legend-swatch goal-set"></span> Goal Set</span>
+    <span class="legend-item"><span class="legend-swatch future"></span> Future</span>
+  </div>
+
   <div id="gridContainer"></div>
 
   <div id="goalModal">
@@ -166,27 +336,80 @@
   </div>
 
   <script>
-    // Load or prompt for date of birth on initial load
+    // Date of birth (and lifespan) are only ever asked for once: if they're
+    // already in localStorage from a previous visit, skip the setup form
+    // entirely and generate the chart right away. The setup form stays
+    // reachable afterwards via the "Edit" button in the summary bar, in
+    // case the user needs to correct their date of birth or lifespan.
     document.addEventListener('DOMContentLoaded', () => {
       const savedDob = localStorage.getItem('dob');
+      const savedLifespan = localStorage.getItem('lifespan');
       const dobInput = document.getElementById('dob');
-      if (!savedDob) {
-        let userDob = prompt('Please enter your date of birth (YYYY-MM-DD):');
-        while (userDob && isNaN(new Date(userDob))) {
-          alert('Invalid date format. Please enter a valid date (YYYY-MM-DD).');
-          userDob = prompt('Please enter your date of birth (YYYY-MM-DD):');
-        }
-        if (userDob) {
-          dobInput.value = userDob;
-          localStorage.setItem('dob', userDob);
-        } else {
-          alert('A date of birth is required to proceed.');
-          return; // Prevent further execution until valid input
-        }
+      const lifespanInput = document.getElementById('lifespan');
+
+      if (savedDob) {
+        dobInput.value = savedDob;
+        if (savedLifespan) lifespanInput.value = savedLifespan;
+        generateGrid();
       } else {
-        dobInput.value = savedDob; // Load the last saved date
+        document.getElementById('setupSection').style.display = 'block';
       }
     });
+
+    function editSetup() {
+      document.getElementById('setupSection').style.display = 'block';
+      document.getElementById('dob').focus();
+    }
+
+    function updateSummaryBar(dob, lifespan, weeksLived, totalWeeks) {
+      const weeksLeft = Math.max(0, totalWeeks - weeksLived);
+      const pct = Math.min(100, (weeksLived / totalWeeks) * 100).toFixed(1);
+      document.getElementById('summaryText').innerHTML =
+        `🎂 Born <strong>${dob.toLocaleDateString()}</strong> &nbsp;|&nbsp; ` +
+        `Lifespan <strong>${lifespan} yrs</strong> &nbsp;|&nbsp; ` +
+        `<strong>${weeksLived}</strong> weeks lived (${pct}%) &nbsp;|&nbsp; ` +
+        `<strong>${weeksLeft}</strong> weeks remaining`;
+      document.getElementById('summaryBar').style.display = 'flex';
+      document.getElementById('legend').style.display = 'flex';
+    }
+
+    // Live days:hours:minutes:seconds countdown to the end of life
+    // expectancy (dob + lifespan years) -- a visceral, second-by-second
+    // visual companion to the weeks grid above. Re-reads dob/lifespan from
+    // the (hidden, saved) form fields on every tick rather than closing
+    // over stale values, so it stays correct if the user edits and
+    // regenerates. The interval is cleared/recreated on every
+    // generateGrid() call so re-generating never stacks duplicate timers.
+    let countdownIntervalId = null;
+
+    function tickCountdown() {
+      const dobVal = document.getElementById('dob').value;
+      const lifespanVal = parseInt(document.getElementById('lifespan').value);
+      if (!dobVal || !lifespanVal) return;
+
+      const dob = new Date(dobVal);
+      const endOfLife = new Date(dob);
+      endOfLife.setFullYear(dob.getFullYear() + lifespanVal);
+
+      const msLeft = Math.max(0, endOfLife - new Date());
+      const totalSeconds = Math.floor(msLeft / 1000);
+      const days = Math.floor(totalSeconds / 86400);
+      const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      document.getElementById('cdDays').textContent = String(days);
+      document.getElementById('cdHours').textContent = String(hours).padStart(2, '0');
+      document.getElementById('cdMinutes').textContent = String(minutes).padStart(2, '0');
+      document.getElementById('cdSeconds').textContent = String(seconds).padStart(2, '0');
+    }
+
+    function startCountdown() {
+      tickCountdown();
+      if (countdownIntervalId) clearInterval(countdownIntervalId);
+      countdownIntervalId = setInterval(tickCountdown, 1000);
+      document.getElementById('countdownTimer').style.display = 'block';
+    }
 
     function generateGrid() {
       const dobInput = document.getElementById('dob').value;
@@ -199,8 +422,11 @@
         return;
       }
 
-      // Save the new dob to localStorage
+      // Save dob and lifespan to localStorage so they're only ever asked
+      // for once -- next visit skips straight to the chart.
       localStorage.setItem('dob', dobInput);
+      localStorage.setItem('lifespan', lifespan);
+      document.getElementById('setupSection').style.display = 'none';
 
       const dob = new Date(dobInput);
       const today = new Date(); // Dynamic current date and time: 03:05 PM IST, August 04, 2025
@@ -213,7 +439,6 @@
       // Calculate current week by finding the week containing today
       const daysSinceBirth = Math.floor((today - dob) / msPerDay);
       const currentWeek = Math.floor(daysSinceBirth / 7) + 1; // Week containing today
-      const nextWeek = currentWeek + 1; // Highlight the next week
       const startYear = dob.getFullYear();
       const endYear = startYear + lifespan - 1;
 
@@ -255,14 +480,17 @@
           }
           const savedGoal = localStorage.getItem(`goal_${weekIndex}_weekly`) || localStorage.getItem(`goal_${weekIndex}`);
           if (savedGoal) weekBox.classList.add('goal-set');
-          if (weekIndex === nextWeek) {
-            weekBox.classList.add('current-week'); // Highlight the next week
+          if (weekIndex === currentWeek) {
+            weekBox.classList.add('current-week');
           }
           weekBox.addEventListener('click', showGoalModal);
           yearRow.appendChild(weekBox);
         }
         gridContainer.appendChild(yearRow);
       }
+
+      updateSummaryBar(dob, lifespan, weeksLived, totalWeeks);
+      startCountdown();
     }
 
     function showGoalModal(event) {
@@ -277,7 +505,6 @@
       const weeksLived = Math.floor(daysLived / 7);
       const daysSinceBirth = Math.floor((today - dob) / msPerDay); // Recalculate here
       const currentWeek = Math.floor(daysSinceBirth / 7) + 1; // Week containing today
-      const nextWeek = currentWeek + 1; // Next week for reference
 
       // Calculate start and end dates for the week (starting on Monday)
       const startDate = new Date(dob);
@@ -339,7 +566,7 @@
     }
 
     function saveGoals() {
-      const weekNumber = document.getElementById('weekNumberInfo').textContent.split(': ')[1];
+      const weekNumber = parseInt(document.getElementById('weekNumberInfo').textContent.split(': ')[1]);
       const dayInputs = document.querySelectorAll('.day-goal');
       if (dayInputs.length === 0) return; // Safeguard if no inputs are found
       // Save weekly goal
@@ -368,13 +595,13 @@
         if (weekNumber <= weeksLived) weekBox.classList.add('lived');
         else weekBox.classList.add('future');
         const currentWeek = Math.floor(daysLived / 7) + 1;
-        if (weekNumber === currentWeek + 1) weekBox.classList.add('current-week');
+        if (weekNumber === currentWeek) weekBox.classList.add('current-week');
       }
       closeModal();
     }
 
     function deleteGoals() {
-      const weekNumber = document.getElementById('weekNumberInfo').textContent.split(': ')[1];
+      const weekNumber = parseInt(document.getElementById('weekNumberInfo').textContent.split(': ')[1]);
       const dayInputs = document.querySelectorAll('.day-goal');
       if (dayInputs.length === 0) return; // Safeguard if no inputs are found
       // Delete weekly goal
@@ -399,7 +626,7 @@
       if (weekNumber <= weeksLived) weekBox.classList.add('lived');
       else weekBox.classList.add('future');
       const currentWeek = Math.floor(daysLived / 7) + 1;
-      if (weekNumber === currentWeek + 1) weekBox.classList.add('current-week');
+      if (weekNumber === currentWeek) weekBox.classList.add('current-week');
       closeModal();
     }
 
