@@ -56,10 +56,94 @@ const ENDING_NOTE_HTML = `
         <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.8; margin: 15px 0 0;">
             <strong style="color: #27ae60;">Support:</strong> For calculation discrepancies, mistakes, or additional options, contact
             <a href="mailto:calculatoronline2024@gmail.com" style="color: #2ecc71; font-style: italic; text-decoration: none; transition: color 0.3s ease;">calculatoronline2024@gmail.com</a>.
-            <span style="display: block; margin-top: 8px; font-size: 12px; color: var(--text-muted);">(Version 3.0.07: Last updated: 03-July-2026) </span>
+            <span style="display: block; margin-top: 8px; font-size: 12px; color: var(--text-muted);">(Version 3.0.08: Last updated: 03-July-2026) </span>
         </p>
     </div>
 `;
+
+// ToD-only "(T1: x + T2: y + T3: z)" sub-label under a usage row; blank for
+// Normal billing, which only ever has a single combined reading.
+function todSubLabel(bill, normalField, peakField, offPeakField) {
+    if (bill.billingType !== 'tod') return '';
+    return `<br><span style="font-size: 11px; color: var(--text-muted);">T1: ${(bill[normalField] || 0).toFixed(2)} + T2: ${(bill[peakField] || 0).toFixed(2)} + T3: ${(bill[offPeakField] || 0).toFixed(2)}</span>`;
+}
+
+function usageRows(bill) {
+    const { solarGeneration, importReading, exportReading, generationUsage, unitsConsumed } = bill;
+
+    return `
+                        <tr style="background-color: var(--surface);">
+                            <td style="border: 1px solid var(--border); padding: 10px;">Solar Generation${todSubLabel(bill, 'solarNormal', 'solarPeak', 'solarOffPeak')}</td>
+                            <td style="border: 1px solid var(--border); padding: 10px; text-align: right;"><strong class="green-text">${solarGeneration.toFixed(2)} Unit</strong></td>
+                        </tr>
+                        <tr style="background-color: var(--surface-muted);">
+                            <td style="border: 1px solid var(--border); padding: 10px;">Import Total${todSubLabel(bill, 'importNormal', 'importPeak', 'importOffPeak')}</td>
+                            <td style="border: 1px solid var(--border); padding: 10px; text-align: right;">${importReading.toFixed(2)} Unit</td>
+                        </tr>
+                        <tr style="background-color: var(--surface);">
+                            <td style="border: 1px solid var(--border); padding: 10px;">Export Total${todSubLabel(bill, 'exportNormal', 'exportPeak', 'exportOffPeak')}</td>
+                            <td style="border: 1px solid var(--border); padding: 10px; text-align: right;">${exportReading.toFixed(2)} Unit</td>
+                        </tr>
+                        <tr style="background-color: var(--surface-muted);">
+                            <td style="border: 1px solid var(--border); padding: 10px;">Direct Usage from Solar<br><span style="font-size: 11px; color: var(--text-muted);">Solar − Export</span></td>
+                            <td style="border: 1px solid var(--border); padding: 10px; text-align: right;"><strong class="red-text">${generationUsage.toFixed(2)} Unit</strong></td>
+                        </tr>
+                        <tr style="background-color: var(--surface);">
+                            <td style="border: 1px solid var(--border); padding: 10px;">Total Consumption<br><span style="font-size: 11px; color: var(--text-muted);">Direct Solar Usage + Import</span></td>
+                            <td style="border: 1px solid var(--border); padding: 10px; text-align: right;"><strong class="red-text">${unitsConsumed.toFixed(2)} Unit</strong></td>
+                        </tr>`;
+}
+
+// The per-slab / per-timezone lines behind the single "Energy Charge"
+// total -- whichever of the three tariff paths bill went through
+// (calculator.js's applyTariffRules): telescopic bands, a flat
+// non-telescopic rate, or a real T1/T2/T3 ToD split. See CLAUDE.md's
+// "above20kW" field-selection pattern (also used in render-insights.js and
+// solar-diary.html) for why Peak/OffPeak read from different fields
+// depending on connected load.
+function energyBreakdownRows(bill) {
+    if (bill.breakdownRows && bill.breakdownRows.length > 0) {
+        return bill.breakdownRows.map((row) => `
+                        <tr style="background-color: var(--surface-muted);">
+                            <td style="border: 1px solid var(--border); padding: 10px 10px 10px 24px; font-size: 13px;">${row.units} unit(s) @ ₹${row.rate.toFixed(2)}</td>
+                            <td style="border: 1px solid var(--border); padding: 10px; text-align: right; font-size: 13px;">₹${row.amount.toFixed(2)}</td>
+                        </tr>`).join('');
+    }
+
+    if (bill.billType === 'Non-Telescopic') {
+        return `
+                        <tr style="background-color: var(--surface-muted);">
+                            <td style="border: 1px solid var(--border); padding: 10px 10px 10px 24px; font-size: 13px;">${(bill.bankAdjustedUnits || 0).toFixed(2)} unit(s) @ ₹${(bill.unitRate || 0).toFixed(2)}</td>
+                            <td style="border: 1px solid var(--border); padding: 10px; text-align: right; font-size: 13px;">₹${(bill.energyCharge || 0).toFixed(2)}</td>
+                        </tr>`;
+    }
+
+    if (bill.billType === 'Non-Telescopic-ToD') {
+        const above20kW = bill.todBillingAbove20kW > 0;
+        const normalUnits = bill.Normal_NoOfUnitsFor_energy_calculation || 0;
+        const peakUnits = (above20kW ? bill.Peak_NoOfUnitsFor_energy_calculation : bill.Peak_NoOfUnitsFor_energy_calculation_Below20kW) || 0;
+        const offPeakUnits = (above20kW ? bill.OffPeak_NoOfUnitsFor_energy_calculation : bill.OffPeak_NoOfUnitsFor_energy_calculation_Below20kW) || 0;
+        const normalCharge = bill.NormalConsumptionAdjusted_energy_charge || 0;
+        const peakCharge = (above20kW ? bill.PeakConsumptionAdjusted_energy_charge : bill.PeakConsumptionAdjusted_energy_charge_Below20kW) || 0;
+        const offPeakCharge = (above20kW ? bill.OffPeakConsumptionAdjusted_energy_charge : bill.OffPeakConsumptionAdjusted_energy_charge_Below20kW) || 0;
+
+        return `
+                        <tr style="background-color: var(--surface-muted);">
+                            <td style="border: 1px solid var(--border); padding: 10px 10px 10px 24px; font-size: 13px;">Normal (T1, 6am-6pm): ${normalUnits.toFixed(2)} units @ 90%</td>
+                            <td style="border: 1px solid var(--border); padding: 10px; text-align: right; font-size: 13px;">₹${normalCharge.toFixed(2)}</td>
+                        </tr>
+                        <tr style="background-color: var(--surface-muted);">
+                            <td style="border: 1px solid var(--border); padding: 10px 10px 10px 24px; font-size: 13px;">Peak (T2, 6pm-10pm): ${peakUnits.toFixed(2)} units @ 125%</td>
+                            <td style="border: 1px solid var(--border); padding: 10px; text-align: right; font-size: 13px;">₹${peakCharge.toFixed(2)}</td>
+                        </tr>
+                        <tr style="background-color: var(--surface-muted);">
+                            <td style="border: 1px solid var(--border); padding: 10px 10px 10px 24px; font-size: 13px;">Off-Peak (T3, 10pm-6am): ${offPeakUnits.toFixed(2)} units @ 100%</td>
+                            <td style="border: 1px solid var(--border); padding: 10px; text-align: right; font-size: 13px;">₹${offPeakCharge.toFixed(2)}</td>
+                        </tr>`;
+    }
+
+    return '';
+}
 
 function buildBillSummaryTable(bill) {
     const { billType, fixedCharge, meterRent, unitRate, duty, monthlyFuelSurcharge, totalBillAmount } = bill;
@@ -67,14 +151,14 @@ function buildBillSummaryTable(bill) {
     const bankAdjustedUnitsToUse = bill.bankAdjustedUnits || 0;
 
     const detailRows = bankAdjustedUnitsToUse > 0 ? `
-                        <tr style="background-color: var(--surface);">
+                        <tr style="background-color: var(--surface-muted);">
                             <td style="border: 1px solid var(--border); padding: 10px;">No: of Units Consumed<br>(for Energy Calculation)</td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #2ecc71;">${bankAdjustedUnitsToUse.toFixed(2)} Unit</td>
                         </tr>
-                        <tr style="background-color: var(--surface-muted);">
+                        <tr style="background-color: var(--surface);">
                             <td style="border: 1px solid var(--border); padding: 10px;">Unit Charge</td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #3498db;">₹${(unitRate || 0).toFixed(2)}/Unit</td>
-                        </tr>
+                        </tr>${energyBreakdownRows(bill)}
                         <tr style="background-color: var(--surface);">
                             <td style="border: 1px solid var(--border); padding: 10px;">Energy Charge</td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #e74c3c;"><strong>₹${energyChargeToUse.toFixed(2)}</strong></td>
@@ -109,12 +193,12 @@ function buildBillSummaryTable(bill) {
                         <tr style="background-color: var(--surface-muted);">
                             <td style="border: 1px solid var(--border); padding: 10px;">Bill Type</td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right;"><strong>${billType || 'N/A'}</strong></td>
-                        </tr>
-                        <tr style="background-color: var(--surface);">
+                        </tr>${usageRows(bill)}
+                        <tr style="background-color: var(--surface-muted);">
                             <td style="border: 1px solid var(--border); padding: 10px;">Fixed Charge</td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(fixedCharge || 0).toFixed(2)}</strong></td>
                         </tr>
-                        <tr style="background-color: var(--surface-muted);">
+                        <tr style="background-color: var(--surface);">
                             <td style="border: 1px solid var(--border); padding: 10px;">Meter Rent</td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(meterRent || 0).toFixed(2)}</strong></td>
                         </tr>${detailRows}${wheelingRow}
