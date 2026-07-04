@@ -837,7 +837,7 @@
 
       const body = JSON.stringify({
         system_instruction: {
-          parts: [{ text: 'You are a warm, thoughtful journaling companion. Summarize the user\'s diary entries for one day into a short narrative (4-6 sentences) of how their day went: the overall arc, mood, and anything notable. Speak to the user as "you". Do not invent events that are not in the entries. End with one gentle, encouraging observation.' }],
+          parts: [{ text: 'You are a warm, thoughtful journaling companion. Summarize the user\'s diary entries for one day into a short narrative (4-6 sentences) of how their day went: the overall arc, mood, and anything notable. Speak to the user as "you". If any entries contain these words than map it as 'Pammu' to daughter, 'Vichu' to son, 'Niju' as Wife, 'Amma' as mother, 'Achan' as father,"Jeevass" as School. Do not invent events that are not in the entries. End with one gentle, encouraging observation.' }],
         },
         contents: [{
           parts: [{ text: `My diary entries for ${d.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}:\n\n${entriesText}\n\nPlease summarize how my day went.` }],
