@@ -202,6 +202,16 @@
       padding-top: 2px;
       white-space: nowrap;
     }
+    .entry-elapsed {
+      flex: none;
+      font-size: 10.5px;
+      color: var(--accent);
+      font-family: "Consolas", "Courier New", monospace;
+      padding: 1px 6px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      white-space: nowrap;
+    }
     .entry-text { flex: 1; word-break: break-word; white-space: pre-wrap; }
     .entry-edit,
     .entry-delete {
@@ -405,6 +415,7 @@
 
     @media (max-width: 480px) {
       .entry-time { font-size: 10.5px; }
+      .entry-elapsed { font-size: 9.5px; padding: 1px 5px; }
       .cal-day { font-size: 12px; padding: 6px 0 11px; }
     }
   </style>
@@ -590,6 +601,38 @@
       '6:00 PM – 9:00 PM', '9:00 PM – 12:00 AM'
     ];
 
+    function formatDuration(ms) {
+      const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+      const h = Math.floor(totalSeconds / 3600);
+      const m = Math.floor((totalSeconds % 3600) / 60);
+      const s = totalSeconds % 60;
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${pad(h)}:${pad(m)}:${pad(s)}`;
+    }
+
+    // Each entry's timer starts at 00:00:00 when it's added and keeps
+    // ticking until the next entry is added, at which point it freezes
+    // (showing how long that entry "ran" for) and the next entry's timer
+    // starts from zero. Flattened across all dates so it works across day
+    // boundaries too.
+    function buildEntryTimerInfo(allEntries) {
+      const flat = [];
+      for (const k in allEntries) {
+        allEntries[k].forEach((e) => flat.push(e.t));
+      }
+      flat.sort();
+      const frozenElapsed = {};
+      flat.forEach((t, i) => {
+        if (i < flat.length - 1) {
+          frozenElapsed[t] = new Date(flat[i + 1]) - new Date(t);
+        }
+      });
+      const latestTimestamp = flat.length ? flat[flat.length - 1] : null;
+      return { frozenElapsed, latestTimestamp };
+    }
+
+    let liveEntryTimerId = null;
+
     function groupEntriesByThreeHours(dayEntries) {
       const blocks = THREE_HOUR_BLOCK_LABELS.map(() => []);
       dayEntries.forEach((e, i) => {
@@ -611,25 +654,35 @@
       const entries = loadEntries();
       const dayEntries = entries[key] || [];
 
+      if (liveEntryTimerId) { clearInterval(liveEntryTimerId); liveEntryTimerId = null; }
+
       if (dayEntries.length === 0) {
         list.innerHTML = '<p class="no-entries">No entries for this date.</p>';
         return;
       }
 
       const blocks = groupEntriesByThreeHours(dayEntries);
+      const { frozenElapsed, latestTimestamp } = buildEntryTimerInfo(entries);
 
       list.innerHTML = blocks.map((blockEntries, b) => {
         if (blockEntries.length === 0) return '';
         return `
         <div class="entry-group">
           <div class="entry-group-heading">${THREE_HOUR_BLOCK_LABELS[b]}</div>
-          ${blockEntries.map((e) => `
+          ${blockEntries.map((e) => {
+            const isLive = e.t === latestTimestamp;
+            const badge = isLive
+              ? `<span class="entry-elapsed" data-timer-t="${e.t}" title="Running -- this is the latest entry">⏱ 00:00:00</span>`
+              : `<span class="entry-elapsed" title="How long this entry ran before the next one was added">⏱ ${formatDuration(frozenElapsed[e.t] || 0)}</span>`;
+            return `
           <div class="entry-line" data-index="${e.index}">
             <span class="entry-time">${formatTime(e.t)}</span>
+            ${badge}
             <span class="entry-text" data-index="${e.index}"></span>
             <button class="entry-edit" data-index="${e.index}" title="Edit this entry" type="button">✏️</button>
             <button class="entry-delete" data-index="${e.index}" title="Delete this entry" type="button">✕</button>
-          </div>`).join('')}
+          </div>`;
+          }).join('')}
         </div>`;
       }).join('');
 
@@ -637,6 +690,14 @@
       list.querySelectorAll('.entry-text').forEach((span) => {
         span.textContent = dayEntries[parseInt(span.dataset.index)].text;
       });
+
+      const liveBadge = list.querySelector('[data-timer-t]');
+      if (liveBadge) {
+        const startTime = new Date(liveBadge.dataset.timerT).getTime();
+        liveEntryTimerId = setInterval(() => {
+          liveBadge.textContent = `⏱ ${formatDuration(Date.now() - startTime)}`;
+        }, 1000);
+      }
 
       list.querySelectorAll('.entry-delete').forEach((btn) => {
         btn.addEventListener('click', () => {
