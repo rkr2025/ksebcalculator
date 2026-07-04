@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life Diary</title>
+  <style>
+    :root {
+      --bg: #eef1f7;
+      --surface: #ffffff;
+      --surface-muted: #f6f8fb;
+      --border: #e3e7ef;
+      --text: #17203a;
+      --text-muted: #6b7280;
+      --primary: #2a78d6;
+      --primary-dark: #1f5fac;
+      --accent: #1baf7a;
+      --danger: #d9433f;
+      --weekend: #d9433f;
+      --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 8px 24px rgba(16, 24, 40, 0.08);
+    }
+    :root[data-theme="dark"] {
+      --bg: #0f1420;
+      --surface: #1a2130;
+      --surface-muted: #232b3d;
+      --border: #313b52;
+      --text: #eef1f8;
+      --text-muted: #8792a8;
+      --primary: #5b9ee8;
+      --primary-dark: #86b9ee;
+      --accent: #33d497;
+      --danger: #f2726f;
+      --weekend: #f2726f;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 16px 12px 48px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .container { max-width: 720px; margin: 0 auto; }
+
+    /* ------------------------------- Header ------------------------------ */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    h1 {
+      font-size: 24px;
+      margin: 0;
+      text-align: center;
+      flex: 1;
+    }
+    .subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      margin: 4px 0 18px;
+    }
+
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+    }
+    .switch { position: relative; display: inline-block; width: 36px; height: 21px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switch-slider {
+      position: absolute; inset: 0;
+      background: var(--border);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .switch-slider::before {
+      content: "";
+      position: absolute;
+      height: 15px; width: 15px; left: 3px; top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.15s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+    }
+    .switch input:checked + .switch-slider { background: var(--primary); }
+    .switch input:checked + .switch-slider::before { transform: translateX(15px); }
+
+    /* ------------------------------- Cards ------------------------------- */
+    .card {
+      background: var(--surface);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 16px 18px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .card h3 {
+      margin: 0 0 12px;
+      font-size: 15px;
+    }
+
+    /* ------------------------------ New entry ---------------------------- */
+    textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--surface-muted);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      resize: vertical;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: var(--surface);
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .btn {
+      padding: 9px 16px;
+      font-size: 13.5px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn:hover { background: var(--primary-dark); }
+    .btn-outline {
+      background: none;
+      border: 1.5px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+    .entry-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .save-hint { font-size: 12px; color: var(--text-muted); }
+
+    /* ---------------------------- View controls -------------------------- */
+    .view-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .view-controls input[type="date"] {
+      padding: 8px 10px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--surface-muted);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      color-scheme: light;
+    }
+    :root[data-theme="dark"] .view-controls input[type="date"] { color-scheme: dark; }
+    .selected-date-label {
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .selected-date-label.weekend { color: var(--weekend); }
+
+    /* ------------------------------ Entries ------------------------------ */
+    .entry-line {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 4px;
+      border-bottom: 1px dashed var(--border);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .entry-line:last-child { border-bottom: none; }
+    .entry-time {
+      flex: none;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      font-family: "Consolas", "Courier New", monospace;
+      padding-top: 2px;
+      white-space: nowrap;
+    }
+    .entry-text { flex: 1; word-break: break-word; white-space: pre-wrap; }
+    .entry-delete {
+      flex: none;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      padding: 0 4px;
+      line-height: 1.4;
+    }
+    .entry-delete:hover { color: var(--danger); }
+    .no-entries {
+      color: var(--text-muted);
+      font-size: 13.5px;
+      font-style: italic;
+      padding: 8px 0;
+    }
+
+    /* ------------------------------ Calendar ------------------------------ */
+    #calendarSection { display: none; }
+    .cal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .cal-title { font-weight: 700; font-size: 15px; }
+    .cal-nav {
+      background: none;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 4px 12px;
+      font-size: 14px;
+    }
+    .cal-nav:hover { border-color: var(--primary); color: var(--primary); }
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .cal-dow {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      padding: 4px 0;
+    }
+    .cal-dow.weekend { color: var(--weekend); }
+    .cal-day {
+      position: relative;
+      text-align: center;
+      padding: 8px 0 12px;
+      font-size: 13px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      background: var(--surface-muted);
+      color: var(--text);
+    }
+    .cal-day:hover { border-color: var(--primary); }
+    .cal-day.empty { background: none; cursor: default; }
+    .cal-day.empty:hover { border-color: transparent; }
+    .cal-day.weekend { color: var(--weekend); font-weight: 700; }
+    .cal-day.today { border-color: var(--accent); font-weight: 700; }
+    .cal-day.selected { background: var(--primary); color: #fff; }
+    .cal-day.selected.weekend { color: #ffd9d9; }
+    .cal-day .dot {
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    /* --------------------------- Backup / restore ------------------------- */
+    .backup-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .backup-note {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+    #restoreFileInput { display: none; }
+
+    @media (max-width: 480px) {
+      .entry-time { font-size: 10.5px; }
+      .cal-day { font-size: 12px; padding: 6px 0 11px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top-bar">
+      <div class="theme-toggle">
+        <span>☀️</span>
+        <label class="switch">
+          <input type="checkbox" id="themeToggle">
+          <span class="switch-slider"></span>
+        </label>
+        <span>🌙</span>
+      </div>
+      <h1>📔 Life Diary</h1>
+      <button class="btn-outline btn" id="calendarToggleBtn" type="button">📅 Calendar</button>
+    </div>
+    <p class="subtitle">One place for your daily thoughts — saved privately on this device.</p>
+
+    <!-- Calendar (hidden until toggled) -->
+    <div class="card" id="calendarSection">
+      <div class="cal-header">
+        <button class="cal-nav" id="calPrevBtn" type="button">‹</button>
+        <span class="cal-title" id="calTitle"></span>
+        <button class="cal-nav" id="calNextBtn" type="button">›</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+
+    <!-- New entry -->
+    <div class="card">
+      <h3>✍️ New Entry</h3>
+      <textarea id="entryInput" placeholder="Write what's on your mind..."></textarea>
+      <div class="entry-actions">
+        <span class="save-hint">Date &amp; time are stamped automatically when you save.</span>
+        <button class="btn" id="addEntryBtn" type="button">Save Entry</button>
+      </div>
+    </div>
+
+    <!-- View entries by date -->
+    <div class="card">
+      <h3>📖 Diary Entries</h3>
+      <div class="view-controls">
+        <input type="date" id="viewDateInput">
+        <button class="btn-outline btn" id="todayBtn" type="button">Today</button>
+        <span class="selected-date-label" id="selectedDateLabel"></span>
+      </div>
+      <div id="entriesList" style="margin-top: 12px;"></div>
+    </div>
+
+    <!-- Backup / restore -->
+    <div class="card">
+      <h3>💾 Backup &amp; Restore</h3>
+      <div class="backup-row">
+        <button class="btn" id="backupBtn" type="button">⬇️ Backup (Download)</button>
+        <button class="btn-outline btn" id="restoreBtn" type="button">⬆️ Restore from File</button>
+        <input type="file" id="restoreFileInput" accept=".json,application/json">
+      </div>
+      <p class="backup-note">Backup downloads all your entries as a JSON file. Restore merges a backup file's entries back in (existing entries are kept).</p>
+    </div>
+  </div>
+
+  <script>
+    // ------------------------------ Storage -------------------------------
+    // Shape: { "YYYY-MM-DD": [ { t: <ISO timestamp>, text: <string> }, ... ] }
+    const STORAGE_KEY = 'life_diary_entries';
+    const THEME_KEY = 'life_diary_theme';
+
+    function loadEntries() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveEntries(entries) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    }
+
+    function dateKey(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function isWeekendKey(key) {
+      const d = new Date(key + 'T12:00:00');
+      const dow = d.getDay();
+      return dow === 0 || dow === 6; // Sunday or Saturday
+    }
+
+    // ------------------------------- Theme --------------------------------
+    (function initTheme() {
+      const saved = localStorage.getItem(THEME_KEY);
+      const dark = saved ? saved === 'dark'
+        : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+      document.getElementById('themeToggle').checked = dark;
+    })();
+
+    document.getElementById('themeToggle').addEventListener('change', function () {
+      if (this.checked) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem(THEME_KEY, 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem(THEME_KEY, 'light');
+      }
+    });
+
+    // ---------------------------- Add an entry ----------------------------
+    document.getElementById('addEntryBtn').addEventListener('click', () => {
+      const input = document.getElementById('entryInput');
+      const text = input.value.trim();
+      if (!text) {
+        input.focus();
+        return;
+      }
+      const now = new Date();
+      const key = dateKey(now);
+      const entries = loadEntries();
+      if (!entries[key]) entries[key] = [];
+      entries[key].push({ t: now.toISOString(), text });
+      saveEntries(entries);
+      input.value = '';
+
+      // Jump the view to today so the new entry is immediately visible.
+      document.getElementById('viewDateInput').value = key;
+      renderEntries();
+      renderCalendar();
+    });
+
+    // ------------------------- View entries by date -----------------------
+    const viewDateInput = document.getElementById('viewDateInput');
+    viewDateInput.value = dateKey(new Date());
+    viewDateInput.addEventListener('change', () => {
+      renderEntries();
+      renderCalendar();
+    });
+
+    document.getElementById('todayBtn').addEventListener('click', () => {
+      viewDateInput.value = dateKey(new Date());
+      renderEntries();
+      renderCalendar();
+    });
+
+    function formatTime(iso) {
+      return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function renderEntries() {
+      const key = viewDateInput.value;
+      const label = document.getElementById('selectedDateLabel');
+      const list = document.getElementById('entriesList');
+
+      const d = new Date(key + 'T12:00:00');
+      label.textContent = d.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      label.classList.toggle('weekend', isWeekendKey(key));
+
+      const entries = loadEntries();
+      const dayEntries = entries[key] || [];
+
+      if (dayEntries.length === 0) {
+        list.innerHTML = '<p class="no-entries">No entries for this date.</p>';
+        return;
+      }
+
+      list.innerHTML = dayEntries.map((e, i) => `
+        <div class="entry-line">
+          <span class="entry-time">${formatTime(e.t)}</span>
+          <span class="entry-text"></span>
+          <button class="entry-delete" data-index="${i}" title="Delete this entry" type="button">✕</button>
+        </div>`).join('');
+
+      // Entry text is user content -- assign via textContent, never innerHTML.
+      const textSpans = list.querySelectorAll('.entry-text');
+      dayEntries.forEach((e, i) => { textSpans[i].textContent = e.text; });
+
+      list.querySelectorAll('.entry-delete').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          if (!confirm('Delete this entry?')) return;
+          const all = loadEntries();
+          all[key].splice(parseInt(btn.dataset.index), 1);
+          if (all[key].length === 0) delete all[key];
+          saveEntries(all);
+          renderEntries();
+          renderCalendar();
+        });
+      });
+    }
+
+    // ------------------------------ Calendar ------------------------------
+    let calYear, calMonth; // currently displayed month
+
+    (function initCalendarMonth() {
+      const today = new Date();
+      calYear = today.getFullYear();
+      calMonth = today.getMonth();
+    })();
+
+    document.getElementById('calendarToggleBtn').addEventListener('click', () => {
+      const section = document.getElementById('calendarSection');
+      const showing = section.style.display === 'block';
+      section.style.display = showing ? 'none' : 'block';
+      if (!showing) {
+        // Re-open on the month of the currently selected date.
+        const sel = new Date(viewDateInput.value + 'T12:00:00');
+        calYear = sel.getFullYear();
+        calMonth = sel.getMonth();
+        renderCalendar();
+      }
+    });
+
+    document.getElementById('calPrevBtn').addEventListener('click', () => {
+      calMonth--;
+      if (calMonth < 0) { calMonth = 11; calYear--; }
+      renderCalendar();
+    });
+
+    document.getElementById('calNextBtn').addEventListener('click', () => {
+      calMonth++;
+      if (calMonth > 11) { calMonth = 0; calYear++; }
+      renderCalendar();
+    });
+
+    function renderCalendar() {
+      const grid = document.getElementById('calGrid');
+      const title = document.getElementById('calTitle');
+      const entries = loadEntries();
+      const todayKey = dateKey(new Date());
+      const selectedKey = viewDateInput.value;
+
+      title.textContent = new Date(calYear, calMonth, 1)
+        .toLocaleDateString([], { month: 'long', year: 'numeric' });
+
+      const dows = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      let html = dows.map((d, i) =>
+        `<div class="cal-dow${i === 0 || i === 6 ? ' weekend' : ''}">${d}</div>`).join('');
+
+      const firstDow = new Date(calYear, calMonth, 1).getDay();
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+      for (let i = 0; i < firstDow; i++) html += '<div class="cal-day empty"></div>';
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const key = dateKey(new Date(calYear, calMonth, day));
+        const classes = ['cal-day'];
+        if (isWeekendKey(key)) classes.push('weekend');
+        if (key === todayKey) classes.push('today');
+        if (key === selectedKey) classes.push('selected');
+        const dot = entries[key] && entries[key].length > 0 ? '<span class="dot"></span>' : '';
+        html += `<div class="${classes.join(' ')}" data-key="${key}">${day}${dot}</div>`;
+      }
+
+      grid.innerHTML = html;
+
+      grid.querySelectorAll('.cal-day:not(.empty)').forEach((cell) => {
+        cell.addEventListener('click', () => {
+          viewDateInput.value = cell.dataset.key;
+          renderEntries();
+          renderCalendar();
+        });
+      });
+    }
+
+    // --------------------------- Backup / restore -------------------------
+    document.getElementById('backupBtn').addEventListener('click', () => {
+      const data = JSON.stringify(loadEntries(), null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `life-diary-backup-${dateKey(new Date())}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('restoreBtn').addEventListener('click', () => {
+      document.getElementById('restoreFileInput').click();
+    });
+
+    document.getElementById('restoreFileInput').addEventListener('change', function () {
+      const file = this.files[0];
+      this.value = ''; // allow re-selecting the same file later
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        let incoming;
+        try {
+          incoming = JSON.parse(reader.result);
+        } catch {
+          alert('That file is not a valid diary backup (could not read JSON).');
+          return;
+        }
+        if (typeof incoming !== 'object' || incoming === null || Array.isArray(incoming)) {
+          alert('That file is not a valid diary backup (unexpected format).');
+          return;
+        }
+
+        // Merge: keep existing entries, add backup entries, skip exact
+        // duplicates (same date, timestamp, and text).
+        const current = loadEntries();
+        let added = 0;
+        for (const [key, dayEntries] of Object.entries(incoming)) {
+          if (!Array.isArray(dayEntries)) continue;
+          if (!current[key]) current[key] = [];
+          for (const e of dayEntries) {
+            if (!e || typeof e.text !== 'string' || typeof e.t !== 'string') continue;
+            const duplicate = current[key].some((c) => c.t === e.t && c.text === e.text);
+            if (!duplicate) {
+              current[key].push({ t: e.t, text: e.text });
+              added++;
+            }
+          }
+          current[key].sort((a, b) => a.t.localeCompare(b.t));
+        }
+        saveEntries(current);
+        renderEntries();
+        renderCalendar();
+        alert(`Restore complete: ${added} entr${added === 1 ? 'y' : 'ies'} added.`);
+      };
+      reader.readAsText(file);
+    });
+
+    // ------------------------------- Init ---------------------------------
+    renderEntries();
+    renderCalendar();
+  </script>
+</body>
+</html>
