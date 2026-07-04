@@ -814,6 +814,32 @@ td {
   }
 }
 
+@media print {
+  .digital-clock-colon {
+    animation: none;
+    opacity: 1;
+  }
+
+  .quick-nav,
+  #quote,
+  #billCalculator,
+  #printButton,
+  #moveToTop,
+  .digital-clock {
+    display: none !important;
+  }
+
+  body {
+    background: none;
+  }
+
+  .card,
+  #billDetails,
+  .result {
+    box-shadow: none;
+  }
+}
+
 /* ---------------------------------- instructions.html -------------------- */
 
 .container1 {

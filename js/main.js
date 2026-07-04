@@ -244,9 +244,23 @@ function updateCurrentDateTime() {
     clockDateElement.textContent = now.toLocaleDateString('en-US', dateOptions);
 }
 
+let clockIntervalId = null;
+
 document.addEventListener('DOMContentLoaded', function () {
     updateCurrentDateTime();
-    setInterval(updateCurrentDateTime, 1000);
+    clockIntervalId = setInterval(updateCurrentDateTime, 1000);
+
+    // The clock's 1s interval and blink animation keep forcing reflows
+    // while the browser paginates the print preview, which is what was
+    // making printing feel slow (and the clock is hidden in print anyway
+    // via the styles.css @media print block).
+    window.addEventListener('beforeprint', function () {
+        if (clockIntervalId) clearInterval(clockIntervalId);
+    });
+    window.addEventListener('afterprint', function () {
+        updateCurrentDateTime();
+        clockIntervalId = setInterval(updateCurrentDateTime, 1000);
+    });
 
     // Show a static quote immediately (instant, no network wait), then
     // swap it for a live motivational quote if one arrives in time. Any
