@@ -219,6 +219,18 @@
       font-style: italic;
       padding: 8px 0;
     }
+    .entry-group + .entry-group { margin-top: 14px; }
+    .entry-group-heading {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      background: var(--surface-muted, rgba(127,127,127,0.08));
+      border-radius: 6px;
+      padding: 4px 8px;
+      margin-bottom: 2px;
+    }
 
     /* ------------------------------ Calendar ------------------------------ */
     #calendarSection { display: none; }
@@ -547,6 +559,22 @@
       return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
 
+    const THREE_HOUR_BLOCK_LABELS = [
+      '12:00 AM – 3:00 AM', '3:00 AM – 6:00 AM',
+      '6:00 AM – 9:00 AM', '9:00 AM – 12:00 PM',
+      '12:00 PM – 3:00 PM', '3:00 PM – 6:00 PM',
+      '6:00 PM – 9:00 PM', '9:00 PM – 12:00 AM'
+    ];
+
+    function groupEntriesByThreeHours(dayEntries) {
+      const blocks = THREE_HOUR_BLOCK_LABELS.map(() => []);
+      dayEntries.forEach((e, i) => {
+        const hour = new Date(e.t).getHours();
+        blocks[Math.floor(hour / 3)].push({ ...e, index: i });
+      });
+      return blocks;
+    }
+
     function renderEntries() {
       const key = viewDateInput.value;
       const label = document.getElementById('selectedDateLabel');
@@ -564,16 +592,26 @@
         return;
       }
 
-      list.innerHTML = dayEntries.map((e, i) => `
-        <div class="entry-line">
-          <span class="entry-time">${formatTime(e.t)}</span>
-          <span class="entry-text"></span>
-          <button class="entry-delete" data-index="${i}" title="Delete this entry" type="button">✕</button>
-        </div>`).join('');
+      const blocks = groupEntriesByThreeHours(dayEntries);
+
+      list.innerHTML = blocks.map((blockEntries, b) => {
+        if (blockEntries.length === 0) return '';
+        return `
+        <div class="entry-group">
+          <div class="entry-group-heading">${THREE_HOUR_BLOCK_LABELS[b]}</div>
+          ${blockEntries.map((e) => `
+          <div class="entry-line">
+            <span class="entry-time">${formatTime(e.t)}</span>
+            <span class="entry-text" data-index="${e.index}"></span>
+            <button class="entry-delete" data-index="${e.index}" title="Delete this entry" type="button">✕</button>
+          </div>`).join('')}
+        </div>`;
+      }).join('');
 
       // Entry text is user content -- assign via textContent, never innerHTML.
-      const textSpans = list.querySelectorAll('.entry-text');
-      dayEntries.forEach((e, i) => { textSpans[i].textContent = e.text; });
+      list.querySelectorAll('.entry-text').forEach((span) => {
+        span.textContent = dayEntries[parseInt(span.dataset.index)].text;
+      });
 
       list.querySelectorAll('.entry-delete').forEach((btn) => {
         btn.addEventListener('click', () => {
