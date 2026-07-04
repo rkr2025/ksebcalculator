@@ -265,6 +265,16 @@
       padding: 4px 8px;
       margin-bottom: 2px;
     }
+    .entry-group-insight {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      padding: 6px 8px 8px;
+      line-height: 1.5;
+      border-left: 3px solid var(--accent);
+      margin: 2px 0 6px;
+    }
+    .entry-group-insight strong { color: inherit; font-weight: 700; }
+    .entry-group-insight .insight-highlight { color: var(--accent); font-weight: 700; }
 
     /* ------------------------------ Calendar ------------------------------ */
     #calendarSection { display: none; }
@@ -633,6 +643,35 @@
 
     let liveEntryTimerId = null;
 
+    function formatDurationHuman(ms) {
+      const totalMinutes = Math.round(ms / 60000);
+      const h = Math.floor(totalMinutes / 60);
+      const m = totalMinutes % 60;
+      if (h === 0 && m === 0) return '<1m';
+      if (h === 0) return `${m}m`;
+      if (m === 0) return `${h}h`;
+      return `${h}h ${m}m`;
+    }
+
+    // Live ms for an entry: frozen duration if a later entry already exists,
+    // or "now minus its timestamp" if it's still the running latest entry.
+    function currentElapsedForEntry(e, frozenElapsed, latestTimestamp) {
+      return e.t === latestTimestamp
+        ? (Date.now() - new Date(e.t).getTime())
+        : (frozenElapsed[e.t] || 0);
+    }
+
+    function computeBlockStats(blockEntries, frozenElapsed, latestTimestamp) {
+      let totalMs = 0;
+      let busiest = null;
+      blockEntries.forEach((e) => {
+        const ms = currentElapsedForEntry(e, frozenElapsed, latestTimestamp);
+        totalMs += ms;
+        if (!busiest || ms > busiest.ms) busiest = { ms, text: e.text };
+      });
+      return { totalMs, count: blockEntries.length, avgMs: totalMs / blockEntries.length, busiest };
+    }
+
     function groupEntriesByThreeHours(dayEntries) {
       const blocks = THREE_HOUR_BLOCK_LABELS.map(() => []);
       dayEntries.forEach((e, i) => {
@@ -669,6 +708,12 @@
         return `
         <div class="entry-group">
           <div class="entry-group-heading">${THREE_HOUR_BLOCK_LABELS[b]}</div>
+          <div class="entry-group-insight" data-block="${b}">
+            ⏳ <strong><span class="insight-total"></span></strong> tracked across ${blockEntries.length} entr${blockEntries.length === 1 ? 'y' : 'ies'}
+            — <span class="insight-highlight"><span class="insight-pct"></span></span> of today's tracked time.
+            Avg <span class="insight-avg"></span> per entry.
+            <span class="insight-longest"></span>
+          </div>
           ${blockEntries.map((e) => {
             const isLive = e.t === latestTimestamp;
             const badge = isLive
@@ -691,11 +736,39 @@
         span.textContent = dayEntries[parseInt(span.dataset.index)].text;
       });
 
+      function refreshGroupInsights() {
+        const perBlockStats = blocks.map((blockEntries) =>
+          blockEntries.length ? computeBlockStats(blockEntries, frozenElapsed, latestTimestamp) : null
+        );
+        const dayTotalMs = perBlockStats.reduce((sum, s) => sum + (s ? s.totalMs : 0), 0);
+
+        list.querySelectorAll('.entry-group-insight[data-block]').forEach((el) => {
+          const b = parseInt(el.dataset.block);
+          const stats = perBlockStats[b];
+          if (!stats) return;
+
+          const pct = dayTotalMs > 0 ? Math.round((stats.totalMs / dayTotalMs) * 100) : 0;
+          el.querySelector('.insight-total').textContent = formatDurationHuman(stats.totalMs);
+          el.querySelector('.insight-pct').textContent = `${pct}%`;
+          el.querySelector('.insight-avg').textContent = formatDurationHuman(stats.avgMs);
+
+          const longestEl = el.querySelector('.insight-longest');
+          if (stats.busiest && stats.busiest.ms > 0 && stats.count > 1) {
+            longestEl.textContent = `Longest stretch: ${formatDurationHuman(stats.busiest.ms)} on "${stats.busiest.text}".`;
+          } else {
+            longestEl.textContent = '';
+          }
+        });
+      }
+
+      refreshGroupInsights();
+
       const liveBadge = list.querySelector('[data-timer-t]');
       if (liveBadge) {
         const startTime = new Date(liveBadge.dataset.timerT).getTime();
         liveEntryTimerId = setInterval(() => {
           liveBadge.textContent = `⏱ ${formatDuration(Date.now() - startTime)}`;
+          refreshGroupInsights();
         }, 1000);
       }
 
