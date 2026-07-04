@@ -534,6 +534,14 @@
       document.getElementById(id).addEventListener('change', saveBillingProfileFromForm);
     });
 
+    const INITIAL_FORM_FIELD_IDS = ['init_date', 'init_solar', 'init_t1', 'init_t2', 'init_t3', 'init_export'];
+
+    function setInitialFormFieldsDisabled(disabled) {
+      INITIAL_FORM_FIELD_IDS.forEach((id) => {
+        document.getElementById(id).disabled = disabled;
+      });
+    }
+
     function displayInitialValues() {
       const el = document.getElementById("initialValuesDisplay");
       const saveBtn = document.getElementById("saveInitialBtn");
@@ -541,6 +549,7 @@
         el.innerHTML = '<em>No valid initial readings provided. Please enter initial readings to enable usage analysis.</em>';
         saveBtn.classList.remove('disabled');
         saveBtn.removeAttribute('disabled');
+        setInitialFormFieldsDisabled(false);
       } else {
         el.innerHTML = `
           <div class="table-container">
@@ -574,6 +583,7 @@
         `;
         saveBtn.classList.add('disabled');
         saveBtn.setAttribute('disabled', 'disabled');
+        setInitialFormFieldsDisabled(true);
       }
     }
 
