@@ -281,6 +281,78 @@
       background: var(--accent);
     }
 
+    /* ------------------------------ Summary ------------------------------- */
+    #summaryPanel {
+      display: none;
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 13.5px;
+    }
+    #summaryPanel h4 {
+      margin: 0 0 8px;
+      font-size: 13.5px;
+    }
+    .summary-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 18px;
+      margin-bottom: 8px;
+      color: var(--text-muted);
+      font-size: 12.5px;
+    }
+    .summary-stats strong { color: var(--text); }
+    .summary-timeline {
+      margin: 6px 0 0;
+      padding-left: 18px;
+    }
+    .summary-timeline li {
+      margin-bottom: 4px;
+      line-height: 1.45;
+    }
+    .summary-timeline .t {
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-right: 6px;
+    }
+    #aiSummarySection {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border);
+    }
+    #aiSummaryText {
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+    .ai-note {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .ai-key-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .ai-key-row input {
+      flex: 1;
+      min-width: 180px;
+      padding: 7px 10px;
+      font-size: 12.5px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+    }
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 12.5px;
+    }
+
     /* --------------------------- Backup / restore ------------------------- */
     .backup-row {
       display: flex;
@@ -343,9 +415,29 @@
       <div class="view-controls">
         <input type="date" id="viewDateInput">
         <button class="btn-outline btn" id="todayBtn" type="button">Today</button>
+        <button class="btn btn-small" id="summaryBtn" type="button">✨ Summary</button>
         <span class="selected-date-label" id="selectedDateLabel"></span>
       </div>
       <div id="entriesList" style="margin-top: 12px;"></div>
+
+      <div id="summaryPanel">
+        <h4>📋 How the day went — <span id="summaryDateLabel"></span></h4>
+        <div class="summary-stats" id="summaryStats"></div>
+        <ol class="summary-timeline" id="summaryTimeline"></ol>
+
+        <div id="aiSummarySection">
+          <h4>🤖 AI Summary</h4>
+          <div id="aiSummaryText" style="display: none;"></div>
+          <p class="ai-note" id="aiStatusNote"></p>
+          <div class="ai-key-row" id="aiKeyRow" style="display: none;">
+            <input type="password" id="apiKeyInput" placeholder="sk-ant-... (your Anthropic API key)">
+            <button class="btn btn-small" id="saveApiKeyBtn" type="button">Save Key</button>
+          </div>
+          <p class="ai-note" id="aiKeyManageRow" style="display: none;">
+            <a href="#" id="clearApiKeyLink">Remove saved API key</a>
+          </p>
+        </div>
+      </div>
     </div>
 
     <!-- Backup / restore -->
@@ -625,6 +717,240 @@
         alert(`Restore complete: ${added} entr${added === 1 ? 'y' : 'ies'} added.`);
       };
       reader.readAsText(file);
+    });
+
+    // ------------------------------ Summary --------------------------------
+    // "How the day went": a local recap (always, instant, offline) plus an
+    // AI-written narrative on top when the user has saved their own
+    // Anthropic API key. The key is stored only in this browser's
+    // localStorage and requests go straight from the browser to the
+    // Anthropic API (which permits direct browser calls via the
+    // anthropic-dangerous-direct-browser-access header) -- no server involved.
+    const API_KEY_STORAGE = 'life_diary_api_key';
+
+    function wordCount(text) {
+      return text.trim().split(/\s+/).filter(Boolean).length;
+    }
+
+    function renderLocalSummary(key, dayEntries) {
+      const d = new Date(key + 'T12:00:00');
+      const dateLabel = document.getElementById('summaryDateLabel');
+      dateLabel.textContent = d.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+      dateLabel.style.color = isWeekendKey(key) ? 'var(--weekend)' : '';
+
+      const totalWords = dayEntries.reduce((n, e) => n + wordCount(e.text), 0);
+      const firstTime = formatTime(dayEntries[0].t);
+      const lastTime = formatTime(dayEntries[dayEntries.length - 1].t);
+
+      document.getElementById('summaryStats').innerHTML = `
+        <span><strong>${dayEntries.length}</strong> entr${dayEntries.length === 1 ? 'y' : 'ies'}</span>
+        <span>First: <strong>${firstTime}</strong></span>
+        <span>Last: <strong>${lastTime}</strong></span>
+        <span><strong>${totalWords}</strong> words</span>`;
+
+      const timeline = document.getElementById('summaryTimeline');
+      timeline.innerHTML = dayEntries.map(() => '<li><span class="t"></span><span class="txt"></span></li>').join('');
+      const items = timeline.querySelectorAll('li');
+      dayEntries.forEach((e, i) => {
+        items[i].querySelector('.t').textContent = formatTime(e.t);
+        // First sentence (or up to 120 chars) of each entry as the timeline line
+        const firstLine = e.text.split(/\n/)[0];
+        const brief = firstLine.length > 120 ? firstLine.slice(0, 117) + '...' : firstLine;
+        items[i].querySelector('.txt').textContent = brief;
+      });
+    }
+
+    async function fetchAiSummary(apiKey, key, dayEntries) {
+      const d = new Date(key + 'T12:00:00');
+      const entriesText = dayEntries
+        .map((e) => `[${formatTime(e.t)}] ${e.text}`)
+        .join('\n');
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: 'claude-opus-4-8',
+          max_tokens: 1024,
+          system: 'You are a warm, thoughtful journaling companion. Summarize the user\'s diary entries for one day into a short narrative (4-6 sentences) of how their day went: the overall arc, mood, and anything notable. Speak to the user as "you". Do not invent events that are not in the entries. End with one gentle, encouraging observation.',
+          messages: [{
+            role: 'user',
+            content: `My diary entries for ${d.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}:\n\n${entriesText}\n\nPlease summarize how my day went.`,
+          }],
+        }),
+      });
+
+      if (!response.ok) {
+        let apiMessage = '';
+        try {
+          const err = await response.json();
+          apiMessage = err.error && err.error.message ? ` -- ${err.error.message}` : '';
+        } catch { /* body not JSON */ }
+        if (response.status === 401) {
+          throw new Error('Your API key was rejected (invalid or revoked). Remove the saved key below and enter a new one.');
+        }
+        throw new Error(`API request failed (HTTP ${response.status})${apiMessage}`);
+      }
+
+      const data = await response.json();
+      const textBlock = (data.content || []).find((b) => b.type === 'text');
+      if (!textBlock) throw new Error('The API returned no text.');
+      return textBlock.text;
+    }
+
+    function setAiUiState({ status, showKeyEntry, showManage, aiText }) {
+      const note = document.getElementById('aiStatusNote');
+      const textEl = document.getElementById('aiSummaryText');
+      note.textContent = status || '';
+      note.style.display = status ? 'block' : 'none';
+      document.getElementById('aiKeyRow').style.display = showKeyEntry ? 'flex' : 'none';
+      document.getElementById('aiKeyManageRow').style.display = showManage ? 'block' : 'none';
+      textEl.style.display = aiText ? 'block' : 'none';
+      if (aiText) textEl.textContent = aiText;
+    }
+
+    // Free on-device AI via the browser's built-in Summarizer API
+    // (Chrome 138+/Edge -- Gemini Nano/Phi running locally). No API key, no
+    // cost; the entries never leave the device. The model is downloaded once
+    // by the browser on first use.
+    function withTimeout(promise, ms, message) {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms)),
+      ]);
+    }
+
+    async function fetchBrowserAiSummary(key, dayEntries) {
+      // availability() should answer near-instantly; if it hangs (seen on
+      // some setups), give up quickly and fall through to the other options
+      // instead of leaving the status stuck on "Summarizing...".
+      const availability = await withTimeout(Summarizer.availability(), 5000, 'on-device AI did not respond');
+      if (availability === 'unavailable') {
+        throw new Error('on-device AI unavailable');
+      }
+
+      const note = document.getElementById('aiStatusNote');
+      const summarizer = await Summarizer.create({
+        sharedContext: 'Personal diary entries written by one person over a single day, each line prefixed with the time it was written.',
+        type: 'tldr',
+        format: 'plain-text',
+        length: 'medium',
+        monitor(m) {
+          m.addEventListener('downloadprogress', (e) => {
+            note.textContent = `⬇️ Downloading the browser's built-in AI model (one-time): ${Math.round((e.loaded || 0) * 100)}%`;
+          });
+        },
+      });
+
+      try {
+        const entriesText = dayEntries.map((e) => `[${formatTime(e.t)}] ${e.text}`).join('\n');
+        // Generous cap: first use may include a model download + local
+        // inference on modest hardware, but never leave the UI stuck forever.
+        return await withTimeout(
+          summarizer.summarize(entriesText, {
+            context: 'Summarize how this person\'s day went overall -- the arc of the day and anything notable.',
+          }),
+          180000,
+          'on-device summarization timed out',
+        );
+      } finally {
+        summarizer.destroy();
+      }
+    }
+
+    async function renderSummary() {
+      const key = viewDateInput.value;
+      const dayEntries = loadEntries()[key] || [];
+      const panel = document.getElementById('summaryPanel');
+      panel.style.display = 'block';
+
+      if (dayEntries.length === 0) {
+        const emptyLabel = document.getElementById('summaryDateLabel');
+        emptyLabel.textContent =
+          new Date(key + 'T12:00:00').toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+        emptyLabel.style.color = isWeekendKey(key) ? 'var(--weekend)' : '';
+        document.getElementById('summaryStats').innerHTML = '<span>No entries for this date -- nothing to summarize yet.</span>';
+        document.getElementById('summaryTimeline').innerHTML = '';
+        setAiUiState({ status: '', showKeyEntry: false, showManage: false, aiText: '' });
+        return;
+      }
+
+      renderLocalSummary(key, dayEntries);
+
+      const apiKey = localStorage.getItem(API_KEY_STORAGE);
+
+      // 1st choice: the browser's free on-device AI.
+      if (typeof Summarizer !== 'undefined') {
+        setAiUiState({ status: '✨ Summarizing on this device (free & private)...', showKeyEntry: false, showManage: !!apiKey, aiText: '' });
+        try {
+          const summary = await fetchBrowserAiSummary(key, dayEntries);
+          setAiUiState({
+            status: '🆓 Written by your browser\'s built-in AI -- free, and your entries never left this device.',
+            showKeyEntry: false,
+            showManage: !!apiKey,
+            aiText: summary,
+          });
+          return;
+        } catch (err) {
+          // On-device AI exists but can't run here (unsupported hardware,
+          // model blocked from downloading, etc.) -- fall through to the
+          // Claude path if a key is saved, else explain the options.
+        }
+      }
+
+      // 2nd choice: Claude API, if the user saved a key.
+      if (apiKey) {
+        setAiUiState({ status: '✨ Writing your day\'s summary...', showKeyEntry: false, showManage: true, aiText: '' });
+        try {
+          const summary = await fetchAiSummary(apiKey, key, dayEntries);
+          setAiUiState({ status: '', showKeyEntry: false, showManage: true, aiText: summary });
+        } catch (err) {
+          setAiUiState({
+            status: `AI summary unavailable: ${err.message}`,
+            showKeyEntry: err.message.indexOf('rejected') !== -1,
+            showManage: true,
+            aiText: '',
+          });
+        }
+        return;
+      }
+
+      // Neither available.
+      setAiUiState({
+        status: 'Free AI summaries use your browser\'s built-in on-device AI, which isn\'t available here yet. In Edge/Chrome, make sure the browser is up to date and on-device AI is enabled (it may download a model on first use). Alternatively, save an Anthropic API key (paid) below.',
+        showKeyEntry: true,
+        showManage: false,
+        aiText: '',
+      });
+    }
+
+    document.getElementById('summaryBtn').addEventListener('click', renderSummary);
+
+    document.getElementById('saveApiKeyBtn').addEventListener('click', () => {
+      const input = document.getElementById('apiKeyInput');
+      const key = input.value.trim();
+      if (!key) { input.focus(); return; }
+      localStorage.setItem(API_KEY_STORAGE, key);
+      input.value = '';
+      renderSummary(); // re-run, now with the AI half
+    });
+
+    document.getElementById('clearApiKeyLink').addEventListener('click', (e) => {
+      e.preventDefault();
+      if (!confirm('Remove the saved API key from this browser?')) return;
+      localStorage.removeItem(API_KEY_STORAGE);
+      renderSummary();
+    });
+
+    // Hide the summary panel when switching dates so a stale summary never
+    // sits under a different date's entries.
+    viewDateInput.addEventListener('change', () => {
+      document.getElementById('summaryPanel').style.display = 'none';
     });
 
     // ------------------------------- Init ---------------------------------
