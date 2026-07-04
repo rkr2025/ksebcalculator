@@ -444,11 +444,13 @@
     <div class="card">
       <h3>💾 Backup &amp; Restore</h3>
       <div class="backup-row">
-        <button class="btn" id="backupBtn" type="button">⬇️ Backup (Download)</button>
+        <button class="btn" id="backupBtn" type="button">💾 Backup</button>
         <button class="btn-outline btn" id="restoreBtn" type="button">⬆️ Restore from File</button>
+        <button class="btn-outline btn" id="resumeBackupBtn" type="button" style="display: none;">▶️ Resume Auto-Backup</button>
         <input type="file" id="restoreFileInput" accept=".json,application/json">
       </div>
-      <p class="backup-note">Backup downloads all your entries as a JSON file. Restore merges a backup file's entries back in (existing entries are kept).</p>
+      <p class="backup-note" id="backupStatusNote"></p>
+      <p class="backup-note" id="backupOffRow" style="display: none;"><a href="#" id="disableBackupLink">Turn off auto-backup</a></p>
     </div>
   </div>
 
@@ -468,6 +470,9 @@
 
     function saveEntries(entries) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+      // Every change (new entry, delete, restore) flows through here, so
+      // this one hook keeps the on-disk backup file current automatically.
+      scheduleAutoBackup();
     }
 
     function dateKey(d) {
@@ -658,7 +663,77 @@
     }
 
     // --------------------------- Backup / restore -------------------------
-    document.getElementById('backupBtn').addEventListener('click', () => {
+    // Auto-backup: after the user picks a backup file ONCE (File System
+    // Access API -- Edge/Chrome), every later change is written to that
+    // same file automatically; no more clicking Backup. The file handle is
+    // persisted in IndexedDB so it survives page reloads (the browser may
+    // ask once per session to re-allow access -- choose "Allow on every
+    // visit" to make it fully silent). Browsers without the API (Firefox,
+    // Safari) keep the old manual download behavior.
+    const supportsAutoBackup = 'showSaveFilePicker' in window;
+    let backupHandle = null;
+    let backupTimer = null;
+
+    function idbOpen() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open('life_diary_backup', 1);
+        req.onupgradeneeded = () => req.result.createObjectStore('kv');
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+    async function idbSet(key, value) {
+      const db = await idbOpen();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('kv', 'readwrite');
+        tx.objectStore('kv').put(value, key);
+        tx.oncomplete = () => { db.close(); resolve(); };
+        tx.onerror = () => { db.close(); reject(tx.error); };
+      });
+    }
+    async function idbGet(key) {
+      const db = await idbOpen();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('kv', 'readonly');
+        const req = tx.objectStore('kv').get(key);
+        req.onsuccess = () => { db.close(); resolve(req.result); };
+        req.onerror = () => { db.close(); reject(req.error); };
+      });
+    }
+    async function idbDelete(key) {
+      const db = await idbOpen();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('kv', 'readwrite');
+        tx.objectStore('kv').delete(key);
+        tx.oncomplete = () => { db.close(); resolve(); };
+        tx.onerror = () => { db.close(); reject(tx.error); };
+      });
+    }
+
+    function setBackupStatus(text, showOffLink) {
+      document.getElementById('backupStatusNote').textContent = text;
+      document.getElementById('backupOffRow').style.display = showOffLink ? 'block' : 'none';
+    }
+
+    async function writeBackupFile() {
+      if (!backupHandle) return;
+      try {
+        const writable = await backupHandle.createWritable();
+        await writable.write(JSON.stringify(loadEntries(), null, 2));
+        await writable.close();
+        setBackupStatus(`✅ Auto-backup ON -- all entries saved to "${backupHandle.name}" (last: ${new Date().toLocaleTimeString()}).`, true);
+      } catch (err) {
+        setBackupStatus(`⚠️ Auto-backup failed: ${err.message}. Click Backup to choose the file again.`, true);
+      }
+    }
+
+    function scheduleAutoBackup() {
+      if (!backupHandle) return;
+      clearTimeout(backupTimer);
+      backupTimer = setTimeout(writeBackupFile, 800);
+    }
+
+    function downloadBackup() {
       const data = JSON.stringify(loadEntries(), null, 2);
       const blob = new Blob([data], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -669,7 +744,89 @@
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('backupBtn').addEventListener('click', async () => {
+      if (!supportsAutoBackup) {
+        downloadBackup();
+        return;
+      }
+      let handle;
+      try {
+        handle = await window.showSaveFilePicker({
+          suggestedName: 'life-diary-backup.json',
+          types: [{ description: 'JSON file', accept: { 'application/json': ['.json'] } }],
+        });
+      } catch (err) {
+        if (err && err.name === 'AbortError') return; // user cancelled the picker
+        // Picker blocked (e.g. iframe/permissions) -- fall back to download
+        downloadBackup();
+        return;
+      }
+      backupHandle = handle;
+      document.getElementById('resumeBackupBtn').style.display = 'none';
+      try {
+        // Timeout guard: IndexedDB can hang entirely in some environments;
+        // never let that block the first backup write.
+        await withTimeout(idbSet('handle', handle), 3000, 'idb timeout');
+      } catch {
+        // Couldn't persist the handle (e.g. private browsing) -- auto-backup
+        // still works for this session; it just won't survive a reload.
+      }
+      await writeBackupFile();
     });
+
+    document.getElementById('resumeBackupBtn').addEventListener('click', async () => {
+      let handle = null;
+      try { handle = await withTimeout(idbGet('handle'), 3000, 'idb timeout'); } catch { /* treat as absent */ }
+      if (!handle) return;
+      try {
+        const perm = await handle.requestPermission({ mode: 'readwrite' });
+        if (perm === 'granted') {
+          backupHandle = handle;
+          document.getElementById('resumeBackupBtn').style.display = 'none';
+          await writeBackupFile();
+        }
+      } catch (err) {
+        setBackupStatus(`⚠️ Could not resume auto-backup: ${err.message}. Click Backup to choose the file again.`, false);
+      }
+    });
+
+    document.getElementById('disableBackupLink').addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (!confirm('Turn off auto-backup? (Your existing backup file is kept; it just stops updating.)')) return;
+      backupHandle = null;
+      try { await withTimeout(idbDelete('handle'), 3000, 'idb timeout'); } catch { /* nothing to clear */ }
+      document.getElementById('resumeBackupBtn').style.display = 'none';
+      setBackupStatus('Auto-backup is OFF. Click Backup once to choose a backup file -- after that, every new entry is saved to it automatically.', false);
+    });
+
+    // On load: reconnect to the previously chosen backup file, if any.
+    (async function initAutoBackup() {
+      if (!supportsAutoBackup) {
+        setBackupStatus('Backup downloads all entries as a JSON file (this browser does not support automatic backup -- use Edge or Chrome for that). Restore merges a backup file back in.', false);
+        return;
+      }
+      let handle = null;
+      try { handle = await withTimeout(idbGet('handle'), 3000, 'idb timeout'); } catch { /* first visit or idb unavailable */ }
+      if (!handle) {
+        setBackupStatus('Auto-backup is OFF. Click Backup once to choose a backup file -- after that, every new entry is saved to it automatically.', false);
+        return;
+      }
+      try {
+        const perm = await handle.queryPermission({ mode: 'readwrite' });
+        if (perm === 'granted') {
+          backupHandle = handle;
+          setBackupStatus(`✅ Auto-backup ON -- entries are being saved to "${handle.name}" automatically.`, true);
+        } else {
+          // Browser wants a fresh user gesture this session before writing.
+          document.getElementById('resumeBackupBtn').style.display = 'inline-block';
+          setBackupStatus(`Auto-backup is set up ("${handle.name}") but the browser needs your OK this session -- click "Resume Auto-Backup". (Tip: choose "Allow on every visit" to skip this.)`, true);
+        }
+      } catch {
+        setBackupStatus('Auto-backup is OFF. Click Backup once to choose a backup file -- after that, every new entry is saved to it automatically.', false);
+      }
+    })();
 
     document.getElementById('restoreBtn').addEventListener('click', () => {
       document.getElementById('restoreFileInput').click();
