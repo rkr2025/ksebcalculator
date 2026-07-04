@@ -203,6 +203,7 @@
       white-space: nowrap;
     }
     .entry-text { flex: 1; word-break: break-word; white-space: pre-wrap; }
+    .entry-edit,
     .entry-delete {
       flex: none;
       background: none;
@@ -212,7 +213,30 @@
       padding: 0 4px;
       line-height: 1.4;
     }
+    .entry-edit:hover { color: var(--accent, #3a7bfd); }
     .entry-delete:hover { color: var(--danger); }
+    .entry-edit-textarea {
+      flex: 1;
+      font: inherit;
+      color: inherit;
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 8px;
+      resize: vertical;
+      min-height: 44px;
+    }
+    .entry-edit-save,
+    .entry-edit-cancel {
+      flex: none;
+      border: none;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12.5px;
+      cursor: pointer;
+    }
+    .entry-edit-save { background: var(--accent, #3a7bfd); color: #fff; }
+    .entry-edit-cancel { background: var(--surface-muted); color: var(--text-muted); }
     .no-entries {
       color: var(--text-muted);
       font-size: 13.5px;
@@ -600,9 +624,10 @@
         <div class="entry-group">
           <div class="entry-group-heading">${THREE_HOUR_BLOCK_LABELS[b]}</div>
           ${blockEntries.map((e) => `
-          <div class="entry-line">
+          <div class="entry-line" data-index="${e.index}">
             <span class="entry-time">${formatTime(e.t)}</span>
             <span class="entry-text" data-index="${e.index}"></span>
+            <button class="entry-edit" data-index="${e.index}" title="Edit this entry" type="button">✏️</button>
             <button class="entry-delete" data-index="${e.index}" title="Delete this entry" type="button">✕</button>
           </div>`).join('')}
         </div>`;
@@ -623,6 +648,45 @@
           renderEntries();
           renderCalendar();
         });
+      });
+
+      list.querySelectorAll('.entry-edit').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const index = parseInt(btn.dataset.index);
+          startEditingEntry(key, index);
+        });
+      });
+    }
+
+    function startEditingEntry(key, index) {
+      const line = document.querySelector(`.entry-line[data-index="${index}"]`);
+      if (!line) return;
+      const entries = loadEntries();
+      const entry = entries[key][index];
+
+      line.innerHTML = `
+        <span class="entry-time">${formatTime(entry.t)}</span>
+        <textarea class="entry-edit-textarea"></textarea>
+        <button class="entry-edit-save" type="button">Save</button>
+        <button class="entry-edit-cancel" type="button">Cancel</button>`;
+
+      const textarea = line.querySelector('.entry-edit-textarea');
+      textarea.value = entry.text; // user content -- .value, not innerHTML
+      textarea.focus();
+      textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+
+      line.querySelector('.entry-edit-save').addEventListener('click', () => {
+        const newText = textarea.value.trim();
+        if (!newText) { alert('Entry text cannot be empty.'); return; }
+        const all = loadEntries();
+        all[key][index].text = newText;
+        saveEntries(all);
+        renderEntries();
+        renderCalendar();
+      });
+
+      line.querySelector('.entry-edit-cancel').addEventListener('click', () => {
+        renderEntries();
       });
     }
 
