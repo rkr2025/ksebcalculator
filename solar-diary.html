@@ -472,6 +472,8 @@
         <thead>
           <tr>
             <th>Date</th>
+            <th>Solar Generation</th>
+            <th>Direct Solar Usage</th>
             <th>Normal (T1)</th>
             <th>Peak (T2)</th>
             <th>Off-Peak (T3)</th>
@@ -642,22 +644,42 @@
       body.innerHTML = "";
       if (!initialReadings || entries.length === 0) return;
 
+      const dailyByDate = [];
       let prev = initialReadings;
       entries.forEach((entry) => {
         const daily = {
+          solar: entry.solar - prev.solar,
+          export: entry.export - prev.export,
           t1: entry.t1 - prev.t1,
           t2: entry.t2 - prev.t2,
           t3: entry.t3 - prev.t3
         };
-        const dailyTotal = daily.t1 + daily.t2 + daily.t3;
+        const dayKey = new Date(entry.timestamp).toDateString();
+        const existing = dailyByDate.find(d => d.dayKey === dayKey);
+        if (existing) {
+          existing.solar += daily.solar;
+          existing.export += daily.export;
+          existing.t1 += daily.t1;
+          existing.t2 += daily.t2;
+          existing.t3 += daily.t3;
+        } else {
+          dailyByDate.push({ dayKey, date: new Date(entry.timestamp).toLocaleDateString(), ...daily });
+        }
+        prev = entry;
+      });
+
+      dailyByDate.forEach((daily) => {
+        const directSolarUsage = daily.solar - daily.export;
+        const dailyTotal = directSolarUsage + daily.t1 + daily.t2 + daily.t3;
         body.innerHTML += `<tr>
-          <td>${entry.date}</td>
+          <td>${daily.date}</td>
+          <td>${Math.round(daily.solar)}</td>
+          <td>${Math.round(directSolarUsage)}</td>
           <td>${Math.round(daily.t1)}</td>
           <td>${Math.round(daily.t2)}</td>
           <td>${Math.round(daily.t3)}</td>
           <td><strong>${Math.round(dailyTotal)}</strong></td>
         </tr>`;
-        prev = entry;
       });
     }
 
