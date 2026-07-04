@@ -430,7 +430,7 @@
           <div id="aiSummaryText" style="display: none;"></div>
           <p class="ai-note" id="aiStatusNote"></p>
           <div class="ai-key-row" id="aiKeyRow" style="display: none;">
-            <input type="password" id="apiKeyInput" placeholder="sk-ant-... (your Anthropic API key)">
+            <input type="password" id="apiKeyInput" placeholder="AIza... (free Gemini key from aistudio.google.com)">
             <button class="btn btn-small" id="saveApiKeyBtn" type="button">Save Key</button>
           </div>
           <p class="ai-note" id="aiKeyManageRow" style="display: none;">
@@ -825,6 +825,55 @@
       ]);
     }
 
+    // Google Gemini API, free tier -- the key is free (aistudio.google.com,
+    // Google account only, no credit card) and the API allows direct
+    // browser calls, so it works from a static page with no server.
+    const GEMINI_KEY_STORAGE = 'life_diary_gemini_key';
+    const GEMINI_MODELS = ['gemini-flash-latest', 'gemini-2.5-flash'];
+
+    async function fetchGeminiSummary(geminiKey, key, dayEntries) {
+      const d = new Date(key + 'T12:00:00');
+      const entriesText = dayEntries.map((e) => `[${formatTime(e.t)}] ${e.text}`).join('\n');
+
+      const body = JSON.stringify({
+        system_instruction: {
+          parts: [{ text: 'You are a warm, thoughtful journaling companion. Summarize the user\'s diary entries for one day into a short narrative (4-6 sentences) of how their day went: the overall arc, mood, and anything notable. Speak to the user as "you". Do not invent events that are not in the entries. End with one gentle, encouraging observation.' }],
+        },
+        contents: [{
+          parts: [{ text: `My diary entries for ${d.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}:\n\n${entriesText}\n\nPlease summarize how my day went.` }],
+        }],
+      });
+
+      let lastError = null;
+      for (const model of GEMINI_MODELS) {
+        const response = await withTimeout(
+          fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey },
+            body,
+          }),
+          60000,
+          'the Gemini API took too long to respond',
+        );
+
+        if (response.status === 404) { lastError = new Error(`model ${model} not found`); continue; }
+        if (response.status === 400 || response.status === 401 || response.status === 403) {
+          throw new Error('Your Gemini API key was rejected (invalid or restricted). Remove the saved key below and enter a new one from aistudio.google.com.');
+        }
+        if (response.status === 429) {
+          throw new Error('The free Gemini quota is used up for now -- try again in a minute (or tomorrow if the daily limit is hit).');
+        }
+        if (!response.ok) { lastError = new Error(`Gemini API error (HTTP ${response.status})`); continue; }
+
+        const data = await response.json();
+        const parts = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
+        const text = parts ? parts.map((p) => p.text || '').join('').trim() : '';
+        if (!text) throw new Error('the Gemini API returned no text');
+        return text;
+      }
+      throw lastError || new Error('no Gemini model responded');
+    }
+
     async function fetchBrowserAiSummary(key, dayEntries) {
       // availability() should answer near-instantly; if it hangs (seen on
       // some setups), give up quickly and fall through to the other options
@@ -882,28 +931,48 @@
 
       renderLocalSummary(key, dayEntries);
 
+      const geminiKey = localStorage.getItem(GEMINI_KEY_STORAGE);
       const apiKey = localStorage.getItem(API_KEY_STORAGE);
+      const anyKey = !!(geminiKey || apiKey);
 
-      // 1st choice: the browser's free on-device AI.
+      // 1st choice: Google Gemini with the user's free API key.
+      if (geminiKey) {
+        setAiUiState({ status: '✨ Writing your day\'s summary (Gemini, free)...', showKeyEntry: false, showManage: true, aiText: '' });
+        try {
+          const summary = await fetchGeminiSummary(geminiKey, key, dayEntries);
+          setAiUiState({ status: '🆓 Written by Google Gemini (free tier).', showKeyEntry: false, showManage: true, aiText: summary });
+          return;
+        } catch (err) {
+          setAiUiState({
+            status: `Gemini summary unavailable: ${err.message}`,
+            showKeyEntry: err.message.indexOf('rejected') !== -1,
+            showManage: true,
+            aiText: '',
+          });
+          if (err.message.indexOf('rejected') !== -1 || err.message.indexOf('quota') !== -1) return;
+          // Other failures (network blip, model gone): fall through and try
+          // the remaining options.
+        }
+      }
+
+      // 2nd choice: the browser's free on-device AI (private, offline).
       if (typeof Summarizer !== 'undefined') {
-        setAiUiState({ status: '✨ Summarizing on this device (free & private)...', showKeyEntry: false, showManage: !!apiKey, aiText: '' });
+        setAiUiState({ status: '✨ Summarizing on this device (free & private)...', showKeyEntry: false, showManage: anyKey, aiText: '' });
         try {
           const summary = await fetchBrowserAiSummary(key, dayEntries);
           setAiUiState({
             status: '🆓 Written by your browser\'s built-in AI -- free, and your entries never left this device.',
             showKeyEntry: false,
-            showManage: !!apiKey,
+            showManage: anyKey,
             aiText: summary,
           });
           return;
         } catch (err) {
-          // On-device AI exists but can't run here (unsupported hardware,
-          // model blocked from downloading, etc.) -- fall through to the
-          // Claude path if a key is saved, else explain the options.
+          // Not available on this machine -- fall through.
         }
       }
 
-      // 2nd choice: Claude API, if the user saved a key.
+      // 3rd choice: Claude API, if the user saved an Anthropic key.
       if (apiKey) {
         setAiUiState({ status: '✨ Writing your day\'s summary...', showKeyEntry: false, showManage: true, aiText: '' });
         try {
@@ -920,9 +989,9 @@
         return;
       }
 
-      // Neither available.
+      // No key saved and no on-device AI: explain the free option.
       setAiUiState({
-        status: 'Free AI summaries use your browser\'s built-in on-device AI, which isn\'t available here yet. In Edge/Chrome, make sure the browser is up to date and on-device AI is enabled (it may download a model on first use). Alternatively, save an Anthropic API key (paid) below.',
+        status: 'For free AI summaries, get a FREE Google Gemini API key: open aistudio.google.com, sign in with your Google account, click "Get API key" and create one (no credit card, no payment). Paste it below -- it is saved only in this browser, so avoid shared computers.',
         showKeyEntry: true,
         showManage: false,
         aiText: '',
@@ -935,15 +1004,22 @@
       const input = document.getElementById('apiKeyInput');
       const key = input.value.trim();
       if (!key) { input.focus(); return; }
-      localStorage.setItem(API_KEY_STORAGE, key);
+      // Auto-detect the provider from the key format: Google keys start
+      // with "AIza", Anthropic keys with "sk-ant-".
+      if (key.indexOf('sk-ant-') === 0) {
+        localStorage.setItem(API_KEY_STORAGE, key);
+      } else {
+        localStorage.setItem(GEMINI_KEY_STORAGE, key);
+      }
       input.value = '';
       renderSummary(); // re-run, now with the AI half
     });
 
     document.getElementById('clearApiKeyLink').addEventListener('click', (e) => {
       e.preventDefault();
-      if (!confirm('Remove the saved API key from this browser?')) return;
+      if (!confirm('Remove the saved API key(s) from this browser?')) return;
       localStorage.removeItem(API_KEY_STORAGE);
+      localStorage.removeItem(GEMINI_KEY_STORAGE);
       renderSummary();
     });
 
