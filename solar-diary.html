@@ -429,6 +429,10 @@
     </div>
     <h3 id="initialReadingHeading">🔑 June month Initial Reading</h3>
     <form id="initialForm">
+      <div>
+        <label for="init_date" style="font-size: 13px; color: #555; display: block; margin-bottom: 3px;">Date of Initial Reading</label>
+        <input type="date" id="init_date">
+      </div>
       <input type="number" id="init_solar" placeholder="Initial Solar Gen">
       <input type="number" id="init_t1" placeholder="Initial T1">
       <input type="number" id="init_t2" placeholder="Initial T2">
@@ -465,8 +469,8 @@
       </table>
     </div>
     <div class="center" style="margin: 10px 0;">
-      <label for="totalDaysInput" style="font-weight: bold; margin-right: 8px;">Total Number of Days (for Daily Energy usage):</label>
-      <input type="number" id="totalDaysInput" min="1" step="1" value="30" style="width: 80px;">
+      <label style="font-weight: bold; margin-right: 8px;">Total Number of Days (for Daily Energy usage):</label>
+      <span id="totalDaysDisplay">—</span>
     </div>
     <div id="usageInsights"></div>
     <div id="usageAnalysis"></div>
@@ -543,6 +547,7 @@
             <table>
               <thead>
                 <tr>
+                  <th>Date</th>
                   <th>Solar</th>
                   <th>T1</th>
                   <th>T2</th>
@@ -553,6 +558,7 @@
               </thead>
               <tbody>
                 <tr>
+                  <td>${initialReadingDateKey() ? new Date(initialReadingDateKey() + 'T00:00:00').toLocaleDateString() : '—'}</td>
                   <td>${initialReadings.solar}</td>
                   <td>${initialReadings.t1}</td>
                   <td>${initialReadings.t2}</td>
@@ -576,20 +582,43 @@
       localStorage.setItem("entries", JSON.stringify(entries));
     }
 
-    // "Daily Energy usage" divides by a day count the user enters directly
-    // (#totalDaysInput) rather than one computed automatically -- persisted
-    // across reloads the same way initialReadings/entries are.
-    function getTotalDaysInput() {
-      const input = document.getElementById("totalDaysInput");
-      const days = parseInt(input.value, 10);
-      return days > 0 ? days : null;
+    // "Daily Energy usage" divides by the number of days between the
+    // Initial Reading's date and the latest entry's date -- computed
+    // automatically so the day count is always correct, instead of relying
+    // on the user to keep a separate number in sync by hand.
+    function initialReadingDateKey() {
+      if (!initialReadings) return null;
+      if (initialReadings.date) return initialReadings.date;
+      // Back-compat: older saved readings only recorded a timestamp.
+      if (initialReadings.timestamp) return new Date(initialReadings.timestamp).toISOString().slice(0, 10);
+      return null;
     }
 
-    document.getElementById("totalDaysInput").value = localStorage.getItem("totalDaysForUsage") || 30;
-    document.getElementById("totalDaysInput").addEventListener("input", function () {
-      localStorage.setItem("totalDaysForUsage", this.value);
-      renderEntries();
-    });
+    function getTotalDaysInput() {
+      const dateKey = initialReadingDateKey();
+      if (!dateKey || entries.length === 0) return null;
+      const initDate = new Date(dateKey + 'T00:00:00');
+      const lastEntryDate = new Date(entries[entries.length - 1].timestamp);
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const days = Math.round((lastEntryDate - initDate) / msPerDay);
+      return days > 0 ? days : 1;
+    }
+
+    function updateTotalDaysDisplay() {
+      const el = document.getElementById('totalDaysDisplay');
+      const dateKey = initialReadingDateKey();
+      if (!dateKey) {
+        el.textContent = '— (set an Initial Reading date first)';
+        return;
+      }
+      if (entries.length === 0) {
+        el.textContent = '— (add a reading to calculate)';
+        return;
+      }
+      const days = getTotalDaysInput();
+      const lastEntryDate = new Date(entries[entries.length - 1].timestamp);
+      el.textContent = `${days} day(s) — from ${new Date(dateKey + 'T00:00:00').toLocaleDateString()} to ${lastEntryDate.toLocaleDateString()}`;
+    }
 
     function renderEntries() {
       const tbody = document.getElementById("entriesBody");
@@ -598,6 +627,7 @@
       tbody.innerHTML = "";
       insightsEl.innerHTML = "";
       analysisEl.innerHTML = "";
+      updateTotalDaysDisplay();
 
       let total = { solar: 0, t1: 0, t2: 0, t3: 0, export: 0 };
 
@@ -683,7 +713,7 @@
               const dailyUsage = (totalUsage / totalDays).toFixed(2);
               insightsHTML += `<p><strong>Daily Energy usage:</strong> ${totalUsage} / ${totalDays} day(s) = ${dailyUsage} units/day</p>`;
             } else {
-              insightsHTML += `<p class="advice">Daily Energy usage: enter the total number of days above to calculate.</p>`;
+              insightsHTML += `<p class="advice">Daily Energy usage: set an Initial Reading date and add at least one reading to calculate.</p>`;
             }
         } catch (err) {
             console.error('Error generating usage insights:', err);
@@ -801,6 +831,60 @@
       };
     }
 
+    // solar-diary always drives computeBill() with billingType 'tod' (see
+    // billInputsFromUsage above), so the T1/T2/T3 sub-breakdown always
+    // applies -- unlike index.html's Normal-billing path, there's no case
+    // here without a timezone split to show.
+    function todSubLabel(bill, normalField, peakField, offPeakField) {
+      return `<br><small>T1: ${(bill[normalField] || 0).toFixed(2)} + T2: ${(bill[peakField] || 0).toFixed(2)} + T3: ${(bill[offPeakField] || 0).toFixed(2)}</small>`;
+    }
+
+    function usageRows(bill) {
+      return `
+        <tr><td>Solar Generation${todSubLabel(bill, 'solarNormal', 'solarPeak', 'solarOffPeak')}</td><td>${bill.solarGeneration.toFixed(2)} Unit</td></tr>
+        <tr><td>Import Total${todSubLabel(bill, 'importNormal', 'importPeak', 'importOffPeak')}</td><td>${bill.importReading.toFixed(2)} Unit</td></tr>
+        <tr><td>Export Total${todSubLabel(bill, 'exportNormal', 'exportPeak', 'exportOffPeak')}</td><td>${bill.exportReading.toFixed(2)} Unit</td></tr>
+        <tr><td>Direct Usage from Solar<br><small>Solar − Export</small></td><td>${bill.generationUsage.toFixed(2)} Unit</td></tr>
+        <tr><td>Total Consumption<br><small>Direct Solar Usage + Import</small></td><td>${bill.unitsConsumed.toFixed(2)} Unit</td></tr>
+      `;
+    }
+
+    // The per-slab / per-timezone lines behind the single "Energy Charge"
+    // total -- whichever of the three tariff paths computeBill() took
+    // (js/calculator.js's applyTariffRules): telescopic bands, a flat
+    // non-telescopic rate, or a real T1/T2/T3 ToD split. See CLAUDE.md's
+    // "above20kW" field-selection pattern for why Peak/Off-Peak read from
+    // different fields depending on Connected Load.
+    function energyBreakdownRows(bill) {
+      if (bill.breakdownRows && bill.breakdownRows.length > 0) {
+        return bill.breakdownRows.map((row) => `
+          <tr><td style="padding-left: 24px; font-size: 0.9em;">${row.units} unit(s) @ ₹${row.rate.toFixed(2)}</td><td>₹${row.amount.toFixed(2)}</td></tr>
+        `).join('');
+      }
+
+      if (bill.billType === 'Non-Telescopic') {
+        return `<tr><td style="padding-left: 24px; font-size: 0.9em;">${(bill.bankAdjustedUnits || 0).toFixed(2)} unit(s) @ ₹${(bill.unitRate || 0).toFixed(2)}</td><td>₹${(bill.energyCharge || 0).toFixed(2)}</td></tr>`;
+      }
+
+      if (bill.billType === 'Non-Telescopic-ToD') {
+        const above20kW = bill.todBillingAbove20kW > 0;
+        const normalUnits = bill.Normal_NoOfUnitsFor_energy_calculation || 0;
+        const peakUnits = (above20kW ? bill.Peak_NoOfUnitsFor_energy_calculation : bill.Peak_NoOfUnitsFor_energy_calculation_Below20kW) || 0;
+        const offPeakUnits = (above20kW ? bill.OffPeak_NoOfUnitsFor_energy_calculation : bill.OffPeak_NoOfUnitsFor_energy_calculation_Below20kW) || 0;
+        const normalCharge = bill.NormalConsumptionAdjusted_energy_charge || 0;
+        const peakCharge = (above20kW ? bill.PeakConsumptionAdjusted_energy_charge : bill.PeakConsumptionAdjusted_energy_charge_Below20kW) || 0;
+        const offPeakCharge = (above20kW ? bill.OffPeakConsumptionAdjusted_energy_charge : bill.OffPeakConsumptionAdjusted_energy_charge_Below20kW) || 0;
+
+        return `
+          <tr><td style="padding-left: 24px; font-size: 0.9em;">Normal (T1, 6am-6pm): ${normalUnits.toFixed(2)} units @ 90%</td><td>₹${normalCharge.toFixed(2)}</td></tr>
+          <tr><td style="padding-left: 24px; font-size: 0.9em;">Peak (T2, 6pm-10pm): ${peakUnits.toFixed(2)} units @ 125%</td><td>₹${peakCharge.toFixed(2)}</td></tr>
+          <tr><td style="padding-left: 24px; font-size: 0.9em;">Off-Peak (T3, 10pm-6am): ${offPeakUnits.toFixed(2)} units @ 100%</td><td>₹${offPeakCharge.toFixed(2)}</td></tr>
+        `;
+      }
+
+      return '';
+    }
+
     function billSummaryRows(bill) {
       // Banked units don't get their own line in energyCharge/total -- they
       // reduce bankAdjustedUnits before energyCharge is computed. Show them
@@ -817,10 +901,14 @@
         <table>
           <tbody>
             <tr><td>Bill Type</td><td>${bill.billType || 'N/A'}</td></tr>
+            ${usageRows(bill)}
             ${bankRow}
             <tr><td>Fixed Charge</td><td>₹${bill.fixedCharge.toFixed(2)}</td></tr>
             <tr><td>Meter Rent</td><td>₹${bill.meterRent.toFixed(2)}</td></tr>
-            <tr><td>Energy Charge (${bill.bankAdjustedUnits.toFixed(2)} units @ ₹${bill.unitRate.toFixed(2)})</td><td>₹${bill.energyCharge.toFixed(2)}</td></tr>
+            <tr><td>No: of Units Consumed<br><small>for Energy Calculation</small></td><td>${bill.bankAdjustedUnits.toFixed(2)} Unit</td></tr>
+            <tr><td>Unit Charge</td><td>₹${bill.unitRate.toFixed(2)}/Unit</td></tr>
+            ${energyBreakdownRows(bill)}
+            <tr><td>Energy Charge</td><td>₹${bill.energyCharge.toFixed(2)}</td></tr>
             <tr><td>Duty (10%)</td><td>₹${bill.duty.toFixed(2)}</td></tr>
             <tr><td>Fuel Surcharge</td><td>₹${bill.monthlyFuelSurcharge.toFixed(2)}</td></tr>
             ${remainingBankRow}
@@ -894,10 +982,16 @@
       localStorage.removeItem("initialReadings");
       displayInitialValues();
       renderEntries();
+      document.getElementById("init_date").value = new Date().toISOString().slice(0, 10);
     }
+
+    // Default the Initial Reading date to today so a fresh visit is
+    // one less thing to fill in.
+    document.getElementById("init_date").value = new Date().toISOString().slice(0, 10);
 
     document.getElementById("initialForm").addEventListener("submit", e => {
       e.preventDefault();
+      const dateVal = document.getElementById("init_date").value || new Date().toISOString().slice(0, 10);
       const solar = parseFloat(document.getElementById("init_solar").value) || 0;
       const t1 = parseFloat(document.getElementById("init_t1").value) || 0;
       const t2 = parseFloat(document.getElementById("init_t2").value) || 0;
@@ -908,6 +1002,7 @@
         document.getElementById("initialValuesDisplay").innerHTML = '<em class="error">Invalid initial readings. Please check your last bill for the latest readings.</em>';
       } else {
         initialReadings = {
+          date: dateVal,
           solar: solar,
           t1: t1,
           t2: t2,
@@ -919,6 +1014,7 @@
         displayInitialValues();
         renderEntries();
         e.target.reset();
+        document.getElementById("init_date").value = new Date().toISOString().slice(0, 10);
       }
     });
 
