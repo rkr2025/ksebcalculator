@@ -479,6 +479,7 @@
             <th>Off-Peak (T3)</th>
             <th>Total Usage</th>
             <th>Today's Bill</th>
+            <th id="overallBillColumnHeader">Estimated Bill</th>
             <th>Projected Monthly Bill</th>
           </tr>
         </thead>
@@ -689,6 +690,10 @@
       const perDayShareText = (!cumulativeBill.error && totalDays)
         ? `₹${(cumulativeBill.totalBillAmount / totalDays).toFixed(2)}`
         : '—';
+      const overallBillText = cumulativeBill.error ? '—' : `₹${cumulativeBill.totalBillAmount.toFixed(2)}`;
+
+      const todayLabel = new Date().toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric' });
+      document.getElementById('overallBillColumnHeader').textContent = `Estimated Bill on ${todayLabel}`;
 
       const PROJECTION_DAYS = 30;
       let projectedMonthlyText = '—';
@@ -720,6 +725,7 @@
           <td>${Math.round(daily.t3)}</td>
           <td><strong>${Math.round(dailyTotal)}</strong></td>
           <td>${estimatedBillText}</td>
+          <td>${overallBillText}</td>
           <td>${projectedBillText}</td>
         </tr>`;
       });
