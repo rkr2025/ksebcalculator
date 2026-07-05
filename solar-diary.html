@@ -478,6 +478,8 @@
             <th>Peak (T2)</th>
             <th>Off-Peak (T3)</th>
             <th>Total Usage</th>
+            <th>Estimated Bill</th>
+            <th>Projected Monthly Bill</th>
           </tr>
         </thead>
         <tbody id="dailyUsageBody"></tbody>
@@ -668,9 +670,28 @@
         prev = entry;
       });
 
+      const DAYS_IN_MONTH = 30;
+
       dailyByDate.forEach((daily) => {
         const directSolarUsage = daily.solar - daily.export;
         const dailyTotal = directSolarUsage + daily.t1 + daily.t2 + daily.t3;
+
+        // Bill this single day's usage standalone (same computeBill() path
+        // as the Estimated Bill section below), then scale it to a 30-day
+        // month at this day's rate for a quick projected-monthly figure.
+        const dayBill = computeBill(billInputsFromUsage(daily));
+        const estimatedBillText = dayBill.error ? '—' : `₹${dayBill.totalBillAmount.toFixed(2)}`;
+
+        const projectedDaily = {
+          solar: daily.solar * DAYS_IN_MONTH,
+          t1: daily.t1 * DAYS_IN_MONTH,
+          t2: daily.t2 * DAYS_IN_MONTH,
+          t3: daily.t3 * DAYS_IN_MONTH,
+          export: daily.export * DAYS_IN_MONTH,
+        };
+        const projectedBill = computeBill(billInputsFromUsage(projectedDaily));
+        const projectedBillText = projectedBill.error ? '—' : `₹${projectedBill.totalBillAmount.toFixed(2)}`;
+
         body.innerHTML += `<tr>
           <td>${daily.date}</td>
           <td>${Math.round(daily.solar)}</td>
@@ -679,6 +700,8 @@
           <td>${Math.round(daily.t2)}</td>
           <td>${Math.round(daily.t3)}</td>
           <td><strong>${Math.round(dailyTotal)}</strong></td>
+          <td>${estimatedBillText}</td>
+          <td>${projectedBillText}</td>
         </tr>`;
       });
     }
