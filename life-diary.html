@@ -78,12 +78,28 @@
       text-align: center;
       color: var(--text-muted);
       font-size: 11.5px;
-      margin: 0 0 18px;
+      margin: 0 0 6px;
     }
     .day-countdown .dc-accent {
       font-family: "Consolas", "Courier New", monospace;
       font-weight: 700;
       color: var(--accent);
+    }
+    .day-progress-track {
+      width: 100%;
+      max-width: 320px;
+      height: 6px;
+      margin: 0 auto 18px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .day-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      border-radius: 999px;
+      transition: width 0.9s linear;
     }
 
     .theme-toggle {
@@ -502,6 +518,9 @@
     </div>
     <p class="year-progress" id="yearProgress"></p>
     <p class="day-countdown" id="dayCountdown"></p>
+    <div class="day-progress-track" id="dayProgressTrack" title="Time left today">
+      <div class="day-progress-fill" id="dayProgressFill"></div>
+    </div>
 
     <!-- Calendar (hidden until toggled) -->
     <div class="card" id="calendarSection">
@@ -667,8 +686,8 @@
       const weekNumber = getWeekNumber(now);
       const todayLabel = now.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-      el.innerHTML = `<span class="yp-accent">${dayOfYear}</span> day(s) passed in ${year} · ` +
-        `<span class="yp-accent">${daysRemaining}</span> day(s) to go · ` +
+      el.innerHTML = `<span class="yp-accent">${dayOfYear}</span> days passed in ${year} · ` +
+        `<span class="yp-accent">${daysRemaining}</span> days to go · ` +
         `Week <span class="yp-accent">${weekNumber}</span> · ${todayLabel} · ` +
         `<span class="yp-clock" id="yearProgressClock"></span>`;
       updateYearProgressClock();
@@ -687,10 +706,12 @@
 
     function updateDayCountdown() {
       const el = document.getElementById('dayCountdown');
+      const fill = document.getElementById('dayProgressFill');
       const now = new Date();
       const secondsIntoDay = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
       const secondsLeftInDay = 86400 - secondsIntoDay;
-      el.innerHTML = `<span class="dc-accent">${secondsLeftInDay}</span> second(s) left for today to end`;
+      el.innerHTML = `<span class="dc-accent">${secondsLeftInDay}</span> seconds left`;
+      if (fill) fill.style.width = `${(secondsIntoDay / 86400) * 100}%`;
     }
 
     updateDayCountdown();
