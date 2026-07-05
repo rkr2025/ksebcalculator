@@ -268,6 +268,16 @@
         padding: 3px 8px;
       }
     }
+    .nav-link {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      text-decoration: none;
+      color: #3498db;
+    }
+    @media print {
+      .nav-link { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -334,6 +344,8 @@
     <button onclick="deleteGoals()">Delete</button>
     <button onclick="closeModal()">Close</button>
   </div>
+
+  <a href="tools.html" class="nav-link">← Back to Tools</a>
 
   <script>
     // Date of birth (and lifespan) are only ever asked for once: if they're
