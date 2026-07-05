@@ -164,6 +164,16 @@
       color: var(--danger);
       font-style: italic;
     }
+    .note {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      font-style: italic;
+      margin: 0 0 10px;
+      padding: 8px 10px;
+      background: var(--primary-light);
+      border-left: 3px solid var(--primary);
+      border-radius: 6px;
+    }
     #usageInsights {
       margin-top: 10px;
       text-align: left;
@@ -216,6 +226,19 @@
       margin-top: 15px;
       text-align: left;
       font-size: 14px;
+      padding: 18px;
+      background: var(--surface-muted);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+    }
+    #estimatedBill:empty {
+      display: none;
+    }
+    #estimatedBill hr:first-child {
+      display: none;
+    }
+    #estimatedBill h4:first-of-type {
+      margin-top: 0;
     }
     #estimatedBill table {
       margin-top: 8px;
@@ -228,8 +251,13 @@
     #estimatedBill .projected {
       opacity: 0.9;
       margin-top: 18px;
-      padding-top: 14px;
-      border-top: 1px dashed var(--border);
+      padding: 14px 16px 16px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+    }
+    #estimatedBill .projected h4 {
+      margin-top: 0;
     }
     #estimatedBill .note {
       font-size: 12px;
@@ -244,6 +272,19 @@
     }
     #viewFullBreakdownBtn:hover {
       filter: brightness(0.95);
+    }
+    .section-box {
+      margin-bottom: 20px;
+      padding: 18px;
+      background: var(--surface-muted);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .section-box h3 {
+      margin-top: 0;
+    }
+    .section-box #billingProfile {
+      margin-bottom: 0;
     }
     .actions-card {
       margin-top: 25px;
@@ -386,7 +427,7 @@
         padding: 10px;
         box-shadow: none;
       }
-      h2, h3, h4, form, details, .center, .nav-link, .actions-card, #initialValuesDisplay, #usageInsights, #billingProfile, #estimatedBill, #viewFullBreakdownBtn {
+      h2, h3, h4, form, details, .center, .nav-link, .actions-card, .section-box, #initialValuesDisplay, #usageInsights, #estimatedBill, #viewFullBreakdownBtn {
         display: none;
       }
       .table-container {
@@ -534,106 +575,121 @@
       </div>
     </details>
     <h2>📘 Solar Diary</h2>
-    <h3>⚙️ Billing Profile</h3>
-    <div id="billingProfile">
-      <div>
-        <label for="profile_phase">Phase</label>
-        <select id="profile_phase">
-          <option value="phase1">Phase 1</option>
-          <option value="phase3">Phase 3</option>
-        </select>
-      </div>
-      <div>
-        <label for="profile_meterOwner">Meter Owner</label>
-        <select id="profile_meterOwner">
-          <option value="kseb">KSEB</option>
-          <option value="consumer">Consumer</option>
-        </select>
-      </div>
-      <div>
-        <label for="profile_connectedLoad">Connected Load</label>
-        <select id="profile_connectedLoad">
-          <option value="below20k">Below 20kW</option>
-          <option value="above20k">Above 20kW</option>
-        </select>
-      </div>
-      <div>
-        <label for="profile_hasBank">Banked Units?</label>
-        <select id="profile_hasBank">
-          <option value="No">No</option>
-          <option value="Yes">Yes</option>
-        </select>
-      </div>
-      <div id="profile_bankedUnitsWrap" style="display: none;">
-        <label for="profile_bankedUnits">Banked Units (kWh) — carried over from your last KSEB bill</label>
-        <input type="number" id="profile_bankedUnits" value="0" min="0">
+    <p class="note">This diary records your daily solar and meter usage, and estimates your electricity bill both for today and projected for the full month.</p>
+    <div class="section-box">
+      <h3>⚙️ Billing Profile</h3>
+      <div id="billingProfile">
+        <div>
+          <label for="profile_phase">Phase</label>
+          <select id="profile_phase">
+            <option value="phase1">Phase 1</option>
+            <option value="phase3">Phase 3</option>
+          </select>
+        </div>
+        <div>
+          <label for="profile_meterOwner">Meter Owner</label>
+          <select id="profile_meterOwner">
+            <option value="kseb">KSEB</option>
+            <option value="consumer">Consumer</option>
+          </select>
+        </div>
+        <div>
+          <label for="profile_connectedLoad">Connected Load</label>
+          <select id="profile_connectedLoad">
+            <option value="below20k">Below 20kW</option>
+            <option value="above20k">Above 20kW</option>
+          </select>
+        </div>
+        <div>
+          <label for="profile_hasBank">Banked Units?</label>
+          <select id="profile_hasBank">
+            <option value="No">No</option>
+            <option value="Yes">Yes</option>
+          </select>
+        </div>
+        <div id="profile_bankedUnitsWrap" style="display: none;">
+          <label for="profile_bankedUnits">Banked Units (kWh) — carried over from your last KSEB bill</label>
+          <input type="number" id="profile_bankedUnits" value="0" min="0">
+        </div>
       </div>
     </div>
-    <h3 id="initialReadingHeading">🔑 June month Initial Reading</h3>
-    <form id="initialForm">
-      <div>
-        <label for="init_date" style="font-size: 13px; color: #555; display: block; margin-bottom: 3px;">Date of Initial Reading</label>
-        <input type="date" id="init_date">
+    <div class="section-box">
+      <h3 id="initialReadingHeading">🔑 June month Initial Reading</h3>
+      <p class="note">ഈ മാസത്തെ Initial റീഡിങ് ഇവിടെ enter ചെയ്യുക. കഴിഞ്ഞ മാസം ലഭിച്ച ബില്ലിലെ Current റീഡിങ് ആണ് ഈ മാസത്തെ Initial Reading ആയി എടുക്കേണ്ടത്.</p>
+      <form id="initialForm">
+        <div>
+          <label for="init_date" style="font-size: 13px; color: #555; display: block; margin-bottom: 3px;">Date of Initial Reading</label>
+          <input type="date" id="init_date">
+        </div>
+        <input type="number" id="init_solar" placeholder="Initial Solar Gen">
+        <input type="number" id="init_t1" placeholder="Initial T1">
+        <input type="number" id="init_t2" placeholder="Initial T2">
+        <input type="number" id="init_t3" placeholder="Initial T3">
+        <input type="number" id="init_export" placeholder="Initial Export">
+        <button type="submit" id="saveInitialBtn">💾 Save Initial</button>
+      </form>
+      <div id="initialValuesDisplay"></div>
+    </div>
+    <div class="section-box">
+      <h3 style="margin-top: 0;">➕ Current Solar Readings</h3>
+      <p class="note">Enter your current reading from the meter.<br>നിങ്ങളുടെ ഇപ്പോൾ ഉള്ള സോളാർ മീറ്റർ റീഡിങ് ഇവിടെ Enter ചെയ്യുക.</p>
+      <form id="diaryForm">
+        <input type="number" id="solar" placeholder="Solar Gen" required>
+        <input type="number" id="t1" placeholder="T1" required>
+        <input type="number" id="t2" placeholder="T2" required>
+        <input type="number" id="t3" placeholder="T3" required>
+        <input type="number" id="export" placeholder="Export" required>
+        <button type="submit">➕ Add</button>
+      </form>
+    </div>
+    <div class="section-box">
+      <h3 style="margin-top: 0;">📋 Entries Log</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Solar</th>
+              <th>T1</th>
+              <th>T2</th>
+              <th>T3</th>
+              <th>Export</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="entriesBody"></tbody>
+        </table>
       </div>
-      <input type="number" id="init_solar" placeholder="Initial Solar Gen">
-      <input type="number" id="init_t1" placeholder="Initial T1">
-      <input type="number" id="init_t2" placeholder="Initial T2">
-      <input type="number" id="init_t3" placeholder="Initial T3">
-      <input type="number" id="init_export" placeholder="Initial Export">
-      <button type="submit" id="saveInitialBtn">💾 Save Initial</button>
-    </form>
-    <div id="initialValuesDisplay"></div>
-    <hr>
-    <h3 style="margin-top: 25px;">➕ Current Solar Readings</h3>
-    <form id="diaryForm">
-      <input type="number" id="solar" placeholder="Solar Gen" required>
-      <input type="number" id="t1" placeholder="T1" required>
-      <input type="number" id="t2" placeholder="T2" required>
-      <input type="number" id="t3" placeholder="T3" required>
-      <input type="number" id="export" placeholder="Export" required>
-      <button type="submit">➕ Add</button>
-    </form>
-    <h3>📋 Entries Log</h3>
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Solar</th>
-            <th>T1</th>
-            <th>T2</th>
-            <th>T3</th>
-            <th>Export</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="entriesBody"></tbody>
-      </table>
     </div>
-    <div class="center" style="margin: 10px 0;">
-      <label style="font-weight: bold; margin-right: 8px;">Total Number of Days (for Daily Energy usage):</label>
-      <span id="totalDaysDisplay">—</span>
+    <div class="section-box">
+      <div class="center" style="margin: 10px 0;">
+        <label style="font-weight: bold; margin-right: 8px;">Total Number of Days (for Daily Energy usage):</label>
+        <span id="totalDaysDisplay">—</span>
+      </div>
+      <div id="usageInsights"></div>
     </div>
-    <div id="usageInsights"></div>
-    <h3>📅 Daily Usage Tracker</h3>
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Solar Generation</th>
-            <th>Direct Solar Usage</th>
-            <th>Normal (T1)</th>
-            <th>Peak (T2)</th>
-            <th>Off-Peak (T3)</th>
-            <th>Total Usage</th>
-            <th>Today's Bill</th>
-            <th id="overallBillColumnHeader">Estimated Bill</th>
-            <th>Projected Monthly Bill</th>
-          </tr>
-        </thead>
-        <tbody id="dailyUsageBody"></tbody>
-      </table>
+    <div class="section-box">
+      <h3 style="margin-top: 0;">📅 Daily Usage Tracker</h3>
+      <p class="note">ഇവിടെ daily usage, ഇന്നത്തെ electricity ചാർജും ഒരു മാസത്തെ estimated electricity ചാർജും ലഭിക്കുന്നതാണ്.</p>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Solar Generation</th>
+              <th>Direct Solar Usage</th>
+              <th>Normal (T1)</th>
+              <th>Peak (T2)</th>
+              <th>Off-Peak (T3)</th>
+              <th>Total Usage</th>
+              <th>Today's Bill</th>
+              <th id="overallBillColumnHeader">Estimated Bill</th>
+              <th>Projected Monthly Bill</th>
+            </tr>
+          </thead>
+          <tbody id="dailyUsageBody"></tbody>
+        </table>
+      </div>
     </div>
     <div id="estimatedBill"></div>
     <div class="center">
@@ -731,6 +787,7 @@
         setInitialFormFieldsDisabled(false);
       } else {
         el.innerHTML = `
+          <p class="note">ℹ️ Initial readings are already saved, so "Save Initial" and its fields are greyed out. To change these values, delete the entry below first, then enter and save the new readings.<br>ഇനീഷ്യൽ റീഡിംഗുകൾ ഇതിനകം സേവ് ചെയ്തിട്ടുള്ളതിനാൽ "Save Initial" ബട്ടണും അതിന്റെ ഫീൽഡുകളും ഗ്രേ ഔട്ട് ആയിരിക്കും. ഈ മൂല്യങ്ങൾ മാറ്റണമെങ്കിൽ, ആദ്യം താഴെയുള്ള എൻട്രി ഡിലീറ്റ് ചെയ്ത ശേഷം പുതിയ റീഡിംഗുകൾ നൽകി സേവ് ചെയ്യുക.</p>
           <div class="table-container">
             <table>
               <thead>
