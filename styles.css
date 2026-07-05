@@ -198,6 +198,13 @@ body {
   line-height: 1;
 }
 
+.header-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .extra-apps-link {
   display: inline-flex;
   align-items: center;
