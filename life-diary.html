@@ -734,16 +734,11 @@
         <button class="btn" id="backupBtn" type="button">💾 Backup</button>
         <button class="btn-outline btn" id="restoreBtn" type="button">⬆️ Restore from File</button>
         <button class="btn-outline btn" id="resumeBackupBtn" type="button" style="display: none;">▶️ Resume Auto-Backup</button>
+        <button class="btn-outline btn" id="printLogBtn" type="button">🖨️ Print This Day's Log</button>
         <input type="file" id="restoreFileInput" accept=".json,application/json">
       </div>
       <p class="backup-note" id="backupStatusNote"></p>
       <p class="backup-note" id="backupOffRow" style="display: none;"><a href="#" id="disableBackupLink">Turn off auto-backup</a></p>
-    </div>
-
-    <div class="card">
-      <h3>🖨️ Print Diary Log</h3>
-      <p class="backup-note">Prints the entries for the date currently shown above as a table (Date, Start Time, End Time, Duration), split into the same 3-hour groups shown on screen.</p>
-      <button class="btn-outline btn" id="printLogBtn" type="button">🖨️ Print This Day's Log</button>
     </div>
 
     <div id="printableLog"></div>
