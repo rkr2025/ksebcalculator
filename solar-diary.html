@@ -670,27 +670,46 @@
         prev = entry;
       });
 
-      const DAYS_IN_MONTH = 30;
+      // Estimated Bill / Projected Monthly Bill columns show each day's
+      // *share* of the real cumulative bill (same computeBill() call as the
+      // Estimated Bill / Projected Month-End sections below), not a bill
+      // recomputed standalone per day -- billing this single day's usage on
+      // its own would double-count the Fixed Charge/Meter Rent on every row
+      // and never match the detailed sections' totals.
+      const lastEntry = entries[entries.length - 1];
+      const cumulativeUsage = {
+        solar: lastEntry.solar - initialReadings.solar,
+        t1: lastEntry.t1 - initialReadings.t1,
+        t2: lastEntry.t2 - initialReadings.t2,
+        t3: lastEntry.t3 - initialReadings.t3,
+        export: lastEntry.export - initialReadings.export
+      };
+      const totalDays = getTotalDaysInput();
+      const cumulativeBill = computeBill(billInputsFromUsage(cumulativeUsage));
+      const perDayShareText = (!cumulativeBill.error && totalDays)
+        ? `₹${(cumulativeBill.totalBillAmount / totalDays).toFixed(2)}`
+        : '—';
+
+      const PROJECTION_DAYS = 30;
+      let projectedMonthlyText = '—';
+      if (totalDays) {
+        const scale = PROJECTION_DAYS / totalDays;
+        const projectedUsage = {
+          solar: cumulativeUsage.solar * scale,
+          t1: cumulativeUsage.t1 * scale,
+          t2: cumulativeUsage.t2 * scale,
+          t3: cumulativeUsage.t3 * scale,
+          export: cumulativeUsage.export * scale,
+        };
+        const projectedBill = computeBill(billInputsFromUsage(projectedUsage));
+        if (!projectedBill.error) projectedMonthlyText = `₹${projectedBill.totalBillAmount.toFixed(2)}`;
+      }
 
       dailyByDate.forEach((daily) => {
         const directSolarUsage = daily.solar - daily.export;
         const dailyTotal = directSolarUsage + daily.t1 + daily.t2 + daily.t3;
-
-        // Bill this single day's usage standalone (same computeBill() path
-        // as the Estimated Bill section below), then scale it to a 30-day
-        // month at this day's rate for a quick projected-monthly figure.
-        const dayBill = computeBill(billInputsFromUsage(daily));
-        const estimatedBillText = dayBill.error ? '—' : `₹${dayBill.totalBillAmount.toFixed(2)}`;
-
-        const projectedDaily = {
-          solar: daily.solar * DAYS_IN_MONTH,
-          t1: daily.t1 * DAYS_IN_MONTH,
-          t2: daily.t2 * DAYS_IN_MONTH,
-          t3: daily.t3 * DAYS_IN_MONTH,
-          export: daily.export * DAYS_IN_MONTH,
-        };
-        const projectedBill = computeBill(billInputsFromUsage(projectedDaily));
-        const projectedBillText = projectedBill.error ? '—' : `₹${projectedBill.totalBillAmount.toFixed(2)}`;
+        const estimatedBillText = perDayShareText;
+        const projectedBillText = projectedMonthlyText;
 
         body.innerHTML += `<tr>
           <td>${daily.date}</td>
@@ -931,7 +950,8 @@
     function renderEstimatedBill(usage, totalDays) {
       const el = document.getElementById('estimatedBill');
       const viewBtn = document.getElementById('viewFullBreakdownBtn');
-      let html = '<hr style="margin-top: 20px;"><h4>💰 Estimated Bill</h4>';
+      const todayLabel = new Date().toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric' });
+      let html = `<hr style="margin-top: 20px;"><h4>💰 Estimated Total Bill as on ${todayLabel}</h4>`;
 
       const bill = computeBill(billInputsFromUsage(usage));
       if (bill.error) {
