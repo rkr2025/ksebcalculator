@@ -687,8 +687,11 @@
       };
       const totalDays = getTotalDaysInput();
       const cumulativeBill = computeBill(billInputsFromUsage(cumulativeUsage));
+      // "Today's Bill" excludes the flat Fixed Charge and Meter Rent (those
+      // are monthly fees, not a per-day cost) -- only the energy-driven
+      // portion (Energy Charge + Duty + Fuel Surcharge) is spread over days.
       const perDayShareText = (!cumulativeBill.error && totalDays)
-        ? `₹${(cumulativeBill.totalBillAmount / totalDays).toFixed(2)}`
+        ? `₹${((cumulativeBill.totalBillAmount - cumulativeBill.fixedCharge - cumulativeBill.meterRent) / totalDays).toFixed(2)}`
         : '—';
       const overallBillText = cumulativeBill.error ? '—' : `₹${cumulativeBill.totalBillAmount.toFixed(2)}`;
 
