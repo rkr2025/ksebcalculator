@@ -1094,10 +1094,16 @@
     }
 
     // --------------------------- Print diary log ----------------------------
-    // Builds a table (Date, Start Time, End Time, Duration) per 3-hour group
-    // for the currently viewed date, matching the on-screen grouping exactly,
-    // then triggers window.print() -- the @media print rule hides everything
-    // else on the page and shows only this generated table.
+    // Builds a table (Diary Entries, Start Time, End Time, Duration) per
+    // 3-hour group for the currently viewed date, matching the on-screen
+    // grouping exactly, then triggers window.print() -- the @media print
+    // rule hides everything else on the page and shows only this table.
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
     function buildPrintableLog() {
       const key = viewDateInput.value;
       const container = document.getElementById('printableLog');
@@ -1126,7 +1132,7 @@
           <div class="print-log-group-heading">${THREE_HOUR_BLOCK_LABELS[b]}</div>
           <table class="print-log-table">
             <thead>
-              <tr><th>Date</th><th>Start Time</th><th>End Time</th><th>Duration</th></tr>
+              <tr><th>Diary Entries</th><th>Start Time</th><th>End Time</th><th>Duration</th></tr>
             </thead>
             <tbody>`;
         blockEntries.forEach((e) => {
@@ -1135,7 +1141,7 @@
           const isLive = e.t === latestTimestamp;
           const endText = isLive ? 'Ongoing' : new Date(endMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
           html += `<tr>
-            <td>${dateLabel}</td>
+            <td>${escapeHtml(e.text)}</td>
             <td>${formatTime(e.t)}</td>
             <td>${endText}</td>
             <td>${formatDuration(durationMs)}</td>
