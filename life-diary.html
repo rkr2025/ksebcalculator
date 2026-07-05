@@ -276,6 +276,46 @@
     .entry-group-insight strong { color: inherit; font-weight: 700; }
     .entry-group-insight .insight-highlight { color: var(--accent); font-weight: 700; }
 
+    /* --------------------------- Hours of the Day --------------------------- */
+    .hour-box-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 8px;
+    }
+    @media (max-width: 480px) {
+      .hour-box-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    .hour-box {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 4px;
+      text-align: center;
+      background: var(--surface-muted);
+    }
+    .hour-box-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .hour-box-count {
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-top: 2px;
+    }
+    .hour-box--passed {
+      background: var(--surface-muted);
+      opacity: 0.45;
+      filter: grayscale(1);
+    }
+    .hour-box--active {
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+    }
+    .hour-box--active .hour-box-count { color: var(--accent); }
+    .hour-box--upcoming { opacity: 0.85; }
+
     /* ------------------------------ Calendar ------------------------------ */
     #calendarSection { display: none; }
     .cal-header {
@@ -466,6 +506,12 @@
       </div>
     </div>
 
+    <!-- 24-hour countdown -->
+    <div class="card">
+      <h3>⏱️ Hours of the Day</h3>
+      <div class="hour-box-grid" id="hourBoxGrid"></div>
+    </div>
+
     <!-- View entries by date -->
     <div class="card">
       <h3>📖 Diary Entries</h3>
@@ -544,6 +590,43 @@
       const dow = d.getDay();
       return dow === 0 || dow === 6; // Sunday or Saturday
     }
+
+    // --------------------------- Hours of the Day ---------------------------
+    // 24 boxes, one per hour of today. Each starts at 3600 (seconds in an
+    // hour). Hours already passed grey out; the current hour counts its
+    // 3600 seconds down live; hours still to come just sit at 3600 until
+    // their turn arrives.
+    function renderHourBoxes() {
+      const grid = document.getElementById('hourBoxGrid');
+      const now = new Date();
+      const currentHour = now.getHours();
+      const secondsIntoHour = now.getMinutes() * 60 + now.getSeconds();
+      const secondsLeftInHour = 3600 - secondsIntoHour;
+
+      let html = '';
+      for (let h = 0; h < 24; h++) {
+        let stateClass, count;
+        if (h < currentHour) {
+          stateClass = 'hour-box--passed';
+          count = 0;
+        } else if (h === currentHour) {
+          stateClass = 'hour-box--active';
+          count = secondsLeftInHour;
+        } else {
+          stateClass = 'hour-box--upcoming';
+          count = 3600;
+        }
+        const label = String(h).padStart(2, '0') + ':00';
+        html += `<div class="hour-box ${stateClass}">
+          <div class="hour-box-label">${label}</div>
+          <div class="hour-box-count">${count}</div>
+        </div>`;
+      }
+      grid.innerHTML = html;
+    }
+
+    renderHourBoxes();
+    setInterval(renderHourBoxes, 1000);
 
     // ------------------------------- Theme --------------------------------
     (function initTheme() {
