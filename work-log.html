@@ -29,7 +29,7 @@
     background: linear-gradient(160deg, #eef1f7, #e4ebf7 60%);
     color: var(--text-primary);
   }
-  .container { max-width: 760px; margin: 0 auto; }
+  .container { max-width: 800px; margin: 0 auto; }
   h1 {
     text-align: center;
     font-size: 24px;
@@ -50,23 +50,87 @@
     color: var(--text-secondary);
   }
 
-  /* -------- Target + summary stats -------- */
-  .target-row {
+  /* -------- Category pills -------- */
+  .category-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .category-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 8px 7px 14px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--surface-muted);
+    color: var(--text-secondary);
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .category-pill.active {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--primary-dark);
+  }
+  .category-pill .running-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: none;
+  }
+  .category-pill.running .running-dot { display: inline-block; }
+  .category-pill .cat-delete {
+    background: none;
+    border: none;
+    color: inherit;
+    opacity: .55;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 0 2px;
+    line-height: 1;
+  }
+  .category-pill .cat-delete:hover { opacity: 1; color: var(--danger); }
+  .new-category-form { display: flex; gap: 6px; }
+  .new-category-form input {
+    padding: 7px 10px;
+    font-size: 13.5px;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    font-family: inherit;
+    width: 140px;
+  }
+
+  /* -------- Date + target row -------- */
+  .top-controls-row {
     display: flex;
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
     margin-bottom: 14px;
   }
-  .target-row label { font-size: 13.5px; font-weight: 600; color: var(--text-secondary); }
-  .target-row input[type="number"] {
-    width: 80px;
+  .top-controls-row label { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+  .top-controls-row input[type="date"],
+  .top-controls-row input[type="number"] {
     padding: 7px 9px;
     font-size: 14px;
     border: 1.5px solid var(--border);
     border-radius: 8px;
     font-family: inherit;
   }
+  .top-controls-row input[type="number"] { width: 80px; }
+  .viewing-past-note {
+    font-size: 12px;
+    color: var(--warn);
+    font-weight: 600;
+    display: none;
+  }
+  .viewing-past-note.show { display: inline-block; }
+
+  /* -------- Summary stats -------- */
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -118,6 +182,8 @@
   }
   .task-row input[type="text"]:disabled { background: var(--surface-muted); color: var(--text-muted); }
   .task-hint { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+  .task-blocked-note { font-size: 12.5px; color: var(--warn); font-weight: 600; margin-top: 8px; display: none; }
+  .task-blocked-note.show { display: block; }
   button {
     font-family: inherit;
     font-size: 14.5px;
@@ -134,6 +200,7 @@
   .btn-add { background: var(--accent); color: #fff; }
   .btn-stop { background: var(--danger); color: #fff; }
   .btn-outline { background: var(--surface-muted); color: var(--text-secondary); border: 1px solid var(--border); }
+  .btn-small { padding: 6px 12px; font-size: 12.5px; }
 
   /* -------- Running task banner -------- */
   #runningBanner {
@@ -227,14 +294,34 @@
 <body>
   <div class="container">
     <h1>🕒 Work Log Tracker</h1>
-    <p class="subtitle">Track today's work sessions against your target hours.</p>
+    <p class="subtitle">Track separate categories (Work, Study, ...) day by day, against a target.</p>
 
-    <!-- Target + summary -->
+    <!-- Categories -->
+    <div class="card no-print">
+      <h2>Categories</h2>
+      <div class="category-row" id="categoryRow"></div>
+      <div class="new-category-form" style="margin-top: 10px;">
+        <input type="text" id="newCategoryInput" placeholder="New category name...">
+        <button class="btn-outline btn-small" id="addCategoryButton">+ Add Category</button>
+      </div>
+    </div>
+
+    <!-- Date + target -->
     <div class="card">
-      <div class="target-row">
-        <label for="targetHoursInput">Target work hours (per day)</label>
+      <div class="top-controls-row">
+        <label for="viewDateInput">Date</label>
+        <input type="date" id="viewDateInput">
+        <button class="btn-outline btn-small" id="todayButton">Today</button>
+        <span class="viewing-past-note" id="viewingPastNote">Viewing a past/future date -- read only</span>
+      </div>
+      <div class="top-controls-row" style="margin-bottom: 0;">
+        <label for="targetHoursInput">Target hours for <span id="targetCategoryLabel"></span></label>
         <input type="number" id="targetHoursInput" min="0" step="0.5" value="8">
       </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="card">
       <div class="stats-grid">
         <div class="stat-box">
           <div class="stat-label">Elapsed (work)</div>
@@ -255,13 +342,14 @@
 
     <!-- Task controls -->
     <div class="card no-print">
-      <h2>Current Task</h2>
+      <h2>Current Task -- <span id="taskCategoryLabel"></span></h2>
       <div class="task-row">
         <input type="text" id="taskInput" placeholder="What are you working on? (include the word 'break' for breaks)">
         <button class="btn-add" id="addButton">▶ Add Task</button>
         <button class="btn-stop" id="stopButton" disabled>⏹ Stop</button>
       </div>
       <p class="task-hint">Tip: name a task "Break" / "Lunch Break" / "Coffee break" etc. -- its duration is logged but excluded from work hours.</p>
+      <p class="task-blocked-note" id="taskBlockedNote"></p>
 
       <div id="runningBanner">
         <div id="runningTaskName">—</div>
@@ -271,7 +359,7 @@
 
     <!-- Work log summary -->
     <div class="card">
-      <h2>📋 Work Log Summary</h2>
+      <h2>📋 Work Log Summary -- <span id="logCategoryLabel"></span>, <span id="logDateLabel"></span></h2>
       <div class="table-wrap">
         <table>
           <thead>
@@ -295,7 +383,7 @@
         <button class="btn-outline" id="backupButton">💾 Backup Data</button>
         <button class="btn-outline" id="restoreButton">📂 Restore Data</button>
         <input type="file" id="restoreFileInput" accept=".json" style="display:none;">
-        <button class="btn-outline" id="clearButton">🗑️ Clear All</button>
+        <button class="btn-outline" id="clearButton">🗑️ Clear This Day</button>
       </div>
     </div>
 
@@ -305,12 +393,24 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const STORAGE_KEY = 'workLogData';
+    const STORAGE_KEY = 'workLogDataV2';
+    const DEFAULT_CATEGORIES = ['Work', 'Study'];
 
+    const categoryRow = document.getElementById('categoryRow');
+    const newCategoryInput = document.getElementById('newCategoryInput');
+    const addCategoryButton = document.getElementById('addCategoryButton');
+    const viewDateInput = document.getElementById('viewDateInput');
+    const todayButton = document.getElementById('todayButton');
+    const viewingPastNote = document.getElementById('viewingPastNote');
+    const targetHoursInput = document.getElementById('targetHoursInput');
+    const targetCategoryLabel = document.getElementById('targetCategoryLabel');
+    const taskCategoryLabel = document.getElementById('taskCategoryLabel');
+    const logCategoryLabel = document.getElementById('logCategoryLabel');
+    const logDateLabel = document.getElementById('logDateLabel');
     const taskInput = document.getElementById('taskInput');
     const addButton = document.getElementById('addButton');
     const stopButton = document.getElementById('stopButton');
-    const targetHoursInput = document.getElementById('targetHoursInput');
+    const taskBlockedNote = document.getElementById('taskBlockedNote');
     const runningBanner = document.getElementById('runningBanner');
     const runningTaskName = document.getElementById('runningTaskName');
     const runningTimer = document.getElementById('runningTimer');
@@ -329,10 +429,26 @@
     const clearButton = document.getElementById('clearButton');
     const toast = document.getElementById('toast');
 
-    // sessions: [{ task, start: isoString, end: isoString, ms, isBreak }]
-    // current: { task, start: isoString, isBreak } | null
-    let state = { targetHours: 8, sessions: [], current: null };
+    // state.logs[category][dateKey] = [{ task, start, end, ms, isBreak }, ...]
+    // state.current = { category, task, start, isBreak } | null  -- always today
+    let state = {
+      categories: [...DEFAULT_CATEGORIES],
+      selectedCategory: DEFAULT_CATEGORIES[0],
+      targetHoursByCategory: { Work: 8, Study: 2 },
+      logs: {},
+      current: null
+    };
+    let viewDate = dateKey(new Date()); // which day's log/stats we're viewing (not persisted)
     let tickInterval = null;
+
+    function dateKey(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function todayKey() { return dateKey(new Date()); }
 
     function isBreakTask(taskName) {
       return /break/i.test(taskName);
@@ -371,13 +487,31 @@
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
-          state.targetHours = typeof parsed.targetHours === 'number' ? parsed.targetHours : 8;
-          state.sessions = Array.isArray(parsed.sessions) ? parsed.sessions : [];
+          if (Array.isArray(parsed.categories) && parsed.categories.length > 0) {
+            state.categories = parsed.categories;
+          }
+          if (typeof parsed.selectedCategory === 'string' && state.categories.includes(parsed.selectedCategory)) {
+            state.selectedCategory = parsed.selectedCategory;
+          } else {
+            state.selectedCategory = state.categories[0];
+          }
+          state.targetHoursByCategory = parsed.targetHoursByCategory && typeof parsed.targetHoursByCategory === 'object'
+            ? parsed.targetHoursByCategory : {};
+          state.logs = parsed.logs && typeof parsed.logs === 'object' ? parsed.logs : {};
           state.current = parsed.current || null;
         }
       } catch (e) {
         console.error('Error loading work log state:', e);
       }
+      // Make sure every category has a target + a logs bucket.
+      state.categories.forEach((c) => {
+        if (typeof state.targetHoursByCategory[c] !== 'number') state.targetHoursByCategory[c] = 8;
+        if (!state.logs[c]) state.logs[c] = {};
+      });
+    }
+
+    function sessionsFor(category, dKey) {
+      return (state.logs[category] && state.logs[category][dKey]) || [];
     }
 
     function currentElapsedMs() {
@@ -385,22 +519,94 @@
       return Date.now() - new Date(state.current.start).getTime();
     }
 
-    function computeTotals() {
+    function computeTotalsFor(category, dKey) {
       let workMs = 0;
       let breakMs = 0;
-      state.sessions.forEach((s) => {
+      sessionsFor(category, dKey).forEach((s) => {
         if (s.isBreak) breakMs += s.ms; else workMs += s.ms;
       });
-      if (state.current) {
+      if (state.current && state.current.category === category && dateKey(new Date(state.current.start)) === dKey) {
         const liveMs = currentElapsedMs();
         if (state.current.isBreak) breakMs += liveMs; else workMs += liveMs;
       }
       return { workMs, breakMs };
     }
 
+    // --------------------------- Rendering ---------------------------
+
+    function renderCategoryPills() {
+      categoryRow.innerHTML = '';
+      state.categories.forEach((cat) => {
+        const pill = document.createElement('div');
+        pill.className = 'category-pill' + (cat === state.selectedCategory ? ' active' : '');
+        if (state.current && state.current.category === cat) pill.classList.add('running');
+
+        const dot = document.createElement('span');
+        dot.className = 'running-dot';
+        pill.appendChild(dot);
+
+        const label = document.createElement('span');
+        label.textContent = cat;
+        pill.appendChild(label);
+
+        const del = document.createElement('button');
+        del.className = 'cat-delete';
+        del.type = 'button';
+        del.title = `Delete "${cat}"`;
+        del.textContent = '✕';
+        del.addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteCategory(cat);
+        });
+        pill.appendChild(del);
+
+        pill.addEventListener('click', () => {
+          state.selectedCategory = cat;
+          renderAll();
+        });
+
+        categoryRow.appendChild(pill);
+      });
+    }
+
+    function deleteCategory(cat) {
+      if (state.categories.length <= 1) {
+        showToast('You need at least one category.', true);
+        return;
+      }
+      if (state.current && state.current.category === cat) {
+        showToast(`Stop the running "${cat}" task before deleting it.`, true);
+        return;
+      }
+      if (!confirm(`Delete category "${cat}" and all its logged data? This cannot be undone.`)) return;
+
+      state.categories = state.categories.filter((c) => c !== cat);
+      delete state.targetHoursByCategory[cat];
+      delete state.logs[cat];
+      if (state.selectedCategory === cat) state.selectedCategory = state.categories[0];
+      renderAll();
+      showToast(`Category "${cat}" deleted.`);
+    }
+
     function render() {
-      // Running banner
-      if (state.current) {
+      const cat = state.selectedCategory;
+      const isToday = viewDate === todayKey();
+      const runningHere = !!(state.current && state.current.category === cat);
+      const runningElsewhere = !!(state.current && state.current.category !== cat);
+
+      // Labels
+      targetCategoryLabel.textContent = cat;
+      taskCategoryLabel.textContent = cat;
+      logCategoryLabel.textContent = cat;
+      logDateLabel.textContent = new Date(viewDate + 'T12:00:00').toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+      viewDateInput.value = viewDate;
+      viewingPastNote.classList.toggle('show', !isToday);
+
+      targetHoursInput.value = state.targetHoursByCategory[cat];
+
+      // Running banner (only relevant/shown for the currently selected category)
+      if (runningHere) {
         runningBanner.style.display = 'flex';
         runningBanner.classList.toggle('break-mode', state.current.isBreak);
         runningTaskName.innerHTML = '';
@@ -418,15 +624,27 @@
         runningBanner.style.display = 'none';
       }
 
-      // Buttons + input
+      // Task controls
       const hasText = taskInput.value.trim().length > 0;
-      addButton.disabled = !!state.current || !hasText;
-      stopButton.disabled = !state.current;
-      taskInput.disabled = !!state.current;
+      const canAddHere = isToday && !state.current && hasText;
+      addButton.disabled = !canAddHere;
+      stopButton.disabled = !runningHere;
+      taskInput.disabled = !isToday || runningHere || runningElsewhere;
 
-      // Stats
-      const { workMs, breakMs } = computeTotals();
-      const targetMs = Math.max(0, state.targetHours) * 3600 * 1000;
+      if (!isToday) {
+        taskBlockedNote.textContent = 'Switch to Today to start a new task for this category.';
+        taskBlockedNote.classList.add('show');
+      } else if (runningElsewhere) {
+        taskBlockedNote.textContent = `A task is already running under "${state.current.category}" -- stop it first.`;
+        taskBlockedNote.classList.add('show');
+      } else {
+        taskBlockedNote.classList.remove('show');
+      }
+
+      // Stats (for selected category + viewed date)
+      const { workMs, breakMs } = computeTotalsFor(cat, viewDate);
+      const targetHours = Math.max(0, state.targetHoursByCategory[cat] || 0);
+      const targetMs = targetHours * 3600 * 1000;
       const remainingMs = targetMs - workMs;
 
       elapsedStat.textContent = formatDuration(workMs);
@@ -440,13 +658,14 @@
       progressCaption.textContent = targetMs === 0
         ? 'Set a target to track progress.'
         : (remainingMs >= 0
-          ? `${pct.toFixed(1)}% of ${state.targetHours}h target complete`
-          : `Target complete -- ${formatDuration(-remainingMs)} over ${state.targetHours}h`);
+          ? `${pct.toFixed(1)}% of ${targetHours}h target complete`
+          : `Target complete -- ${formatDuration(-remainingMs)} over ${targetHours}h`);
 
-      // Table
+      // Table (for selected category + viewed date)
       logBody.innerHTML = '';
-      const allRows = state.sessions.map((s, i) => ({ ...s, index: i }));
-      if (state.current) {
+      const sessions = sessionsFor(cat, viewDate);
+      const allRows = sessions.map((s, i) => ({ ...s, index: i }));
+      if (runningHere && dateKey(new Date(state.current.start)) === viewDate) {
         allRows.push({
           task: state.current.task,
           start: state.current.start,
@@ -463,7 +682,6 @@
         logFoot.innerHTML = '';
       } else {
         noLogsMessage.style.display = 'none';
-        // Most recent first
         allRows.slice().reverse().forEach((row) => {
           const tr = document.createElement('tr');
 
@@ -475,7 +693,7 @@
           const typeTd = document.createElement('td');
           const tag = document.createElement('span');
           tag.className = 'tag ' + (row.isBreak ? 'tag-break' : 'tag-work');
-          tag.textContent = row.isBreak ? 'Break' : 'Work';
+          tag.textContent = row.isBreak ? 'Break' : cat;
           typeTd.appendChild(tag);
           tr.appendChild(typeTd);
 
@@ -498,7 +716,7 @@
             delBtn.className = 'delete-btn';
             delBtn.title = 'Delete this entry';
             delBtn.textContent = '✕';
-            delBtn.addEventListener('click', () => deleteSession(row.index));
+            delBtn.addEventListener('click', () => deleteSession(cat, viewDate, row.index));
             actionTd.appendChild(delBtn);
           }
           tr.appendChild(actionTd);
@@ -509,23 +727,76 @@
         logFoot.innerHTML = `
           <tr>
             <td colspan="4">Totals</td>
-            <td colspan="2">Work: ${formatDuration(workMs)} · Break: ${formatDuration(breakMs)}</td>
+            <td colspan="2">${cat}: ${formatDuration(workMs)} · Break: ${formatDuration(breakMs)}</td>
           </tr>`;
       }
 
       saveState();
     }
 
-    function deleteSession(index) {
+    function renderAll() {
+      renderCategoryPills();
+      render();
+    }
+
+    function deleteSession(category, dKey, index) {
       if (!confirm('Delete this log entry?')) return;
-      state.sessions.splice(index, 1);
+      state.logs[category][dKey].splice(index, 1);
       render();
     }
 
     function startTicking() {
       if (tickInterval) clearInterval(tickInterval);
-      tickInterval = setInterval(render, 1000);
+      tickInterval = setInterval(() => { renderCategoryPills(); render(); }, 1000);
     }
+
+    function stopTickingIfIdle() {
+      if (!state.current && tickInterval) {
+        clearInterval(tickInterval);
+        tickInterval = null;
+      }
+    }
+
+    // --------------------------- Event handlers ---------------------------
+
+    addCategoryButton.addEventListener('click', () => {
+      const name = newCategoryInput.value.trim();
+      if (!name) {
+        showToast('Enter a category name first.', true);
+        return;
+      }
+      if (state.categories.some((c) => c.toLowerCase() === name.toLowerCase())) {
+        showToast('That category already exists.', true);
+        return;
+      }
+      state.categories.push(name);
+      state.targetHoursByCategory[name] = 8;
+      state.logs[name] = {};
+      state.selectedCategory = name;
+      newCategoryInput.value = '';
+      renderAll();
+      showToast(`Category "${name}" added.`);
+    });
+
+    newCategoryInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addCategoryButton.click();
+    });
+
+    viewDateInput.addEventListener('change', () => {
+      viewDate = viewDateInput.value || todayKey();
+      render();
+    });
+
+    todayButton.addEventListener('click', () => {
+      viewDate = todayKey();
+      render();
+    });
+
+    targetHoursInput.addEventListener('input', () => {
+      const val = parseFloat(targetHoursInput.value);
+      state.targetHoursByCategory[state.selectedCategory] = isNaN(val) ? 0 : val;
+      render();
+    });
 
     addButton.addEventListener('click', () => {
       const task = taskInput.value.trim();
@@ -533,39 +804,36 @@
         showToast('Please enter a task first.', true);
         return;
       }
-      if (state.current) return; // already running
+      if (state.current) return;
+      if (viewDate !== todayKey()) {
+        showToast('Switch to Today to start a new task.', true);
+        return;
+      }
 
-      state.current = { task, start: new Date().toISOString(), isBreak: isBreakTask(task) };
+      state.current = { category: state.selectedCategory, task, start: new Date().toISOString(), isBreak: isBreakTask(task) };
       startTicking();
-      render();
+      renderAll();
       showToast(`Started: ${task}`);
     });
 
     stopButton.addEventListener('click', () => {
       if (!state.current) return;
+      const { category, task, start, isBreak } = state.current;
       const end = new Date();
-      const ms = end.getTime() - new Date(state.current.start).getTime();
-      state.sessions.push({
-        task: state.current.task,
-        start: state.current.start,
-        end: end.toISOString(),
-        ms,
-        isBreak: state.current.isBreak
-      });
+      const ms = end.getTime() - new Date(start).getTime();
+      const dKey = dateKey(new Date(start));
+      if (!state.logs[category]) state.logs[category] = {};
+      if (!state.logs[category][dKey]) state.logs[category][dKey] = [];
+      state.logs[category][dKey].push({ task, start, end: end.toISOString(), ms, isBreak });
+
       state.current = null;
-      if (tickInterval) { clearInterval(tickInterval); tickInterval = null; }
+      stopTickingIfIdle();
       taskInput.value = '';
-      render();
+      renderAll();
       showToast('Task stopped and logged.');
     });
 
     taskInput.addEventListener('input', render);
-
-    targetHoursInput.addEventListener('input', () => {
-      const val = parseFloat(targetHoursInput.value);
-      state.targetHours = isNaN(val) ? 0 : val;
-      render();
-    });
 
     printButton.addEventListener('click', () => window.print());
 
@@ -575,7 +843,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `work-log-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `work-log-backup-${todayKey()}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -592,13 +860,20 @@
       reader.onload = (e) => {
         try {
           const restored = JSON.parse(e.target.result);
-          if (restored && typeof restored === 'object' && Array.isArray(restored.sessions)) {
-            state.targetHours = typeof restored.targetHours === 'number' ? restored.targetHours : state.targetHours;
-            state.sessions = restored.sessions;
-            state.current = restored.current || null;
-            targetHoursInput.value = state.targetHours;
+          if (restored && typeof restored === 'object' && Array.isArray(restored.categories)) {
+            state = {
+              categories: restored.categories,
+              selectedCategory: restored.selectedCategory || restored.categories[0],
+              targetHoursByCategory: restored.targetHoursByCategory || {},
+              logs: restored.logs || {},
+              current: restored.current || null
+            };
+            state.categories.forEach((c) => {
+              if (typeof state.targetHoursByCategory[c] !== 'number') state.targetHoursByCategory[c] = 8;
+              if (!state.logs[c]) state.logs[c] = {};
+            });
             if (state.current) startTicking();
-            render();
+            renderAll();
             showToast('Work log restored.');
           } else {
             showToast('Invalid backup file.', true);
@@ -614,20 +889,18 @@
     });
 
     clearButton.addEventListener('click', () => {
-      if (!confirm('Clear all work log data? This cannot be undone.')) return;
-      if (tickInterval) { clearInterval(tickInterval); tickInterval = null; }
-      state = { targetHours: state.targetHours, sessions: [], current: null };
+      const cat = state.selectedCategory;
+      if (!confirm(`Clear all "${cat}" log entries for ${viewDate}? This cannot be undone.`)) return;
+      if (state.logs[cat]) delete state.logs[cat][viewDate];
       render();
-      showToast('Work log cleared.');
+      showToast('Day cleared.');
     });
 
     // --------------------------- Initialization ---------------------------
     loadState();
-    targetHoursInput.value = state.targetHours;
     if (state.current) startTicking();
-    render();
+    renderAll();
 
-    // Keep totals accurate if the tab was backgrounded/suspended.
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) render();
     });
