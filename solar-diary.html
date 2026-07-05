@@ -478,7 +478,7 @@
             <th>Peak (T2)</th>
             <th>Off-Peak (T3)</th>
             <th>Total Usage</th>
-            <th>Estimated Bill</th>
+            <th>Today's Bill</th>
             <th>Projected Monthly Bill</th>
           </tr>
         </thead>
@@ -791,8 +791,8 @@
             const totalUsage = Math.round(totalConsumption + (usage.solar - usage.export));
 
             insightsHTML += '<hr style="margin-top: 20px;">';
-            insightsHTML += `<p><strong>Direct usage from solar:</strong> ${Math.round(usage.solar)} - ${Math.round(usage.export)} = ${directUsage} units</p>`;
-            insightsHTML += `<p><strong>Total Electricity usage for this month (for Fixed Charge):</strong> (${Math.round(usage.t1)} + ${Math.round(usage.t2)} + ${Math.round(usage.t3)}) + (${directUsage}) = ${totalUsage} units</p>`;
+            //insightsHTML += `<p><strong>Direct usage from solar:</strong> ${Math.round(usage.solar)} - ${Math.round(usage.export)} = ${directUsage} units</p>`;
+            //insightsHTML += `<p><strong>Total Electricity usage for this month (for Fixed Charge):</strong> (${Math.round(usage.t1)} + ${Math.round(usage.t2)} + ${Math.round(usage.t3)}) + (${directUsage}) = ${totalUsage} units</p>`;
 
             const totalDays = getTotalDaysInput();
             if (totalDays) {
