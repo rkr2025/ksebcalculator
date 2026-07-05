@@ -215,6 +215,57 @@
     }
     .selected-date-label.weekend { color: var(--weekend); }
 
+    /* ------------------------------- Search -------------------------------- */
+    .search-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .search-controls input[type="text"] {
+      flex: 1;
+      min-width: 180px;
+      padding: 8px 10px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--surface-muted);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+    }
+    #searchResults { margin-top: 12px; }
+    .search-result-count {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .search-result-line {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 4px;
+      border-bottom: 1px dashed var(--border);
+      font-size: 14px;
+      line-height: 1.5;
+      cursor: pointer;
+    }
+    .search-result-line:last-child { border-bottom: none; }
+    .search-result-line:hover { background: var(--surface-muted); }
+    .search-result-datetime {
+      flex: none;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      font-family: "Consolas", "Courier New", monospace;
+      padding-top: 2px;
+      white-space: nowrap;
+    }
+    .search-result-text { flex: 1; word-break: break-word; white-space: pre-wrap; }
+    .search-result-text mark {
+      background: color-mix(in srgb, var(--accent) 35%, transparent);
+      color: inherit;
+      border-radius: 2px;
+    }
+
     /* ------------------------------ Entries ------------------------------ */
     .entry-line {
       display: flex;
@@ -589,6 +640,16 @@
       <div class="hour-box-grid" id="hourBoxGrid"></div>
     </div>
 
+    <!-- Search all entries -->
+    <div class="card">
+      <h3>🔍 Search Entries</h3>
+      <div class="search-controls">
+        <input type="text" id="searchInput" placeholder="Search across all diary entries...">
+        <button class="btn-outline btn" id="searchClearBtn" type="button">Clear</button>
+      </div>
+      <div id="searchResults"></div>
+    </div>
+
     <!-- View entries by date -->
     <div class="card">
       <h3>📖 Diary Entries</h3>
@@ -802,6 +863,85 @@
       document.getElementById('viewDateInput').value = key;
       renderEntries();
       renderCalendar();
+    });
+
+    // ------------------------------- Search ---------------------------------
+    // Wraps every case-insensitive match of `query` inside `text` in <mark>,
+    // built as real DOM nodes (not innerHTML) so user-authored diary text
+    // can never be interpreted as markup.
+    function highlightMatches(text, query) {
+      const frag = document.createDocumentFragment();
+      const lowerText = text.toLowerCase();
+      const lowerQuery = query.toLowerCase();
+      let i = 0;
+      while (true) {
+        const idx = lowerText.indexOf(lowerQuery, i);
+        if (idx === -1) {
+          frag.appendChild(document.createTextNode(text.slice(i)));
+          break;
+        }
+        frag.appendChild(document.createTextNode(text.slice(i, idx)));
+        const mark = document.createElement('mark');
+        mark.textContent = text.slice(idx, idx + query.length);
+        frag.appendChild(mark);
+        i = idx + query.length;
+      }
+      return frag;
+    }
+
+    function runSearch() {
+      const query = document.getElementById('searchInput').value.trim();
+      const resultsEl = document.getElementById('searchResults');
+      resultsEl.innerHTML = '';
+      if (!query) return;
+
+      const all = loadEntries();
+      const matches = [];
+      Object.keys(all).forEach((dayKey) => {
+        all[dayKey].forEach((e) => {
+          if (e.text.toLowerCase().includes(query.toLowerCase())) {
+            matches.push({ dayKey, t: e.t, text: e.text });
+          }
+        });
+      });
+      matches.sort((a, b) => b.t.localeCompare(a.t)); // most recent first
+
+      const countEl = document.createElement('div');
+      countEl.className = 'search-result-count';
+      countEl.textContent = matches.length === 0
+        ? 'No matching entries found.'
+        : `${matches.length} matching entr${matches.length === 1 ? 'y' : 'ies'} found.`;
+      resultsEl.appendChild(countEl);
+
+      matches.forEach((m) => {
+        const line = document.createElement('div');
+        line.className = 'search-result-line';
+
+        const dt = document.createElement('span');
+        dt.className = 'search-result-datetime';
+        const dateObj = new Date(m.t);
+        dt.textContent = `${dateObj.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' })} · ${formatTime(m.t)}`;
+
+        const txt = document.createElement('span');
+        txt.className = 'search-result-text';
+        txt.appendChild(highlightMatches(m.text, query));
+
+        line.appendChild(dt);
+        line.appendChild(txt);
+        line.addEventListener('click', () => {
+          document.getElementById('viewDateInput').value = m.dayKey;
+          renderEntries();
+          renderCalendar();
+          document.getElementById('entriesList').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        resultsEl.appendChild(line);
+      });
+    }
+
+    document.getElementById('searchInput').addEventListener('input', runSearch);
+    document.getElementById('searchClearBtn').addEventListener('click', () => {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('searchResults').innerHTML = '';
     });
 
     // ------------------------- View entries by date -----------------------
