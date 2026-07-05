@@ -5,67 +5,103 @@
   <title>📘 Solar Diary</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
+    :root {
+      --primary: #2a78d6;
+      --primary-dark: #1f5fac;
+      --primary-light: #eaf2fc;
+      --accent: #1baf7a;
+      --danger: #e34948;
+      --warn: #c97e00;
+      --surface: #ffffff;
+      --surface-muted: #f6f8fb;
+      --border: #e3e7ef;
+      --text-primary: #17203a;
+      --text-secondary: #52514e;
+      --text-muted: #898781;
+      --radius: 14px;
+      --shadow: 0 1px 2px rgba(16,24,40,.04), 0 8px 24px rgba(16,24,40,.08);
+    }
     * {
       box-sizing: border-box;
     }
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #2980b9, #6dd5fa);
+      font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+      background: linear-gradient(160deg, #2a78d6, #6dd5fa 65%);
       margin: 0;
-      padding: 0;
+      padding: 16px 10px 32px;
+      color: var(--text-primary);
     }
     .container {
       max-width: 960px;
-      margin: 10px auto;
-      background: white;
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      margin: 0 auto;
+      background: var(--surface);
+      padding: 22px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
       width: 100%;
     }
     h2, h3 {
       text-align: center;
-      font-size: 24px;
+      font-size: 22px;
+      font-weight: 700;
       margin: 10px 0;
       overflow-wrap: break-word;
+      letter-spacing: -0.01em;
     }
     h3 {
-      font-size: 18px;
+      font-size: 17px;
+      color: var(--text-secondary);
     }
     h4 {
-      font-size: 16px;
+      font-size: 15px;
       margin: 10px 0;
+      color: var(--text-secondary);
     }
     form {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-      gap: 8px;
+      gap: 10px;
       margin-bottom: 15px;
       width: 100%;
     }
     input {
-      padding: 6px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
+      padding: 9px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
       width: 100%;
       font-size: 14px;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text-primary);
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
     }
     button {
-      padding: 8px;
-      background: #3498db;
+      padding: 9px 14px;
+      background: var(--primary);
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
       font-size: 14px;
+      font-weight: 700;
       max-width: 100%;
+      transition: filter .15s ease, transform .1s ease;
     }
     button:hover:not(.disabled) {
-      background: #2980b9;
+      filter: brightness(0.95);
+    }
+    button:active:not(.disabled) {
+      transform: translateY(1px);
     }
     button.disabled {
-      background: #ccc;
-      opacity: 0.6;
+      background: var(--surface-muted);
+      color: var(--text-muted);
+      border: 1.5px solid var(--border);
+      opacity: 1;
       cursor: not-allowed;
       pointer-events: none;
     }
@@ -75,30 +111,41 @@
       margin-top: 15px;
     }
     th, td {
-      border: 1px solid #ddd;
-      padding: 6px;
+      border: 1px solid var(--border);
+      padding: 8px 6px;
       text-align: center;
-      font-size: 14px;
+      font-size: 13.5px;
+    }
+    th {
+      background: var(--surface-muted);
+      color: var(--text-muted);
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: .02em;
     }
     .highlight {
-      background-color: #ecf0f1;
-      font-weight: bold;
+      background-color: var(--primary-light);
+      font-weight: 700;
+      color: var(--primary-dark);
     }
     .edit-btn, .delete-btn {
       background: none;
       border: none;
       font-size: 16px;
       cursor: pointer;
+      padding: 2px 4px;
     }
-    .edit-btn { color: #2980b9; }
-    .delete-btn { color: #e74c3c; }
+    .edit-btn { color: var(--primary); }
+    .delete-btn { color: var(--danger); }
+    .edit-btn:hover, .delete-btn:hover { filter: brightness(0.85); }
     .nav-link {
       display: block;
       text-align: center;
-      margin-top: 15px;
+      margin-top: 18px;
       text-decoration: none;
-      color: #3498db;
-      font-size: 14px;
+      color: var(--primary);
+      font-weight: 600;
+      font-size: 13.5px;
     }
     .center {
       text-align: center;
@@ -107,13 +154,14 @@
     .table-container {
       overflow-x: auto;
       width: 100%;
+      border-radius: 10px;
     }
     #initialValuesDisplay {
       font-size: 14px;
       margin-bottom: 10px;
     }
     #initialValuesDisplay .error {
-      color: #e74c3c;
+      color: var(--danger);
       font-style: italic;
     }
     #usageInsights {
@@ -121,38 +169,48 @@
       text-align: left;
       font-size: 14px;
       max-width: 100%;
-      padding: 0 10px;
+      padding: 12px 14px;
+      background: var(--surface-muted);
+      border-radius: 10px;
+      border-left: 3px solid var(--primary);
     }
     #usageInsights .warning {
-      color: #e74c3c;
+      color: var(--danger);
       font-weight: bold;
     }
     #usageInsights .safe {
-      color: #2ecc71;
+      color: var(--accent);
       font-weight: bold;
     }
     #usageInsights .advice {
-      color: #7f8c8d;
+      color: var(--text-muted);
       font-style: italic;
     }
     #billingProfile {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 8px;
+      gap: 10px;
       margin-bottom: 15px;
     }
     #billingProfile label {
-      font-size: 13px;
-      color: #555;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-muted);
       display: block;
-      margin-bottom: 3px;
+      margin-bottom: 4px;
     }
     #billingProfile select, #billingProfile input {
-      padding: 6px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
+      padding: 9px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
       width: 100%;
       font-size: 14px;
+      font-family: inherit;
+    }
+    #billingProfile select:focus, #billingProfile input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
     }
     #estimatedBill {
       margin-top: 15px;
@@ -163,77 +221,172 @@
       margin-top: 8px;
     }
     #estimatedBill .bill-total td {
-      background: linear-gradient(90deg, #2ecc71, #27ae60);
+      background: linear-gradient(90deg, var(--accent), #159a68);
       color: white;
       font-weight: bold;
     }
     #estimatedBill .projected {
-      opacity: 0.85;
+      opacity: 0.9;
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--border);
     }
     #estimatedBill .note {
       font-size: 12px;
-      color: #7f8c8d;
+      color: var(--text-muted);
       font-style: italic;
       margin-top: 6px;
     }
     #viewFullBreakdownBtn {
-      background: #27ae60;
-      margin-top: 10px;
+      background: var(--accent);
+      display: block;
+      margin: 10px auto 0;
     }
     #viewFullBreakdownBtn:hover {
-      background: #219150;
+      filter: brightness(0.95);
+    }
+    .actions-card {
+      margin-top: 25px;
+      padding: 18px;
+      background: var(--surface-muted);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .actions-card h3 {
+      margin-top: 0;
     }
     #backupSection {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+    .action-box {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 8px;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 12px;
+      gap: 6px;
     }
-    #backupSection input[type="file"] {
+    .action-box-icon {
+      font-size: 26px;
+      line-height: 1;
+    }
+    .action-box-title {
+      font-weight: 700;
+      font-size: 14.5px;
+      color: var(--text-primary);
+    }
+    .action-box-desc {
       font-size: 12px;
-      max-width: 150px;
+      color: var(--text-muted);
+      margin: 0 0 6px;
+      line-height: 1.4;
     }
-    #backupSection button, #backupSection input[type="file"] {
+    .action-box .action-btn,
+    .action-box .file-input-label {
       width: 100%;
-      max-width: 200px;
+    }
+    .action-btn {
+      max-width: 260px;
+    }
+    .action-btn--primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .action-btn--accent {
+      background: var(--accent);
+      color: #fff;
+    }
+    .action-btn--outline {
+      background: var(--surface);
+      color: var(--text-secondary);
+      border: 1.5px solid var(--border);
+    }
+    .visually-hidden-file {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    .file-input-label {
+      flex: 1 1 200px;
+      max-width: 260px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 14px;
+      background: var(--surface);
+      color: var(--text-secondary);
+      border: 1.5px dashed var(--border);
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: border-color .15s ease, color .15s ease;
+    }
+    .file-input-label:hover {
+      border-color: var(--primary);
+      color: var(--primary-dark);
     }
     /* Instructions styles */
     details {
       margin: 10px 0;
-      border: 1px solid #3498db;
-      border-radius: 6px;
-      background: #f9f9f9;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface-muted);
+      overflow: hidden;
     }
     summary {
-      padding: 10px;
+      padding: 12px 14px;
       font-size: 14px;
-      font-weight: bold;
-      color: #3498db;
+      font-weight: 700;
+      color: var(--primary-dark);
       cursor: pointer;
       outline: none;
     }
     .instructions {
-      padding: 10px;
+      padding: 4px 14px 14px;
       font-size: 14px;
       line-height: 1.6;
-      color: #333;
+      color: var(--text-secondary);
     }
     .instructions ul {
       margin: 5px 0;
       padding-left: 20px;
+    }
+    hr {
+      border: none;
+      border-top: 1px dashed var(--border);
+      margin: 18px 0;
     }
     /* Print-specific styles */
     @media print {
       body {
         background: none;
         margin: 0;
+        padding: 0;
       }
       .container {
         margin: 0;
         padding: 10px;
         box-shadow: none;
       }
-      h2, h3, h4, form, details, .center, .nav-link, #backupSection, #initialValuesDisplay, #usageInsights, #billingProfile, #estimatedBill, #viewFullBreakdownBtn {
+      h2, h3, h4, form, details, .center, .nav-link, .actions-card, #initialValuesDisplay, #usageInsights, #billingProfile, #estimatedBill, #viewFullBreakdownBtn {
         display: none;
       }
       .table-container {
@@ -247,95 +400,95 @@
         padding: 4px;
         border: 1px solid #000;
       }
+      #estimatedBill .bill-total td {
+        background: #2ecc71 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
     }
     /* Responsive styles for mobile (480px) */
     @media (max-width: 480px) {
+      body { padding: 10px 6px; }
       .container {
-        padding: 10px;
-        margin: 5px;
+        padding: 14px;
+        margin: 0;
       }
       h2 {
-        font-size: 24px;
-      }
-      h3 {
         font-size: 20px;
       }
-      h4 {
+      h3 {
         font-size: 16px;
+      }
+      h4 {
+        font-size: 14px;
       }
       form {
         grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
-        gap: 6px;
+        gap: 8px;
       }
       input {
-        padding: 6px;
+        padding: 8px;
         font-size: 14px;
       }
       button {
-        padding: 7px;
+        padding: 8px;
         font-size: 14px;
       }
       th, td {
-        padding: 5px;
-        font-size: 14px;
+        padding: 6px;
+        font-size: 13px;
         min-width: 60px;
       }
       .edit-btn, .delete-btn {
         font-size: 16px;
       }
       .nav-link {
-        font-size: 14px;
+        font-size: 13px;
       }
       #initialValuesDisplay, #usageInsights {
-        font-size: 14px;
+        font-size: 13px;
       }
       #backupSection {
-        flex-direction: column;
-        align-items: center;
+        grid-template-columns: 1fr;
       }
-      #backupSection input[type="file"] {
-        font-size: 13px;
-        max-width: 130px;
-      }
-      #backupSection button, #backupSection input[type="file"] {
-        max-width: 160px;
+      .action-btn, .file-input-label {
+        max-width: 100%;
       }
       summary {
-        font-size: 14px;
+        font-size: 13px;
       }
       .instructions {
-        font-size: 14px;
+        font-size: 13px;
       }
     }
     /* Responsive styles for small mobile (360px) */
     @media (max-width: 360px) {
       .container {
-        padding: 8px;
-        margin: 3px;
+        padding: 10px;
       }
       h2 {
-        font-size: 22px;
-      }
-      h3 {
         font-size: 18px;
       }
+      h3 {
+        font-size: 15px;
+      }
       h4 {
-        font-size: 14px;
+        font-size: 13px;
       }
       form {
         grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
-        gap: 5px;
+        gap: 6px;
       }
       input {
-        padding: 5px;
+        padding: 7px;
         font-size: 13px;
       }
       button {
-        padding: 6px;
+        padding: 7px;
         font-size: 13px;
       }
       th, td {
-        padding: 4px;
+        padding: 5px;
         font-size: 12px;
         min-width: 55px;
       }
@@ -343,23 +496,19 @@
         font-size: 14px;
       }
       .nav-link {
-        font-size: 13px;
+        font-size: 12.5px;
       }
       #initialValuesDisplay, #usageInsights {
-        font-size: 13px;
+        font-size: 12.5px;
       }
-      #backupSection input[type="file"] {
+      .file-input-label {
         font-size: 12px;
-        max-width: 110px;
-      }
-      #backupSection button, #backupSection input[type="file"] {
-        max-width: 140px;
       }
       summary {
-        font-size: 13px;
+        font-size: 12.5px;
       }
       .instructions {
-        font-size: 13px;
+        font-size: 12.5px;
       }
     }
   </style>
@@ -490,14 +639,32 @@
     <div class="center">
       <button type="button" id="viewFullBreakdownBtn" style="display: none;">📊 View Full Bill Breakdown</button>
     </div>
-    <hr style="margin-top: 25px;">
-    <div id="backupSection" class="center">
-      <button onclick="backupReadings()">💾 Backup Readings</button>
-      <input type="file" id="restoreFile" accept=".json" style="margin: 10px;">
-      <button onclick="restoreReadings()">📂 Restore Readings</button>
-    </div>
-    <div class="center">
-      <button onclick="generatePrintableReport()">🖨️ Generate Printable Report</button>
+    <div class="actions-card">
+      <h3>💾 Backup, Restore &amp; Print</h3>
+      <div id="backupSection">
+        <div class="action-box">
+          <div class="action-box-icon">💾</div>
+          <div class="action-box-title">Backup</div>
+          <p class="action-box-desc">Save all your readings to a JSON file.</p>
+          <button class="action-btn action-btn--primary" onclick="backupReadings()">💾 Backup Readings</button>
+        </div>
+        <div class="action-box">
+          <div class="action-box-icon">📂</div>
+          <div class="action-box-title">Restore</div>
+          <p class="action-box-desc">Load readings back from a backup file.</p>
+          <label class="file-input-label" for="restoreFile">
+            📂 <span id="restoreFileName">Choose backup file…</span>
+          </label>
+          <input type="file" id="restoreFile" accept=".json" class="visually-hidden-file">
+          <button class="action-btn action-btn--accent" onclick="restoreReadings()">↩️ Restore Readings</button>
+        </div>
+        <div class="action-box">
+          <div class="action-box-icon">🖨️</div>
+          <div class="action-box-title">Print</div>
+          <p class="action-box-desc">Generate a printable report of your entries.</p>
+          <button class="action-btn action-btn--outline" onclick="generatePrintableReport()">🖨️ Generate Printable Report</button>
+        </div>
+      </div>
     </div>
     <a href="index.html" class="nav-link">← Back to Calculator</a>
   </div>
@@ -1091,6 +1258,13 @@
       renderEntries();
     }
 
+    // Show the chosen file's name on the styled label instead of the
+    // browser's default "No file chosen" text.
+    document.getElementById('restoreFile').addEventListener('change', (e) => {
+      const nameEl = document.getElementById('restoreFileName');
+      nameEl.textContent = e.target.files[0] ? e.target.files[0].name : 'Choose backup file…';
+    });
+
     // Backup Readings
     function backupReadings() {
       const data = { initialReadings, entries, billingProfile };
@@ -1137,6 +1311,7 @@
       };
       reader.readAsText(file);
       fileInput.value = '';
+      document.getElementById('restoreFileName').textContent = 'Choose backup file…';
     }
 
     // Generate Printable Report
