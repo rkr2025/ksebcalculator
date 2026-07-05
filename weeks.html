@@ -3,51 +3,89 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Life in Weeks</title>
+  <title>⏳ Your Life in Weeks</title>
   <style>
+    :root {
+      --primary: #2a78d6;
+      --primary-dark: #1f5fac;
+      --primary-light: #eaf2fc;
+      --accent: #1baf7a;
+      --danger: #e34948;
+      --warn: #c97e00;
+      --surface: #ffffff;
+      --surface-muted: #f6f8fb;
+      --border: #e3e7ef;
+      --text-primary: #17203a;
+      --text-secondary: #52514e;
+      --text-muted: #898781;
+      --radius: 14px;
+      --shadow: 0 1px 2px rgba(16,24,40,.04), 0 8px 24px rgba(16,24,40,.08);
+    }
+    * { box-sizing: border-box; }
     body {
-      font-family: Arial, sans-serif;
+      font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
       text-align: center;
-      margin: 20px;
+      margin: 0;
+      padding: 16px 10px 32px;
       font-size: 16px;
+      background: linear-gradient(160deg, #eef1f7, #e4ebf7 60%);
+      color: var(--text-primary);
+    }
+    h1 {
+      margin: 4px 0 18px;
+      font-size: 1.6em;
+      font-weight: 700;
+      letter-spacing: -0.01em;
     }
     .input-section {
-      margin: 0 auto 20px;
+      margin: 0 auto 16px;
       max-width: 480px;
-      background: #f7f9fa;
-      border: 1px solid #e0e0e0;
-      border-radius: 10px;
-      padding: 18px 20px;
+      background: var(--surface);
+      border: none;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
     }
     .input-section label {
       display: inline-block;
       margin: 6px 8px 6px 0;
-      font-weight: bold;
+      font-weight: 600;
+      font-size: 0.9em;
+      color: var(--text-secondary);
     }
     .input-section input,
     .input-section select {
       margin: 6px 12px 6px 0;
-      padding: 6px 8px;
+      padding: 8px 10px;
       font-size: 0.95em;
-      border: 1px solid #ccc;
-      border-radius: 5px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+    }
+    .input-section input:focus,
+    .input-section select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
     }
     .setup-intro {
-      margin: 0 0 12px;
-      color: #555;
+      margin: 0 0 14px;
+      color: var(--text-muted);
       font-size: 0.9em;
+      line-height: 1.5;
     }
     #countdownTimer {
       display: none;
       max-width: 480px;
-      margin: 0 auto 20px;
-      background: #111;
-      border-radius: 10px;
-      padding: 14px 16px;
+      margin: 0 auto 16px;
+      background: linear-gradient(160deg, #0c1826, #16273d 60%, #0e1c2e);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px 18px;
     }
     .countdown-label {
       font-size: 0.75em;
-      color: #999;
+      color: #7ba3c4;
       letter-spacing: 0.05em;
       text-transform: uppercase;
       margin-bottom: 8px;
@@ -57,7 +95,7 @@
       align-items: flex-start;
       justify-content: center;
       gap: 4px;
-      font-family: 'Courier New', monospace;
+      font-family: "Consolas", "Courier New", monospace;
     }
     .countdown-unit {
       display: flex;
@@ -68,13 +106,13 @@
     .countdown-unit span {
       font-size: 1.8em;
       font-weight: bold;
-      color: #4CAF50;
-      text-shadow: 0 0 6px rgba(76, 175, 80, 0.6);
+      color: #5fe0ff;
+      text-shadow: 0 0 6px rgba(95, 224, 255, 0.5);
       line-height: 1.1;
     }
     .countdown-unit small {
       font-size: 0.6em;
-      color: #999;
+      color: #7ba3c4;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       margin-top: 2px;
@@ -82,7 +120,7 @@
     .countdown-colon {
       font-size: 1.8em;
       font-weight: bold;
-      color: #4CAF50;
+      color: #5fe0ff;
       margin-top: 0.05em;
     }
     @media (max-width: 600px) {
@@ -94,17 +132,26 @@
         min-width: 2.6em;
       }
     }
+    button {
+      margin: 5px;
+      padding: 9px 16px;
+      font-size: 0.9em;
+      font-weight: 700;
+      font-family: inherit;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: filter .15s ease, transform .1s ease;
+      background: var(--surface-muted);
+      color: var(--text-secondary);
+      border: 1.5px solid var(--border);
+    }
+    button:hover { filter: brightness(0.96); }
+    button:active { transform: translateY(1px); }
     .input-section button {
-      background: #4CAF50;
+      background: var(--accent);
       color: #fff;
       border: none;
-      border-radius: 5px;
-      padding: 8px 16px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .input-section button:hover {
-      background: #43a047;
     }
     #summaryBar {
       display: none;
@@ -114,21 +161,20 @@
       gap: 6px 16px;
       max-width: 720px;
       margin: 0 auto 14px;
-      padding: 10px 16px;
-      background: #f0f4f8;
-      border-radius: 8px;
+      padding: 12px 18px;
+      background: var(--surface);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
       font-size: 0.9em;
     }
+    #summaryBar strong { color: var(--primary-dark); }
     #summaryBar button {
-      background: none;
-      border: 1px solid #999;
-      border-radius: 5px;
-      padding: 4px 10px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      border: none;
+      padding: 5px 12px;
       font-size: 0.85em;
-      cursor: pointer;
-    }
-    #summaryBar button:hover {
-      background: #e6e6e6;
+      margin: 0;
     }
     .legend {
       display: none;
@@ -138,7 +184,7 @@
       gap: 4px 16px;
       margin-bottom: 14px;
       font-size: 0.8em;
-      color: #444;
+      color: var(--text-muted);
     }
     .legend-item {
       display: inline-flex;
@@ -151,16 +197,21 @@
       border-radius: 3px;
       display: inline-block;
     }
-    .legend-swatch.lived { background-color: #4CAF50; }
+    .legend-swatch.lived { background-color: var(--accent); }
     .legend-swatch.future { background-color: #B0BEC5; }
     .legend-swatch.goal-set { background-color: #FFCA28; }
-    .legend-swatch.current-week-swatch { background-color: #fff; border: 2px solid red; }
+    .legend-swatch.current-week-swatch { background-color: #fff; border: 2px solid var(--danger); }
     .grid {
       display: inline-block;
-      border: 2px solid #000;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      box-shadow: var(--shadow);
       position: relative;
       max-width: 100%;
       overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 6px;
     }
     .year-row {
       display: flex;
@@ -169,16 +220,23 @@
     .week-box {
       width: 2.5vw;
       height: 2.5vw;
-      min-width: 12px;
-      min-height: 12px;
-      border: 1px solid #ccc;
-      margin: 1px;
-      background-color: #fff;
+      min-width: 15px;
+      min-height: 15px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      margin: 1.5px;
+      background-color: var(--surface);
       cursor: pointer;
       position: relative;
       font-size: 0.6em;
       line-height: 1;
       padding-top: 2px;
+      transition: transform .12s ease;
+    }
+    .week-box:hover {
+      transform: scale(1.15);
+      z-index: 2;
+      box-shadow: 0 2px 6px rgba(16,24,40,.2);
     }
     .week-box span.week-number {
       position: absolute;
@@ -193,26 +251,42 @@
       left: 50%;
       transform: translateX(-50%);
       font-size: 0.5em;
-      color: #333;
+      color: var(--text-muted);
     }
     .lived {
-      background-color: #4CAF50;
+      background-color: var(--accent);
     }
+    .lived span.age { color: rgba(255,255,255,.85); }
     .future {
-      background-color: #B0BEC5;
+      background-color: #dfe6ee;
     }
     .goal-set {
       background-color: #FFCA28;
     }
     .current-week {
-      border: 2px solid red;
+      border: 2px solid var(--danger);
     }
     .year-label {
       width: 5vw;
-      min-width: 30px;
-      margin-right: 5px;
+      min-width: 34px;
+      margin-right: 6px;
       text-align: right;
-      font-size: 0.9em;
+      font-size: 0.85em;
+      font-weight: 700;
+      color: var(--text-secondary);
+      position: sticky;
+      left: 0;
+      background: var(--surface);
+      z-index: 3;
+      padding-right: 2px;
+    }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 20, 32, 0.55);
+      backdrop-filter: blur(2px);
+      z-index: 999;
     }
     #goalModal {
       display: none;
@@ -220,52 +294,76 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: white;
-      padding: 15px;
-      border: 1px solid #ccc;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      background: var(--surface);
+      padding: 20px;
+      border-radius: var(--radius);
+      box-shadow: 0 20px 50px rgba(0,0,0,.3);
       max-width: 90vw;
+      width: 420px;
       text-align: left;
       font-size: 0.9em;
+      z-index: 1000;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    #goalModal h3 {
+      margin: 0 0 10px;
+      font-size: 1.1em;
     }
     #goalInput, .day-goal {
       width: 100%;
       margin: 5px 0;
       font-size: 0.9em;
+      padding: 8px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+    }
+    #goalInput:focus, .day-goal:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
     }
     .info {
       margin-bottom: 5px;
+      color: var(--text-secondary);
     }
     .day-goals {
       margin-top: 10px;
     }
-    button {
-      margin: 5px;
-      padding: 5px 10px;
-      font-size: 0.9em;
-    }
+    #goalModal button:nth-of-type(1) { background: var(--accent); color: #fff; border: none; } /* Save All */
+    #goalModal button:nth-of-type(2) { background: var(--surface-muted); color: var(--danger); } /* Delete */
+    #goalModal button:nth-of-type(3) { background: var(--surface-muted); color: var(--text-secondary); } /* Close */
 
     @media (max-width: 600px) {
       .week-box {
-        width: 4vw;
-        height: 4vw;
+        width: 6.2vw;
+        height: 6.2vw;
+        min-width: 22px;
+        min-height: 22px;
       }
       .week-box span.week-number {
-        font-size: 0.6em;
+        font-size: 0.62em;
       }
       .week-box span.age {
-        font-size: 0.4em;
+        font-size: 0.42em;
       }
       .year-label {
-        width: 8vw;
-        font-size: 0.8em;
+        width: 9vw;
+        min-width: 30px;
+        font-size: 0.78em;
       }
       #goalModal {
-        max-width: 85vw;
-        padding: 10px;
+        max-width: 92vw;
+        width: auto;
+        padding: 14px;
       }
       button {
-        padding: 3px 8px;
+        padding: 8px 12px;
+      }
+      #summaryBar {
+        font-size: 0.8em;
+        padding: 10px 14px;
       }
     }
     .nav-link {
@@ -273,15 +371,18 @@
       text-align: center;
       margin-top: 20px;
       text-decoration: none;
-      color: #3498db;
+      color: var(--primary);
+      font-weight: 600;
+      font-size: 13.5px;
     }
     @media print {
+      body { background: none; }
       .nav-link { display: none; }
     }
   </style>
 </head>
 <body>
-  <h1>Your Life in Weeks</h1>
+  <h1>⏳ Your Life in Weeks</h1>
 
   <div id="countdownTimer">
     <div class="countdown-label">⏳ Estimated Time Remaining</div>
@@ -315,7 +416,7 @@
       <option value="100">100</option>
     </select>
     <br>
-    <button onclick="generateGrid()">Save &amp; Generate</button>
+    <button onclick="generateGrid()">💾 Save &amp; Generate</button>
   </div>
 
   <div id="summaryBar">
@@ -332,17 +433,18 @@
 
   <div id="gridContainer"></div>
 
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
   <div id="goalModal">
-    <h3>Week Details</h3>
+    <h3>📅 Week Details</h3>
     <div class="info" id="weekNumberInfo"></div>
     <div class="info" id="dateRangeInfo"></div>
     <div class="info" id="currentWeekInfo"></div>
     <div class="info" id="timePassedInfo"></div>
     <div class="info" id="timeLeftInfo"></div>
     <div class="day-goals" id="dayGoals"></div>
-    <button onclick="saveGoals()">Save All</button>
-    <button onclick="deleteGoals()">Delete</button>
-    <button onclick="closeModal()">Close</button>
+    <button onclick="saveGoals()">💾 Save All</button>
+    <button onclick="deleteGoals()">🗑️ Delete</button>
+    <button onclick="closeModal()">✕ Close</button>
   </div>
 
   <a href="tools.html" class="nav-link">← Back to Tools</a>
@@ -575,6 +677,7 @@
       }
 
       document.getElementById('goalModal').style.display = 'block';
+      document.getElementById('modalOverlay').style.display = 'block';
     }
 
     function saveGoals() {
@@ -644,6 +747,7 @@
 
     function closeModal() {
       document.getElementById('goalModal').style.display = 'none';
+      document.getElementById('modalOverlay').style.display = 'none';
     }
   </script>
 </body>
