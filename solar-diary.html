@@ -916,12 +916,11 @@
       };
       const totalDays = getTotalDaysInput();
       const cumulativeBill = computeBill(billInputsFromUsage(cumulativeUsage));
-      // "Today's Bill" excludes the flat Fixed Charge and Meter Rent (those
-      // are monthly fees, not a per-day cost) -- only the energy-driven
-      // portion (Energy Charge + Duty + Fuel Surcharge) is spread over days.
-      const perDayShareText = (!cumulativeBill.error && totalDays)
-        ? `₹${((cumulativeBill.totalBillAmount - cumulativeBill.fixedCharge - cumulativeBill.meterRent) / totalDays).toFixed(2)}`
-        : '—';
+      // "Today's Bill" is per-row: that row's own Total Usage billed at the
+      // current energy-charge unit rate (from the cumulative bill so far) --
+      // it excludes the flat Fixed Charge/Meter Rent (monthly fees, not a
+      // per-day cost) and varies row-to-row with that day's actual usage.
+      const currentUnitRate = !cumulativeBill.error ? (cumulativeBill.unitRate || 0) : 0;
       const overallBillText = cumulativeBill.error ? '—' : `₹${cumulativeBill.totalBillAmount.toFixed(2)}`;
 
       const todayLabel = new Date().toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric' });
@@ -945,7 +944,7 @@
       dailyByDate.forEach((daily) => {
         const directSolarUsage = daily.solar - daily.export;
         const dailyTotal = directSolarUsage + daily.t1 + daily.t2 + daily.t3;
-        const estimatedBillText = perDayShareText;
+        const estimatedBillText = cumulativeBill.error ? '—' : `₹${(dailyTotal * currentUnitRate).toFixed(2)}`;
         const projectedBillText = projectedMonthlyText;
 
         body.innerHTML += `<tr>
