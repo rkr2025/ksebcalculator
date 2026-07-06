@@ -615,7 +615,7 @@
     </div>
     <div class="section-box">
       <h3 id="initialReadingHeading">🔑 June month Initial Reading</h3>
-      <p class="note">ഈ മാസത്തെ Initial റീഡിങ് ഇവിടെ enter ചെയ്യുക. കഴിഞ്ഞ മാസം ലഭിച്ച ബില്ലിലെ Current റീഡിങ് ആണ് ഈ മാസത്തെ Initial Reading ആയി എടുക്കേണ്ടത്.</p>
+      <p class="note" id="initialReadingNote">ഈ മാസത്തെ Initial റീഡിങ് ഇവിടെ enter ചെയ്യുക. കഴിഞ്ഞ മാസം ലഭിച്ച ബില്ലിലെ Current റീഡിങ് ആണ് ഈ മാസത്തെ Initial Reading ആയി എടുക്കേണ്ടത്.</p>
       <form id="initialForm">
         <div>
           <label for="init_date" style="font-size: 13px; color: #555; display: block; margin-bottom: 3px;">Date of Initial Reading</label>
@@ -780,14 +780,17 @@
     function displayInitialValues() {
       const el = document.getElementById("initialValuesDisplay");
       const saveBtn = document.getElementById("saveInitialBtn");
+      const noteEl = document.getElementById("initialReadingNote");
+      const formEl = document.getElementById("initialForm");
       if (!initialReadings) {
         el.innerHTML = '<em>No valid initial readings provided. Please enter initial readings to enable usage analysis.</em>';
         saveBtn.classList.remove('disabled');
         saveBtn.removeAttribute('disabled');
         setInitialFormFieldsDisabled(false);
+        noteEl.style.display = '';
+        formEl.style.display = '';
       } else {
         el.innerHTML = `
-          <p class="note">ℹ️ Initial readings are already saved, so "Save Initial" and its fields are greyed out. To change these values, delete the entry below first, then enter and save the new readings.<br>ഇനീഷ്യൽ റീഡിംഗുകൾ ഇതിനകം സേവ് ചെയ്തിട്ടുള്ളതിനാൽ "Save Initial" ബട്ടണും അതിന്റെ ഫീൽഡുകളും ഗ്രേ ഔട്ട് ആയിരിക്കും. ഈ മൂല്യങ്ങൾ മാറ്റണമെങ്കിൽ, ആദ്യം താഴെയുള്ള എൻട്രി ഡിലീറ്റ് ചെയ്ത ശേഷം പുതിയ റീഡിംഗുകൾ നൽകി സേവ് ചെയ്യുക.</p>
           <div class="table-container">
             <table>
               <thead>
@@ -820,6 +823,8 @@
         saveBtn.classList.add('disabled');
         saveBtn.setAttribute('disabled', 'disabled');
         setInitialFormFieldsDisabled(true);
+        noteEl.style.display = 'none';
+        formEl.style.display = 'none';
       }
     }
 
@@ -1240,6 +1245,7 @@
     }
 
     function deleteInitial() {
+      if (!confirm('Delete the initial reading? You will need to enter and save it again to continue tracking.')) return;
       initialReadings = null;
       localStorage.removeItem("initialReadings");
       displayInitialValues();
