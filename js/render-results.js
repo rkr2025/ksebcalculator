@@ -21,32 +21,6 @@ import { FUEL_SURCHARGE_PER_UNIT } from './tariff-rates.js';
 
 const FUEL_SURCHARGE_PAISE_LABEL = `${Math.round(FUEL_SURCHARGE_PER_UNIT * 100)}ps`;
 
-const SOLAR_DIARY_PROMO_HTML = `
-                    <p style="font-size: 16px; color: var(--text-secondary); line-height: 1.8; margin: 15px 0 0; background: var(--surface-muted); padding: 10px; border-radius: 5px; font-weight: bold; animation: glow 1.5s ease-in-out infinite alternate;">
-                        <span style="font-size: 18px; color: #e74c3c;">🌞 New Release:</span> New <a href="solar-diary.html" style="color: #2ecc71; font-style: italic; text-decoration: none; font-weight: bold; position: relative; transition: color 0.3s ease;" class="solar-diary-link">Solar Diary</a> app released! Try it out and track your energy usage.
-                    </p>
-                    <style>
-                        @keyframes glow {
-                            0% { box-shadow: 0 0 5px rgba(46, 204, 113, 0.3); }
-                            100% { box-shadow: 0 0 15px rgba(46, 204, 113, 0.7); }
-                        }
-                        .solar-diary-link::after {
-                            content: '';
-                            position: absolute;
-                            width: 0;
-                            height: 2px;
-                            bottom: -2px;
-                            left: 0;
-                            background-color: #27ae60;
-                            transition: width 0.3s ease;
-                        }
-                        .solar-diary-link:hover::after {
-                            width: 100%;
-                        }
-                        .solar-diary-link:hover {
-                            color: #27ae60;
-                        }
-                    </style>`;
 
 const ENDING_NOTE_HTML = `
     <div style="background: var(--surface-muted); padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); margin: 20px auto; max-width: 90%; font-family: 'Georgia', serif; border-left: 4px solid #2ecc71;">
@@ -56,7 +30,7 @@ const ENDING_NOTE_HTML = `
         <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.8; margin: 15px 0 0;">
             <strong style="color: #27ae60;">Support:</strong> For calculation discrepancies, mistakes, or additional options, contact
             <a href="mailto:calculatoronline2024@gmail.com" style="color: #2ecc71; font-style: italic; text-decoration: none; transition: color 0.3s ease;">calculatoronline2024@gmail.com</a>.
-            <span style="display: block; margin-top: 8px; font-size: 12px; color: var(--text-muted);">(Version 3.0.10: Last updated: 05-July-2026) </span>
+            <span style="display: block; margin-top: 8px; font-size: 12px; color: var(--text-muted);">(Version 3.0.12: Last updated: 06-July-2026) </span>
         </p>
     </div>
 `;
@@ -382,7 +356,6 @@ function buildNormalBillingResult(bill) {
                 <h5><u>Total Bill Amount</u></h5>
                 <p>ഏകദേശം <strong class="red-text">₹${(totalBillAmount || 0).toFixed(2)}</strong></p>
                 <p style="font-size: 0.9em; font-style: italic;">(GST, Security Deposit interest, Tariff changes, Advance calculation എന്നിവയിൽ മാറ്റങ്ങൾ വരാം)</p>
-                    ${SOLAR_DIARY_PROMO_HTML}
             `;
     } else {
         if (importReading === exportPlusBank) {
@@ -402,10 +375,8 @@ function buildNormalBillingResult(bill) {
                 ${(accountBalance || 0) > 0 ? `
                     <p>Final Bank Closing = <strong class="green-text">${accountBalance || 0} Unit</strong></p>
                     <p style="font-size: 0.9em;">(Export+Bank(${exportPlusBank || 0}) - Import(${importReading || 0}))</p>
-                    ${SOLAR_DIARY_PROMO_HTML}
                 ` : `
                     <p>No Energy units to be added to bank 👎</p>
-                    ${SOLAR_DIARY_PROMO_HTML}
                 `}
             `;
     }

@@ -231,6 +231,37 @@ body {
   transform: translateY(-1px);
 }
 
+.extra-apps-link--stacked {
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1.25;
+  text-align: center;
+}
+
+
+.extra-apps-link-title {
+  font-weight: 700;
+}
+
+.extra-apps-link-subtitle {
+  font-size: 10.5px;
+  font-weight: 600;
+  animation: extra-apps-link-blink 1.1s step-start infinite;
+}
+
+@keyframes extra-apps-link-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .extra-apps-link-subtitle {
+    animation: none;
+  }
+}
+
 h1 {
   text-align: center;
   font-family: "Poppins", sans-serif;
