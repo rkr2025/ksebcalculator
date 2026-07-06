@@ -474,8 +474,34 @@
         padding: 10px;
         box-shadow: none;
       }
-      h2, h3, h4, form, details, .center, .nav-link, .actions-card, .section-box, #initialValuesDisplay, #usageInsights, #estimatedBill, #viewFullBreakdownBtn {
+      /* Only 4 reports print: Initial Reading details, Entries Log, Daily
+         Usage Tracker, and Projected Month-End -- everything else (intro
+         note, instructions, Billing Profile, input forms, Total
+         Days/Insights, buttons, nav link) is hidden. */
+      form, details, .center, .nav-link, .actions-card, #viewFullBreakdownBtn,
+      .print-hide-section, .note {
         display: none;
+      }
+      #estimatedBill .projected .note {
+        display: block;
+      }
+      .section-box {
+        border: 1px solid #000;
+        box-shadow: none;
+        background: none;
+      }
+      #estimatedBill {
+        display: block;
+        padding: 0;
+        background: none;
+        border: none;
+      }
+      #estimatedBill > *:not(.projected) {
+        display: none;
+      }
+      #estimatedBill .projected {
+        border: 1px solid #000;
+        background: none;
       }
       .table-container {
         overflow-x: visible;
@@ -623,7 +649,7 @@
     </details>
     <h2>📘 Solar Diary</h2>
     <p class="note">This diary records your daily solar and meter usage, and estimates your electricity bill both for today and projected for the full month.</p>
-    <div class="section-box">
+    <div class="section-box print-hide-section">
       <h3>⚙️ Billing Profile</h3>
       <div id="billingProfile">
         <div>
@@ -660,7 +686,7 @@
         </div>
       </div>
     </div>
-    <div class="section-box">
+    <div class="section-box print-initial-section">
       <h3 id="initialReadingHeading">🔑 June month Initial Reading</h3>
       <p class="note" id="initialReadingNote">ഈ മാസത്തെ Initial റീഡിങ് ഇവിടെ enter ചെയ്യുക. കഴിഞ്ഞ മാസം ലഭിച്ച ബില്ലിലെ Current റീഡിങ് ആണ് ഈ മാസത്തെ Initial Reading ആയി എടുക്കേണ്ടത്.</p>
       <form id="initialForm">
@@ -677,7 +703,7 @@
       </form>
       <div id="initialValuesDisplay"></div>
     </div>
-    <div class="section-box">
+    <div class="section-box print-hide-section">
       <h3 style="margin-top: 0;">➕ Current Solar Readings</h3>
       <p class="note">Enter your current reading from the meter.<br>നിങ്ങളുടെ ഇപ്പോൾ ഉള്ള സോളാർ മീറ്റർ റീഡിങ് ഇവിടെ Enter ചെയ്യുക.</p>
       <form id="diaryForm">
@@ -689,7 +715,7 @@
         <button type="submit">➕ Add</button>
       </form>
     </div>
-    <div class="section-box">
+    <div class="section-box print-show-section">
       <h3 style="margin-top: 0;">📋 Entries Log</h3>
       <div class="table-container">
         <table>
@@ -708,7 +734,7 @@
         </table>
       </div>
     </div>
-    <div class="section-box">
+    <div class="section-box print-hide-section">
       <div class="usage-grid">
         <div class="usage-stat">
           <div class="usage-stat-label">📆 Days Tracked</div>
@@ -723,7 +749,7 @@
       </div>
       <div id="usageInsights"></div>
     </div>
-    <div class="section-box">
+    <div class="section-box print-show-section">
       <h3 style="margin-top: 0;">📅 Daily Usage Tracker</h3>
       <p class="note">ഇവിടെ daily usage, ഇന്നത്തെ electricity ചാർജും ഒരു മാസത്തെ estimated electricity ചാർജും ലഭിക്കുന്നതാണ്.</p>
       <div class="table-container">
