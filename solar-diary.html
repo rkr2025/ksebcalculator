@@ -179,22 +179,62 @@
       text-align: left;
       font-size: 14px;
       max-width: 100%;
-      padding: 12px 14px;
-      background: var(--surface-muted);
+    }
+    .usage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+    .usage-stat {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
       border-radius: 10px;
-      border-left: 3px solid var(--primary);
+      padding: 12px 14px;
+      text-align: center;
     }
-    #usageInsights .warning {
-      color: var(--danger);
-      font-weight: bold;
-    }
-    #usageInsights .safe {
-      color: var(--accent);
-      font-weight: bold;
-    }
-    #usageInsights .advice {
+    .usage-stat-label {
+      font-size: 11.5px;
+      font-weight: 700;
       color: var(--text-muted);
-      font-style: italic;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+    }
+    .usage-stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-top: 4px;
+    }
+    .usage-stat-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .usage-status {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+    .usage-status-icon { font-size: 20px; line-height: 1; }
+    .usage-status-title { font-weight: 700; font-size: 14px; }
+    .usage-status-detail { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+    .usage-status--warning {
+      background: color-mix(in srgb, var(--danger) 10%, var(--surface));
+      border-left: 3px solid var(--danger);
+    }
+    .usage-status--warning .usage-status-title { color: var(--danger); }
+    .usage-status--safe {
+      background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+      border-left: 3px solid var(--accent);
+    }
+    .usage-status--safe .usage-status-title { color: var(--accent); }
+    .usage-status--advice {
+      background: var(--surface-muted);
+      border-left: 3px solid var(--text-muted);
     }
     #billingProfile {
       display: grid;
@@ -662,9 +702,17 @@
       </div>
     </div>
     <div class="section-box">
-      <div class="center" style="margin: 10px 0;">
-        <label style="font-weight: bold; margin-right: 8px;">Total Number of Days (for Daily Energy usage):</label>
-        <span id="totalDaysDisplay">—</span>
+      <div class="usage-grid">
+        <div class="usage-stat">
+          <div class="usage-stat-label">📆 Days Tracked</div>
+          <div class="usage-stat-value" id="totalDaysValue">—</div>
+          <div class="usage-stat-sub" id="totalDaysSub">for Daily Energy usage</div>
+        </div>
+        <div class="usage-stat" id="dailyUsageStat" style="display: none;">
+          <div class="usage-stat-label">⚡ Daily Energy Usage</div>
+          <div class="usage-stat-value" id="dailyUsageValue">—</div>
+          <div class="usage-stat-sub" id="dailyUsageSub"></div>
+        </div>
       </div>
       <div id="usageInsights"></div>
     </div>
@@ -856,19 +904,23 @@
     }
 
     function updateTotalDaysDisplay() {
-      const el = document.getElementById('totalDaysDisplay');
+      const valueEl = document.getElementById('totalDaysValue');
+      const subEl = document.getElementById('totalDaysSub');
       const dateKey = initialReadingDateKey();
       if (!dateKey) {
-        el.textContent = '— (set an Initial Reading date first)';
+        valueEl.textContent = '—';
+        subEl.textContent = 'Set an Initial Reading date first';
         return;
       }
       if (entries.length === 0) {
-        el.textContent = '— (add a reading to calculate)';
+        valueEl.textContent = '—';
+        subEl.textContent = 'Add a reading to calculate';
         return;
       }
       const days = getTotalDaysInput();
       const lastEntryDate = new Date(entries[entries.length - 1].timestamp);
-      el.textContent = `${days} day(s) — from ${new Date(dateKey + 'T00:00:00').toLocaleDateString()} to ${lastEntryDate.toLocaleDateString()}`;
+      valueEl.textContent = `${days} day${days === 1 ? '' : 's'}`;
+      subEl.textContent = `${new Date(dateKey + 'T00:00:00').toLocaleDateString()} → ${lastEntryDate.toLocaleDateString()}`;
     }
 
     function renderDailyUsageTracker() {
@@ -967,6 +1019,7 @@
       const insightsEl = document.getElementById("usageInsights");
       tbody.innerHTML = "";
       insightsEl.innerHTML = "";
+      document.getElementById('dailyUsageStat').style.display = 'none';
       updateTotalDaysDisplay();
 
       let total = { solar: 0, t1: 0, t2: 0, t3: 0, export: 0 };
@@ -1035,31 +1088,60 @@
 
         if (totalConsumption > exportUnits) {
           const difference = Math.round(totalConsumption - exportUnits);
-          insightsHTML += `<hr style="margin-top: 20px;"><p class="warning">Warning: You are using ${difference} units more than exported. These units will be charged. Please reduce your electricity usage.</p>`;
-          insightsHTML += `<p class="advice">Advice: Reduce your usage by ${difference} units to keep it below Export levels.</p>`;
+          insightsHTML += `
+            <div class="usage-status usage-status--warning">
+              <div class="usage-status-icon">⚠️</div>
+              <div>
+                <div class="usage-status-title">Using ${difference} unit(s) more than exported</div>
+                <div class="usage-status-detail">These units will be charged. Reduce your usage by ${difference} unit(s) to stay below export levels.</div>
+              </div>
+            </div>`;
         } else {
           const difference = Math.round(exportUnits - totalConsumption);
-          insightsHTML += `<p class="safe">Good: You have ${difference} units available to use safely this month.</p>`;
+          insightsHTML += `
+            <div class="usage-status usage-status--safe">
+              <div class="usage-status-icon">✅</div>
+              <div>
+                <div class="usage-status-title">You're within your export</div>
+                <div class="usage-status-detail">${difference} unit(s) still available to use safely this month.</div>
+              </div>
+            </div>`;
         }
 
+        const dailyUsageStat = document.getElementById('dailyUsageStat');
+        const dailyUsageValue = document.getElementById('dailyUsageValue');
+        const dailyUsageSub = document.getElementById('dailyUsageSub');
+
         try {
-            const directUsage = Math.round(usage.solar - usage.export);
             const totalUsage = Math.round(totalConsumption + (usage.solar - usage.export));
-
-            insightsHTML += '<hr style="margin-top: 20px;">';
-            //insightsHTML += `<p><strong>Direct usage from solar:</strong> ${Math.round(usage.solar)} - ${Math.round(usage.export)} = ${directUsage} units</p>`;
-            //insightsHTML += `<p><strong>Total Electricity usage for this month (for Fixed Charge):</strong> (${Math.round(usage.t1)} + ${Math.round(usage.t2)} + ${Math.round(usage.t3)}) + (${directUsage}) = ${totalUsage} units</p>`;
-
             const totalDays = getTotalDaysInput();
             if (totalDays) {
               const dailyUsage = (totalUsage / totalDays).toFixed(2);
-              insightsHTML += `<p><strong>Daily Energy usage:</strong> ${totalUsage} / ${totalDays} day(s) = ${dailyUsage} units/day</p>`;
+              dailyUsageStat.style.display = '';
+              dailyUsageValue.textContent = `${dailyUsage} units/day`;
+              dailyUsageSub.textContent = `${totalUsage} units ÷ ${totalDays} day(s)`;
             } else {
-              insightsHTML += `<p class="advice">Daily Energy usage: set an Initial Reading date and add at least one reading to calculate.</p>`;
+              dailyUsageStat.style.display = 'none';
+              insightsHTML += `
+                <div class="usage-status usage-status--advice">
+                  <div class="usage-status-icon">ℹ️</div>
+                  <div>
+                    <div class="usage-status-title">Daily Energy usage unavailable</div>
+                    <div class="usage-status-detail">Set an Initial Reading date and add at least one reading to calculate.</div>
+                  </div>
+                </div>`;
             }
         } catch (err) {
             console.error('Error generating usage insights:', err);
-            insightsHTML += '<p class="error">Error generating usage insights. Please check your data.</p>';
+            dailyUsageStat.style.display = 'none';
+            insightsHTML += `
+              <div class="usage-status usage-status--warning">
+                <div class="usage-status-icon">⚠️</div>
+                <div>
+                  <div class="usage-status-title">Error generating usage insights</div>
+                  <div class="usage-status-detail">Please check your data.</div>
+                </div>
+              </div>`;
         }
 
         insightsEl.innerHTML = insightsHTML;
