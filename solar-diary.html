@@ -123,6 +123,13 @@
       text-transform: uppercase;
       letter-spacing: .02em;
     }
+    .projected-monthly-cell {
+      text-align: center;
+      vertical-align: middle;
+      font-weight: 700;
+      color: var(--danger);
+      font-size: 15px;
+    }
     .highlight {
       background-color: var(--primary-light);
       font-weight: 700;
@@ -730,8 +737,8 @@
               <th>Peak (T2)</th>
               <th>Off-Peak (T3)</th>
               <th>Total Usage</th>
-              <th>Today's Bill</th>
-              <th id="overallBillColumnHeader">Estimated Bill</th>
+              <th>Today's Energy Bill</th>
+              <th id="overallBillColumnHeader">Today's Total Bill</th>
               <th>Projected Monthly Bill</th>
             </tr>
           </thead>
@@ -952,12 +959,6 @@
         prev = entry;
       });
 
-      // Estimated Bill / Projected Monthly Bill columns show each day's
-      // *share* of the real cumulative bill (same computeBill() call as the
-      // Estimated Bill / Projected Month-End sections below), not a bill
-      // recomputed standalone per day -- billing this single day's usage on
-      // its own would double-count the Fixed Charge/Meter Rent on every row
-      // and never match the detailed sections' totals.
       const lastEntry = entries[entries.length - 1];
       const cumulativeUsage = {
         solar: lastEntry.solar - initialReadings.solar,
@@ -966,19 +967,27 @@
         t3: lastEntry.t3 - initialReadings.t3,
         export: lastEntry.export - initialReadings.export
       };
-      const totalDays = getTotalDaysInput();
       const cumulativeBill = computeBill(billInputsFromUsage(cumulativeUsage));
-      // "Today's Bill" is per-row: that row's own Total Usage billed at the
-      // current energy-charge unit rate (from the cumulative bill so far) --
-      // it excludes the flat Fixed Charge/Meter Rent (monthly fees, not a
+      // "Today's Bill" is that row's own Total Usage billed at the current
+      // energy-charge unit rate (from the cumulative bill so far) -- it
+      // excludes the flat Fixed Charge/Meter Rent (monthly fees, not a
       // per-day cost) and varies row-to-row with that day's actual usage.
       const currentUnitRate = !cumulativeBill.error ? (cumulativeBill.unitRate || 0) : 0;
-      const overallBillText = cumulativeBill.error ? '—' : `₹${cumulativeBill.totalBillAmount.toFixed(2)}`;
 
-      const todayLabel = new Date().toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric' });
-      document.getElementById('overallBillColumnHeader').textContent = `Estimated Bill on ${todayLabel}`;
+      document.getElementById('overallBillColumnHeader').textContent = "Today's Total Bill";
 
       const PROJECTION_DAYS = 30;
+
+      // "Projected Monthly Bill" must match the "Projected Month-End (at
+      // current daily rate)" section below exactly: the *average* daily
+      // rate across the whole tracked period (cumulative usage / totalDays)
+      // scaled to a 30-day month -- computed once here (flat across every
+      // row), not from any single row's own usage. A per-row projection
+      // (that day's usage x30, billed standalone) was tried, but tariff
+      // slabs are non-linear, so scaling one volatile day by 30 produced
+      // wildly different -- and less realistic -- totals than the
+      // smoothed account-wide average.
+      const totalDays = getTotalDaysInput();
       let projectedMonthlyText = '—';
       if (totalDays) {
         const scale = PROJECTION_DAYS / totalDays;
@@ -993,11 +1002,26 @@
         if (!projectedBill.error) projectedMonthlyText = `₹${projectedBill.totalBillAmount.toFixed(2)}`;
       }
 
-      dailyByDate.forEach((daily) => {
+      dailyByDate.forEach((daily, i) => {
         const directSolarUsage = daily.solar - daily.export;
         const dailyTotal = directSolarUsage + daily.t1 + daily.t2 + daily.t3;
         const estimatedBillText = cumulativeBill.error ? '—' : `₹${(dailyTotal * currentUnitRate).toFixed(2)}`;
-        const projectedBillText = projectedMonthlyText;
+
+        // "Estimated Bill" for this row is that row's own usage billed
+        // standalone (as if this one day's usage were the whole billing
+        // period) -- it only ever describes this row, not the account's
+        // real cumulative bill (that's what the Estimated Total Bill
+        // section below is for).
+        const rowBill = computeBill(billInputsFromUsage(daily));
+        const overallBillText = rowBill.error ? '—' : `₹${rowBill.totalBillAmount.toFixed(2)}`;
+
+        // "Projected Monthly Bill" is the same single figure for every row
+        // (it's an account-wide projection, not a per-row one), so show it
+        // just once -- spanning the full column -- instead of repeating an
+        // identical value on every line.
+        const projectedCell = i === 0
+          ? `<td rowspan="${dailyByDate.length}" class="projected-monthly-cell">${projectedMonthlyText}</td>`
+          : '';
 
         body.innerHTML += `<tr>
           <td>${daily.date}</td>
@@ -1009,7 +1033,7 @@
           <td><strong>${Math.round(dailyTotal)}</strong></td>
           <td>${estimatedBillText}</td>
           <td>${overallBillText}</td>
-          <td>${projectedBillText}</td>
+          ${projectedCell}
         </tr>`;
       });
     }
