@@ -405,8 +405,15 @@
       localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
     }
 
+    // Categories keep their original (insertion) order internally -- that's
+    // what getCategoryColor() indexes into -- but the dropdowns display them
+    // alphabetically for easier scanning.
+    function alphabeticalCategories() {
+      return categories.slice().sort((a, b) => a.localeCompare(b));
+    }
+
     function renderCategoryOptions(selectedValue) {
-      expCategory.innerHTML = categories.map((c) => {
+      expCategory.innerHTML = alphabeticalCategories().map((c) => {
         const safe = escapeHtml(c);
         return `<option value="${safe}">${safe}</option>`;
       }).join('');
@@ -858,7 +865,7 @@
     function populateLogCategoryFilter() {
       const current = logCategoryFilter.value;
       logCategoryFilter.innerHTML = '<option value="">All Categories</option>' +
-        categories.map((c) => {
+        alphabeticalCategories().map((c) => {
           const safe = escapeHtml(c);
           return `<option value="${safe}">${safe}</option>`;
         }).join('');
