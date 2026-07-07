@@ -340,10 +340,10 @@
           <thead>
             <tr>
               <th>Date</th>
-              <th>Category</th>
-              <th>Payment</th>
               <th>Description</th>
               <th class="sortable-th" id="amountSortTh">Amount <span id="amountSortIcon">↕</span></th>
+              <th>Category</th>
+              <th>Payment</th>
               <th></th>
             </tr>
           </thead>
@@ -666,10 +666,10 @@
 
       tr.innerHTML = `
         <td><input type="date" class="edit-date" value="${expense.date}"></td>
-        <td><select class="edit-category">${categoryOptions}</select></td>
-        <td><select class="edit-payment">${paymentOptions}</select></td>
         <td><input type="text" class="edit-desc"></td>
         <td><input type="number" class="edit-amount" min="0" step="0.01" value="${expense.amount}"></td>
+        <td><select class="edit-category">${categoryOptions}</select></td>
+        <td><select class="edit-payment">${paymentOptions}</select></td>
         <td>
           <button class="delete-btn edit-save-btn" title="Save">💾</button>
           <button class="delete-btn edit-cancel-btn" title="Cancel">✕</button>
@@ -1053,6 +1053,15 @@
         dateTd.textContent = `${rowDateObj.toLocaleDateString()} (${rowDateObj.toLocaleDateString([], { weekday: 'short' })})`;
         tr.appendChild(dateTd);
 
+        const descTd = document.createElement('td');
+        descTd.className = 'desc-cell';
+        descTd.textContent = e.description || '—'; // user text -- textContent only
+        tr.appendChild(descTd);
+
+        const amountTd = document.createElement('td');
+        amountTd.textContent = formatCurrency(e.amount);
+        tr.appendChild(amountTd);
+
         const catTd = document.createElement('td');
         const tag = document.createElement('span');
         tag.className = 'cat-tag';
@@ -1064,15 +1073,6 @@
         const paymentTd = document.createElement('td');
         paymentTd.textContent = e.payment || 'UPI';
         tr.appendChild(paymentTd);
-
-        const descTd = document.createElement('td');
-        descTd.className = 'desc-cell';
-        descTd.textContent = e.description || '—'; // user text -- textContent only
-        tr.appendChild(descTd);
-
-        const amountTd = document.createElement('td');
-        amountTd.textContent = formatCurrency(e.amount);
-        tr.appendChild(amountTd);
 
         const actionTd = document.createElement('td');
         const editBtn = document.createElement('button');
