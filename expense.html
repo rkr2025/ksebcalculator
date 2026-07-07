@@ -488,6 +488,7 @@
     // expenses: [{ id, date: 'YYYY-MM-DD', category, description, amount }]
     let expenses = [];
     let currentPeriod = 'daily';
+    let logPeriod = 'daily';
 
     function dateKey(d) {
       const y = d.getFullYear();
@@ -700,54 +701,85 @@
     }
 
     // --------------------------- Period selection ---------------------------
+    // Usage Summary and Expense Log each have their own Daily/Monthly/Yearly
+    // tabs and date/month/year pickers, but they're kept in sync: choosing a
+    // period (or a specific date/month/year) in either section applies to
+    // both, instead of tracking two independent selections.
 
-    document.querySelectorAll('#summaryPeriodTabs .period-tab').forEach((tab) => {
+    function setActivePeriod(period) {
+      currentPeriod = period;
+      logPeriod = period;
+      document.querySelectorAll('#summaryPeriodTabs .period-tab').forEach((t) => t.classList.toggle('active', t.dataset.period === period));
+      document.querySelectorAll('#logPeriodTabs .period-tab').forEach((t) => t.classList.toggle('active', t.dataset.logPeriod === period));
+
+      periodDateInput.style.display = period === 'daily' ? '' : 'none';
+      periodTodayBtn.style.display = period === 'daily' ? '' : 'none';
+      periodMonthInput.style.display = period === 'monthly' ? '' : 'none';
+      periodYearInput.style.display = period === 'yearly' ? '' : 'none';
+
+      logPeriodDateInput.style.display = period === 'daily' ? '' : 'none';
+      logPeriodTodayBtn.style.display = period === 'daily' ? '' : 'none';
+      logPeriodMonthInput.style.display = period === 'monthly' ? '' : 'none';
+      logPeriodYearInput.style.display = period === 'yearly' ? '' : 'none';
+
+      progressSortDir = null; // switching Daily/Monthly/Yearly resets the Total Expense sort
+      logCategoryFilter.value = ''; // ...and resets the log's category filter back to "All Categories"
+    }
+
+    document.querySelectorAll('#summaryPeriodTabs .period-tab, #logPeriodTabs .period-tab').forEach((tab) => {
       tab.addEventListener('click', () => {
-        document.querySelectorAll('#summaryPeriodTabs .period-tab').forEach((t) => t.classList.remove('active'));
-        tab.classList.add('active');
-        currentPeriod = tab.dataset.period;
-        periodDateInput.style.display = currentPeriod === 'daily' ? '' : 'none';
-        periodTodayBtn.style.display = currentPeriod === 'daily' ? '' : 'none';
-        periodMonthInput.style.display = currentPeriod === 'monthly' ? '' : 'none';
-        periodYearInput.style.display = currentPeriod === 'yearly' ? '' : 'none';
-        progressSortDir = null; // switching Daily/Monthly/Yearly resets the Total Expense sort
+        setActivePeriod(tab.dataset.period || tab.dataset.logPeriod);
         renderSummary();
-      });
-    });
-
-    periodDateInput.addEventListener('change', renderSummary);
-    periodTodayBtn.addEventListener('click', () => {
-      periodDateInput.value = dateKey(new Date());
-      renderSummary();
-    });
-    periodMonthInput.addEventListener('change', renderSummary);
-    periodYearInput.addEventListener('change', renderSummary);
-
-    // --------------------------- Expense log's own period filter ---------------------------
-
-    let logPeriod = 'daily';
-
-    document.querySelectorAll('#logPeriodTabs .period-tab').forEach((tab) => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('#logPeriodTabs .period-tab').forEach((t) => t.classList.remove('active'));
-        tab.classList.add('active');
-        logPeriod = tab.dataset.logPeriod;
-        logPeriodDateInput.style.display = logPeriod === 'daily' ? '' : 'none';
-        logPeriodTodayBtn.style.display = logPeriod === 'daily' ? '' : 'none';
-        logPeriodMonthInput.style.display = logPeriod === 'monthly' ? '' : 'none';
-        logPeriodYearInput.style.display = logPeriod === 'yearly' ? '' : 'none';
-        logCategoryFilter.value = ''; // switching Daily/Monthly/Yearly resets back to "All Categories"
         renderLog();
       });
     });
 
-    logPeriodDateInput.addEventListener('change', renderLog);
-    logPeriodTodayBtn.addEventListener('click', () => {
-      logPeriodDateInput.value = dateKey(new Date());
+    periodDateInput.addEventListener('change', () => {
+      logPeriodDateInput.value = periodDateInput.value;
+      renderSummary();
       renderLog();
     });
-    logPeriodMonthInput.addEventListener('change', renderLog);
-    logPeriodYearInput.addEventListener('change', renderLog);
+    logPeriodDateInput.addEventListener('change', () => {
+      periodDateInput.value = logPeriodDateInput.value;
+      renderSummary();
+      renderLog();
+    });
+    periodTodayBtn.addEventListener('click', () => {
+      const today = dateKey(new Date());
+      periodDateInput.value = today;
+      logPeriodDateInput.value = today;
+      renderSummary();
+      renderLog();
+    });
+    logPeriodTodayBtn.addEventListener('click', () => {
+      const today = dateKey(new Date());
+      periodDateInput.value = today;
+      logPeriodDateInput.value = today;
+      renderSummary();
+      renderLog();
+    });
+
+    periodMonthInput.addEventListener('change', () => {
+      logPeriodMonthInput.value = periodMonthInput.value;
+      renderSummary();
+      renderLog();
+    });
+    logPeriodMonthInput.addEventListener('change', () => {
+      periodMonthInput.value = logPeriodMonthInput.value;
+      renderSummary();
+      renderLog();
+    });
+
+    periodYearInput.addEventListener('change', () => {
+      logPeriodYearInput.value = periodYearInput.value;
+      renderSummary();
+      renderLog();
+    });
+    logPeriodYearInput.addEventListener('change', () => {
+      periodYearInput.value = logPeriodYearInput.value;
+      renderSummary();
+      renderLog();
+    });
 
     function populateYearOptions(selectEl) {
       const current = selectEl.value;
