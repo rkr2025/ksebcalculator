@@ -70,8 +70,8 @@
     box-shadow: 0 0 0 3px var(--primary-light);
   }
   .expense-form-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; }
-  .category-select-row { display: flex; gap: 6px; }
-  .category-select-row select { flex: 1; }
+  .category-select-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .category-select-row select { flex: 1 1 140px; min-width: 0; }
   .category-manage-panel {
     margin-top: 8px;
     padding: 10px;
@@ -161,8 +161,8 @@
   .chart-empty { font-size: 13px; color: var(--text-muted); font-style: italic; padding: 8px 0; }
 
 
-  .trend-chart { display: flex; align-items: flex-end; gap: 6px; height: 140px; padding: 8px 4px 0; }
-  .trend-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; cursor: default; }
+  .trend-chart { display: flex; align-items: flex-end; gap: 6px; height: 140px; padding: 8px 4px 0; overflow-x: auto; }
+  .trend-bar-wrap { flex: 1 0 22px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; cursor: default; }
   .trend-bar { width: 100%; max-width: 26px; border-radius: 4px 4px 0 0; background: var(--primary); min-height: 2px; transition: height .4s ease; }
   .trend-bar-label { font-size: 10.5px; color: var(--text-muted); margin-top: 4px; }
 
@@ -208,8 +208,30 @@
   .nav-link { display: block; text-align: center; margin-top: 8px; text-decoration: none; color: var(--primary); font-size: 13.5px; }
 
   @media (max-width: 480px) {
+    body { padding: 10px 6px 24px; }
+    .card { padding: 14px; }
+    h1 { font-size: 20px; }
+
     .bar-label { flex-basis: 80px; font-size: 11.5px; }
     .bar-value { flex-basis: 60px; font-size: 11.5px; }
+
+    /* One field per row instead of a cramped auto-fit grid. */
+    .expense-form { grid-template-columns: 1fr; }
+    .expense-form-actions { justify-content: stretch; }
+    .expense-form-actions button { width: 100%; }
+
+    .period-total-value { font-size: 22px; }
+
+    .period-tab { flex: 1 1 auto; text-align: center; padding: 7px 10px; }
+    .period-controls input, .period-controls select,
+    .period-controls button { flex: 1 1 auto; min-width: 0; }
+
+    .log-filter-row { flex-direction: column; align-items: stretch; }
+    .log-filter-row select { width: 100%; }
+
+    .actions-row button { flex: 1 1 auto; }
+
+    th, td { padding: 7px 8px; font-size: 12.5px; }
   }
 
   @media print {
