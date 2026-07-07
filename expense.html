@@ -160,6 +160,22 @@
   .bar-value { flex: 0 0 78px; font-size: 12.5px; font-weight: 700; color: var(--text-primary); text-align: right; }
   .chart-empty { font-size: 13px; color: var(--text-muted); font-style: italic; padding: 8px 0; }
 
+  .category-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+  }
+  .category-overview-card {
+    background: var(--surface-muted);
+    border-radius: 10px;
+    padding: 12px;
+    border-left: 4px solid var(--border);
+  }
+  .category-overview-name { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+  .category-overview-total { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+  .category-overview-meta { font-size: 11.5px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+  .category-overview-pct { font-weight: 700; color: var(--text-secondary); }
+
   .trend-chart { display: flex; align-items: flex-end; gap: 6px; height: 140px; padding: 8px 4px 0; }
   .trend-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; cursor: default; }
   .trend-bar { width: 100%; max-width: 26px; border-radius: 4px 4px 0 0; background: var(--primary); min-height: 2px; transition: height .4s ease; }
@@ -277,6 +293,7 @@
       </div>
       <div class="period-controls">
         <input type="date" id="periodDateInput">
+        <button class="btn-outline btn-small" id="periodTodayBtn" type="button">Today</button>
         <input type="month" id="periodMonthInput" style="display: none;">
         <select id="periodYearInput" style="display: none;"></select>
       </div>
@@ -288,6 +305,9 @@
 
       <div class="chart-title">By Category</div>
       <div id="categoryChart"></div>
+
+      <div class="chart-title">Expense Overview</div>
+      <div id="categoryOverview" class="category-overview-grid"></div>
 
       <div id="trendChartSection" style="display: none;">
         <div class="chart-title" id="trendChartTitle">Monthly Trend</div>
@@ -378,11 +398,13 @@
     const expDesc = document.getElementById('expDesc');
     const addExpenseBtn = document.getElementById('addExpenseBtn');
     const periodDateInput = document.getElementById('periodDateInput');
+    const periodTodayBtn = document.getElementById('periodTodayBtn');
     const periodMonthInput = document.getElementById('periodMonthInput');
     const periodYearInput = document.getElementById('periodYearInput');
     const periodTotalLabel = document.getElementById('periodTotalLabel');
     const periodTotalValue = document.getElementById('periodTotalValue');
     const categoryChart = document.getElementById('categoryChart');
+    const categoryOverview = document.getElementById('categoryOverview');
     const trendChartSection = document.getElementById('trendChartSection');
     const trendChartTitle = document.getElementById('trendChartTitle');
     const trendChart = document.getElementById('trendChart');
@@ -618,6 +640,7 @@
         tab.classList.add('active');
         currentPeriod = tab.dataset.period;
         periodDateInput.style.display = currentPeriod === 'daily' ? '' : 'none';
+        periodTodayBtn.style.display = currentPeriod === 'daily' ? '' : 'none';
         periodMonthInput.style.display = currentPeriod === 'monthly' ? '' : 'none';
         periodYearInput.style.display = currentPeriod === 'yearly' ? '' : 'none';
         renderSummary();
@@ -625,6 +648,10 @@
     });
 
     periodDateInput.addEventListener('change', renderSummary);
+    periodTodayBtn.addEventListener('click', () => {
+      periodDateInput.value = dateKey(new Date());
+      renderSummary();
+    });
     periodMonthInput.addEventListener('change', renderSummary);
     periodYearInput.addEventListener('change', renderSummary);
 
@@ -663,6 +690,43 @@
               <div class="bar-fill" style="width:${pct}%; background:${getCategoryColor(e.cat)};" title="${safeCat}: ${formatCurrency(e.amount)}"></div>
             </div>
             <div class="bar-value">${formatCurrency(e.amount)}</div>
+          </div>`;
+      }).join('');
+    }
+
+    // Per-category insight cards: total, share of the period's spend, how
+    // many transactions, and the average expense size -- gives a fuller
+    // read than the bar chart alone (which only shows relative magnitude).
+    function renderCategoryOverview(container, periodExpenses, periodTotal) {
+      const statsByCategory = {};
+      periodExpenses.forEach((e) => {
+        if (!statsByCategory[e.category]) statsByCategory[e.category] = { total: 0, count: 0 };
+        statsByCategory[e.category].total += e.amount;
+        statsByCategory[e.category].count += 1;
+      });
+
+      const entries = categories
+        .map((cat) => ({ cat, ...(statsByCategory[cat] || { total: 0, count: 0 }) }))
+        .filter((e) => e.count > 0)
+        .sort((a, b) => b.total - a.total);
+
+      if (entries.length === 0) {
+        container.innerHTML = '<p class="chart-empty">No expenses in this period.</p>';
+        return;
+      }
+
+      container.innerHTML = entries.map((e) => {
+        const pct = periodTotal > 0 ? Math.round((e.total / periodTotal) * 100) : 0;
+        const avg = e.total / e.count;
+        const safeCat = escapeHtml(e.cat);
+        return `
+          <div class="category-overview-card" style="border-left-color:${getCategoryColor(e.cat)};">
+            <div class="category-overview-name">${safeCat}</div>
+            <div class="category-overview-total">${formatCurrency(e.total)}</div>
+            <div class="category-overview-meta">
+              <span class="category-overview-pct">${pct}%</span> of period total<br>
+              ${e.count} transaction${e.count === 1 ? '' : 's'} · avg ${formatCurrency(avg)}
+            </div>
           </div>`;
       }).join('');
     }
@@ -727,6 +791,7 @@
         totalsByCategory[e.category] = (totalsByCategory[e.category] || 0) + e.amount;
       });
       renderCategoryBarChart(categoryChart, totalsByCategory);
+      renderCategoryOverview(categoryOverview, periodExpenses, total);
     }
 
     // --------------------------- Expense log table ---------------------------
