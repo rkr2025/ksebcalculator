@@ -190,6 +190,15 @@
   .log-filter-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
   .log-filter-row label { font-size: 12.5px; font-weight: 600; color: var(--text-muted); }
   .log-filter-row select { padding: 7px 10px; font-size: 13.5px; font-family: inherit; border: 1.5px solid var(--border); border-radius: 8px; }
+  .log-filter-row input[type="text"] {
+    flex: 1 1 180px;
+    min-width: 0;
+    padding: 7px 10px;
+    font-size: 13.5px;
+    font-family: inherit;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+  }
   .sortable-th { cursor: pointer; user-select: none; }
   .sortable-th:hover { color: var(--primary-dark); }
   tfoot td { font-weight: 700; border-bottom: none; border-top: 2px solid var(--border); }
@@ -227,7 +236,7 @@
     .period-controls button { flex: 1 1 auto; min-width: 0; }
 
     .log-filter-row { flex-direction: column; align-items: stretch; }
-    .log-filter-row select { width: 100%; }
+    .log-filter-row select, .log-filter-row input[type="text"] { width: 100%; }
 
     .actions-row button { flex: 1 1 auto; }
 
@@ -314,6 +323,8 @@
         <select id="logCategoryFilter">
           <option value="">All Categories</option>
         </select>
+        <label for="logSearchInput">Search</label>
+        <input type="text" id="logSearchInput" placeholder="Search description, category, payment...">
       </div>
       <div class="table-wrap">
         <table>
@@ -452,6 +463,7 @@
     const logPeriodMonthInput = document.getElementById('logPeriodMonthInput');
     const logPeriodYearInput = document.getElementById('logPeriodYearInput');
     const logCategoryFilter = document.getElementById('logCategoryFilter');
+    const logSearchInput = document.getElementById('logSearchInput');
     const amountSortTh = document.getElementById('amountSortTh');
     const amountSortIcon = document.getElementById('amountSortIcon');
     const expenseLogBody = document.getElementById('expenseLogBody');
@@ -997,7 +1009,16 @@
       populateLogCategoryFilter(periodFiltered);
 
       const filterCat = logCategoryFilter.value;
-      const filtered = filterCat ? periodFiltered.filter((e) => e.category === filterCat) : periodFiltered.slice();
+      let filtered = filterCat ? periodFiltered.filter((e) => e.category === filterCat) : periodFiltered.slice();
+
+      const searchTerm = logSearchInput.value.trim().toLowerCase();
+      if (searchTerm) {
+        filtered = filtered.filter((e) =>
+          (e.description || '').toLowerCase().includes(searchTerm) ||
+          (e.category || '').toLowerCase().includes(searchTerm) ||
+          (e.payment || '').toLowerCase().includes(searchTerm)
+        );
+      }
 
       const sorted = amountSortDir
         ? filtered.sort((a, b) => amountSortDir === 'asc' ? a.amount - b.amount : b.amount - a.amount)
@@ -1006,7 +1027,9 @@
       if (sorted.length === 0) {
         expenseLogBody.innerHTML = '';
         expenseLogFoot.innerHTML = '';
-        noExpensesMessage.textContent = filterCat ? `No expenses in "${filterCat}".` : 'No expenses logged yet.';
+        noExpensesMessage.textContent = searchTerm
+          ? `No expenses match "${logSearchInput.value.trim()}".`
+          : (filterCat ? `No expenses in "${filterCat}".` : 'No expenses logged yet.');
         noExpensesMessage.style.display = 'block';
         return;
       }
@@ -1074,6 +1097,7 @@
     }
 
     logCategoryFilter.addEventListener('change', renderLog);
+    logSearchInput.addEventListener('input', renderLog);
 
     amountSortTh.addEventListener('click', () => {
       amountSortDir = amountSortDir === 'desc' ? 'asc' : (amountSortDir === 'asc' ? null : 'desc');
