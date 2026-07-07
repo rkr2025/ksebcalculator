@@ -976,7 +976,11 @@
     // --------------------------- Backup / Restore / Clear ---------------------------
 
     backupBtn.addEventListener('click', () => {
-      const dataStr = JSON.stringify(expenses, null, 2);
+      // Back up categories alongside expenses -- a plain expenses-only
+      // backup would silently drop any custom categories on restore (each
+      // expense keeps its category as a string either way, but the
+      // selectable category list / colors wouldn't be recreated).
+      const dataStr = JSON.stringify({ expenses, categories }, null, 2);
       const blob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1000,9 +1004,35 @@
       reader.onload = (e) => {
         try {
           const restored = JSON.parse(e.target.result);
+
+          // Accept both the current { expenses, categories } shape and old
+          // plain-array-of-expenses backups (made before categories were
+          // included), so older backup files still restore correctly.
+          let restoredExpenses = null;
+          let restoredCategories = null;
           if (Array.isArray(restored)) {
-            expenses = restored;
+            restoredExpenses = restored;
+          } else if (restored && Array.isArray(restored.expenses)) {
+            restoredExpenses = restored.expenses;
+            if (Array.isArray(restored.categories)) restoredCategories = restored.categories;
+          }
+
+          if (restoredExpenses) {
+            expenses = restoredExpenses;
             saveExpenses();
+
+            // Start from the restored category list (or the current one, for
+            // old backups that didn't have one), then make sure every
+            // category actually used by a restored expense is present --
+            // otherwise it'd be unselectable and could get a mismatched color.
+            categories = restoredCategories || categories;
+            const usedCategories = new Set(expenses.map((ex) => ex.category).filter(Boolean));
+            usedCategories.forEach((cat) => {
+              if (!categories.includes(cat)) categories.push(cat);
+            });
+            saveCategories();
+            renderCategoryOptions();
+
             renderAll();
             showToast('Expenses restored.');
           } else {
