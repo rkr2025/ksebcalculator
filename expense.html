@@ -390,6 +390,7 @@
 
       <div class="chart-title" id="progressTableTitle">Day-by-Day Total</div>
       <div id="progressTable"></div>
+      <div id="progressLineChart"></div>
 
       <div id="trendChartSection" style="display: none;">
         <div class="chart-title" id="trendChartTitle">Monthly Trend</div>
@@ -903,13 +904,14 @@
         periodMonthInput.value = key;
         periodExpenses = expenses.filter((e) => e.date.slice(0, 7) === key);
         const [y, m] = key.split('-');
-        label = `Total spent in ${new Date(`${y}-${m}-01T12:00:00`).toLocaleDateString([], { year: 'numeric', month: 'long' })}`;
+        const monthLabel = new Date(`${y}-${m}-01T12:00:00`).toLocaleDateString([], { year: 'numeric', month: 'long' });
+        label = `Total spent in ${monthLabel}`;
 
         // Daily trend within the selected month.
         const daysInMonth = new Date(parseInt(y), parseInt(m), 0).getDate();
         const dailyTotals = new Array(daysInMonth).fill(0);
         periodExpenses.forEach((e) => { dailyTotals[parseInt(e.date.slice(8, 10)) - 1] += e.amount; });
-        trendChartTitle.textContent = 'Daily Trend This Month';
+        trendChartTitle.textContent = `Daily Trend This Month (${monthLabel})`;
         trendChartSection.style.display = 'block';
         renderTrendChart(trendChart, dailyTotals.map((_, i) => i + 1), dailyTotals);
       } else {
@@ -920,7 +922,7 @@
         const monthlyTotals = new Array(12).fill(0);
         periodExpenses.forEach((e) => { monthlyTotals[parseInt(e.date.slice(5, 7)) - 1] += e.amount; });
         const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        trendChartTitle.textContent = 'Monthly Trend This Year';
+        trendChartTitle.textContent = `Monthly Trend This Year (${year})`;
         trendChartSection.style.display = 'block';
         renderTrendChart(trendChart, monthLabels, monthlyTotals);
       }
@@ -960,7 +962,7 @@
             .reduce((sum, e) => sum + e.amount, 0);
           const dateObj = new Date(dateStr + 'T12:00:00');
           const weekday = dateObj.toLocaleDateString([], { weekday: 'short' });
-          rows.push({ label: `${dateObj.toLocaleDateString()} (${weekday})`, total });
+          rows.push({ label: `${dateObj.toLocaleDateString()} (${weekday})`, shortLabel: String(day), total });
         }
       } else if (currentPeriod === 'monthly') {
         const [y, m] = periodMonthInput.value.split('-').map(Number);
@@ -972,15 +974,21 @@
           const total = expenses
             .filter((e) => e.date.slice(0, 7) === monthKey)
             .reduce((sum, e) => sum + e.amount, 0);
-          rows.push({ label: `${monthNames[mo - 1]} ${y}`, total });
+          rows.push({ label: `${monthNames[mo - 1]} ${y}`, shortLabel: monthNames[mo - 1].slice(0, 3), total });
         }
       } else {
-        const year = periodYearInput.value || String(new Date().getFullYear());
-        titleEl.textContent = 'Year Total';
-        const total = expenses
-          .filter((e) => e.date.slice(0, 4) === year)
-          .reduce((sum, e) => sum + e.amount, 0);
-        rows.push({ label: year, total });
+        // Unlike Daily/Monthly (which show "up to" the selected point within
+        // one month/year), Yearly lists every year that has any data at all,
+        // so you can compare year over year rather than seeing just one row.
+        titleEl.textContent = 'Year-by-Year Total';
+        const years = new Set(expenses.map((e) => e.date.slice(0, 4)));
+        years.add(String(new Date().getFullYear()));
+        Array.from(years).sort((a, b) => a - b).forEach((year) => {
+          const total = expenses
+            .filter((e) => e.date.slice(0, 4) === year)
+            .reduce((sum, e) => sum + e.amount, 0);
+          rows.push({ label: year, shortLabel: year, total });
+        });
       }
 
       const sortedRows = progressSortDir
@@ -1000,6 +1008,59 @@
         progressSortDir = progressSortDir === 'desc' ? 'asc' : (progressSortDir === 'asc' ? null : 'desc');
         renderProgressTable();
       });
+
+      // Trend over time (chronological order, regardless of the table's own
+      // sort) -- a single-series line is the right form for "change over
+      // time"; skipped for Yearly since one point isn't a trend.
+      renderProgressLineChart(rows);
+    }
+
+    function renderProgressLineChart(rows) {
+      const container = document.getElementById('progressLineChart');
+      if (rows.length < 2) {
+        container.innerHTML = '';
+        return;
+      }
+
+      const width = 600;
+      const height = 180;
+      const padTop = 14;
+      const padBottom = 26;
+      const padSide = 8;
+      const maxTotal = Math.max(...rows.map((r) => r.total), 1);
+      const plotW = width - padSide * 2;
+      const plotH = height - padTop - padBottom;
+
+      const points = rows.map((r, i) => {
+        const x = rows.length === 1 ? padSide : padSide + (i / (rows.length - 1)) * plotW;
+        const y = padTop + plotH - (r.total / maxTotal) * plotH;
+        return { x, y, r };
+      });
+
+      const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+
+      // Only label a handful of points along the x-axis so labels don't
+      // collide -- always the first/last, spaced roughly evenly between.
+      const maxLabels = 8;
+      const labelStep = Math.max(1, Math.ceil(rows.length / maxLabels));
+
+      const circles = points.map((p, i) => `
+        <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="var(--primary)">
+          <title>${escapeHtml(p.r.label)}: ${formatCurrency(p.r.total)}</title>
+        </circle>`).join('');
+
+      const xLabels = points.map((p, i) => {
+        if (i % labelStep !== 0 && i !== points.length - 1) return '';
+        return `<text x="${p.x.toFixed(1)}" y="${height - 8}" font-size="9.5" fill="var(--text-muted)" text-anchor="middle">${escapeHtml(p.r.shortLabel || p.r.label)}</text>`;
+      }).join('');
+
+      container.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" style="width:100%; height:180px; display:block;">
+          <line x1="${padSide}" y1="${padTop + plotH}" x2="${width - padSide}" y2="${padTop + plotH}" stroke="var(--border)" stroke-width="1"></line>
+          <path d="${linePath}" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+          ${circles}
+          ${xLabels}
+        </svg>`;
     }
 
     // --------------------------- Expense log table ---------------------------
