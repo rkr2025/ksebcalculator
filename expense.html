@@ -288,38 +288,6 @@
       </div>
     </div>
 
-    <!-- Summary -->
-    <div class="card">
-      <h2>📊 Usage Summary</h2>
-      <div class="period-tabs" id="summaryPeriodTabs">
-        <button class="period-tab active" data-period="daily" type="button">Daily</button>
-        <button class="period-tab" data-period="monthly" type="button">Monthly</button>
-        <button class="period-tab" data-period="yearly" type="button">Yearly</button>
-      </div>
-      <div class="period-controls">
-        <input type="date" id="periodDateInput">
-        <button class="btn-outline btn-small" id="periodTodayBtn" type="button">Today</button>
-        <input type="month" id="periodMonthInput" style="display: none;">
-        <select id="periodYearInput" style="display: none;"></select>
-      </div>
-
-      <div class="period-total">
-        <div class="period-total-label" id="periodTotalLabel">Total spent today</div>
-        <div class="period-total-value" id="periodTotalValue">₹0.00</div>
-      </div>
-
-      <div class="chart-title">By Category</div>
-      <div id="categoryChart"></div>
-
-      <div class="chart-title">Expense Overview</div>
-      <div id="categoryOverview" class="category-overview-grid"></div>
-
-      <div id="trendChartSection" style="display: none;">
-        <div class="chart-title" id="trendChartTitle">Monthly Trend</div>
-        <div class="trend-chart" id="trendChart"></div>
-      </div>
-    </div>
-
     <!-- Expense log -->
     <div class="card">
       <h2>📋 Expense Log</h2>
@@ -364,6 +332,38 @@
         <button class="btn-outline" id="printBtn" type="button">🖨️ Print</button>
         <input type="file" id="restoreFileInput" accept=".json" style="display:none;">
         <button class="btn-outline" id="clearAllBtn" type="button">🗑️ Clear All</button>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="card">
+      <h2>📊 Usage Summary</h2>
+      <div class="period-tabs" id="summaryPeriodTabs">
+        <button class="period-tab active" data-period="daily" type="button">Daily</button>
+        <button class="period-tab" data-period="monthly" type="button">Monthly</button>
+        <button class="period-tab" data-period="yearly" type="button">Yearly</button>
+      </div>
+      <div class="period-controls">
+        <input type="date" id="periodDateInput">
+        <button class="btn-outline btn-small" id="periodTodayBtn" type="button">Today</button>
+        <input type="month" id="periodMonthInput" style="display: none;">
+        <select id="periodYearInput" style="display: none;"></select>
+      </div>
+
+      <div class="period-total">
+        <div class="period-total-label" id="periodTotalLabel">Total spent today</div>
+        <div class="period-total-value" id="periodTotalValue">₹0.00</div>
+      </div>
+
+      <div class="chart-title">By Category</div>
+      <div id="categoryChart"></div>
+
+      <div class="chart-title">Expense Overview</div>
+      <div id="categoryOverview" class="category-overview-grid"></div>
+
+      <div id="trendChartSection" style="display: none;">
+        <div class="chart-title" id="trendChartTitle">Monthly Trend</div>
+        <div class="trend-chart" id="trendChart"></div>
       </div>
     </div>
 
