@@ -711,6 +711,7 @@
         logPeriodTodayBtn.style.display = logPeriod === 'daily' ? '' : 'none';
         logPeriodMonthInput.style.display = logPeriod === 'monthly' ? '' : 'none';
         logPeriodYearInput.style.display = logPeriod === 'yearly' ? '' : 'none';
+        logCategoryFilter.value = ''; // switching Daily/Monthly/Yearly resets back to "All Categories"
         renderLog();
       });
     });
@@ -884,17 +885,10 @@
     // null = default (newest first); 'asc' / 'desc' = sorted by amount instead.
     let amountSortDir = null;
 
-    function populateLogCategoryFilter() {
-      const current = logCategoryFilter.value;
-      logCategoryFilter.innerHTML = '<option value="">All Categories</option>' +
-        alphabeticalCategories().map((c) => {
-          const safe = escapeHtml(c);
-          return `<option value="${safe}">${safe}</option>`;
-        }).join('');
-      if (current && categories.includes(current)) logCategoryFilter.value = current;
-    }
-
-    function renderLog() {
+    // The period filter (Daily/Monthly/Yearly) is applied first so the
+    // category dropdown below only ever offers categories that actually
+    // have expenses in the currently selected period.
+    function getLogPeriodExpenses() {
       let filtered = expenses.slice();
 
       if (logPeriod === 'daily') {
@@ -910,8 +904,31 @@
         filtered = filtered.filter((e) => e.date.slice(0, 4) === year);
       }
 
+      return filtered;
+    }
+
+    function populateLogCategoryFilter(periodExpenses) {
+      const current = logCategoryFilter.value;
+      const presentCategories = alphabeticalCategories().filter((c) =>
+        periodExpenses.some((e) => e.category === c)
+      );
+      logCategoryFilter.innerHTML = '<option value="">All Categories</option>' +
+        presentCategories.map((c) => {
+          const safe = escapeHtml(c);
+          return `<option value="${safe}">${safe}</option>`;
+        }).join('');
+      // Keep the current selection only if it's still one of the categories
+      // present in this period; otherwise fall back to "All Categories"
+      // rather than silently filtering by a category no longer shown.
+      logCategoryFilter.value = (current && presentCategories.includes(current)) ? current : '';
+    }
+
+    function renderLog() {
+      const periodFiltered = getLogPeriodExpenses();
+      populateLogCategoryFilter(periodFiltered);
+
       const filterCat = logCategoryFilter.value;
-      if (filterCat) filtered = filtered.filter((e) => e.category === filterCat);
+      const filtered = filterCat ? periodFiltered.filter((e) => e.category === filterCat) : periodFiltered.slice();
 
       const sorted = amountSortDir
         ? filtered.sort((a, b) => amountSortDir === 'asc' ? a.amount - b.amount : b.amount - a.amount)
@@ -982,7 +999,6 @@
     function renderAll() {
       populateYearOptions(periodYearInput);
       populateYearOptions(logPeriodYearInput);
-      populateLogCategoryFilter();
       renderSummary();
       renderLog();
     }
