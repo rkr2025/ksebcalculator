@@ -905,7 +905,9 @@
           const total = expenses
             .filter((e) => e.date === dateStr)
             .reduce((sum, e) => sum + e.amount, 0);
-          rows.push({ label: new Date(dateStr + 'T12:00:00').toLocaleDateString(), total });
+          const dateObj = new Date(dateStr + 'T12:00:00');
+          const weekday = dateObj.toLocaleDateString([], { weekday: 'short' });
+          rows.push({ label: `${dateObj.toLocaleDateString()} (${weekday})`, total });
         }
       } else if (currentPeriod === 'monthly') {
         const [y, m] = periodMonthInput.value.split('-').map(Number);
@@ -1015,7 +1017,8 @@
         const tr = document.createElement('tr');
 
         const dateTd = document.createElement('td');
-        dateTd.textContent = new Date(e.date + 'T12:00:00').toLocaleDateString();
+        const rowDateObj = new Date(e.date + 'T12:00:00');
+        dateTd.textContent = `${rowDateObj.toLocaleDateString()} (${rowDateObj.toLocaleDateString([], { weekday: 'short' })})`;
         tr.appendChild(dateTd);
 
         const catTd = document.createElement('td');
