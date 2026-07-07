@@ -1095,7 +1095,7 @@
       });
 
       const grandTotal = sorted.reduce((sum, e) => sum + e.amount, 0);
-      expenseLogFoot.innerHTML = `<tr><td colspan="4">Total</td><td colspan="2">${formatCurrency(grandTotal)}</td></tr>`;
+      expenseLogFoot.innerHTML = `<tr><td colspan="2">Total</td><td>${formatCurrency(grandTotal)}</td><td colspan="3"></td></tr>`;
     }
 
     function renderAll() {
