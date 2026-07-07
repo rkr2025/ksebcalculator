@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>💰 Expense Tracker</title>
+<style>
+  :root {
+    --primary: #2a78d6;
+    --primary-dark: #1f5fac;
+    --primary-light: #eaf2fc;
+    --accent: #1baf7a;
+    --danger: #e34948;
+    --warn: #c97e00;
+    --surface: #ffffff;
+    --surface-muted: #f6f8fb;
+    --border: #e3e7ef;
+    --text-primary: #17203a;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(16,24,40,.04), 0 8px 24px rgba(16,24,40,.08);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px 10px 32px;
+    font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+    background: linear-gradient(160deg, #eef1f7, #e4ebf7 60%);
+    color: var(--text-primary);
+  }
+  .container { max-width: 820px; margin: 0 auto; }
+  h1 { text-align: center; font-size: 24px; font-weight: 700; margin: 6px 0 4px; }
+  .subtitle { text-align: center; color: var(--text-muted); font-size: 13px; margin: 0 0 18px; }
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .card h2 { font-size: 15px; margin: 0 0 14px; color: var(--text-secondary); }
+
+  /* -------- Add expense form -------- */
+  .expense-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+  }
+  .expense-form label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .expense-form input, .expense-form select {
+    width: 100%;
+    padding: 9px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-primary);
+  }
+  .expense-form input:focus, .expense-form select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+  }
+  .expense-form-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; }
+  .category-select-row { display: flex; gap: 6px; }
+  .category-select-row select { flex: 1; }
+  .category-manage-panel {
+    margin-top: 8px;
+    padding: 10px;
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .new-category-row { display: flex; gap: 6px; }
+  .new-category-row input { flex: 1; }
+  .category-chip-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+  .category-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .category-chip button {
+    background: rgba(255,255,255,.25);
+    border: none;
+    color: #fff;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    line-height: 1;
+    font-size: 11px;
+    padding: 0;
+    cursor: pointer;
+  }
+  .btn-small { padding: 6px 10px; font-size: 12.5px; white-space: nowrap; }
+  button {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    cursor: pointer;
+    transition: filter .15s ease, transform .1s ease;
+  }
+  button:hover { filter: brightness(0.95); }
+  button:active { transform: translateY(1px); }
+  .btn-add { background: var(--accent); color: #fff; }
+  .btn-outline { background: var(--surface-muted); color: var(--text-secondary); border: 1px solid var(--border); }
+
+  /* -------- Period tabs -------- */
+  .period-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .period-tab {
+    background: var(--surface-muted);
+    color: var(--text-secondary);
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    padding: 7px 16px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .period-tab.active { background: var(--primary-light); color: var(--primary-dark); border-color: var(--primary); }
+  .period-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .period-controls input, .period-controls select {
+    padding: 8px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+  }
+  .period-total {
+    text-align: center;
+    background: var(--surface-muted);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 16px;
+  }
+  .period-total-label { font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .02em; }
+  .period-total-value { font-size: 26px; font-weight: 700; color: var(--text-primary); margin-top: 4px; }
+
+  /* -------- Charts -------- */
+  .chart-title { font-size: 13px; font-weight: 700; color: var(--text-secondary); margin: 18px 0 8px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .bar-label { flex: 0 0 110px; font-size: 12.5px; color: var(--text-secondary); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-track { flex: 1; background: var(--surface-muted); border-radius: 6px; height: 22px; position: relative; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 6px; min-width: 4px; transition: width .4s ease; }
+  .bar-value { flex: 0 0 78px; font-size: 12.5px; font-weight: 700; color: var(--text-primary); text-align: right; }
+  .chart-empty { font-size: 13px; color: var(--text-muted); font-style: italic; padding: 8px 0; }
+
+  .trend-chart { display: flex; align-items: flex-end; gap: 6px; height: 140px; padding: 8px 4px 0; }
+  .trend-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; cursor: default; }
+  .trend-bar { width: 100%; max-width: 26px; border-radius: 4px 4px 0 0; background: var(--primary); min-height: 2px; transition: height .4s ease; }
+  .trend-bar-label { font-size: 10.5px; color: var(--text-muted); margin-top: 4px; }
+
+  .bar-fill[title], .trend-bar[title] { cursor: pointer; }
+
+  /* -------- Expense log table -------- */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th { color: var(--text-muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .02em; }
+  td.desc-cell { white-space: normal; }
+  .cat-tag {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    color: #fff;
+  }
+  .delete-btn {
+    background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 0 4px;
+  }
+  .delete-btn:hover { color: var(--danger); }
+  .no-expenses { text-align: center; color: var(--text-muted); font-style: italic; padding: 20px 0; }
+  tfoot td { font-weight: 700; border-bottom: none; border-top: 2px solid var(--border); }
+
+  .actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+    background: var(--text-primary); color: #fff; padding: 10px 18px; border-radius: 999px;
+    font-size: 13.5px; font-weight: 600; box-shadow: var(--shadow);
+    opacity: 0; pointer-events: none; transition: opacity .25s ease; z-index: 50;
+  }
+  .toast.show { opacity: 1; }
+  .toast.error { background: var(--danger); }
+
+  .nav-link { display: block; text-align: center; margin-top: 8px; text-decoration: none; color: var(--primary); font-size: 13.5px; }
+
+  @media (max-width: 480px) {
+    .bar-label { flex-basis: 80px; font-size: 11.5px; }
+    .bar-value { flex-basis: 60px; font-size: 11.5px; }
+  }
+
+  @media print {
+    body { background: none; }
+    .nav-link, .actions-row, .card:has(.expense-form), .toast {
+      display: none !important;
+    }
+    .card { box-shadow: none; border: 1px solid #ccc; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>💰 Expense Tracker</h1>
+    <p class="subtitle">Log expenses and track daily, monthly, and yearly spending.</p>
+
+    <!-- Add expense -->
+    <div class="card">
+      <h2>➕ Add Expense</h2>
+      <div class="expense-form">
+        <div>
+          <label for="expDate">Date</label>
+          <input type="date" id="expDate">
+        </div>
+        <div>
+          <label for="expCategory">Category</label>
+          <div class="category-select-row">
+            <select id="expCategory"></select>
+            <button class="btn-outline btn-small" id="newCategoryBtn" type="button" title="Add or remove categories">Manage</button>
+          </div>
+          <div class="category-manage-panel" id="categoryManagePanel" style="display: none;">
+            <div class="new-category-row">
+              <input type="text" id="newCategoryInput" placeholder="New category name...">
+              <button class="btn-add btn-small" id="saveCategoryBtn" type="button">Add</button>
+            </div>
+            <div class="category-chip-list" id="categoryChipList"></div>
+            <button class="btn-outline btn-small" id="closeCategoryPanelBtn" type="button">Close</button>
+          </div>
+        </div>
+        <div>
+          <label for="expAmount">Amount (₹)</label>
+          <input type="number" id="expAmount" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div>
+          <label for="expPayment">Payment Option</label>
+          <select id="expPayment">
+            <option value="UPI" selected>UPI</option>
+            <option value="Cash">Cash</option>
+            <option value="Card">Card</option>
+            <option value="Net Banking">Net Banking</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div style="grid-column: span 2;">
+          <label for="expDesc">Description</label>
+          <input type="text" id="expDesc" placeholder="What was this for?">
+        </div>
+        <div class="expense-form-actions">
+          <button class="btn-add" id="addExpenseBtn" type="button">➕ Add Expense</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="card">
+      <h2>📊 Usage Summary</h2>
+      <div class="period-tabs">
+        <button class="period-tab active" data-period="daily" type="button">Daily</button>
+        <button class="period-tab" data-period="monthly" type="button">Monthly</button>
+        <button class="period-tab" data-period="yearly" type="button">Yearly</button>
+      </div>
+      <div class="period-controls">
+        <input type="date" id="periodDateInput">
+        <input type="month" id="periodMonthInput" style="display: none;">
+        <select id="periodYearInput" style="display: none;"></select>
+      </div>
+
+      <div class="period-total">
+        <div class="period-total-label" id="periodTotalLabel">Total spent today</div>
+        <div class="period-total-value" id="periodTotalValue">₹0.00</div>
+      </div>
+
+      <div class="chart-title">By Category</div>
+      <div id="categoryChart"></div>
+
+      <div id="trendChartSection" style="display: none;">
+        <div class="chart-title" id="trendChartTitle">Monthly Trend</div>
+        <div class="trend-chart" id="trendChart"></div>
+      </div>
+    </div>
+
+    <!-- Expense log -->
+    <div class="card">
+      <h2>📋 Expense Log</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Category</th>
+              <th>Payment</th>
+              <th>Description</th>
+              <th>Amount</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="expenseLogBody"></tbody>
+          <tfoot id="expenseLogFoot"></tfoot>
+        </table>
+      </div>
+      <p class="no-expenses" id="noExpensesMessage">No expenses logged yet.</p>
+
+      <div class="actions-row">
+        <button class="btn-outline" id="backupBtn" type="button">💾 Backup</button>
+        <button class="btn-outline" id="restoreBtn" type="button">📂 Restore</button>
+        <button class="btn-outline" id="printBtn" type="button">🖨️ Print</button>
+        <input type="file" id="restoreFileInput" accept=".json" style="display:none;">
+        <button class="btn-outline" id="clearAllBtn" type="button">🗑️ Clear All</button>
+      </div>
+    </div>
+
+    <a href="tools.html" class="nav-link">← Back to Tools</a>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORAGE_KEY = 'expenseTrackerData';
+    const CATEGORIES_KEY = 'expenseTrackerCategories';
+    const DEFAULT_CATEGORIES = ['Food', 'Transport', 'Bills', 'Shopping', 'Health', 'Other'];
+    const PAYMENT_OPTIONS = ['UPI', 'Cash', 'Card', 'Net Banking', 'Other'];
+
+    // Reuse this project's already-validated categorical palette (see
+    // js/render-chart.js / CLAUDE.md) instead of inventing new colors, so
+    // every chart in the app reads as one visual system. Categories are
+    // user-extendable, so colors are assigned by position in the list and
+    // cycle back to the start of the palette past the 6th category.
+    const CATEGORY_PALETTE = ['#2a78d6', '#1baf7a', '#eda100', '#008300', '#4a3aa7', '#e34948'];
+
+    let categories = [];
+
+    function getCategoryColor(cat) {
+      const index = categories.indexOf(cat);
+      return CATEGORY_PALETTE[(index < 0 ? 0 : index) % CATEGORY_PALETTE.length];
+    }
+
+    function loadCategories() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(CATEGORIES_KEY));
+        return Array.isArray(stored) && stored.length > 0 ? stored : [...DEFAULT_CATEGORIES];
+      } catch {
+        return [...DEFAULT_CATEGORIES];
+      }
+    }
+
+    function saveCategories() {
+      localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+    }
+
+    function renderCategoryOptions(selectedValue) {
+      expCategory.innerHTML = categories.map((c) => {
+        const safe = escapeHtml(c);
+        return `<option value="${safe}">${safe}</option>`;
+      }).join('');
+      if (selectedValue && categories.includes(selectedValue)) expCategory.value = selectedValue;
+    }
+
+    const expDate = document.getElementById('expDate');
+    const expCategory = document.getElementById('expCategory');
+    const expAmount = document.getElementById('expAmount');
+    const expPayment = document.getElementById('expPayment');
+    const expDesc = document.getElementById('expDesc');
+    const addExpenseBtn = document.getElementById('addExpenseBtn');
+    const periodDateInput = document.getElementById('periodDateInput');
+    const periodMonthInput = document.getElementById('periodMonthInput');
+    const periodYearInput = document.getElementById('periodYearInput');
+    const periodTotalLabel = document.getElementById('periodTotalLabel');
+    const periodTotalValue = document.getElementById('periodTotalValue');
+    const categoryChart = document.getElementById('categoryChart');
+    const trendChartSection = document.getElementById('trendChartSection');
+    const trendChartTitle = document.getElementById('trendChartTitle');
+    const trendChart = document.getElementById('trendChart');
+    const expenseLogBody = document.getElementById('expenseLogBody');
+    const expenseLogFoot = document.getElementById('expenseLogFoot');
+    const noExpensesMessage = document.getElementById('noExpensesMessage');
+    const backupBtn = document.getElementById('backupBtn');
+    const restoreBtn = document.getElementById('restoreBtn');
+    const restoreFileInput = document.getElementById('restoreFileInput');
+    const printBtn = document.getElementById('printBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const toast = document.getElementById('toast');
+
+    // expenses: [{ id, date: 'YYYY-MM-DD', category, description, amount }]
+    let expenses = [];
+    let currentPeriod = 'daily';
+
+    function dateKey(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function formatCurrency(n) {
+      return `₹${n.toFixed(2)}`;
+    }
+
+    // Categories are user-typed free text, so anywhere one is interpolated
+    // into an HTML string (not assigned via .textContent) must escape it.
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function showToast(message, isError) {
+      toast.textContent = message;
+      toast.className = 'toast show' + (isError ? ' error' : '');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => { toast.className = 'toast'; }, 2200);
+    }
+
+    function loadExpenses() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        return Array.isArray(stored) ? stored : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveExpenses() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
+    }
+
+    // --------------------------- Categories ---------------------------
+
+    const newCategoryBtn = document.getElementById('newCategoryBtn');
+    const categoryManagePanel = document.getElementById('categoryManagePanel');
+    const newCategoryInput = document.getElementById('newCategoryInput');
+    const saveCategoryBtn = document.getElementById('saveCategoryBtn');
+    const closeCategoryPanelBtn = document.getElementById('closeCategoryPanelBtn');
+    const categoryChipList = document.getElementById('categoryChipList');
+
+    function renderCategoryChips() {
+      categoryChipList.innerHTML = '';
+      categories.forEach((cat) => {
+        const chip = document.createElement('span');
+        chip.className = 'category-chip';
+        chip.style.background = getCategoryColor(cat);
+
+        const label = document.createElement('span');
+        label.textContent = cat; // user text -- textContent only
+        chip.appendChild(label);
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.textContent = '✕';
+        delBtn.title = `Delete "${cat}"`;
+        delBtn.addEventListener('click', () => deleteCategory(cat));
+        chip.appendChild(delBtn);
+
+        categoryChipList.appendChild(chip);
+      });
+    }
+
+    function deleteCategory(cat) {
+      if (categories.length <= 1) {
+        showToast('You need at least one category.', true);
+        return;
+      }
+      const usedCount = expenses.filter((e) => e.category === cat).length;
+      const confirmMsg = usedCount > 0
+        ? `${usedCount} expense(s) use "${cat}". Delete this category anyway? (existing expenses keep their category label, but it won't be selectable for new ones)`
+        : `Delete category "${cat}"?`;
+      if (!confirm(confirmMsg)) return;
+
+      categories = categories.filter((c) => c !== cat);
+      saveCategories();
+      renderCategoryOptions();
+      renderCategoryChips();
+      showToast(`Category "${cat}" deleted.`);
+    }
+
+    newCategoryBtn.addEventListener('click', () => {
+      const opening = categoryManagePanel.style.display === 'none';
+      categoryManagePanel.style.display = opening ? 'block' : 'none';
+      if (opening) {
+        renderCategoryChips();
+        newCategoryInput.value = '';
+        newCategoryInput.focus();
+      }
+    });
+
+    closeCategoryPanelBtn.addEventListener('click', () => {
+      categoryManagePanel.style.display = 'none';
+    });
+
+    saveCategoryBtn.addEventListener('click', () => {
+      const name = newCategoryInput.value.trim();
+      if (!name) { showToast('Enter a category name first.', true); return; }
+      if (categories.some((c) => c.toLowerCase() === name.toLowerCase())) {
+        showToast('That category already exists.', true);
+        return;
+      }
+      categories.push(name);
+      saveCategories();
+      renderCategoryOptions(name);
+      renderCategoryChips();
+      newCategoryInput.value = '';
+      showToast(`Category "${name}" added.`);
+    });
+
+    newCategoryInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') saveCategoryBtn.click();
+    });
+
+    // --------------------------- Add / delete ---------------------------
+
+    addExpenseBtn.addEventListener('click', () => {
+      const date = expDate.value;
+      const category = expCategory.value;
+      const amount = parseFloat(expAmount.value);
+      const payment = expPayment.value;
+      const description = expDesc.value.trim();
+
+      if (!date) { showToast('Please pick a date.', true); return; }
+      if (!amount || amount <= 0) { showToast('Please enter a valid amount.', true); return; }
+
+      expenses.push({
+        id: Date.now(),
+        date,
+        category,
+        payment,
+        description,
+        amount: Math.round(amount * 100) / 100,
+      });
+      saveExpenses();
+      expAmount.value = '';
+      expDesc.value = '';
+      expPayment.value = 'UPI';
+      renderAll();
+      showToast('Expense added.');
+    });
+
+    function deleteExpense(id) {
+      if (!confirm('Delete this expense entry?')) return;
+      expenses = expenses.filter((e) => e.id !== id);
+      saveExpenses();
+      renderAll();
+    }
+
+    // Turns one expense log row into inline editable fields (date, category,
+    // description, amount) with Save/Cancel, instead of a separate edit form.
+    function startEditingExpense(id) {
+      const expense = expenses.find((e) => e.id === id);
+      if (!expense) return;
+      const tr = expenseLogBody.querySelector(`tr[data-expense-id="${id}"]`);
+      if (!tr) return;
+
+      const categoryOptions = categories.map((c) => {
+        const safe = escapeHtml(c);
+        const selected = c === expense.category ? ' selected' : '';
+        return `<option value="${safe}"${selected}>${safe}</option>`;
+      }).join('');
+
+      const paymentOptions = PAYMENT_OPTIONS.map((p) => {
+        const selected = p === (expense.payment || 'UPI') ? ' selected' : '';
+        return `<option value="${p}"${selected}>${p}</option>`;
+      }).join('');
+
+      tr.innerHTML = `
+        <td><input type="date" class="edit-date" value="${expense.date}"></td>
+        <td><select class="edit-category">${categoryOptions}</select></td>
+        <td><select class="edit-payment">${paymentOptions}</select></td>
+        <td><input type="text" class="edit-desc"></td>
+        <td><input type="number" class="edit-amount" min="0" step="0.01" value="${expense.amount}"></td>
+        <td>
+          <button class="delete-btn edit-save-btn" title="Save">💾</button>
+          <button class="delete-btn edit-cancel-btn" title="Cancel">✕</button>
+        </td>`;
+
+      // Description is user text -- assign via .value on the input, not innerHTML.
+      tr.querySelector('.edit-desc').value = expense.description || '';
+
+      tr.querySelector('.edit-save-btn').addEventListener('click', () => {
+        const newDate = tr.querySelector('.edit-date').value;
+        const newAmount = parseFloat(tr.querySelector('.edit-amount').value);
+        if (!newDate) { showToast('Please pick a date.', true); return; }
+        if (!newAmount || newAmount <= 0) { showToast('Please enter a valid amount.', true); return; }
+
+        expense.date = newDate;
+        expense.category = tr.querySelector('.edit-category').value;
+        expense.payment = tr.querySelector('.edit-payment').value;
+        expense.description = tr.querySelector('.edit-desc').value.trim();
+        expense.amount = Math.round(newAmount * 100) / 100;
+        saveExpenses();
+        renderAll();
+        showToast('Expense updated.');
+      });
+
+      tr.querySelector('.edit-cancel-btn').addEventListener('click', () => {
+        renderLog();
+      });
+    }
+
+    // --------------------------- Period selection ---------------------------
+
+    document.querySelectorAll('.period-tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.period-tab').forEach((t) => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentPeriod = tab.dataset.period;
+        periodDateInput.style.display = currentPeriod === 'daily' ? '' : 'none';
+        periodMonthInput.style.display = currentPeriod === 'monthly' ? '' : 'none';
+        periodYearInput.style.display = currentPeriod === 'yearly' ? '' : 'none';
+        renderSummary();
+      });
+    });
+
+    periodDateInput.addEventListener('change', renderSummary);
+    periodMonthInput.addEventListener('change', renderSummary);
+    periodYearInput.addEventListener('change', renderSummary);
+
+    function populateYearSelect() {
+      const years = new Set(expenses.map((e) => e.date.slice(0, 4)));
+      years.add(String(new Date().getFullYear()));
+      const sorted = Array.from(years).sort((a, b) => b - a);
+      periodYearInput.innerHTML = sorted.map((y) => `<option value="${y}">${y}</option>`).join('');
+    }
+
+    // --------------------------- Charts (SVG-free, div bars) ---------------------------
+    // Horizontal bars for category comparison (the right form for comparing
+    // magnitudes across a handful of named categories), direct-labeled so
+    // identity never depends on color alone, with a title attribute as a
+    // lightweight hover tooltip.
+
+    function renderCategoryBarChart(container, totalsByCategory) {
+      const entries = categories
+        .map((cat) => ({ cat, amount: totalsByCategory[cat] || 0 }))
+        .filter((e) => e.amount > 0)
+        .sort((a, b) => b.amount - a.amount);
+
+      if (entries.length === 0) {
+        container.innerHTML = '<p class="chart-empty">No expenses in this period.</p>';
+        return;
+      }
+
+      const maxAmount = Math.max(...entries.map((e) => e.amount));
+      container.innerHTML = entries.map((e) => {
+        const pct = maxAmount > 0 ? (e.amount / maxAmount) * 100 : 0;
+        const safeCat = escapeHtml(e.cat);
+        return `
+          <div class="bar-row">
+            <div class="bar-label">${safeCat}</div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width:${pct}%; background:${getCategoryColor(e.cat)};" title="${safeCat}: ${formatCurrency(e.amount)}"></div>
+            </div>
+            <div class="bar-value">${formatCurrency(e.amount)}</div>
+          </div>`;
+      }).join('');
+    }
+
+    function renderTrendChart(container, labels, values) {
+      const maxVal = Math.max(...values, 1);
+      container.innerHTML = values.map((v, i) => {
+        const heightPct = (v / maxVal) * 100;
+        return `
+          <div class="trend-bar-wrap">
+            <div class="trend-bar" style="height:${heightPct}%;" title="${labels[i]}: ${formatCurrency(v)}"></div>
+            <div class="trend-bar-label">${labels[i]}</div>
+          </div>`;
+      }).join('');
+    }
+
+    // --------------------------- Summary rendering ---------------------------
+
+    function renderSummary() {
+      let periodExpenses = [];
+      let label = '';
+
+      if (currentPeriod === 'daily') {
+        const key = periodDateInput.value || dateKey(new Date());
+        periodDateInput.value = key;
+        periodExpenses = expenses.filter((e) => e.date === key);
+        label = `Total spent on ${new Date(key + 'T12:00:00').toLocaleDateString()}`;
+        trendChartSection.style.display = 'none';
+      } else if (currentPeriod === 'monthly') {
+        const key = periodMonthInput.value || dateKey(new Date()).slice(0, 7);
+        periodMonthInput.value = key;
+        periodExpenses = expenses.filter((e) => e.date.slice(0, 7) === key);
+        const [y, m] = key.split('-');
+        label = `Total spent in ${new Date(`${y}-${m}-01T12:00:00`).toLocaleDateString([], { year: 'numeric', month: 'long' })}`;
+
+        // Daily trend within the selected month.
+        const daysInMonth = new Date(parseInt(y), parseInt(m), 0).getDate();
+        const dailyTotals = new Array(daysInMonth).fill(0);
+        periodExpenses.forEach((e) => { dailyTotals[parseInt(e.date.slice(8, 10)) - 1] += e.amount; });
+        trendChartTitle.textContent = 'Daily Trend This Month';
+        trendChartSection.style.display = 'block';
+        renderTrendChart(trendChart, dailyTotals.map((_, i) => i + 1), dailyTotals);
+      } else {
+        const year = periodYearInput.value || String(new Date().getFullYear());
+        periodExpenses = expenses.filter((e) => e.date.slice(0, 4) === year);
+        label = `Total spent in ${year}`;
+
+        const monthlyTotals = new Array(12).fill(0);
+        periodExpenses.forEach((e) => { monthlyTotals[parseInt(e.date.slice(5, 7)) - 1] += e.amount; });
+        const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        trendChartTitle.textContent = 'Monthly Trend This Year';
+        trendChartSection.style.display = 'block';
+        renderTrendChart(trendChart, monthLabels, monthlyTotals);
+      }
+
+      const total = periodExpenses.reduce((sum, e) => sum + e.amount, 0);
+      periodTotalLabel.textContent = label;
+      periodTotalValue.textContent = formatCurrency(total);
+
+      const totalsByCategory = {};
+      periodExpenses.forEach((e) => {
+        totalsByCategory[e.category] = (totalsByCategory[e.category] || 0) + e.amount;
+      });
+      renderCategoryBarChart(categoryChart, totalsByCategory);
+    }
+
+    // --------------------------- Expense log table ---------------------------
+
+    function renderLog() {
+      const sorted = expenses.slice().sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
+
+      if (sorted.length === 0) {
+        expenseLogBody.innerHTML = '';
+        expenseLogFoot.innerHTML = '';
+        noExpensesMessage.style.display = 'block';
+        return;
+      }
+      noExpensesMessage.style.display = 'none';
+
+      expenseLogBody.innerHTML = '';
+      sorted.forEach((e) => {
+        const tr = document.createElement('tr');
+
+        const dateTd = document.createElement('td');
+        dateTd.textContent = new Date(e.date + 'T12:00:00').toLocaleDateString();
+        tr.appendChild(dateTd);
+
+        const catTd = document.createElement('td');
+        const tag = document.createElement('span');
+        tag.className = 'cat-tag';
+        tag.style.background = getCategoryColor(e.category);
+        tag.textContent = e.category;
+        catTd.appendChild(tag);
+        tr.appendChild(catTd);
+
+        const paymentTd = document.createElement('td');
+        paymentTd.textContent = e.payment || 'UPI';
+        tr.appendChild(paymentTd);
+
+        const descTd = document.createElement('td');
+        descTd.className = 'desc-cell';
+        descTd.textContent = e.description || '—'; // user text -- textContent only
+        tr.appendChild(descTd);
+
+        const amountTd = document.createElement('td');
+        amountTd.textContent = formatCurrency(e.amount);
+        tr.appendChild(amountTd);
+
+        const actionTd = document.createElement('td');
+        const editBtn = document.createElement('button');
+        editBtn.className = 'delete-btn';
+        editBtn.title = 'Edit this entry';
+        editBtn.textContent = '✏️';
+        editBtn.addEventListener('click', () => startEditingExpense(e.id));
+        actionTd.appendChild(editBtn);
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'delete-btn';
+        delBtn.title = 'Delete this entry';
+        delBtn.textContent = '✕';
+        delBtn.addEventListener('click', () => deleteExpense(e.id));
+        actionTd.appendChild(delBtn);
+        tr.appendChild(actionTd);
+
+        tr.dataset.expenseId = e.id;
+        expenseLogBody.appendChild(tr);
+      });
+
+      const grandTotal = sorted.reduce((sum, e) => sum + e.amount, 0);
+      expenseLogFoot.innerHTML = `<tr><td colspan="4">Total</td><td colspan="2">${formatCurrency(grandTotal)}</td></tr>`;
+    }
+
+    function renderAll() {
+      populateYearSelect();
+      renderSummary();
+      renderLog();
+    }
+
+    // --------------------------- Backup / Restore / Clear ---------------------------
+
+    backupBtn.addEventListener('click', () => {
+      const dataStr = JSON.stringify(expenses, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `expense-tracker-backup-${dateKey(new Date())}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Expenses backed up.');
+    });
+
+    restoreBtn.addEventListener('click', () => restoreFileInput.click());
+
+    printBtn.addEventListener('click', () => window.print());
+
+    restoreFileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const restored = JSON.parse(e.target.result);
+          if (Array.isArray(restored)) {
+            expenses = restored;
+            saveExpenses();
+            renderAll();
+            showToast('Expenses restored.');
+          } else {
+            showToast('Invalid backup file.', true);
+          }
+        } catch (err) {
+          console.error('Error parsing restore file:', err);
+          showToast('Error restoring: invalid JSON file.', true);
+        }
+      };
+      reader.onerror = () => showToast('Error reading file.', true);
+      reader.readAsText(file);
+      restoreFileInput.value = '';
+    });
+
+    clearAllBtn.addEventListener('click', () => {
+      if (!confirm('Clear all logged expenses? This cannot be undone.')) return;
+      expenses = [];
+      saveExpenses();
+      renderAll();
+      showToast('All expenses cleared.');
+    });
+
+    // --------------------------- Initialization ---------------------------
+    expDate.value = dateKey(new Date());
+    periodDateInput.value = dateKey(new Date());
+    periodMonthInput.value = dateKey(new Date()).slice(0, 7);
+
+    categories = loadCategories();
+    renderCategoryOptions();
+    expenses = loadExpenses();
+    renderAll();
+  </script>
+</body>
+</html>
