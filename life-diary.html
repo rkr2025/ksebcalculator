@@ -1932,14 +1932,14 @@
 
       // 1st choice: Google Gemini with the user's free API key.
       if (geminiKey) {
-        setAiUiState({ status: '✨ Writing your day\'s summary (Gemini, free)...', showKeyEntry: false, showManage: true, aiText: '' });
+        setAiUiState({ status: '✨ Writing your day\'s summary...', showKeyEntry: false, showManage: true, aiText: '' });
         try {
           const summary = await fetchGeminiSummary(geminiKey, key, dayEntries);
-          setAiUiState({ status: '🆓 Written by Google Gemini (free tier).', showKeyEntry: false, showManage: true, aiText: summary });
+          setAiUiState({ status: 'Written With Love: ', showKeyEntry: false, showManage: true, aiText: summary });
           return;
         } catch (err) {
           setAiUiState({
-            status: `Gemini summary unavailable: ${err.message}`,
+            status: `AI summary unavailable: ${err.message}`,
             showKeyEntry: err.message.indexOf('rejected') !== -1,
             showManage: true,
             aiText: '',
@@ -1986,7 +1986,7 @@
 
       // No key saved and no on-device AI: explain the free option.
       setAiUiState({
-        status: 'For free AI summaries, get a FREE Google Gemini API key: open aistudio.google.com, sign in with your Google account, click "Get API key" and create one (no credit card, no payment). Paste it below -- it is saved only in this browser, so avoid shared computers.',
+        status: 'What is your Key?',
         showKeyEntry: true,
         showManage: false,
         aiText: '',
