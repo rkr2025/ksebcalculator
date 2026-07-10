@@ -457,6 +457,27 @@
       margin: 5px 0;
       padding-left: 20px;
     }
+    .instructions-lang-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .instructions-lang-toggle .lang-btn {
+      font: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-muted);
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+    .instructions-lang-toggle .lang-btn.active {
+      background: var(--primary, #3a7bfd);
+      border-color: var(--primary, #3a7bfd);
+      color: #fff;
+    }
     hr {
       border: none;
       border-top: 1px dashed var(--border);
@@ -632,19 +653,40 @@
     <details>
       <summary>📖 How to Use Solar Diary</summary>
       <div class="instructions">
-        <p>Welcome to Solar Diary! Follow these steps to track your solar energy and electricity usage:</p>
-        <ul>
-          <li><strong>Set Billing Profile</strong>: Choose your Phase, Meter Owner, Connected Load, and any Banked Units once at the top — this is used to estimate your bill.</li>
-          <li><strong>Set Initial Readings</strong>: Enter your starting values for Solar, T1, T2, T3, and Export from your last bill in the "Initial Reading" section. At least one value must be non-zero. Click 💾 Save Initial.</li>
-          <li><strong>Add Current Readings</strong>: Input current readings in the "Current Solar Readings" section and click ➕ Add. Add entries daily or weekly.</li>
-          <li><strong>View Insights & Analysis</strong>: After initial readings, see usage warnings (red) or safe messages (green) and cost-saving tips below the "Entries Log".</li>
-          <li><strong>Estimated Bill</strong>: See your estimated bill so far and a projected month-end total, calculated with the same tariff rules as the main Bill Calculator. Click 📊 View Full Bill Breakdown for the detailed T1/T2/T3 breakdown.</li>
-          <li><strong>Edit/Delete Entries</strong>: Use ✏️ to edit or 🗑️ to delete entries in the log table.</li>
-          <li><strong>Backup/Restore</strong>: Save data with 💾 Backup Readings or restore from a JSON file using 📂 Restore Readings.</li>
-          <li><strong>Print Report</strong>: Click 🖨️ Generate Printable Report to print the entries log.</li>
-          <li><strong>Mobile Tips</strong>: Swipe tables left/right and toggle these instructions on small screens.</li>
-        </ul>
-        <p><em>Tip</em>: Minimize T2 (6pm-10pm) usage to reduce costs due to its high rate (125%). Check your bill for accurate initial values.</p>
+        <div class="instructions-lang-toggle" role="group" aria-label="Instructions language">
+          <button type="button" class="lang-btn active" data-lang="en">English</button>
+          <button type="button" class="lang-btn" data-lang="ml">മലയാളം</button>
+        </div>
+        <div class="instructions-content" data-lang-content="en">
+          <p>Welcome to Solar Diary! Follow these steps to track your solar energy and electricity usage:</p>
+          <ul>
+            <li><strong>Set Billing Profile</strong>: Choose your Phase, Meter Owner, Connected Load, and any Banked Units once at the top — this is used to estimate your bill.</li>
+            <li><strong>Set Initial Readings</strong>: Enter your starting values for Solar, T1, T2, T3, and Export from your last bill in the "Initial Reading" section. At least one value must be non-zero. Click 💾 Save Initial.</li>
+            <li><strong>Add Current Readings</strong>: Input current readings in the "Current Solar Readings" section and click ➕ Add. Add entries daily or weekly.</li>
+            <li><strong>View Insights & Analysis</strong>: After initial readings, see usage warnings (red) or safe messages (green) and cost-saving tips below the "Entries Log".</li>
+            <li><strong>Estimated Bill</strong>: See your estimated bill so far and a projected month-end total, calculated with the same tariff rules as the main Bill Calculator. Click 📊 View Full Bill Breakdown for the detailed T1/T2/T3 breakdown.</li>
+            <li><strong>Edit/Delete Entries</strong>: Use ✏️ to edit or 🗑️ to delete entries in the log table.</li>
+            <li><strong>Backup/Restore</strong>: Save data with 💾 Backup Readings or restore from a JSON file using 📂 Restore Readings.</li>
+            <li><strong>Print Report</strong>: Click 🖨️ Generate Printable Report to print the entries log.</li>
+            <li><strong>Mobile Tips</strong>: Swipe tables left/right and toggle these instructions on small screens.</li>
+          </ul>
+          <p><em>Tip</em>: Minimize T2 (6pm-10pm) usage to reduce costs due to its high rate (125%). Check your bill for accurate initial values.</p>
+        </div>
+        <div class="instructions-content" data-lang-content="ml" hidden>
+          <p>സോളാർ ഡയറിയിലേക്ക് സ്വാഗതം! നിങ്ങളുടെ സോളാർ ഊർജ്ജവും വൈദ്യുതി ഉപയോഗവും ട്രാക്ക് ചെയ്യാൻ ഈ ഘട്ടങ്ങൾ പിന്തുടരുക:</p>
+          <ul>
+            <li><strong>ബില്ലിംഗ് പ്രൊഫൈൽ സെറ്റ് ചെയ്യുക</strong>: മുകളിൽ ഒരു തവണ നിങ്ങളുടെ ഫേസ്, മീറ്റർ ഓണർ, കണക്റ്റഡ് ലോഡ്, ബാങ്ക്ഡ് യൂണിറ്റുകൾ (ഉണ്ടെങ്കിൽ) തിരഞ്ഞെടുക്കുക — ഇത് നിങ്ങളുടെ ബിൽ കണക്കാക്കാൻ ഉപയോഗിക്കുന്നു.</li>
+            <li><strong>പ്രാരംഭ റീഡിംഗുകൾ സെറ്റ് ചെയ്യുക</strong>: നിങ്ങളുടെ കഴിഞ്ഞ ബില്ലിൽ നിന്നുള്ള സോളാർ, T1, T2, T3, എക്സ്പോർട്ട് എന്നിവയുടെ ആരംഭ മൂല്യങ്ങൾ "Initial Reading" വിഭാഗത്തിൽ നൽകുക. കുറഞ്ഞത് ഒരു മൂല്യമെങ്കിലും പൂജ്യമല്ലാതെ ഉണ്ടായിരിക്കണം. 💾 Save Initial ക്ലിക്ക് ചെയ്യുക.</li>
+            <li><strong>നിലവിലെ റീഡിംഗുകൾ ചേർക്കുക</strong>: "Current Solar Readings" വിഭാഗത്തിൽ നിലവിലെ റീഡിംഗുകൾ നൽകി ➕ Add ക്ലിക്ക് ചെയ്യുക. ദിവസേനയോ ആഴ്ചതോറുമോ എൻട്രികൾ ചേർക്കുക.</li>
+            <li><strong>ഇൻസൈറ്റുകളും വിശകലനവും കാണുക</strong>: പ്രാരംഭ റീഡിംഗുകൾക്ക് ശേഷം, "Entries Log"-ന് താഴെ ഉപയോഗ മുന്നറിയിപ്പുകൾ (ചുവപ്പ്) അല്ലെങ്കിൽ സുരക്ഷിത സന്ദേശങ്ങൾ (പച്ച), ചെലവ് ലാഭിക്കാനുള്ള നിർദ്ദേശങ്ങൾ എന്നിവ കാണാം.</li>
+            <li><strong>കണക്കാക്കിയ ബിൽ</strong>: ഇതുവരെയുള്ള കണക്കാക്കിയ ബില്ലും, പ്രധാന ബിൽ കാൽക്കുലേറ്ററിലെ അതേ താരിഫ് നിയമങ്ങൾ ഉപയോഗിച്ച് കണക്കാക്കിയ മാസാവസാന പ്രൊജക്ഷനും കാണാം. വിശദമായ T1/T2/T3 ബ്രേക്ക്ഡൗണിനായി 📊 View Full Bill Breakdown ക്ലിക്ക് ചെയ്യുക.</li>
+            <li><strong>എൻട്രികൾ എഡിറ്റ്/ഡിലീറ്റ് ചെയ്യുക</strong>: ലോഗ് ടേബിളിലെ എൻട്രികൾ എഡിറ്റ് ചെയ്യാൻ ✏️ ഉം ഡിലീറ്റ് ചെയ്യാൻ 🗑️ ഉം ഉപയോഗിക്കുക.</li>
+            <li><strong>ബാക്കപ്പ്/റീസ്റ്റോർ</strong>: 💾 Backup Readings ഉപയോഗിച്ച് ഡാറ്റ സേവ് ചെയ്യുക അല്ലെങ്കിൽ 📂 Restore Readings ഉപയോഗിച്ച് ഒരു JSON ഫയലിൽ നിന്ന് പുനഃസ്ഥാപിക്കുക.</li>
+            <li><strong>റിപ്പോർട്ട് പ്രിന്റ് ചെയ്യുക</strong>: എൻട്രി ലോഗ് പ്രിന്റ് ചെയ്യാൻ 🖨️ Generate Printable Report ക്ലിക്ക് ചെയ്യുക.</li>
+            <li><strong>മൊബൈൽ ടിപ്സ്</strong>: ചെറിയ സ്ക്രീനുകളിൽ ടേബിളുകൾ ഇടത്തോട്ടും വലത്തോട്ടും സ്വൈപ്പ് ചെയ്യുകയും ഈ നിർദ്ദേശങ്ങൾ ടോഗിൾ ചെയ്യുകയും ചെയ്യാം.</li>
+          </ul>
+          <p><em>കുറിപ്പ്</em>: T2 (വൈകുന്നേരം 6 മുതൽ രാത്രി 10 വരെ) ഉപയോഗം കുറയ്ക്കുക, കാരണം അതിന്റെ നിരക്ക് ഉയർന്നതാണ് (125%). കൃത്യമായ പ്രാരംഭ മൂല്യങ്ങൾക്കായി നിങ്ങളുടെ ബിൽ പരിശോധിക്കുക.</p>
+        </div>
       </div>
     </details>
     <h2>📘 Solar Diary</h2>
@@ -813,6 +855,25 @@
       const monthHeading = document.getElementById('initialReadingHeading');
       const currentMonth = new Date().toLocaleString('en-US', { month: 'long' });
       monthHeading.textContent = `🔑 ${currentMonth} month Initial Reading`;
+    });
+
+    // Instructions language toggle (English/Malayalam), remembered across visits.
+    document.addEventListener('DOMContentLoaded', () => {
+      const langButtons = document.querySelectorAll('.instructions-lang-toggle .lang-btn');
+      const langContents = document.querySelectorAll('.instructions-content');
+      if (!langButtons.length) return;
+
+      function setInstructionsLang(lang) {
+        langButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.lang === lang));
+        langContents.forEach((el) => { el.hidden = el.dataset.langContent !== lang; });
+        localStorage.setItem('solarDiaryInstructionsLang', lang);
+      }
+
+      langButtons.forEach((btn) => {
+        btn.addEventListener('click', () => setInstructionsLang(btn.dataset.lang));
+      });
+
+      setInstructionsLang(localStorage.getItem('solarDiaryInstructionsLang') || 'en');
     });
 
     let initialReadings = JSON.parse(localStorage.getItem("initialReadings")) || null;
