@@ -261,19 +261,29 @@ document.addEventListener('DOMContentLoaded', function () {
         clockIntervalId = setInterval(updateCurrentDateTime, 1000);
     });
 
-    // FAQ language toggle (English/Malayalam), remembered across visits.
+    // FAQ language toggle (English/Malayalam). Always reset to Malayalam
+    // whenever the FAQ card is collapsed, so it's the default the next time
+    // it's expanded -- rather than remembering whatever was last selected.
     const faqLangButtons = document.querySelectorAll('.faq-lang-toggle .faq-lang-btn');
     const faqLangContents = document.querySelectorAll('.faq-list[data-faq-lang-content]');
     if (faqLangButtons.length) {
         const setFaqLang = (lang) => {
             faqLangButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.faqLang === lang));
             faqLangContents.forEach((el) => { el.hidden = el.dataset.faqLangContent !== lang; });
-            localStorage.setItem('kseb_faq_lang', lang);
         };
         faqLangButtons.forEach((btn) => {
             btn.addEventListener('click', () => setFaqLang(btn.dataset.faqLang));
         });
-        setFaqLang(localStorage.getItem('kseb_faq_lang') || 'en');
+        setFaqLang('ml');
+
+        const faqCardDetails = faqLangButtons[0].closest('details.faq-card');
+        if (faqCardDetails) {
+            faqCardDetails.addEventListener('toggle', () => {
+                if (!faqCardDetails.open) {
+                    setFaqLang('ml');
+                }
+            });
+        }
     }
 
 });
