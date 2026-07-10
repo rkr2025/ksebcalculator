@@ -743,6 +743,73 @@ button {
   display: none;
 }
 
+/* ---------------------------------- Bill Analysis insights --------------- */
+
+.insight-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 14px;
+}
+
+.insight-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.insight-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border-left: 4px solid var(--primary);
+  background: var(--primary-light);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s ease;
+}
+
+.insight-card:hover {
+  transform: translateY(-2px);
+}
+
+.insight-card-icon {
+  flex: none;
+  font-size: 19px;
+  line-height: 1.3;
+}
+
+.insight-card-text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.insight-card-text strong {
+  color: var(--text-primary);
+}
+
+.insight-card--success {
+  border-left-color: var(--solar);
+  background: var(--solar-light);
+}
+
+.insight-card--warning {
+  border-left-color: var(--import);
+  background: var(--import-light);
+}
+
+@media (max-width: 480px) {
+  .insight-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .result:empty {
   display: none !important;
 }
