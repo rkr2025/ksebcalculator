@@ -13,22 +13,6 @@ import { computeWheelingResult } from './wheeling-calculator.js';
 const resetReadingGroups = initReadingGroups();
 const wheelingUI = initWheelingUI();
 
-// Theme toggle. The initial dark/light state is already applied by the
-// inline script in index.html's <head> (before first paint, to avoid a
-// flash of the wrong theme) -- this just syncs the switch to match and
-// wires up future changes.
-const themeToggle = document.getElementById('themeToggle');
-themeToggle.checked = document.documentElement.getAttribute('data-theme') === 'dark';
-themeToggle.addEventListener('change', function () {
-    if (this.checked) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        localStorage.setItem('theme', 'dark');
-    } else {
-        document.documentElement.removeAttribute('data-theme');
-        localStorage.setItem('theme', 'light');
-    }
-});
-
 const RESULT_PANEL_IDS = ['billChart', 'billAnalysis', 'wheelingBreakdown', 'result', 'result1', 'result2', 'result3', 'result4', 'result6'];
 
 function num(id) {
@@ -80,8 +64,8 @@ function showResultPanels() {
         document.getElementById(id).style.display = 'block';
     });
     document.getElementById('billDetails').style.display = 'block';
-    document.getElementById('printButton').style.display = 'block';
-    document.getElementById('moveToTop').style.display = 'block';
+    document.getElementById('printActionsRow').style.display = 'flex';
+    document.getElementById('quote').style.display = 'block';
 }
 
 function hideResultPanels() {
@@ -89,8 +73,8 @@ function hideResultPanels() {
         document.getElementById(id).style.display = 'none';
     });
     document.getElementById('billDetails').style.display = 'none';
-    document.getElementById('printButton').style.display = 'none';
-    document.getElementById('moveToTop').style.display = 'none';
+    document.getElementById('printActionsRow').style.display = 'none';
+    document.getElementById('quote').style.display = 'none';
 }
 
 function updateBillingTypeSections(billingType) {
@@ -142,6 +126,18 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
         document.getElementById(id).innerHTML = panels[id];
     });
     document.getElementById('billInfo').innerHTML = panels.billInfo;
+
+    // Daily Thought only appears once a bill has actually been calculated --
+    // show a static quote immediately (instant, no network wait), then swap
+    // it for a live motivational quote if one arrives in time. Any fetch
+    // failure just leaves the static quote in place.
+    const quoteElement = document.getElementById('quote');
+    quoteElement.textContent = getRandomQuote();
+    fetchOnlineQuote().then((onlineQuote) => {
+        if (onlineQuote) {
+            quoteElement.textContent = onlineQuote;
+        }
+    });
 
     showResultPanels();
     document.getElementById('billDetails').scrollIntoView({ behavior: 'smooth' });
@@ -214,7 +210,7 @@ function applyBillHandoff() {
 
 applyBillHandoff();
 
-document.getElementById('resetButton').addEventListener('click', function () {
+function resetCalculator() {
     document.getElementById('billCalculator').reset();
     resetReadingGroups();
     wheelingUI.reset();
@@ -226,7 +222,10 @@ document.getElementById('resetButton').addEventListener('click', function () {
         document.getElementById('billingType').value === 'tod' ? 'block' : 'none';
 
     updateBillingTypeSections(document.getElementById('billingType').value);
-});
+}
+
+document.getElementById('resetButton').addEventListener('click', resetCalculator);
+document.getElementById('resetButton2').addEventListener('click', resetCalculator);
 
 document.getElementById('printButton').addEventListener('click', function () {
     window.print();
@@ -262,14 +261,19 @@ document.addEventListener('DOMContentLoaded', function () {
         clockIntervalId = setInterval(updateCurrentDateTime, 1000);
     });
 
-    // Show a static quote immediately (instant, no network wait), then
-    // swap it for a live motivational quote if one arrives in time. Any
-    // fetch failure just leaves the static quote in place.
-    const quoteElement = document.getElementById('quote');
-    quoteElement.textContent = getRandomQuote();
-    fetchOnlineQuote().then((onlineQuote) => {
-        if (onlineQuote) {
-            quoteElement.textContent = onlineQuote;
-        }
-    });
+    // FAQ language toggle (English/Malayalam), remembered across visits.
+    const faqLangButtons = document.querySelectorAll('.faq-lang-toggle .faq-lang-btn');
+    const faqLangContents = document.querySelectorAll('.faq-list[data-faq-lang-content]');
+    if (faqLangButtons.length) {
+        const setFaqLang = (lang) => {
+            faqLangButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.faqLang === lang));
+            faqLangContents.forEach((el) => { el.hidden = el.dataset.faqLangContent !== lang; });
+            localStorage.setItem('kseb_faq_lang', lang);
+        };
+        faqLangButtons.forEach((btn) => {
+            btn.addEventListener('click', () => setFaqLang(btn.dataset.faqLang));
+        });
+        setFaqLang(localStorage.getItem('kseb_faq_lang') || 'en');
+    }
+
 });

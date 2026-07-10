@@ -46,49 +46,6 @@
   --icon-tint-base: white;
 }
 
-/* Dark theme -- same tokens, re-picked for a dark surface (not just an
-   inverted light palette). Category hues are brightened slightly so they
-   still read clearly against the darker backgrounds; result-panel content
-   from render-*.js keeps its own light card styling either way (those
-   panels carry full inline styles, including the validated chart palette,
-   which is out of scope here -- see js/render-chart.js). */
-:root[data-theme="dark"] {
-  color-scheme: dark;
-
-  --primary: #5b9ee8;
-  --primary-dark: #86b9ee;
-  --primary-light: #16324f;
-
-  --solar: #33d497;
-  --solar-light: #123527;
-
-  --import: #f2726f;
-  --import-light: #3a1e1d;
-
-  --export: #3ecf5f;
-  --export-light: #123018;
-
-  --bank: #9a8bec;
-  --bank-light: #292048;
-
-  --load: #f2a94a;
-  --load-light: #3a2a11;
-
-  --page-bg: #0f1420;
-  --surface: #1a2130;
-  --surface-muted: #232b3d;
-  --border: #313b52;
-
-  --text-primary: #eef1f8;
-  --text-secondary: #b7c0d3;
-  --text-muted: #8792a8;
-
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.45);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
-
-  --icon-tint-base: #0f1420;
-}
-
 * {
   box-sizing: border-box;
 }
@@ -121,53 +78,32 @@ body {
 /* ---------------------------------- Digital clock ----------------------- */
 
 .digital-clock {
-  background: linear-gradient(160deg, #0c1826, #16273d 60%, #0e1c2e);
-  border-radius: var(--radius);
-  padding: 10px 10px 8px;
+  padding: 4px 0;
   margin-bottom: 12px;
   text-align: center;
-  box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-  position: relative;
-  overflow: hidden;
-}
-
-.digital-clock::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.025) 0px,
-    rgba(255, 255, 255, 0.025) 1px,
-    transparent 1px,
-    transparent 3px
-  );
-  pointer-events: none;
-}
-
-.digital-clock-time {
-  font-family: "Share Tech Mono", "Courier New", monospace;
-  font-size: clamp(16px, 5.2vw, 28px);
-  font-weight: 400;
-  letter-spacing: clamp(0.5px, 0.5vw, 2.5px);
-  color: #5fe0ff;
-  text-shadow: 0 0 5px rgba(95, 224, 255, 0.7), 0 0 14px rgba(95, 224, 255, 0.35);
-  line-height: 1.15;
   white-space: nowrap;
+  overflow-x: auto;
+}
+
+#clockTime {
+  font-family: "Share Tech Mono", "Courier New", monospace;
+  font-size: clamp(11px, 2.4vw, 14px);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--primary);
 }
 
 .digital-clock-colon {
   animation: digital-clock-blink 1s step-start infinite;
 }
 
-.digital-clock-date {
-  margin-top: 3px;
+#clockDate {
   font-family: "Share Tech Mono", "Courier New", monospace;
-  font-size: clamp(9px, 2.1vw, 11px);
-  letter-spacing: clamp(0.5px, 0.35vw, 1.5px);
+  font-size: clamp(9px, 1.9vw, 11px);
+  letter-spacing: 0.3px;
   text-transform: uppercase;
-  color: #7ba3c4;
-  white-space: nowrap;
+  color: var(--text-secondary);
+  margin-left: 10px;
 }
 
 @keyframes digital-clock-blink {
@@ -178,31 +114,13 @@ body {
 
 /* ---------------------------------- Header ---------------------------- */
 
-.header-container {
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-.theme-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.theme-toggle-icon {
-  font-size: 13px;
-  line-height: 1;
-}
-
-.header-links {
+.new-apps-list {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
   flex-wrap: wrap;
+  gap: 12px;
+  padding: 4px 0 14px;
 }
 
 .extra-apps-link {
@@ -291,6 +209,108 @@ h1 {
   margin: 0 auto 18px;
   max-width: 420px;
   border-left: 3px solid var(--primary);
+}
+
+/* ---------------------------------- FAQ ---------------------------------- */
+
+.faq-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 0 16px;
+  margin: 0 0 18px;
+}
+
+.faq-card > summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+  padding: 8px 0;
+  list-style: none;
+}
+
+.faq-card > summary::-webkit-details-marker { display: none; }
+
+.faq-card-title::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 8px;
+  color: var(--primary);
+  transition: transform 0.15s ease;
+}
+
+.faq-card[open] > summary .faq-card-title::before {
+  transform: rotate(90deg);
+}
+
+.new-apps-highlight {
+  color: var(--primary);
+  background: var(--primary-light);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.faq-lang-toggle {
+  display: flex;
+  gap: 8px;
+  padding: 0 0 6px;
+}
+
+.faq-lang-toggle .faq-lang-btn {
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-muted);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.faq-lang-toggle .faq-lang-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.faq-list {
+  padding: 2px 0 14px;
+}
+
+.faq-item {
+  border-top: 1px dashed var(--border);
+  padding: 2px 0;
+}
+
+.faq-item > summary {
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 8px 4px;
+  list-style: none;
+}
+
+.faq-item > summary::-webkit-details-marker { display: none; }
+
+.faq-item > summary::before {
+  content: '❔';
+  margin-right: 6px;
+}
+
+.faq-item p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  padding: 0 4px 10px 24px;
+  margin: 0;
+}
+
+.faq-item p + p {
+  padding-top: 0;
 }
 
 /* ---------------------------------- Quick nav --------------------------- */
@@ -779,21 +799,64 @@ td {
 
 /* Print / move-to-top */
 
-#printButton {
-  display: none;
-  margin: 18px auto 0;
-  width: 200px;
+.print-actions-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  margin: 18px 0 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+}
+
+.print-actions-top-row {
+  display: flex;
+  gap: 10px;
+}
+
+.print-action-btn {
+  flex: 1;
+  padding: 13px 18px;
+  font-size: 14.5px;
+  font-weight: 700;
+  font-family: inherit;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
+}
+
+.print-action-btn:active {
+  transform: translateY(0);
+}
+
+.print-action-btn--print {
+  color: #ffffff;
   background: var(--bank);
-  color: #fff;
+  box-shadow: 0 4px 12px rgba(74, 58, 167, 0.3);
 }
 
-#printButton:hover {
+.print-action-btn--print:hover {
   background: #3a2f86;
+  transform: translateY(-1px);
 }
 
-#moveToTop {
-  display: none;
-  margin: 14px auto 0;
+.print-action-btn--reset {
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+}
+
+.print-action-btn--reset:hover {
+  border-color: var(--import);
+  color: var(--import);
+}
+
+.move-to-top-link {
+  display: block;
   text-align: center;
   color: var(--primary);
   font-weight: 600;
@@ -801,9 +864,14 @@ td {
   font-size: 13px;
 }
 
-#moveToTop:hover {
+.move-to-top-link:hover {
   color: var(--primary-dark);
   text-decoration: underline;
+}
+
+#moveToTop {
+  align-self: center;
+  margin: 0;
 }
 
 .green-text {
@@ -852,6 +920,19 @@ td {
   }
 }
 
+.app-link-footer {
+  display: none;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 16px 0 6px;
+}
+
+.app-link-footer a {
+  color: var(--primary);
+  word-break: break-all;
+}
+
 @media print {
   .digital-clock-colon {
     animation: none;
@@ -861,10 +942,13 @@ td {
   .quick-nav,
   #quote,
   #billCalculator,
-  #printButton,
-  #moveToTop,
-  .digital-clock {
+  .print-actions-row,
+  .faq-card {
     display: none !important;
+  }
+
+  .app-link-footer {
+    display: block !important;
   }
 
   body {

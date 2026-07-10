@@ -6,19 +6,6 @@
     <title>Solar Prosumers Electricity Bill Calculator</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <!-- Applies the saved/system theme before first paint, so there's no
-         flash of the light theme while js/main.js (a deferred module)
-         loads. main.js owns the toggle switch itself; this only sets the
-         initial state. -->
-    <script>
-        (function () {
-            var saved = localStorage.getItem('theme');
-            var theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-            if (theme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        })();
-    </script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-JFG7JRVYNV"></script>
     <script>
@@ -31,32 +18,145 @@
 </head>
 <body>
     <div class="container">
+        <h1>Solar Prosumers Electricity Bill Calculator</h1>
+
         <div class="digital-clock" id="digitalClock">
-            <div class="digital-clock-time" id="clockTime">--:--:--</div>
-            <div class="digital-clock-date" id="clockDate">&nbsp;</div>
+            <span id="clockTime">--:--:--</span>
+            <span id="clockDate">&nbsp;</span>
         </div>
 
-        <div class="header-container">
-            <div class="theme-toggle">
-                <span class="theme-toggle-icon">☀️</span>
-                <label class="switch">
-                    <input type="checkbox" id="themeToggle">
-                    <span class="switch-slider"></span>
-                </label>
-                <span class="theme-toggle-icon">🌙</span>
+        <details class="faq-card">
+            <summary>
+                <span class="faq-card-title">❓ Solar - Frequently Asked Questions</span>
+            </summary>
+            <div class="faq-lang-toggle" role="group" aria-label="FAQ language">
+                <button type="button" class="faq-lang-btn active" data-faq-lang="en">English</button>
+                <button type="button" class="faq-lang-btn" data-faq-lang="ml">മലയാളം</button>
             </div>
-            <div class="header-links">
+            <div class="faq-list" data-faq-lang-content="en">
+                <details class="faq-item">
+                    <summary>What is an on-grid/off-grid/hybrid solar plant?</summary>
+                    <p>A solar plant whose inverter runs using the distribution company's (e.g. KSEBL) grid supply is called an <strong>on-grid</strong> solar plant. If the inverter instead runs on power drawn from a battery rather than the grid, it is called an <strong>off-grid</strong> solar plant. In short, an on-grid plant can only feed power outward when grid supply is present -- if grid supply is absent, the solar plant's own output also stops. Compared to the cost of batteries in an off-grid plant, an on-grid plant is always more economical. A <strong>hybrid</strong> solar plant is a combined form of on-grid and off-grid, and its cost increases accordingly.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What is a fixed charge?</summary>
+                    <p>When you buy electricity from an electricity distribution company, they charge you a fixed fee (Fixed Charge) in addition to the actual cost of the electricity you use (Energy Charge). This can be thought of as a fixed fee for connecting the wiring system that contains your electrical appliances to the distribution company's electricity network. The purpose is to cover the distribution company's infrastructure cost. Although this is generally proportional to your total load, it is now calculated for residential customers based on their monthly electricity consumption.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What is ACD (Additional Cash Deposit)?</summary>
+                    <p>As per the Kerala Electricity Supply Code 2014, an electricity distribution company is required to keep a certain amount as security deposit from all its customers. A customer is required to pay a certain amount in advance as security for the electricity supplied during the period of entering into an electricity contract with this company. For customers receiving bi-monthly bills, the security deposit is three times the average consumption bill amount of the previous financial year and for customers receiving monthly bills, it is two times the average consumption bill amount of the previous financial year.</p>
+                    <p>The above average bill amount for the previous year is based on the current electricity rate.</p>
+                    <p>The security deposit will be re-determined as above at the beginning of the next financial year (April-June) depending on the decrease in electricity consumption this year. If the security deposit is less than the current amount at the time of re-determination, the shortfall will be charged as ACD (Additional Cash Deposit) in the next electricity bill. If the security deposit is more than the current amount at the time of re-determination, the excess amount will be deducted from the next electricity bill. The security deposit is paid annually at the bank rate, which is used to reduce the electricity bill.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What is meter rent?</summary>
+                    <p>The electricity distribution company (e.g. KSEB) does not charge the cost of the energy meter while providing the electricity connection. Instead, the cost of the meter is waived and the monthly rental determined by the Electricity Regulatory Commission is included in the electricity bill. There are different rental rates for single-phase and three-phase meters.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What to do if the energy meter is damaged?</summary>
+                    <p>In case of damage to the energy meter, the person who purchased the meter should install a new one. If the meter installed by the electricity distribution company (e.g. KSEB) is damaged due to the fault of the consumer, the consumer should purchase the meter at his own cost along with the test report and replace it through the electricity distribution company. If this is not possible, the electricity distribution company will install the meter and collect its security deposit, rent, etc. from the consumer by including it in the electricity bill.</p>
+                    <p>If the meter installed by the electricity distribution company is damaged due to the fault of the consumer, the company itself will replace it.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Can a customer purchase their own energy meter?</summary>
+                    <p>If the consumer is interested, he can purchase the meter at his own cost. He can either purchase a meter with NABL test report or buy a new meter and get it tested in NABL accredited labs or labs of the electricity distribution company (e.g. KSEB) and get the report and have the meter installed through the distribution company.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What is a customer's tariff?</summary>
+                    <p>Tariff is the price charged to various types of consumers (domestic, commercial, industrial, agricultural, etc.) for the energy they consume. The tariff is fixed by the State Electricity Regulatory Commission, taking into account various aspects.</p>
+                    <p>LT-1, LT-IV, LT-V, etc. are the different types of tariff categories.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What is Telescopic / non-telescopic energy charge?</summary>
+                    <p>The energy charges are levied in two ways depending on the amount of electricity consumed by the household consumers per month - telescopic &amp; non-telescopic.</p>
+                    <p>Currently, the telescopic rate is for those who use up to 250 units per month. That is, there are separate rates for each slab containing 50 units. According to this rate, the energy charge is determined by adding the amount of the unit used in each slab.</p>
+                    <p>However, currently, the energy charge is levied at the same rate for the entire unit for those whose monthly consumption is above 250 units. This is the non-telescopic rate.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Transformer and Feasibility</summary>
+                    <p>Transformers are required for electricity distribution. Their capacities vary (100kVA, 160kVA, etc.). Electricity connections are given based on this capacity. Connections are given without exceeding a certain percentage of the capacity.</p>
+                    <p>When a solar plant is installed, a feasibility test is done to ensure that the distribution agency's line and transformer have the capacity to carry the electricity generated there and when it is fed into the distribution network. If possible, the relevant parties will certify the feasibility.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What is a TOD meter?</summary>
+                    <p>A TOD (Time Of Day) meter is a meter that is designed to record the amount of electricity used at a specific time. Currently, TOD is set at three times: normal, peak and off-peak.</p>
+                    <p>As per the current regulation, normal time is from 6 am to 6 pm, peak time is from 6 pm to 10 pm and off-peak time is from 10 pm to 6 am.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Why TOD (Time of Day) meters?</summary>
+                    <p>The basic requirement of TOD meters is to understand the consumption patterns of the consumer and to use the capacity of the power generation and transmission distribution network in the most efficient way. That is, through proper load balancing designed according to the TOD system or other means, the consumer is encouraged to use more in the zones of low consumption (zones where the generation capacity and the capacity of the transmission distribution network are used less) and to use less in the zones of high consumption (zones where the capacity of the power generation equipment and the transmission distribution network is used to the maximum).</p>
+                    <p>In this way, the capital investment required for increasing the generation capacity and increasing the transmission distribution network capacity, which should be done only in the zones where the electricity consumption is maximum, can be reduced and the amount of transmission and distribution losses can be reduced. Ultimately, this helps in reducing the cost of generating electricity and delivering it to the consumer and in energy conservation.</p>
+                </details>
+            </div>
+            <div class="faq-list" data-faq-lang-content="ml" hidden>
+                <details class="faq-item">
+                    <summary>എന്താണ് ഓൺഗ്രിഡ്/ഓഫ് ഗ്രിഡ്/ഹൈബ്രിഡ് സോളാർ പ്ലാന്റ്?</summary>
+                    <p>വൈദ്യുതി വിതരണ കമ്പനിയുടെ (ഉദാഹരണം :- KSEBL) വൈദ്യുതി (grid) കൂടി ഇൻവെർട്ടറിന്റെ പ്രവർത്തനത്തിന് ആവശ്യമായ പ്ലാന്റ്റുകൾക്ക് ഓൺഗ്രിഡ് സോളാർ പ്ലാന്റ്റുകൾ എന്ന് പറയുന്നു. Grid-ന് പകരം ബാറ്ററിയിൽ നിന്നുള്ള വൈദ്യുതിയാണ് ഇൻവെർട്ടറിന്റെ പ്രവർത്തനത്തിന് ഉപയോഗിക്കുന്നത് എങ്കിൽ അതിനെ ഓഫ്‌ ഗ്രിഡ് സോളാർ പ്ലാന്റ് എന്ന് പറയുന്നു. ചുരുക്കത്തിൽ ഒരു ഓൺഗ്രിഡ് പ്ലാന്റിൽ നിന്നും പുറത്തേക്ക് വൈദ്യുതി ഉത്പാദിപ്പിക്കണമെങ്കിൽ ഗ്രിഡ് സപ്ലൈ കൂടിയേ തീരൂ. അതായത് ഗ്രിഡ് സപ്ലൈ ഇല്ല എങ്കിൽ സോളാർ പ്ലാന്റിൽ നിന്നുള്ള വൈദ്യുതിയും നിലയ്ക്കും. ഓഫ്‌ ഗ്രിഡ് പ്ലാന്റിലെ ബാറ്ററിയുടെ വില താരതമ്യം ചെയ്യുമ്പോൾ എപ്പോഴും ഓൺഗ്രിഡ് പ്ലാന്റ് ആണ് ലാഭകരം. ഹൈബ്രിഡ് സോളാർ പ്ലാന്റ് എന്നുള്ളത് ഓൺഗ്രിഡിന്റെയും ഓഫ്‌ഗ്രിഡിന്റെയും ഒരു സംയുക്ത രൂപം ആണ്, അതിന് അനുസൃതമായി ചെലവും കൂടും.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>എന്താണ് ഫിക്സഡ് ചാർജ്ജ്?</summary>
+                    <p>ഒരു വൈദ്യുതി വിതരണ കമ്പനിയിൽ നിന്നും വൈദ്യുതി എടുക്കുമ്പോൾ, ഉപയോഗിക്കുന്ന യഥാർത്ഥ വൈദ്യുതിയുടെ വില (Energy Charge) കൂടാതെ ഒരു നിശ്ചിത തുക (Fixed Charge) കൂടി അവർ ഉപഭോക്താവിൽ നിന്നും വാങ്ങുന്നുണ്ട്. നമ്മുടെ വൈദ്യുതോപകരണങ്ങൾ ഉൾകൊള്ളുന്ന വയറിംഗ് സംവിധാനത്തെ വിതരണ കമ്പിനിയുടെ വൈദ്യുതി ശൃഖലയുമായി ബന്ധിപ്പിക്കുവാനുള്ള ഒരു നിശ്ചിത വാടകയായി ഇതിനെ കരുതാവുന്നതാണ്. വിതരണ കമ്പനിയുടെ infrastructure cost ഉൾകൊള്ളിയ്ക്കുക എന്നതാണ് ഉദ്ദേശ്യം. പൊതുവേ ഇത് നമ്മുടെ മൊത്തം ലോഡിന് ആനുപാതികം ആണെങ്കിലും, ഇപ്പോൾ ഗാർഹിക ഉപഭോക്താക്കൾക്ക് അവർ ഉപയോഗിക്കുന്ന പ്രതിമാസ വൈദ്യുതി ഉപഭോഗത്തിന് ആനുപാതികമായാണ് കണക്കാക്കിയിരിക്കുന്നത്.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>എന്താണ് ACD (Additional Cash Deposit)</summary>
+                    <p>കേരള ഇലക്ട്രിസിറ്റി സപ്ലൈ കോഡ് 2014 അനുസരിച്ച് ഒരു വൈദ്യുതി വിതരണ കമ്പനി എല്ലാ ഉപഭോക്താക്കളിൽ നിന്നും നിശ്ചിത തുക സെക്യൂരിറ്റി ഡെപ്പോസിറ്റായി സൂക്ഷിക്കേണ്ടതുണ്ട്. ഒരു ഉപഭോക്താവ് ഈ കമ്പനിയുമായി വൈദ്യുതി കരാറിൽ ഏർപ്പെട്ട കാലയളവിൽ വിതരണം ചെയ്യുന്ന വൈദ്യുതിക്ക് സെക്യൂരിറ്റിയായി ഒരു നിശ്ചിത തുക മുൻകൂർ ആയി നൽകേണ്ടതാണ്. രണ്ട് മാസത്തിലൊരിക്കൽ ബിൽ ലഭിക്കുന്ന ഉപഭോക്താക്കൾക്ക് മുൻ സാമ്പത്തിക വർഷത്തെ ശരാശരി ഉപഭോഗത്തിന്റെ ബിൽ തുക കണക്കാക്കി അതിന്റെ മൂന്ന് മടങ്ങിനും, പ്രതിമാസ ബിൽ ലഭിക്കുന്ന ഉപഭോക്താക്കൾക്ക് രണ്ടു മടങ്ങിനും തുല്യമായ തുകയാണ് സെക്യൂരിറ്റി ഡെപ്പോസിറ്റായി സൂക്ഷിക്കേണ്ടത്.</p>
+                    <p>മേല്പറഞ്ഞ മുൻവർഷത്തെ ശരാശരി ബിൽ തുക കണ്ടെത്തുവാൻ ആശ്രയിക്കുന്നത് നിലവിൽ ഉള്ള വൈദ്യുതി നിരക്കിനെ ആണ്.</p>
+                    <p>ഈ വർഷത്തെ വൈദ്യുതി ഉപയോഗത്തിലെ ഏറ്റക്കുറവിനനുസരിച്ച് അടുത്ത സാമ്പത്തിക വർഷം ആദ്യം (ഏപ്രിൽ -ജൂൺ) മേല്പറഞ്ഞ പ്രകാരം security deposit പുനർനിശ്ചയിക്കും. അങ്ങനെ പുനർ നിശ്ചയിക്കുമ്പോൾ സെക്യൂരിറ്റി ഡെപ്പോസിറ്റ് നിലവിൽ ഉള്ള തുകയേക്കാൾ കുറവാണെങ്കിൽ, പോരാതെ വരുന്ന തുക അടുത്ത വൈദ്യുതി ബില്ലിൽ ACD (Additional Cash Deposit ) ആയി ഉൾപെടുത്തി ഈടാക്കും. പുനർ നിശ്ചയിക്കുമ്പോൾ security deposit നിലവിൽ ഉള്ള തുകയേക്കാൾ കൂടുതൽ ആണെങ്കിൽ അധികമുള്ള തുക അടുത്ത വൈദ്യുതി ബില്ലിൽ കുറവ് ചെയ്യും. സെക്യൂരിറ്റി ഡെപ്പോസിറ്റിന് എല്ലാ വർഷവും ബാങ്ക് നിരക്കിലുള്ള പലിശ കണക്കാക്കി വൈദ്യുതി ബില്ലിൽ കുറവ് ചെയ്തു കൊടുക്കാറുണ്ട്.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>എന്താണ് മീറ്റർ വാടക?</summary>
+                    <p>വൈദ്യുതി കണക്ഷൻ നൽകുമ്പോൾ വൈദ്യുതി വിതരണ കമ്പനി (ഉദാ:- KSEB) energy മീറ്ററിന്റെ വില വാങ്ങുന്നില്ല. മീറ്ററിന്റെ വില ഒഴിവാക്കി പകരം Electricity Regulatory Commission നിശ്ചയിക്കുന്ന പ്രതിമാസ വാടക വൈദ്യുതി ബില്ലിൽ ഉൾപെടുത്തിയാണ് ഈടാക്കുന്നത്. സിംഗിൾ ഫേസ്, ത്രീ ഫേസ് മീറ്ററുകൾക്ക് വ്യത്യസ്ത വാടക നിരക്കാണുള്ളത്.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>എനർജി മീറ്റർ കേടു വന്നാൽ എന്താണ് നടപടി?</summary>
+                    <p>എനർജി മീറ്റർ കേട് വരുന്ന പക്ഷം ആരാണോ മീറ്റർ വാങ്ങിയത് അവർ തന്നെ പുതിയ മീറ്റർ സ്ഥാപിക്കണം. വൈദ്യുതി വിതരണ കമ്പനി (ഉദാ:- KSEB) സ്ഥാപിച്ച മീറ്റർ ഉപഭോക്താവിന്റെ കാരണത്താൽ കേടായാൽ ഉപഭോക്താവ് സ്വന്തം ചിലവിൽ വാങ്ങി ടെസ്റ്റ് റിപ്പോർട്ട് സഹിതം വൈദ്യുതി വിതരണ കമ്പനി വഴി മാറ്റേണ്ടതാണ്‌. അങ്ങിനെ ചെയ്യാൻ സാധിക്കാത്ത പക്ഷം വൈദ്യുതി വിതരണ കമ്പനി മീറ്റർ സ്ഥാപിക്കുകയും അതിന്റെ സെക്യൂരിറ്റി തുകയും വാടകയും മറ്റും ഉപഭോക്താവിൽ നിന്ന് വൈദ്യുതി ബില്ലിൽ ഉൾപെടുത്തി ഈടാക്കി തുടങ്ങുകയും ചെയ്യും.</p>
+                    <p>വൈദ്യുതി വിതരണ കമ്പനി സ്ഥാപിച്ച മീറ്റർ കേട് വന്നത് ഉപഭോക്താവിന്റെ വീഴ്ച കൊണ്ടല്ലെങ്കിൽ കമ്പനി തന്നെ അത് മാറ്റി സ്ഥാപിക്കുന്നതും ആണ്.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>ഉപഭോക്താവിന് സ്വന്തമായി എനർജി മീറ്റർ വാങ്ങാമോ?</summary>
+                    <p>ഉപഭോക്താവിന് താൽപര്യമുണ്ടെങ്കിൽ സ്വന്തം ചിലവിൽ മീറ്റർ വാങ്ങാം. NABL ടെസ്റ്റ് റിപോർട്ട് സഹിതമുള്ള മീറ്റർ വാങ്ങുകയോ പുതിയ മീറ്റർ വാങ്ങി NABL അംഗീകൃത ലാബുകളിലോ വൈദ്യുതി വിതരണ കമ്പനി(ഉദാ:- KSEB)യുടെ ലാബുകളിലോ പരിശോധിച്ച് റിപോർട്ട് നേടുകയും വിതരണ കമ്പനി വഴി മീറ്റർ സ്ഥാപിക്കുകയും ചെയ്യണം.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>ഒരു ഉപഭോക്താവിന്റെ താരിഫ് എന്ന് പറഞ്ഞാൽ എന്താണ്?</summary>
+                    <p>വിവിധതരം ഉപഭോക്താക്കൾ (ഗാർഹികം, വാണിജ്യം, വ്യവസായം, കൃഷി തുടങ്ങിയവയ്ക്ക്) അവർ ഉപയോഗിക്കുന്ന ഊർജ്ജത്തിന് നിശ്ചയിക്കുന്ന വിലയാണ് താരിഫ് എന്നു പറയുന്നത്. വിവിധ വശങ്ങൾ കണക്കിലെടുത്ത് സംസ്ഥാന വൈദ്യുതി റഗുലേറ്ററി കമ്മീഷനാണ് താരിഫ് നിശ്ചയിക്കുന്നത്.</p>
+                    <p>LT-1, LT-IV, LT-V മുതലായവ വിവിധ തരം താരിഫ് വിഭാഗങ്ങൾ ആണ്.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>എന്താണ് Telescopic /non-telescopic energy charge?</summary>
+                    <p>ഗാർഹിക ഉപഭോക്താക്കൾ പ്രതിമാസം ഉപയോഗിക്കുന്ന വൈദ്യുതിയുടെ അളവ് അനുസരിച്ച് രണ്ടു തരത്തിൽ ആണ് എനർജി ചാർജ് ഈടാക്കുന്നത് - ടെലസ്കോപ്പിക്ക് &amp; നോൺ ടെലസ്കോപ്പിക്ക്.</p>
+                    <p>നിലവിൽ പ്രതി മാസം 250 യൂണിറ്റ് വരെ ഉപയോഗിക്കുന്നവർക്കാണ് ടെലസ്കോപ്പിക്ക് നിരക്ക് ഉള്ളത്. അതായത്, ഓരോ 50 യൂണിറ്റ് അടങ്ങിയ സ്ലാബുകൾക്കും പ്രത്യേകം പ്രത്യേകം നിരക്കുകൾ ഉണ്ട്. ഈ നിരക്കനുസരിച്ച് ഓരോ സ്ലാബിലും ഉപയോഗിച്ച യൂണിറ്റിന്റെ തുക കൂട്ടി എടുത്താണ് എനർജി ചാർജ് നിശ്ചയിക്കുന്നത്.</p>
+                    <p>എന്നാൽ നിലവിൽ പ്രതിമാസ ഉപയോഗം 250 യൂണിറ്റിന് മുകളിൽ ഉള്ളവർക്ക് മുഴുവൻ യൂണിറ്റിനും ഒരേ നിരക്കിലാണ് എനർജി ചാർജ് ഈടാക്കുന്നത്. ഇതാണ് നോൺ ടെലസ്കോപ്പിക് നിരക്ക്.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>ട്രാൻസ്ഫോർമറും ഫീസിബിലിറ്റിയും</summary>
+                    <p>വൈദ്യുതി വിതരണത്തിന് ട്രാൻസ്ഫോർമർ ആവശ്യമാണ്. ഇവയുടെ ശേഷി പലതാണ്. (100kVA, 160 kVA എന്നിങ്ങനെ) ഈ ശേഷി കണക്കിലെടുത്താണ് അതിനു കീഴിൽ വൈദ്യുതി കണക്ഷൻ കൊടുക്കുന്നത്. ശേഷിയുടെ ഒരു നിശ്ചിത ശതമാനം കവിയാതെയാണ് കണക്ഷനുകൾ നൽകുന്നത്.</p>
+                    <p>ഒരു സോളാർ പ്ലാന്റ് സ്ഥാപിക്കുമ്പോൾ അവിടെ ഉത്പാദിപ്പിക്കുന്ന വൈദ്യുതി, വിതരണ ശൃഖലയിലേയ്ക്ക് കൊടുക്കുമ്പോൾ ആ ഊർജം കൂടി വഹിക്കാൻ വിതരണ ഏജൻസിയുടെ ലൈനിനും ട്രാൻസ്ഫോർമറിനും ശേഷിയുണ്ടോ എന്ന് ഉറപ്പു വരുത്തുന്നതിനെയാണ് ഫീസിബിലിറ്റി പരിശോധന എന്നു പറയുന്നത്. സാധ്യമാണെങ്കിൽ ബന്ധപ്പെട്ടവർ ഫീസിബിലിറ്റി സാക്ഷ്യപ്പെടുത്തും.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>എന്താണ് TOD മീറ്റർ?</summary>
+                    <p>ഒരു നിശ്ചിത സമയത്ത് ഉപയോഗിക്കപ്പെടുന്ന വൈദ്യുതിയുടെ അളവ് രേഖപ്പെടുത്തി ലഭിക്കാവുന്ന വിധം തയ്യാർ ചെയ്യപ്പെട്ട മീറ്ററിനെയാണ് TOD (Time Of Day) മീറ്റർ എന്നു പറയുന്നത്. നോർമൽ, പീക്ക്, ഓഫ് പീക്ക് എന്നീ മൂന്നു സമയങ്ങളിലാണ് നിലവിൽ TOD ആയി ക്രമീകരിക്കപ്പെടുന്നത്.</p>
+                    <p>ഇപ്പോഴത്തെ റെഗുലേഷൻ അനുസരിച്ച്, രാവിലെ 6 മണി മുതൽ വൈകിട്ട് 6 മണി വരെ നോർമൽ സമയവും വൈകിട്ട് 6 മണി മുതൽ രാത്രി 10 മണി വരെ പീക്ക് സമയവും രാത്രി 10 മണി മുതൽ രാവിലെ 6 മണി വരെ ഓഫ് പീക്ക് സമയവുമാണ്.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>എന്തിനാണ് TOD (Time of Day) മീറ്റർ?</summary>
+                    <p>TOD മീറ്ററിൻ്റെ അടിസ്ഥാന ആവശ്യകത ഉപഭോക്താവിൻ്റെ ഉപഭോഗത്തിൻ്റെ രീതികളെ മനസിലാക്കി വൈദ്യുതി ഉൽപാദനത്തിൻ്റെയും പ്രസരണ വിതരണ ശൃംഖലയുടെയും ശേഷിയെ ഏറ്റവും കാര്യക്ഷമമായി ഉപയോഗിക്കുക എന്നതാണ്. അതായത് TOD സംവിധാനത്തിനുസരിച്ച് രൂപകൽപന ചെയ്യപ്പെട്ട ശരിയായ ലോഡ് സന്തുലനത്തിലൂടെയോ മറ്റു മാർഗങ്ങളിലൂടെയോ ഉപഭോഗം കുറവുള്ള സോണുകളിൽ (ഉല്പാദന ശേഷിയും പ്രസരണ വിതരണ ശൃംഖലയുടെ ശേഷിയും കുറച്ചുപയോഗിക്കുന്ന സോണുകളിൽ) കൂടുതൽ ഉപയോഗിക്കാനും ഉപഭോഗം കൂടുതലുള്ള സോണുകളിൽ (വൈദ്യുതി ഉല്പാദന യന്ത്രങ്ങളുടെയും പ്രസരണ വിതരണ ശൃംഖലയുടെയും ശേഷി പരമാവധി ഉപയോഗിക്കുന്ന സോണുകളിൽ) കുറച്ചുപയോഗിക്കാനും ഉപഭോക്താവിനെ പ്രേരിപ്പിക്കുക എന്നതാണ്.</p>
+                    <p>അതുവഴി വൈദ്യുതി ഉപഭോഗം പരമാവധി നടക്കുന്ന സോണുകളിലെ ആവശ്യകതയെ മാത്രം മുന്നിൽ കണ്ട് ഉണ്ടാവേണ്ട ഉൽപാദനശേഷി വർദ്ധനവിനും പ്രസരണ വിതരണ ശൃംഖലാശേഷി വർദ്ധനവിനും ആവശ്യമായ മൂലധന നിക്ഷേപം കുറയ്ക്കാനാവുന്നതും പ്രസരണ വിതരണ നഷ്ടത്തിൻ്റെ അളവ് കുറയ്ക്കാനാവുന്നതുമാണ്. ആത്യന്തികമായി ഇത് വൈദ്യുതി ഉൽപാദിപ്പിച്ച് ഉപഭോക്താവിൽ എത്തിക്കാൻ ആവശ്യമായ ചെലവ് കുറയ്ക്കാനും ഊർജ സംരക്ഷണത്തിനും സഹായകമാവുന്നു.</p>
+                </details>
+            </div>
+        </details>
+
+        <details class="faq-card">
+            <summary>
+                <span class="faq-card-title">🆕 New Released Apps - <span class="new-apps-highlight">Solar Diary (Track your daily Bill)</span></span>
+            </summary>
+            <div class="new-apps-list">
                 <a href="solar-diary.html" class="extra-apps-link extra-apps-link--stacked">
                     <span class="extra-apps-link-title">Solar Diary</span>
                     <span class="extra-apps-link-subtitle">Estimate Your daily bill</span>
                 </a>
-                <a href="tools.html" class="extra-apps-link">Apps</a>
+                <a href="tools.html" class="extra-apps-link">Other Apps</a>
             </div>
-        </div>
-
-        <h1>Solar Prosumers Electricity Bill Calculator</h1>
-        <p class="app-subtitle">Estimate your KSEB bill from your solar &amp; net meter readings</p>
-        <div id="quote"></div>
+        </details>
 
         <nav class="quick-nav" aria-label="Jump to section">
             <a href="#accountCard">🏠 Account</a>
@@ -375,6 +475,8 @@
                 <button type="button" id="resetButton" class="reset-button">Reset</button>
             </div>
 
+            <a href="#accountCard" class="move-to-top-link" style="margin-top: 10px;">Move to Top</a>
+
         </form>
         <div id="billDetails" style="display: none;">
             <table id="billTable">
@@ -392,8 +494,15 @@
         <div id="result3" class="result"></div>
         <div id="result4" class="result"></div>
         <div id="result6" class="result"></div>
-        <button type="button" id="printButton" style="display: none;">Print</button>
-        <a href="#top" id="moveToTop" style="display: none;">Move to Top</a>
+        <p class="app-link-footer">Solar Prosumers Electricity Bill Calculator Link :-&gt; <a href="https://rkr2025.github.io/ksebcalculator/" target="_blank" rel="noopener noreferrer">https://rkr2025.github.io/ksebcalculator/</a></p>
+        <div class="print-actions-row" id="printActionsRow" style="display: none;">
+            <div class="print-actions-top-row">
+                <button type="button" id="printButton" class="print-action-btn print-action-btn--print">Print</button>
+                <button type="button" id="resetButton2" class="print-action-btn print-action-btn--reset">Reset</button>
+            </div>
+            <a href="#accountCard" id="moveToTop" class="move-to-top-link">Move to Top</a>
+        </div>
+        <div id="quote" style="display: none;"></div>
     </div>
     <script type="module" src="js/main.js"></script>
 </body>
