@@ -423,8 +423,20 @@
       flex-direction: column;
       gap: 6px;
     }
-    .empty-group-time-input {
-      align-self: flex-start;
+    .empty-group-time-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+    .empty-group-time-row label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+    .empty-group-time-input, .empty-group-endtime-input {
       font: inherit;
       color: inherit;
       background: var(--surface-muted);
@@ -1069,16 +1081,24 @@
     function buildEntryTimerInfo(allEntries) {
       const flat = [];
       for (const k in allEntries) {
-        allEntries[k].forEach((e) => flat.push(e.t));
+        allEntries[k].forEach((e) => flat.push(e));
       }
-      flat.sort();
+      flat.sort((a, b) => a.t.localeCompare(b.t));
       const frozenElapsed = {};
-      flat.forEach((t, i) => {
+      flat.forEach((e, i) => {
         if (i < flat.length - 1) {
-          frozenElapsed[t] = new Date(flat[i + 1]) - new Date(t);
+          frozenElapsed[e.t] = new Date(flat[i + 1].t) - new Date(e.t);
         }
       });
-      const latestTimestamp = flat.length ? flat[flat.length - 1] : null;
+      // A manually-set end time (endT) overrides the "until the next entry"
+      // default -- lets a manually-added entry have a definite duration
+      // instead of inheriting whatever gap happens to follow it.
+      flat.forEach((e) => {
+        if (e.endT) {
+          frozenElapsed[e.t] = new Date(e.endT) - new Date(e.t);
+        }
+      });
+      const latestTimestamp = flat.length ? flat[flat.length - 1].t : null;
       return { frozenElapsed, latestTimestamp };
     }
 
@@ -1097,7 +1117,7 @@
     // Live ms for an entry: frozen duration if a later entry already exists,
     // or "now minus its timestamp" if it's still the running latest entry.
     function currentElapsedForEntry(e, frozenElapsed, latestTimestamp) {
-      return e.t === latestTimestamp
+      return (e.t === latestTimestamp && !e.endT)
         ? (Date.now() - new Date(e.t).getTime())
         : (frozenElapsed[e.t] || 0);
     }
@@ -1253,7 +1273,7 @@
             <span class="insight-overflow"></span>
           </div>
           ${blockEntries.map((e) => {
-            const isLive = e.t === latestTimestamp;
+            const isLive = e.t === latestTimestamp && !e.endT;
             const elapsedMs = isLive ? (Date.now() - new Date(e.t).getTime()) : (frozenElapsed[e.t] || 0);
             const endTimeMs = new Date(e.t).getTime() + elapsedMs;
             const badge = isLive
@@ -1325,6 +1345,10 @@
 
       function refreshEmptyGroupNotes() {
         list.querySelectorAll('.entry-group-empty[data-empty-block]').forEach((el) => {
+          // Skip groups where the user currently has the "add entry" form
+          // open -- the live 1s timer tick would otherwise blow the form
+          // away out from under them before they can type anything.
+          if (el.querySelector('.empty-group-add-form')) return;
           const b = parseInt(el.dataset.emptyBlock);
           const priorEntry = findLastEntryBeforeBlock(b);
           if (priorEntry) {
@@ -1371,7 +1395,10 @@
 
         el.innerHTML = `
           <div class="empty-group-add-form">
-            <input type="time" class="empty-group-time-input" value="${defaultTime}">
+            <div class="empty-group-time-row">
+              <label>Start <input type="time" class="empty-group-time-input" value="${defaultTime}"></label>
+              <label>End <input type="time" class="empty-group-endtime-input"></label>
+            </div>
             <textarea class="entry-edit-textarea empty-group-add-textarea" placeholder="Write what happened during this time..."></textarea>
             <div class="empty-group-add-actions">
               <button class="entry-edit-save" type="button">Save</button>
@@ -1381,6 +1408,7 @@
 
         const textarea = el.querySelector('.empty-group-add-textarea');
         const timeInput = el.querySelector('.empty-group-time-input');
+        const endTimeInput = el.querySelector('.empty-group-endtime-input');
         textarea.focus();
 
         el.querySelector('.entry-edit-save').addEventListener('click', () => {
@@ -1390,9 +1418,19 @@
           const entryDate = new Date(groupKey + 'T00:00:00');
           entryDate.setHours(hh, mm, 0, 0);
 
+          const entry = { t: entryDate.toISOString(), text };
+
+          if (endTimeInput.value) {
+            const [eh, em] = endTimeInput.value.split(':').map(Number);
+            const endDate = new Date(groupKey + 'T00:00:00');
+            endDate.setHours(eh, em, 0, 0);
+            if (endDate <= entryDate) { alert('End time must be after the start time.'); return; }
+            entry.endT = endDate.toISOString();
+          }
+
           const all = loadEntries();
           if (!all[groupKey]) all[groupKey] = [];
-          all[groupKey].push({ t: entryDate.toISOString(), text });
+          all[groupKey].push(entry);
           all[groupKey].sort((a, c) => a.t.localeCompare(c.t));
           saveEntries(all);
           renderEntries();
