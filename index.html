@@ -35,6 +35,34 @@
             </div>
             <div class="faq-list" data-faq-lang-content="en" hidden>
                 <details class="faq-item">
+                    <summary>How does this calculation treat solar export and banked units against my import?</summary>
+                    <p>Any solar units you export, plus banked units from previous bills, are netted against your import readings before charges are calculated. For Normal billing, the combined export+bank total offsets your import units directly. For ToD billing, the offset is netted against Normal (T1) hours first; on connections above 20kW, only 80% of the remaining balance carries over to Peak (T2) hours, and whatever remains after that carries fully over to Off-Peak (T3).</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What happens if my export and banked units are more than what I imported?</summary>
+                    <p>The extra units become your account balance -- shown as banked units that carry forward and automatically offset your next bill. Special attention: The banked balance will be reset to zero at the end of March. Consequently, in the subsequent months, the absence of a bank energy balance may result in an increase in the bill rate.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What is Duty, and how is it calculated?</summary>
+                    <p>Duty (Electricity Duty) is charged at 10% of your Energy Charge, before fixed charge, meter rent, or fuel surcharge are added.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Does this calculation include a Fuel Surcharge?</summary>
+                    <p>Yes, it's calculated per billed unit. It's currently configured at ₹0.00/unit, matching the prevailing rate as of this calculator's last tariff update -- if KSEB revises this rate, only the tariff constants need to change.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Why do I see different results for the same units depending on Connected Load (Above/Below 20kW) in ToD billing?</summary>
+                    <p>Connections above 20kW always use a real T1/T2/T3 split, with 80% of any Normal-hour surplus carried over into Peak hours before netting Off-Peak. Connections below 20kW only get that T1/T2/T3 split once total billed units exceed 250; below that, they're billed on the same flat telescopic slabs as Normal billing, without any real time-of-day split.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What tariff and rates does this calculation use?</summary>
+                    <p>LT-I(a) domestic tariff rates effective 01-04-2025 -- fixed charge slabs by phase and monthly units, telescopic rates (up to 250 units) and non-telescopic flat rates (above 250 units), ToD multipliers of 90% (Normal), 125% (Peak) and 100% (Off-Peak) applied to the non-telescopic base rate, plus meter rent and a 10% electricity duty.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What is Wheeling, and how do they charge for it?</summary>
+                    <p>Wheeling lets you transfer your banked (surplus) export units to a different KSEB connection to offset that connection's bill. This calculator bills the wheeling charge on both the units actually transferred and the units lost in transit -- a distribution loss of 4.99% if the receiving site shares the same transformer as your generation site, or 7.14% if it's on a different transformer -- at a wheeling rate of ₹0.64 per unit.</p>
+                </details>
+                <details class="faq-item">
                     <summary>What is an on-grid/off-grid/hybrid solar plant?</summary>
                     <p>A solar plant whose inverter runs using the distribution company's (e.g. KSEBL) grid supply is called an <strong>on-grid</strong> solar plant. If the inverter instead runs on power drawn from a battery rather than the grid, it is called an <strong>off-grid</strong> solar plant. In short, an on-grid plant can only feed power outward when grid supply is present -- if grid supply is absent, the solar plant's own output also stops. Compared to the cost of batteries in an off-grid plant, an on-grid plant is always more economical. A <strong>hybrid</strong> solar plant is a combined form of on-grid and off-grid, and its cost increases accordingly.</p>
                 </details>
@@ -87,8 +115,64 @@
                     <p>The basic requirement of TOD meters is to understand the consumption patterns of the consumer and to use the capacity of the power generation and transmission distribution network in the most efficient way. That is, through proper load balancing designed according to the TOD system or other means, the consumer is encouraged to use more in the zones of low consumption (zones where the generation capacity and the capacity of the transmission distribution network are used less) and to use less in the zones of high consumption (zones where the capacity of the power generation equipment and the transmission distribution network is used to the maximum).</p>
                     <p>In this way, the capital investment required for increasing the generation capacity and increasing the transmission distribution network capacity, which should be done only in the zones where the electricity consumption is maximum, can be reduced and the amount of transmission and distribution losses can be reduced. Ultimately, this helps in reducing the cost of generating electricity and delivering it to the consumer and in energy conservation.</p>
                 </details>
+                <details class="faq-item">
+                    <summary>What is a "unit" of electricity?</summary>
+                    <p>One unit of electricity equals 1 kWh (kilowatt-hour) -- the energy used by a 1000-watt appliance running continuously for one hour. Your bill's "Energy Charge" is simply this unit count multiplied by the applicable rate.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What is net metering?</summary>
+                    <p>Net metering lets a rooftop solar owner feed surplus power into the grid and draw power back when solar generation falls short, with the utility billing only the <em>net</em> difference between units imported and units exported -- which is exactly what this calculator estimates.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What is Connected Load, and how is it different from Sanctioned/Contracted Load?</summary>
+                    <p>Connected Load is the total wattage of all electrical appliances/points installed at your premises. Sanctioned (or Contracted) Load is the maximum load KSEB has approved you to draw, based on your application -- it can be equal to or less than your Connected Load, and exceeding it may attract a penalty or require a load enhancement application.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Why does my bill amount vary month to month even when my usage feels similar?</summary>
+                    <p>A few common reasons: your billed units may have crossed into a higher-rate slab, seasonal appliance use (fans/AC in summer, heaters in winter) shifts consumption, meter reading dates can shift the days covered, and for ToD/solar customers, the mix of Normal/Peak/Off-Peak usage or solar export can vary month to month.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What is a Power Factor, and does it affect my domestic bill?</summary>
+                    <p>Power Factor measures how efficiently your load uses supplied electricity. It mainly matters for commercial/industrial (3-phase, higher-load) connections, which can be penalized for a low power factor -- ordinary domestic (LT-I(a)) bills like the ones this calculator estimates don't carry a power-factor charge.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What are some practical ways to reduce my electricity bill?</summary>
+                    <p>Shift high-consumption tasks (washing machine, water heater, EV charging) to Off-Peak hours if you're on ToD billing; keep usage aware of slab thresholds since crossing into a non-telescopic slab re-rates your entire usage, not just the extra units; maintain your solar plant's panels/inverter for peak generation; and switch to BEE star-rated / LED appliances to cut baseline consumption.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What happens if I don't pay my electricity bill by the due date?</summary>
+                    <p>KSEB typically charges a late payment surcharge, and continued non-payment can lead to disconnection of supply after the notice period specified in the bill/Supply Code. Reconnection usually requires clearing dues (and sometimes a reconnection fee).</p>
+                </details>
             </div>
             <div class="faq-list" data-faq-lang-content="ml">
+                <details class="faq-item">
+                    <summary>എക്സ്പോർട്ടും ബാങ്ക്ഡ് യൂണിറ്റുകളും എങ്ങനെ ഇംപോർട്ടിനെതിരെ ക്രമീകരിക്കുന്നു?</summary>
+                    <p>നിങ്ങൾ എക്സ്പോർട്ട് ചെയ്യുന്ന സോളാർ യൂണിറ്റുകളും മുൻ ബില്ലുകളിൽ നിന്നുള്ള ബാങ്ക്ഡ് യൂണിറ്റുകളും ചാർജ്ജുകൾ കണക്കാക്കുന്നതിന് മുമ്പ് നിങ്ങളുടെ ഇംപോർട്ട് റീഡിംഗുകൾക്കെതിരെ ക്രമീകരിക്കുന്നു. നോർമൽ ബില്ലിംഗിൽ, എക്സ്പോർട്ട്+ബാങ്ക് ആകെത്തുക നേരിട്ട് ഇംപോർട്ട് യൂണിറ്റുകളെ ഓഫ്സെറ്റ് ചെയ്യുന്നു. ToD ബില്ലിംഗിൽ, ആദ്യം നോർമൽ (T1) സമയത്തിനെതിരെ ക്രമീകരിക്കുന്നു; 20kW-ന് മുകളിലുള്ള കണക്ഷനുകൾക്ക്, ബാക്കിയുള്ളതിന്റെ 80% മാത്രമേ പീക്ക് (T2) സമയത്തേക്ക് കൈമാറൂ, ബാക്കിയുള്ളത് പൂർണ്ണമായും ഓഫ് പീക്ക് (T3) സമയത്തേക്ക് കൈമാറും.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>എക്സ്പോർട്ടും ബാങ്ക്ഡ് യൂണിറ്റുകളും ഇംപോർട്ടിനെക്കാൾ കൂടുതലാണെങ്കിൽ എന്ത് സംഭവിക്കും?</summary>
+                    <p>അധിക യൂണിറ്റുകൾ നിങ്ങളുടെ അക്കൗണ്ട് ബാലൻസ് ആയി മാറുന്നു -- ഇത് ബാങ്ക്ഡ് യൂണിറ്റുകളായി അടുത്ത ബില്ലിലേക്ക് കൈമാറുകയും സ്വയമേവ ആ ബിൽ ഓഫ്സെറ്റ് ചെയ്യുകയും ചെയ്യും. പ്രത്യേകം sradhikkuka: മാർച്ച് അവസാനം ബാങ്ക്ഡ് ബാലൻസ് സീറോ ആക്കി Reset ചെയ്യുന്നതാണ്. അതിനാൽ തുടർന്ന് വരുന്ന മാസങ്ങളിലെ ബാങ്ക് എനർജി ബാലൻസ് ഇല്ലെങ്കിൽ ബിൽ നിരക്ക് കൂടുവാൻ സാധ്യതയുണ്ട്  </p>
+                </details>
+                <details class="faq-item">
+                    <summary>ഡ്യൂട്ടി എങ്ങനെ കണക്കാക്കുന്നു?</summary>
+                    <p>ഡ്യൂട്ടി (ഇലക്ട്രിസിറ്റി ഡ്യൂട്ടി) നിങ്ങളുടെ എനർജി ചാർജിന്റെ (ഫിക്സഡ് ചാർജ്, മീറ്റർ വാടക, ഫ്യുവൽ സർചാർജ് എന്നിവ ചേർക്കുന്നതിന് മുമ്പ്) 10% ആയി ഈടാക്കുന്നു.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>ഫ്യുവൽ സർചാർജ് ഉൾപ്പെടുന്നുണ്ടോ?</summary>
+                    <p>ഉണ്ട്, ഓരോ ബില്ലിംഗ് യൂണിറ്റിനും കണക്കാക്കുന്നു. നിലവിൽ ഇത് ₹0.00/യൂണിറ്റ് ആയി സജ്ജീകരിച്ചിരിക്കുന്നു, ഈ കാൽക്കുലേറ്ററിന്റെ അവസാന താരിഫ് അപ്ഡേറ്റ് സമയത്തെ നിരക്കിന് അനുസൃതമായി. KSEB ഈ നിരക്ക് പുതുക്കിയാൽ, താരിഫ് സ്ഥിരാങ്കങ്ങൾ മാത്രം മാറ്റിയാൽ മതി.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>ToD ബില്ലിംഗിൽ Connected Load (Above/Below 20kW) അനുസരിച്ച് ഒരേ യൂണിറ്റുകൾക്ക് വ്യത്യസ്ത ഫലങ്ങൾ കാണുന്നത് എന്തുകൊണ്ട്?</summary>
+                    <p>20kW-ന് മുകളിലുള്ള കണക്ഷനുകൾ എപ്പോഴും ഒരു യഥാർത്ഥ T1/T2/T3 സ്പ്ലിറ്റ് ഉപയോഗിക്കുന്നു, നോർമൽ സമയത്തെ മിച്ചത്തിന്റെ 80% പീക്ക് സമയത്തേക്ക് കൈമാറിയ ശേഷം ഓഫ് പീക്ക് ക്രമീകരിക്കുന്നു. 20kW-ന് താഴെയുള്ള കണക്ഷനുകൾക്ക്, മൊത്തം ബില്ലിംഗ് യൂണിറ്റുകൾ 250 കവിഞ്ഞാൽ മാത്രമേ ഈ T1/T2/T3 സ്പ്ലിറ്റ് ലഭിക്കൂ; അതിന് താഴെ, നോർമൽ ബില്ലിംഗിലെ അതേ ഫ്ലാറ്റ് ടെലസ്കോപ്പിക് സ്ലാബുകളിലാണ് ബില്ല് ചെയ്യുന്നത്, യഥാർത്ഥ ടൈം-ഓഫ്-ഡേ സ്പ്ലിറ്റ് ഇല്ലാതെ.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>ഉപയോഗിക്കുന്ന താരിഫും നിരക്കുകളും എന്തൊക്കെയാണ്?</summary>
+                    <p>01-04-2025 മുതൽ പ്രാബല്യത്തിലുള്ള LT-I(a) ഗാർഹിക താരിഫ് നിരക്കുകൾ -- ഫേസ്, പ്രതിമാസ യൂണിറ്റുകൾ അനുസരിച്ചുള്ള ഫിക്സഡ് ചാർജ് സ്ലാബുകൾ, ടെലസ്കോപ്പിക് നിരക്കുകൾ (250 യൂണിറ്റ് വരെ), നോൺ-ടെലസ്കോപ്പിക് ഫ്ലാറ്റ് നിരക്കുകൾ (250-ന് മുകളിൽ), നോൺ-ടെലസ്കോപ്പിക് അടിസ്ഥാന നിരക്കിൽ പ്രയോഗിക്കുന്ന 90% (നോർമൽ), 125% (പീക്ക്), 100% (ഓഫ് പീക്ക്) എന്നീ ToD മൾട്ടിപ്ലയറുകൾ, മീറ്റർ വാടക, 10% ഇലക്ട്രിസിറ്റി ഡ്യൂട്ടി എന്നിവ.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>എന്താണ് വീലിംഗ്, അതിന് എങ്ങനെ ചാർജ് ചെയ്യുന്നു?</summary>
+                    <p>നിങ്ങളുടെ ബാങ്ക്ഡ് (മിച്ചമുള്ള) എക്സ്പോർട്ട് യൂണിറ്റുകൾ മറ്റൊരു KSEB കണക്ഷനിലേക്ക് കൈമാറി ആ കണക്ഷന്റെ ബിൽ കുറയ്ക്കാൻ അനുവദിക്കുന്നതാണ് വീലിംഗ്. ഈ കാൽക്കുലേറ്റർ യഥാർത്ഥത്തിൽ കൈമാറിയ യൂണിറ്റുകൾക്കും ഗതാഗതത്തിൽ നഷ്ടപ്പെടുന്ന യൂണിറ്റുകൾക്കും വീലിംഗ് ചാർജ് ഈടാക്കുന്നു -- സ്വീകരിക്കുന്ന സൈറ്റ് നിങ്ങളുടെ ജനറേഷൻ സൈറ്റുമായി അതേ ട്രാൻസ്ഫോർമർ പങ്കിടുന്നുവെങ്കിൽ 4.99% ഡിസ്ട്രിബ്യൂഷൻ നഷ്ടം, അല്ലെങ്കിൽ വ്യത്യസ്ത ട്രാൻസ്ഫോർമർ ആണെങ്കിൽ 7.14% -- ₹0.64 ഓരോ യൂണിറ്റിനും എന്ന വീലിംഗ് നിരക്കിൽ.</p>
+                </details>
                 <details class="faq-item">
                     <summary>എന്താണ് ഓൺഗ്രിഡ്/ഓഫ് ഗ്രിഡ്/ഹൈബ്രിഡ് സോളാർ പ്ലാന്റ്?</summary>
                     <p>വൈദ്യുതി വിതരണ കമ്പനിയുടെ (ഉദാഹരണം :- KSEBL) വൈദ്യുതി (grid) കൂടി ഇൻവെർട്ടറിന്റെ പ്രവർത്തനത്തിന് ആവശ്യമായ പ്ലാന്റ്റുകൾക്ക് ഓൺഗ്രിഡ് സോളാർ പ്ലാന്റ്റുകൾ എന്ന് പറയുന്നു. Grid-ന് പകരം ബാറ്ററിയിൽ നിന്നുള്ള വൈദ്യുതിയാണ് ഇൻവെർട്ടറിന്റെ പ്രവർത്തനത്തിന് ഉപയോഗിക്കുന്നത് എങ്കിൽ അതിനെ ഓഫ്‌ ഗ്രിഡ് സോളാർ പ്ലാന്റ് എന്ന് പറയുന്നു. ചുരുക്കത്തിൽ ഒരു ഓൺഗ്രിഡ് പ്ലാന്റിൽ നിന്നും പുറത്തേക്ക് വൈദ്യുതി ഉത്പാദിപ്പിക്കണമെങ്കിൽ ഗ്രിഡ് സപ്ലൈ കൂടിയേ തീരൂ. അതായത് ഗ്രിഡ് സപ്ലൈ ഇല്ല എങ്കിൽ സോളാർ പ്ലാന്റിൽ നിന്നുള്ള വൈദ്യുതിയും നിലയ്ക്കും. ഓഫ്‌ ഗ്രിഡ് പ്ലാന്റിലെ ബാറ്ററിയുടെ വില താരതമ്യം ചെയ്യുമ്പോൾ എപ്പോഴും ഓൺഗ്രിഡ് പ്ലാന്റ് ആണ് ലാഭകരം. ഹൈബ്രിഡ് സോളാർ പ്ലാന്റ് എന്നുള്ളത് ഓൺഗ്രിഡിന്റെയും ഓഫ്‌ഗ്രിഡിന്റെയും ഒരു സംയുക്ത രൂപം ആണ്, അതിന് അനുസൃതമായി ചെലവും കൂടും.</p>
@@ -141,6 +225,34 @@
                     <summary>എന്തിനാണ് TOD (Time of Day) മീറ്റർ?</summary>
                     <p>TOD മീറ്ററിൻ്റെ അടിസ്ഥാന ആവശ്യകത ഉപഭോക്താവിൻ്റെ ഉപഭോഗത്തിൻ്റെ രീതികളെ മനസിലാക്കി വൈദ്യുതി ഉൽപാദനത്തിൻ്റെയും പ്രസരണ വിതരണ ശൃംഖലയുടെയും ശേഷിയെ ഏറ്റവും കാര്യക്ഷമമായി ഉപയോഗിക്കുക എന്നതാണ്. അതായത് TOD സംവിധാനത്തിനുസരിച്ച് രൂപകൽപന ചെയ്യപ്പെട്ട ശരിയായ ലോഡ് സന്തുലനത്തിലൂടെയോ മറ്റു മാർഗങ്ങളിലൂടെയോ ഉപഭോഗം കുറവുള്ള സോണുകളിൽ (ഉല്പാദന ശേഷിയും പ്രസരണ വിതരണ ശൃംഖലയുടെ ശേഷിയും കുറച്ചുപയോഗിക്കുന്ന സോണുകളിൽ) കൂടുതൽ ഉപയോഗിക്കാനും ഉപഭോഗം കൂടുതലുള്ള സോണുകളിൽ (വൈദ്യുതി ഉല്പാദന യന്ത്രങ്ങളുടെയും പ്രസരണ വിതരണ ശൃംഖലയുടെയും ശേഷി പരമാവധി ഉപയോഗിക്കുന്ന സോണുകളിൽ) കുറച്ചുപയോഗിക്കാനും ഉപഭോക്താവിനെ പ്രേരിപ്പിക്കുക എന്നതാണ്.</p>
                     <p>അതുവഴി വൈദ്യുതി ഉപഭോഗം പരമാവധി നടക്കുന്ന സോണുകളിലെ ആവശ്യകതയെ മാത്രം മുന്നിൽ കണ്ട് ഉണ്ടാവേണ്ട ഉൽപാദനശേഷി വർദ്ധനവിനും പ്രസരണ വിതരണ ശൃംഖലാശേഷി വർദ്ധനവിനും ആവശ്യമായ മൂലധന നിക്ഷേപം കുറയ്ക്കാനാവുന്നതും പ്രസരണ വിതരണ നഷ്ടത്തിൻ്റെ അളവ് കുറയ്ക്കാനാവുന്നതുമാണ്. ആത്യന്തികമായി ഇത് വൈദ്യുതി ഉൽപാദിപ്പിച്ച് ഉപഭോക്താവിൽ എത്തിക്കാൻ ആവശ്യമായ ചെലവ് കുറയ്ക്കാനും ഊർജ സംരക്ഷണത്തിനും സഹായകമാവുന്നു.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>എന്താണ് വൈദ്യുതിയുടെ ഒരു "യൂണിറ്റ്"?</summary>
+                    <p>ഒരു യൂണിറ്റ് വൈദ്യുതി എന്നാൽ 1 kWh (കിലോവാട്ട്-അവർ) ആണ് -- ഒരു 1000 വാട്ട് ഉപകരണം ഒരു മണിക്കൂർ തുടർച്ചയായി പ്രവർത്തിക്കുമ്പോൾ ഉപയോഗിക്കുന്ന ഊർജ്ജം. നിങ്ങളുടെ ബില്ലിലെ "എനർജി ചാർജ്" എന്നത് ഈ യൂണിറ്റ് എണ്ണത്തെ ബാധകമായ നിരക്ക് കൊണ്ട് ഗുണിച്ചതാണ്.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>എന്താണ് നെറ്റ് മീറ്ററിംഗ്?</summary>
+                    <p>നെറ്റ് മീറ്ററിംഗ് വഴി ഒരു റൂഫ്ടോപ്പ് സോളാർ ഉടമയ്ക്ക് മിച്ചമുള്ള വൈദ്യുതി ഗ്രിഡിലേക്ക് നൽകാനും സോളാർ ഉത്പാദനം കുറയുമ്പോൾ ഗ്രിഡിൽ നിന്ന് വൈദ്യുതി എടുക്കാനും കഴിയും; ഇംപോർട്ട് ചെയ്ത യൂണിറ്റുകളും എക്സ്പോർട്ട് ചെയ്ത യൂണിറ്റുകളും തമ്മിലുള്ള വ്യത്യാസത്തിന് മാത്രമേ ബിൽ ഈടാക്കൂ -- ഇതാണ് ഈ കാൽക്കുലേറ്റർ കണക്കാക്കുന്നത്.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>എന്താണ് കണക്റ്റഡ് ലോഡ്, അത് സാങ്ഷൻഡ്/കോൺട്രാക്റ്റഡ് ലോഡിൽ നിന്ന് എങ്ങനെ വ്യത്യാസപ്പെട്ടിരിക്കുന്നു?</summary>
+                    <p>നിങ്ങളുടെ പരിസരത്ത് സ്ഥാപിച്ചിട്ടുള്ള എല്ലാ വൈദ്യുതോപകരണങ്ങളുടെയും/പോയിന്റുകളുടെയും ആകെ വാട്ടേജ് ആണ് കണക്റ്റഡ് ലോഡ്. നിങ്ങളുടെ അപേക്ഷ പ്രകാരം KSEB അനുവദിച്ച പരമാവധി ലോഡ് ആണ് സാങ്ഷൻഡ് (അല്ലെങ്കിൽ കോൺട്രാക്റ്റഡ്) ലോഡ് -- ഇത് കണക്റ്റഡ് ലോഡിന് തുല്യമോ അതിൽ കുറവോ ആകാം, ഇത് കവിഞ്ഞാൽ പിഴ ഈടാക്കുകയോ ലോഡ് വർദ്ധന അപേക്ഷ ആവശ്യമായി വരികയോ ചെയ്യാം.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>എന്റെ ഉപയോഗം ഏകദേശം സമാനമാണെങ്കിലും ബിൽ തുക മാസംതോറും വ്യത്യാസപ്പെടുന്നത് എന്തുകൊണ്ട്?</summary>
+                    <p>ചില സാധാരണ കാരണങ്ങൾ: ബില്ലിംഗ് യൂണിറ്റുകൾ ഉയർന്ന നിരക്കുള്ള സ്ലാബിലേക്ക് കടന്നിരിക്കാം, സീസണൽ ഉപകരണ ഉപയോഗം (വേനൽക്കാലത്ത് ഫാൻ/എസി, തണുപ്പുകാലത്ത് ഹീറ്റർ) ഉപഭോഗത്തെ മാറ്റുന്നു, മീറ്റർ റീഡിംഗ് തീയതികൾ മാറുന്നത് ബില്ലിംഗ് ദിവസങ്ങളെ ബാധിക്കാം, ToD/സോളാർ ഉപഭോക്താക്കൾക്ക് നോർമൽ/പീക്ക്/ഓഫ്-പീക്ക് ഉപയോഗത്തിന്റെയോ സോളാർ എക്സ്പോർട്ടിന്റെയോ അനുപാതം മാസംതോറും മാറാം.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>എന്താണ് പവർ ഫാക്ടർ, അത് എന്റെ ഗാർഹിക ബില്ലിനെ ബാധിക്കുമോ?</summary>
+                    <p>വിതരണം ചെയ്യുന്ന വൈദ്യുതി നിങ്ങളുടെ ലോഡ് എത്ര കാര്യക്ഷമമായി ഉപയോഗിക്കുന്നു എന്നതിന്റെ അളവാണ് പവർ ഫാക്ടർ. ഇത് പ്രധാനമായും വാണിജ്യ/വ്യാവസായിക (ത്രീ-ഫേസ്, ഉയർന്ന ലോഡ്) കണക്ഷനുകൾക്കാണ് ബാധകം -- ഈ കാൽക്കുലേറ്റർ കണക്കാക്കുന്ന സാധാരണ ഗാർഹിക (LT-I(a)) ബില്ലുകളിൽ പവർ-ഫാക്ടർ ചാർജ് ഇല്ല.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>എന്റെ വൈദ്യുതി ബിൽ കുറയ്ക്കാൻ എന്തൊക്കെ പ്രായോഗിക മാർഗങ്ങളുണ്ട്?</summary>
+                    <p>ToD ബില്ലിംഗിൽ ആണെങ്കിൽ ഉയർന്ന ഉപഭോഗമുള്ള ജോലികൾ (വാഷിംഗ് മെഷീൻ, വാട്ടർ ഹീറ്റർ, EV ചാർജിംഗ്) ഓഫ്-പീക്ക് സമയത്തേക്ക് മാറ്റുക; സ്ലാബ് പരിധികൾ ശ്രദ്ധിക്കുക, കാരണം നോൺ-ടെലസ്കോപ്പിക് സ്ലാബിലേക്ക് കടക്കുന്നത് അധിക യൂണിറ്റുകൾ മാത്രമല്ല മുഴുവൻ ഉപയോഗവും പുനർ-റേറ്റ് ചെയ്യും; സോളാർ പ്ലാന്റിന്റെ പാനലുകളും ഇൻവെർട്ടറും പരമാവധി ഉത്പാദനത്തിനായി പരിപാലിക്കുക; BEE സ്റ്റാർ-റേറ്റഡ് / LED ഉപകരണങ്ങളിലേക്ക് മാറി അടിസ്ഥാന ഉപഭോഗം കുറയ്ക്കുക.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>അവസാന തീയതിക്കകം ബിൽ അടച്ചില്ലെങ്കിൽ എന്ത് സംഭവിക്കും?</summary>
+                    <p>സാധാരണയായി KSEB ലേറ്റ് പേയ്‌മെന്റ് സർചാർജ് ഈടാക്കും, തുടർച്ചയായി അടയ്ക്കാതിരുന്നാൽ ബില്ലിൽ/സപ്ലൈ കോഡിൽ പറഞ്ഞിരിക്കുന്ന നോട്ടീസ് കാലയളവിന് ശേഷം വൈദ്യുതി വിച്ഛേദിക്കപ്പെടാം. പുനഃസ്ഥാപനത്തിന് സാധാരണയായി കുടിശ്ശിക തീർക്കുകയും (ചിലപ്പോൾ) ഒരു റീകണക്ഷൻ ഫീസ് നൽകുകയും വേണ്ടിവരും.</p>
                 </details>
             </div>
         </details>
