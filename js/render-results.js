@@ -26,7 +26,7 @@ const ENDING_NOTE_HTML = `
         <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.8; margin: 15px 0 0;">
             <strong style="color: #27ae60;">Support:</strong> For calculation discrepancies, mistakes, or additional options, contact
             <a href="mailto:calculatoronline2024@gmail.com" style="color: #2ecc71; font-style: italic; text-decoration: none; transition: color 0.3s ease;">calculatoronline2024@gmail.com</a>.
-            <span style="display: block; margin-top: 8px; font-size: 12px; color: var(--text-muted);">(Version 3.0.82: Last updated: 10-July-2026)</span>
+            <span style="display: block; margin-top: 8px; font-size: 12px; color: var(--text-muted);">(Version 3.0.85: Last updated: 10-July-2026)</span>
         </p>
     </div>
 `;
@@ -43,23 +43,23 @@ function usageRows(bill) {
 
     return `
                         <tr style="background-color: var(--surface);">
-                            <td style="border: 1px solid var(--border); padding: 10px;">Solar Generation${todSubLabel(bill, 'solarNormal', 'solarPeak', 'solarOffPeak')}</td>
+                            <td style="border: 1px solid var(--border); padding: 10px;"><strong>Solar Generation</strong>${todSubLabel(bill, 'solarNormal', 'solarPeak', 'solarOffPeak')}</td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right;"><strong class="green-text">${solarGeneration.toFixed(2)} Unit</strong></td>
                         </tr>
                         <tr style="background-color: var(--surface-muted);">
-                            <td style="border: 1px solid var(--border); padding: 10px;">Import Total${todSubLabel(bill, 'importNormal', 'importPeak', 'importOffPeak')}</td>
+                            <td style="border: 1px solid var(--border); padding: 10px;"><strong>Import Total</strong>${todSubLabel(bill, 'importNormal', 'importPeak', 'importOffPeak')}</td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right;">${importReading.toFixed(2)} Unit</td>
                         </tr>
                         <tr style="background-color: var(--surface);">
-                            <td style="border: 1px solid var(--border); padding: 10px;">Export Total${todSubLabel(bill, 'exportNormal', 'exportPeak', 'exportOffPeak')}</td>
+                            <td style="border: 1px solid var(--border); padding: 10px;"><strong>Export Total</strong>${todSubLabel(bill, 'exportNormal', 'exportPeak', 'exportOffPeak')}</td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right;">${exportReading.toFixed(2)} Unit</td>
                         </tr>
                         <tr style="background-color: var(--surface-muted);">
-                            <td style="border: 1px solid var(--border); padding: 10px;">Direct Usage from Solar<br><span style="font-size: 11px; color: var(--text-muted);">Solar − Export</span></td>
+                            <td style="border: 1px solid var(--border); padding: 10px;"><strong>Direct Usage from Solar</strong><br><span style="font-size: 11px; color: var(--text-muted);">Solar − Export</span></td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right;"><strong class="red-text">${generationUsage.toFixed(2)} Unit</strong></td>
                         </tr>
                         <tr style="background-color: var(--surface);">
-                            <td style="border: 1px solid var(--border); padding: 10px;">Total Consumption<br><span style="font-size: 11px; color: var(--text-muted);">Direct Solar Usage + Import</span></td>
+                            <td style="border: 1px solid var(--border); padding: 10px;"><strong>Total Consumption</strong><br><span style="font-size: 11px; color: var(--text-muted);">Direct Solar Usage + Import</span></td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right;"><strong class="red-text">${unitsConsumed.toFixed(2)} Unit</strong></td>
                         </tr>`;
 }
@@ -121,10 +121,12 @@ function buildBillSummaryTable(bill) {
     const bankAdjustedUnitsToUse = bill.bankAdjustedUnits || 0;
     const dutyPercentLabel = `${+((bill.dutyRate || 0) * 100).toFixed(2)}%`;
     const fuelSurchargePaiseLabel = `${Math.round((bill.fuelSurchargePerUnit || 0) * 100)}ps`;
+    const phaseLabel = bill.phase === 'phase1' ? 'Phase1' : 'Phase3';
+    const totalConsumptionUnitsLabel = (bill.unitsConsumed || 0).toFixed(2);
 
     const detailRows = bankAdjustedUnitsToUse > 0 ? `
                         <tr style="background-color: var(--surface-muted);">
-                            <td style="border: 1px solid var(--border); padding: 10px;">No: of Units Consumed<br>(for Energy Calculation)</td>
+                            <td style="border: 1px solid var(--border); padding: 10px;"><strong>No: of Units Consumed</strong><br>(for Energy Calculation)</td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #2ecc71;">${bankAdjustedUnitsToUse.toFixed(2)} Unit</td>
                         </tr>
                         <tr style="background-color: var(--surface);">
@@ -132,15 +134,15 @@ function buildBillSummaryTable(bill) {
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #3498db;">₹${(unitRate || 0).toFixed(2)}/Unit</td>
                         </tr>${energyBreakdownRows(bill)}
                         <tr style="background-color: var(--surface);">
-                            <td style="border: 1px solid var(--border); padding: 10px;">Energy Charge</td>
+                            <td style="border: 1px solid var(--border); padding: 10px;"><strong>Energy Charge</strong></td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #e74c3c;"><strong>₹${energyChargeToUse.toFixed(2)}</strong></td>
                         </tr>
                         <tr style="background-color: var(--surface-muted);">
-                            <td style="border: 1px solid var(--border); padding: 10px;">Duty<br>(${dutyPercentLabel} of Energy Charge)</td>
+                            <td style="border: 1px solid var(--border); padding: 10px;"><strong>Duty</strong><br>(${dutyPercentLabel} of Energy Charge)</td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(duty || 0).toFixed(2)}</strong></td>
                         </tr>
                         <tr style="background-color: var(--surface-muted);">
-                            <td style="border: 1px solid var(--border); padding: 10px;">Monthly Fuel Surcharge<br>(Consumption: ${bankAdjustedUnitsToUse.toFixed(2)} Unit x ${fuelSurchargePaiseLabel})</td>
+                            <td style="border: 1px solid var(--border); padding: 10px;"><strong>Monthly Fuel Surcharge</strong><br>(Consumption: ${bankAdjustedUnitsToUse.toFixed(2)} Unit x ${fuelSurchargePaiseLabel})</td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(monthlyFuelSurcharge || 0).toFixed(2)}</strong></td>
                         </tr>` : '';
 
@@ -163,15 +165,15 @@ function buildBillSummaryTable(bill) {
                     </thead>
                     <tbody>
                         <tr style="background-color: var(--surface-muted);">
-                            <td style="border: 1px solid var(--border); padding: 10px;">Bill Type</td>
+                            <td style="border: 1px solid var(--border); padding: 10px;"><strong>Bill Type</strong></td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right;"><strong>${billType || 'N/A'}</strong></td>
                         </tr>${usageRows(bill)}
                         <tr style="background-color: var(--surface-muted);">
-                            <td style="border: 1px solid var(--border); padding: 10px;">Fixed Charge</td>
+                            <td style="border: 1px solid var(--border); padding: 10px;"><strong>Fixed Charge</strong><br>(For ${totalConsumptionUnitsLabel} Units for ${phaseLabel})</td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(fixedCharge || 0).toFixed(2)}</strong></td>
                         </tr>
                         <tr style="background-color: var(--surface);">
-                            <td style="border: 1px solid var(--border); padding: 10px;">Meter Rent</td>
+                            <td style="border: 1px solid var(--border); padding: 10px;"><strong>Meter Rent</strong></td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(meterRent || 0).toFixed(2)}</strong></td>
                         </tr>${detailRows}${wheelingRow}
                         <tr style="background: linear-gradient(90deg, #2ecc71, #27ae60); color: white;">
