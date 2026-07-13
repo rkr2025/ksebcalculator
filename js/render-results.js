@@ -18,6 +18,13 @@ import { renderBillBreakdownChart, renderTodComparisonChart } from './render-cha
 import { renderBillAnalysis } from './render-insights.js';
 import { renderWheelingResult } from './render-wheeling.js';
 
+// Single source of truth for the version stamp -- bump this on every app
+// modification (per the project's versioning convention). Shown both in the
+// results' ENDING_NOTE_HTML below and in a persistent page-footer (rendered
+// by main.js at load time, independent of whether a bill has been
+// calculated yet).
+export const APP_VERSION_LABEL = 'Version 3.0.89: Last updated: 10-July-2026';
+
 const ENDING_NOTE_HTML = `
     <div style="background: var(--surface-muted); padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); margin: 20px auto; max-width: 90%; font-family: 'Georgia', serif; border-left: 4px solid #2ecc71;">
         <p style="font-size: 14px; color: var(--text-primary); line-height: 1.6; margin: 0;">
@@ -26,7 +33,7 @@ const ENDING_NOTE_HTML = `
         <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.8; margin: 15px 0 0;">
             <strong style="color: #27ae60;">Support:</strong> For calculation discrepancies, mistakes, or additional options, contact
             <a href="mailto:calculatoronline2024@gmail.com" style="color: #2ecc71; font-style: italic; text-decoration: none; transition: color 0.3s ease;">calculatoronline2024@gmail.com</a>.
-            <span style="display: block; margin-top: 8px; font-size: 12px; color: var(--text-muted);">(Version 3.0.88: Last updated: 10-July-2026)</span>
+            <span style="display: block; margin-top: 8px; font-size: 12px; color: var(--text-muted);">(${APP_VERSION_LABEL})</span>
         </p>
     </div>
 `;

@@ -3,7 +3,7 @@
 // widget), this is the only file that touches document/window.
 
 import { computeBill, BILL_ERRORS, computeMeterRent } from './calculator.js';
-import { renderBillResults } from './render-results.js';
+import { renderBillResults, APP_VERSION_LABEL } from './render-results.js';
 import { getRandomQuote } from './quotes.js';
 import { fetchOnlineQuote } from './quote-service.js';
 import { initReadingGroups } from './reading-inputs.js';
@@ -292,6 +292,8 @@ function updateCurrentDateTime() {
 let clockIntervalId = null;
 
 document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('appVersionFooter').textContent = APP_VERSION_LABEL;
+
     updateCurrentDateTime();
     clockIntervalId = setInterval(updateCurrentDateTime, 1000);
 

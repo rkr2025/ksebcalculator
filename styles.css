@@ -1340,6 +1340,13 @@ td {
   opacity: 0.85;
 }
 
+.app-version-footer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 10px 0 4px;
+}
+
 /* CSS-only lightbox for the tariff chart image (see FAQ answers) --
    :target shows it when the URL fragment matches this element's id. */
 .tariff-overlay {
@@ -1406,6 +1413,7 @@ td {
   .print-actions-row,
   .faq-card,
   .view-counter,
+  .app-version-footer,
   .tariff-overlay {
     display: none !important;
   }
