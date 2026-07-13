@@ -1620,7 +1620,7 @@
     function energyBreakdownRows(bill) {
       if (bill.breakdownRows && bill.breakdownRows.length > 0) {
         return bill.breakdownRows.map((row) => `
-          <tr><td style="padding-left: 24px; font-size: 0.9em;">${row.units} unit(s) @ ₹${row.rate.toFixed(2)}</td><td>₹${row.amount.toFixed(2)}</td></tr>
+          <tr><td style="padding-left: 24px; font-size: 0.9em;">${row.units.toFixed(2)} unit(s) @ ₹${row.rate.toFixed(2)}</td><td>₹${row.amount.toFixed(2)}</td></tr>
         `).join('');
       }
 
