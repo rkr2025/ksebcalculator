@@ -220,6 +220,9 @@ function resetCalculator() {
         document.getElementById('mybank').value === 'Yes' ? 'block' : 'none';
     document.getElementById('connectedLoadContainer').style.display =
         document.getElementById('billingType').value === 'tod' ? 'block' : 'none';
+    // <details> isn't a form control, so form.reset() doesn't collapse it --
+    // do that explicitly so Reset also shrinks it back to its default state.
+    document.getElementById('connectedLoadContainer').open = false;
 
     updateBillingTypeSections(document.getElementById('billingType').value);
 }
