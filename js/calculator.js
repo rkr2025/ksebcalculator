@@ -313,7 +313,11 @@ function applyTariffRules({
     return { fixedCharge, ...fields };
 }
 
-function computeMeterRent(phase, meterOwner) {
+// Exported so main.js can show/refresh the default Meter Rent value in the
+// Admin Options field whenever Phase/Meter Owner change (see also the
+// dutyRate/fuelSurchargePerUnit override pattern below, applied the same
+// way to Meter Rent via rawInputs.meterRentOverride).
+export function computeMeterRent(phase, meterOwner) {
     const table = phase === 'phase1' ? METER_RENT.phase1 : METER_RENT.other;
     return meterOwner === 'kseb' ? table.kseb : table.other;
 }
@@ -382,9 +386,20 @@ export function computeBill(rawInputs) {
         exportPlusBank, importNormal, importPeak, importOffPeak,
     });
 
-    const meterRent = computeMeterRent(phase, meterOwner);
-    const duty = rules.energyCharge * DUTY_RATE;
-    const monthlyFuelSurcharge = rules.bankAdjustedUnits * FUEL_SURCHARGE_PER_UNIT;
+    // Duty and Fuel Surcharge are editable in the form (in case KSEB revises
+    // these rates in the future) -- fall back to the tariff-rates.js
+    // constants for callers that don't pass them (e.g. render-insights.js's
+    // "what-if" recomputation).
+    const dutyRate = Number.isFinite(rawInputs.dutyRatePercent) ? rawInputs.dutyRatePercent / 100 : DUTY_RATE;
+    // The form collects Fuel Surcharge in paise/unit (how KSEB quotes it),
+    // but every other charge here is in rupees -- convert once at the
+    // boundary so the rest of the math stays in rupees throughout.
+    const fuelSurchargePerUnit = Number.isFinite(rawInputs.fuelSurchargePaise) ? rawInputs.fuelSurchargePaise / 100 : FUEL_SURCHARGE_PER_UNIT;
+    // Meter Rent is likewise editable (Admin Options keeps it synced to the
+    // Phase/Meter Owner selection by default, but the user can override it).
+    const meterRent = Number.isFinite(rawInputs.meterRentOverride) ? rawInputs.meterRentOverride : computeMeterRent(phase, meterOwner);
+    const duty = rules.energyCharge * dutyRate;
+    const monthlyFuelSurcharge = rules.bankAdjustedUnits * fuelSurchargePerUnit;
     const totalBillAmount = Math.round(rules.fixedCharge + meterRent + rules.energyCharge + duty + monthlyFuelSurcharge);
 
     return {
@@ -412,7 +427,9 @@ export function computeBill(rawInputs) {
         unitsConsumed,
         accountBalance,
         meterRent,
+        dutyRate,
         duty,
+        fuelSurchargePerUnit,
         monthlyFuelSurcharge,
         totalBillAmount,
         ...rules,

@@ -602,6 +602,13 @@ h1 {
   box-shadow: 0 0 0 3px var(--primary-light), inset 0 1px 3px rgba(23, 32, 58, 0.05);
 }
 
+.field input:disabled {
+  background-color: var(--surface-muted);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
 select {
   appearance: none;
   background-image: url('data:image/svg+xml;utf8,<svg fill="%2352514e" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
@@ -671,23 +678,35 @@ select {
 
 /* Connected Load is an expandable <details>, same interaction as the FAQ
    and Wheeling cards -- its badge doubles as the <summary> toggle. */
-#connectedLoadContainer > summary.sub-row-badge {
+#adminOptionsContainer > summary.sub-row-badge,
+#connectedLoadContainer > summary.sub-row-badge,
+#dutySurchargeContainer > summary.sub-row-badge,
+#meterRentContainer > summary.sub-row-badge {
   cursor: pointer;
   list-style: none;
 }
 
-#connectedLoadContainer > summary.sub-row-badge::-webkit-details-marker {
+#adminOptionsContainer > summary.sub-row-badge::-webkit-details-marker,
+#connectedLoadContainer > summary.sub-row-badge::-webkit-details-marker,
+#dutySurchargeContainer > summary.sub-row-badge::-webkit-details-marker,
+#meterRentContainer > summary.sub-row-badge::-webkit-details-marker {
   display: none;
 }
 
-#connectedLoadContainer > summary.sub-row-badge::after {
+#adminOptionsContainer > summary.sub-row-badge::after,
+#connectedLoadContainer > summary.sub-row-badge::after,
+#dutySurchargeContainer > summary.sub-row-badge::after,
+#meterRentContainer > summary.sub-row-badge::after {
   content: '▸';
   display: inline-block;
   margin-left: 2px;
   transition: transform 0.15s ease;
 }
 
-#connectedLoadContainer[open] > summary.sub-row-badge::after {
+#adminOptionsContainer[open] > summary.sub-row-badge::after,
+#connectedLoadContainer[open] > summary.sub-row-badge::after,
+#dutySurchargeContainer[open] > summary.sub-row-badge::after,
+#meterRentContainer[open] > summary.sub-row-badge::after {
   transform: rotate(90deg);
 }
 
@@ -1218,6 +1237,21 @@ td {
   #netMeterReadingFields .reading-pair input {
     padding: 6px 4px;
     font-size: 11.5px;
+  }
+
+  /* Duty Rate / Fuel Surcharge stay in one row on narrow screens too. */
+  #dutySurchargeFields {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  #dutySurchargeFields .field label {
+    font-size: 10.5px;
+  }
+
+  #dutySurchargeFields .field input {
+    padding: 7px 6px;
+    font-size: 12.5px;
   }
 
   /* Billing Setup's Phase / Meter Owner / Billing Type / Banked Units? --

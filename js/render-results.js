@@ -17,10 +17,6 @@ import {
 import { renderBillBreakdownChart, renderTodComparisonChart } from './render-chart.js';
 import { renderBillAnalysis } from './render-insights.js';
 import { renderWheelingResult } from './render-wheeling.js';
-import { FUEL_SURCHARGE_PER_UNIT } from './tariff-rates.js';
-
-const FUEL_SURCHARGE_PAISE_LABEL = `${Math.round(FUEL_SURCHARGE_PER_UNIT * 100)}ps`;
-
 
 const ENDING_NOTE_HTML = `
     <div style="background: var(--surface-muted); padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); margin: 20px auto; max-width: 90%; font-family: 'Georgia', serif; border-left: 4px solid #2ecc71;">
@@ -30,7 +26,7 @@ const ENDING_NOTE_HTML = `
         <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.8; margin: 15px 0 0;">
             <strong style="color: #27ae60;">Support:</strong> For calculation discrepancies, mistakes, or additional options, contact
             <a href="mailto:calculatoronline2024@gmail.com" style="color: #2ecc71; font-style: italic; text-decoration: none; transition: color 0.3s ease;">calculatoronline2024@gmail.com</a>.
-            <span style="display: block; margin-top: 8px; font-size: 12px; color: var(--text-muted);">(Version 3.0.73: Last updated: 10-July-2026)</span>
+            <span style="display: block; margin-top: 8px; font-size: 12px; color: var(--text-muted);">(Version 3.0.82: Last updated: 10-July-2026)</span>
         </p>
     </div>
 `;
@@ -123,6 +119,8 @@ function buildBillSummaryTable(bill) {
     const { billType, fixedCharge, meterRent, unitRate, duty, monthlyFuelSurcharge, totalBillAmount } = bill;
     const energyChargeToUse = bill.energyCharge || 0;
     const bankAdjustedUnitsToUse = bill.bankAdjustedUnits || 0;
+    const dutyPercentLabel = `${+((bill.dutyRate || 0) * 100).toFixed(2)}%`;
+    const fuelSurchargePaiseLabel = `${Math.round((bill.fuelSurchargePerUnit || 0) * 100)}ps`;
 
     const detailRows = bankAdjustedUnitsToUse > 0 ? `
                         <tr style="background-color: var(--surface-muted);">
@@ -138,11 +136,11 @@ function buildBillSummaryTable(bill) {
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #e74c3c;"><strong>₹${energyChargeToUse.toFixed(2)}</strong></td>
                         </tr>
                         <tr style="background-color: var(--surface-muted);">
-                            <td style="border: 1px solid var(--border); padding: 10px;">Duty<br>(10% of Energy Charge)</td>
+                            <td style="border: 1px solid var(--border); padding: 10px;">Duty<br>(${dutyPercentLabel} of Energy Charge)</td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(duty || 0).toFixed(2)}</strong></td>
                         </tr>
                         <tr style="background-color: var(--surface-muted);">
-                            <td style="border: 1px solid var(--border); padding: 10px;">Monthly Fuel Surcharge<br>(Consumption: ${bankAdjustedUnitsToUse.toFixed(2)} Unit x ${FUEL_SURCHARGE_PAISE_LABEL})</td>
+                            <td style="border: 1px solid var(--border); padding: 10px;">Monthly Fuel Surcharge<br>(Consumption: ${bankAdjustedUnitsToUse.toFixed(2)} Unit x ${fuelSurchargePaiseLabel})</td>
                             <td style="border: 1px solid var(--border); padding: 10px; text-align: right; color: #e67e22;"><strong>₹${(monthlyFuelSurcharge || 0).toFixed(2)}</strong></td>
                         </tr>` : '';
 

@@ -2,7 +2,7 @@
 // (js/main.js). Besides reading-inputs.js (a self-contained DOM-only
 // widget), this is the only file that touches document/window.
 
-import { computeBill, BILL_ERRORS } from './calculator.js';
+import { computeBill, BILL_ERRORS, computeMeterRent } from './calculator.js';
 import { renderBillResults } from './render-results.js';
 import { getRandomQuote } from './quotes.js';
 import { fetchOnlineQuote } from './quote-service.js';
@@ -31,6 +31,9 @@ function readFormInputs() {
         billingType,
         hasBankBalance,
         bankedUnits: hasBankBalance ? num('bankedUnitInput') : 0,
+        dutyRatePercent: num('dutyRatePercent'),
+        fuelSurchargePaise: num('fuelSurchargeInput'),
+        meterRentOverride: num('meterRentInput'),
     };
 
     if (billingType === 'normal') {
@@ -152,6 +155,32 @@ document.getElementById('mybank').addEventListener('change', function () {
     document.getElementById('bankedUnitSection').style.display = this.value === 'Yes' ? 'block' : 'none';
 });
 
+// Duty Rate / Fuel Surcharge start greyed out at the current KSEB defaults;
+// this toggle is the only way to unlock editing them.
+document.getElementById('dutySurchargeEditToggle').addEventListener('change', function () {
+    document.getElementById('dutyRatePercent').disabled = !this.checked;
+    document.getElementById('fuelSurchargeInput').disabled = !this.checked;
+});
+
+// Meter Rent starts greyed out too, kept in sync with Phase/Meter Owner
+// (the same table js/calculator.js's computeMeterRent() reads) until the
+// user unlocks editing it, at which point it stops auto-updating.
+function updateMeterRentDefault() {
+    const phase = document.getElementById('phase').value;
+    const meterOwner = document.getElementById('meterOwner').value;
+    document.getElementById('meterRentPhaseLabel').textContent = phase === 'phase1' ? 'Phase 1' : 'Phase 3';
+    if (document.getElementById('meterRentEditToggle').checked) return;
+    document.getElementById('meterRentInput').value = computeMeterRent(phase, meterOwner);
+}
+
+document.getElementById('phase').addEventListener('change', updateMeterRentDefault);
+document.getElementById('meterOwner').addEventListener('change', updateMeterRentDefault);
+document.getElementById('meterRentEditToggle').addEventListener('change', function () {
+    document.getElementById('meterRentInput').disabled = !this.checked;
+    if (!this.checked) updateMeterRentDefault();
+});
+updateMeterRentDefault();
+
 // Trigger the change events on page load so the visible sections match
 // whichever options are marked `selected` in index.html.
 document.getElementById('billingType').dispatchEvent(new Event('change'));
@@ -222,7 +251,17 @@ function resetCalculator() {
         document.getElementById('billingType').value === 'tod' ? 'block' : 'none';
     // <details> isn't a form control, so form.reset() doesn't collapse it --
     // do that explicitly so Reset also shrinks it back to its default state.
+    document.getElementById('adminOptionsContainer').open = false;
     document.getElementById('connectedLoadContainer').open = false;
+    document.getElementById('dutySurchargeContainer').open = false;
+    document.getElementById('meterRentContainer').open = false;
+    // form.reset() restores the Edit-these-rates checkboxes to unchecked,
+    // but it doesn't touch the `disabled` property on the rate inputs --
+    // re-sync them so Reset also greys the fields back out.
+    document.getElementById('dutyRatePercent').disabled = true;
+    document.getElementById('fuelSurchargeInput').disabled = true;
+    document.getElementById('meterRentInput').disabled = true;
+    updateMeterRentDefault();
 
     updateBillingTypeSections(document.getElementById('billingType').value);
 }

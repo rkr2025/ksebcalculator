@@ -372,16 +372,72 @@
                     </div>
                 </div>
 
-                <!-- Connected Load stays separate as it's conditional -->
-                <details class="sub-row" id="connectedLoadContainer" style="display: block;">
-                    <summary class="sub-row-badge">🔌 Connected Load</summary>
-                    <div class="field">
-                        <label for="load">Connected Load (for ToD)</label>
-                        <select id="load" name="load">
-                            <option value="below20k">Below 20kW</option>
-                            <option value="above20k">Above 20kW</option>
-                        </select>
-                    </div>
+                <!-- Admin Options: rarely-changed settings (Connected Load,
+                     Duty/Fuel Surcharge rates), tucked away collapsed by
+                     default so they don't clutter the common case. -->
+                <details class="sub-row" id="adminOptionsContainer">
+                    <summary class="sub-row-badge">🛠️ Admin Options</summary>
+                    <p style="margin: 0 0 12px; font-size: 12px; color: var(--text-muted);">⚠️ Change the below options only if required.</p>
+
+                    <!-- Connected Load stays separate as it's conditional -->
+                    <details id="connectedLoadContainer" style="display: block;">
+                        <summary class="sub-row-badge">🔌 Connected Load</summary>
+                        <div class="field">
+                            <label for="load">Connected Load (for ToD)</label>
+                            <select id="load" name="load">
+                                <option value="below20k">Below 20kW</option>
+                                <option value="above20k">Above 20kW</option>
+                            </select>
+                        </div>
+                    </details>
+
+                    <!-- Duty and Fuel Surcharge default to the current KSEB
+                         rates (10% and 0 paise/unit) from js/tariff-rates.js,
+                         but are editable here in case those rates change in
+                         the future -- computeBill() uses whatever is entered
+                         instead of the hardcoded constant. Fuel Surcharge is
+                         entered in paise/unit (how KSEB quotes it);
+                         calculator.js converts to rupees internally. -->
+                    <details id="dutySurchargeContainer" style="margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border);">
+                        <summary class="sub-row-badge">⚙️ Duty &amp; Fuel Surcharge</summary>
+                        <div class="reading-mode-toggle">
+                            <label class="switch">
+                                <input type="checkbox" id="dutySurchargeEditToggle">
+                                <span class="switch-slider"></span>
+                            </label>
+                            <span>Edit these rates</span>
+                        </div>
+                        <div class="field-grid field-grid--2" id="dutySurchargeFields">
+                            <div class="field">
+                                <label for="dutyRatePercent">Duty Rate (%)</label>
+                                <input type="number" id="dutyRatePercent" name="dutyRatePercent" value="10" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fuelSurchargeInput">Fuel Surcharge (Paise/unit)</label>
+                                <input type="number" id="fuelSurchargeInput" name="fuelSurchargeInput" value="0" min="0" step="0.01" disabled>
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- Meter Rent defaults to (and stays synced with) the
+                         rate for the selected Phase/Meter Owner combination
+                         from js/tariff-rates.js's METER_RENT table, but is
+                         editable here in case that rate changes in the
+                         future -- computeBill() uses whatever is entered. -->
+                    <details id="meterRentContainer" style="margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border);">
+                        <summary class="sub-row-badge">🧾 Meter Rent</summary>
+                        <div class="reading-mode-toggle">
+                            <label class="switch">
+                                <input type="checkbox" id="meterRentEditToggle">
+                                <span class="switch-slider"></span>
+                            </label>
+                            <span>Edit this rate</span>
+                        </div>
+                        <div class="field">
+                            <label for="meterRentInput">Meter Rent (<span id="meterRentPhaseLabel">Phase 1</span>) (₹/month)</label>
+                            <input type="number" id="meterRentInput" name="meterRentInput" value="30" min="0" step="0.01" disabled>
+                        </div>
+                    </details>
                 </details>
             </section>
 
