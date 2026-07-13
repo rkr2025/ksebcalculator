@@ -847,7 +847,7 @@
       <div id="initialValuesDisplay"></div>
     </div>
     <div class="section-box print-hide-section">
-      <h3 style="margin-top: 0;">➕ Current Solar Readings</h3>
+      <h3 style="margin-top: 0;" id="currentReadingsHeading">➕ Current Solar Readings</h3>
       <p class="note">Enter your current reading from the meter.<br>നിങ്ങളുടെ ഇപ്പോൾ ഉള്ള സോളാർ മീറ്റർ റീഡിങ് ഇവിടെ Enter ചെയ്യുക.</p>
       <form id="diaryForm">
         <input type="number" id="solar" placeholder="Solar Gen" required>
@@ -889,6 +889,11 @@
           <div class="usage-stat-label">⚡ Daily Energy Usage</div>
           <div class="usage-stat-value" id="dailyUsageValue">—</div>
           <div class="usage-stat-sub" id="dailyUsageSub"></div>
+        </div>
+        <div class="usage-stat" id="projectedMonthlyBillStat" style="display: none;">
+          <div class="usage-stat-label">💰 Projected Monthly Bill</div>
+          <div class="usage-stat-value" id="projectedMonthlyBillValue">—</div>
+          <div class="usage-stat-sub">at current daily rate</div>
         </div>
       </div>
       <div id="usageInsights"></div>
@@ -943,6 +948,8 @@
     document.addEventListener('DOMContentLoaded', () => {
       populateInitialReadingMonthSelect();
       renderInitialReadingForMonth(currentMonthKey());
+      const currentMonthName = new Date().toLocaleString('en-US', { month: 'long' });
+      document.getElementById('currentReadingsHeading').innerHTML = `➕ Current Solar Readings (<span style="color: var(--accent); font-weight: 800;">${currentMonthName}</span>)`;
     });
 
     // Instructions language toggle (English/Malayalam), remembered across visits.
@@ -1025,7 +1032,7 @@
     // for it.
     function renderInitialReadingForMonth(monthKey) {
       const monthLabel = monthLabelFor(monthKey);
-      document.getElementById('initialReadingHeading').textContent = `🔑 ${monthLabel} Initial Reading`;
+      document.getElementById('initialReadingHeading').innerHTML = `🔑 <span style="color: var(--accent); font-weight: 800;">${monthLabel}</span> Initial Reading`;
 
       if (monthKey === currentMonthKey()) {
         displayInitialValues();
@@ -1289,6 +1296,15 @@
         if (!projectedBill.error) projectedMonthlyText = `₹${projectedBill.totalBillAmount.toFixed(2)}`;
       }
 
+      const projectedMonthlyBillStat = document.getElementById('projectedMonthlyBillStat');
+      const projectedMonthlyBillValue = document.getElementById('projectedMonthlyBillValue');
+      if (projectedMonthlyText !== '—') {
+        projectedMonthlyBillStat.style.display = '';
+        projectedMonthlyBillValue.textContent = projectedMonthlyText;
+      } else {
+        projectedMonthlyBillStat.style.display = 'none';
+      }
+
       dailyByDate.forEach((daily, i) => {
         const directSolarUsage = daily.solar - daily.export;
         const dailyTotal = directSolarUsage + daily.t1 + daily.t2 + daily.t3;
@@ -1400,6 +1416,7 @@
       tbody.innerHTML = "";
       insightsEl.innerHTML = "";
       document.getElementById('dailyUsageStat').style.display = 'none';
+      document.getElementById('projectedMonthlyBillStat').style.display = 'none';
       updateTotalDaysDisplay();
 
       let total = { solar: 0, t1: 0, t2: 0, t3: 0, export: 0 };
