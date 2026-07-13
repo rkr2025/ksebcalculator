@@ -1347,9 +1347,10 @@ td {
   position: fixed;
   inset: 0;
   z-index: 1000;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: 24px;
+  overflow-y: auto;
   background: rgba(10, 14, 26, 0.8);
 }
 
