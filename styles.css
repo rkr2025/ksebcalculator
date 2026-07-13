@@ -1092,6 +1092,35 @@ td {
     grid-template-columns: 1fr;
   }
 
+  /* Normal/Off Peak/Peak direct-entry fields (not the Initial/Final pair
+     mode) stay in one row even on narrow screens -- just shrunk down --
+     instead of falling back to the generic single-column stack above. */
+  #solarDirectFields,
+  #importDirectFields,
+  #exportDirectFields {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  #solarDirectFields .field label,
+  #importDirectFields .field label,
+  #exportDirectFields .field label {
+    font-size: 10.5px;
+  }
+
+  #solarDirectFields .field label .field-tag,
+  #importDirectFields .field label .field-tag,
+  #exportDirectFields .field label .field-tag {
+    font-size: 8.5px;
+  }
+
+  #solarDirectFields .field input,
+  #importDirectFields .field input,
+  #exportDirectFields .field input {
+    padding: 7px 6px;
+    font-size: 12.5px;
+  }
+
   .card-subtitle {
     margin-left: 0;
   }
