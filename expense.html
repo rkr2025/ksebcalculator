@@ -319,7 +319,7 @@
   @media print {
     body { background: none; perspective: none; }
     h1 { background: none; -webkit-background-clip: initial; background-clip: initial; color: var(--text-primary); filter: none; }
-    .nav-link, .actions-row, .card:has(.expense-form), .toast {
+    .nav-link, .actions-row, .card:has(.expense-form), .toast, .view-counter {
       display: none !important;
     }
     .card { box-shadow: none; border: 1px solid #ccc; backdrop-filter: none; background: #fff; transform: none !important; }
@@ -464,6 +464,9 @@
     </div>
 
     <a href="tools.html" class="nav-link">← Back to Tools</a>
+    <div class="view-counter" style="text-align: center; margin-top: 10px;">
+      <img src="https://hits.sh/rkr2025.github.io/ksebcalculator/expense.svg?style=flat-square&label=Views" alt="No. of views" loading="lazy">
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
