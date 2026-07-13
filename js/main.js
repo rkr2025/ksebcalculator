@@ -168,6 +168,10 @@ document.getElementById('dutySurchargeEditToggle').addEventListener('change', fu
 function updateMeterRentDefault() {
     const phase = document.getElementById('phase').value;
     const meterOwner = document.getElementById('meterOwner').value;
+    // Meter Rent only applies when KSEB owns the meter -- METER_RENT's
+    // "other" (Consumer-owned) column is 0 for every phase, so there's
+    // nothing to show/edit in that case.
+    document.getElementById('meterRentContainer').style.display = meterOwner === 'kseb' ? '' : 'none';
     document.getElementById('meterRentPhaseLabel').textContent = phase === 'phase1' ? 'Phase 1' : 'Phase 3';
     if (document.getElementById('meterRentEditToggle').checked) return;
     document.getElementById('meterRentInput').value = computeMeterRent(phase, meterOwner);
