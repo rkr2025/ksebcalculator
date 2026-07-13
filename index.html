@@ -271,7 +271,6 @@
         </details>
 
         <nav class="quick-nav" aria-label="Jump to section">
-            <a href="#accountCard">🏠 Account</a>
             <a href="#billingCard">📊 Billing</a>
             <a href="#solarCard">☀️ Solar</a>
             <a href="#meterCard">⚡ Meter</a>
@@ -280,62 +279,44 @@
 
         <form id="billCalculator">
 
-            <!-- Account Details -->
-            <section class="card card--account" id="accountCard">
-                <div class="card-header">
-                    <span class="card-icon">🏠</span>
-                    <h2 class="card-title">Account Details</h2>
-                </div>
-                <div class="field-grid field-grid--2">
-                    <div class="field">
-                        <label for="phase">Phase</label>
-                        <select id="phase" name="phase">
-                            <option value="phase1">Phase 1</option>
-                            <option value="phase3">Phase 3</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label for="meterOwner">Meter Owner</label>
-                        <select id="meterOwner" name="meterOwner">
-                            <option value="kseb">KSEB</option>
-                            <option value="consumer">Consumer</option>
-                        </select>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Billing Setup -->
+            <!-- Billing Setup (combines former Account Details + Billing Setup) -->
             <section class="card card--billing" id="billingCard">
                 <div class="card-header">
                     <span class="card-icon">📊</span>
                     <h2 class="card-title">Billing Setup</h2>
                 </div>
-                <div class="field-grid field-grid--2">
-                    <div class="field">
-                        <label for="billingType">Billing Type</label>
-                        <select id="billingType" name="billingType">
-                            <option value="normal">Normal</option>
-                            <option value="tod" selected>ToD</option>
-                        </select>
+                <div class="billing-fields-row">
+                    <div class="field-grid field-grid--2">
+                        <div class="field">
+                            <label for="phase">Phase</label>
+                            <select id="phase" name="phase">
+                                <option value="phase1">Phase 1</option>
+                                <option value="phase3">Phase 3</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="meterOwner">Meter Owner</label>
+                            <select id="meterOwner" name="meterOwner">
+                                <option value="kseb">KSEB</option>
+                                <option value="consumer">Consumer</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="field">
-                        <label for="mybank">Banked Units?</label>
-                        <select id="mybank" name="mybank">
-                            <option value="No">No</option>
-                            <option value="Yes">Yes</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Connected Load stays separate as it's conditional -->
-                <div class="sub-row" id="connectedLoadContainer" style="display: block;">
-                    <span class="sub-row-badge">🔌 Connected Load</span>
-                    <div class="field">
-                        <label for="load">Connected Load (for ToD)</label>
-                        <select id="load" name="load">
-                            <option value="below20k">Below 20kW</option>
-                            <option value="above20k">Above 20kW</option>
-                        </select>
+                    <div class="field-grid field-grid--2">
+                        <div class="field">
+                            <label for="billingType">Billing Type</label>
+                            <select id="billingType" name="billingType">
+                                <option value="normal">Normal</option>
+                                <option value="tod" selected>ToD</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="mybank">Banked Units?</label>
+                            <select id="mybank" name="mybank">
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -347,6 +328,18 @@
                         <input type="number" id="bankedUnitInput" name="bankedUnitInput" value="0" min="0">
                     </div>
                 </div>
+
+                <!-- Connected Load stays separate as it's conditional -->
+                <details class="sub-row" id="connectedLoadContainer" style="display: block;">
+                    <summary class="sub-row-badge">🔌 Connected Load</summary>
+                    <div class="field">
+                        <label for="load">Connected Load (for ToD)</label>
+                        <select id="load" name="load">
+                            <option value="below20k">Below 20kW</option>
+                            <option value="above20k">Above 20kW</option>
+                        </select>
+                    </div>
+                </details>
             </section>
 
             <!-- Solar Generation -->
@@ -587,7 +580,7 @@
                 <button type="button" id="resetButton" class="reset-button">Reset</button>
             </div>
 
-            <a href="#accountCard" class="move-to-top-link" style="margin-top: 10px;">Move to Top</a>
+            <a href="#billingCard" class="move-to-top-link" style="margin-top: 10px;">Move to Top</a>
 
         </form>
         <div id="billDetails" style="display: none;">
@@ -612,7 +605,7 @@
                 <button type="button" id="printButton" class="print-action-btn print-action-btn--print">Print</button>
                 <button type="button" id="resetButton2" class="print-action-btn print-action-btn--reset">Reset</button>
             </div>
-            <a href="#accountCard" id="moveToTop" class="move-to-top-link">Move to Top</a>
+            <a href="#billingCard" id="moveToTop" class="move-to-top-link">Move to Top</a>
         </div>
         <div id="quote" style="display: none;"></div>
     </div>

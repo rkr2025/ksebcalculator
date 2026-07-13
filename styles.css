@@ -544,6 +544,18 @@ h1 {
   grid-template-columns: repeat(2, 1fr);
 }
 
+.field-grid + .field-grid {
+  margin-top: 14px;
+}
+
+/* Billing Setup's Phase/Meter Owner/Billing Type/Banked Units rows: an
+   inert wrapper on wider screens (the two .field-grid--2 rows render
+   exactly as if it weren't there) that becomes a single 4-column row on
+   small screens instead of falling back to the generic 1-column stack. */
+.billing-fields-row {
+  display: contents;
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -655,6 +667,28 @@ select {
 .sub-row--bank .sub-row-badge {
   color: var(--bank);
   background: linear-gradient(180deg, #ffffff, var(--bank-light));
+}
+
+/* Connected Load is an expandable <details>, same interaction as the FAQ
+   and Wheeling cards -- its badge doubles as the <summary> toggle. */
+#connectedLoadContainer > summary.sub-row-badge {
+  cursor: pointer;
+  list-style: none;
+}
+
+#connectedLoadContainer > summary.sub-row-badge::-webkit-details-marker {
+  display: none;
+}
+
+#connectedLoadContainer > summary.sub-row-badge::after {
+  content: '▸';
+  display: inline-block;
+  margin-left: 2px;
+  transition: transform 0.15s ease;
+}
+
+#connectedLoadContainer[open] > summary.sub-row-badge::after {
+  transform: rotate(90deg);
 }
 
 .block-label {
@@ -1160,6 +1194,30 @@ td {
   #exportDirectFields .field input {
     padding: 7px 6px;
     font-size: 12.5px;
+  }
+
+  /* Billing Setup's Phase / Meter Owner / Billing Type / Banked Units? --
+     one row of 4 shrunk-down dropdowns instead of 4 separate lines. */
+  .billing-fields-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .billing-fields-row .field-grid--2 {
+    display: contents;
+  }
+
+  .billing-fields-row .field label {
+    font-size: 10.5px;
+  }
+
+  .billing-fields-row .field select {
+    padding: 7px 4px;
+    font-size: 11.5px;
+    padding-right: 20px !important;
+    background-position: right 4px center;
+    background-size: 12px;
   }
 
   .card-subtitle {
