@@ -1296,6 +1296,16 @@ td {
   word-break: break-all;
 }
 
+.view-counter {
+  text-align: center;
+  margin: 12px 0 6px;
+}
+
+.view-counter img {
+  vertical-align: middle;
+  opacity: 0.85;
+}
+
 @media print {
   .digital-clock-colon {
     animation: none;
@@ -1306,7 +1316,8 @@ td {
   #quote,
   #billCalculator,
   .print-actions-row,
-  .faq-card {
+  .faq-card,
+  .view-counter {
     display: none !important;
   }
 
