@@ -19,25 +19,34 @@
       --text-secondary: #52514e;
       --text-muted: #898781;
       --radius: 14px;
-      --shadow: 0 1px 2px rgba(16,24,40,.04), 0 8px 24px rgba(16,24,40,.08);
+      --shadow: 0 2px 4px rgba(23,32,58,.06), 0 12px 28px -6px rgba(23,32,58,.14), 0 28px 56px -20px rgba(23,32,58,.16);
+      --shadow-sm: 0 1px 2px rgba(23,32,58,.06), 0 6px 14px -4px rgba(23,32,58,.12);
+      --shadow-lift: 0 6px 12px rgba(23,32,58,.08), 0 22px 44px -10px rgba(23,32,58,.22), 0 36px 70px -24px rgba(23,32,58,.22);
     }
     * {
       box-sizing: border-box;
     }
     body {
       font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
-      background: linear-gradient(160deg, #2a78d6, #6dd5fa 65%);
+      background:
+        radial-gradient(900px 560px at 8% -6%, rgba(255,255,255,.20), transparent 60%),
+        radial-gradient(760px 520px at 100% 100%, rgba(27,175,122,.20), transparent 55%),
+        linear-gradient(160deg, #2a78d6, #6dd5fa 65%);
+      background-attachment: fixed;
       margin: 0;
       padding: 16px 10px 32px;
       color: var(--text-primary);
+      perspective: 1400px;
     }
     .container {
       max-width: 960px;
       margin: 0 auto;
-      background: var(--surface);
+      background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.88));
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,.6);
       padding: 22px;
       border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow-lift);
       width: 100%;
     }
     h2, h3 {
@@ -73,37 +82,56 @@
       font-family: inherit;
       background: var(--surface);
       color: var(--text-primary);
+      box-shadow: inset 0 1px 3px rgba(23,32,58,.05);
+      transition: border-color .15s ease, box-shadow .15s ease;
     }
     input:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px var(--primary-light);
+      box-shadow: 0 0 0 3px var(--primary-light), inset 0 1px 3px rgba(23,32,58,.05);
     }
     button {
+      position: relative;
       padding: 9px 14px;
-      background: var(--primary);
+      background: linear-gradient(180deg, var(--primary), var(--primary-dark));
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      overflow: hidden;
       font-size: 14px;
       font-weight: 700;
       max-width: 100%;
-      transition: filter .15s ease, transform .1s ease;
+      box-shadow: 0 2px 3px rgba(42,120,214,.25), 0 10px 22px -4px rgba(42,120,214,.5);
+      transition: filter .15s ease, transform .15s ease, box-shadow .15s ease;
+    }
+    button::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,.26), rgba(255,255,255,0) 55%);
+      pointer-events: none;
     }
     button:hover:not(.disabled) {
-      filter: brightness(0.95);
+      filter: brightness(0.97);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(42,120,214,.3), 0 16px 30px -6px rgba(42,120,214,.55);
     }
     button:active:not(.disabled) {
       transform: translateY(1px);
+      box-shadow: 0 1px 2px rgba(42,120,214,.25);
     }
     button.disabled {
       background: var(--surface-muted);
       color: var(--text-muted);
       border: 1.5px solid var(--border);
+      box-shadow: none;
       opacity: 1;
       cursor: not-allowed;
       pointer-events: none;
+    }
+    button.disabled::after {
+      display: none;
     }
     table {
       width: 100%;
@@ -117,7 +145,7 @@
       font-size: 13.5px;
     }
     th {
-      background: var(--surface-muted);
+      background: linear-gradient(180deg, var(--surface-muted), #eef1f7);
       color: var(--text-muted);
       font-size: 11.5px;
       text-transform: uppercase;
@@ -177,9 +205,10 @@
       font-style: italic;
       margin: 0 0 10px;
       padding: 8px 10px;
-      background: var(--primary-light);
+      background: linear-gradient(135deg, var(--primary-light), #ffffff 70%);
       border-left: 3px solid var(--primary);
       border-radius: 6px;
+      box-shadow: var(--shadow-sm);
     }
     #usageInsights {
       margin-top: 10px;
@@ -194,11 +223,17 @@
       margin-bottom: 4px;
     }
     .usage-stat {
-      background: var(--surface);
+      background: linear-gradient(180deg, var(--surface), var(--surface-muted));
       border: 1.5px solid var(--border);
       border-radius: 10px;
       padding: 12px 14px;
       text-align: center;
+      box-shadow: var(--shadow-sm);
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .usage-stat:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lift);
     }
     .usage-stat-label {
       font-size: 11.5px;
@@ -274,9 +309,10 @@
       text-align: left;
       font-size: 14px;
       padding: 18px;
-      background: var(--surface-muted);
+      background: linear-gradient(180deg, var(--surface-muted), #eef1f7);
       border: 1.5px solid var(--border);
       border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
     }
     #estimatedBill:empty {
       display: none;
@@ -294,14 +330,16 @@
       background: linear-gradient(90deg, var(--accent), #159a68);
       color: white;
       font-weight: bold;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
     }
     #estimatedBill .projected {
       opacity: 0.9;
       margin-top: 18px;
       padding: 14px 16px 16px;
-      background: var(--surface);
+      background: linear-gradient(180deg, var(--surface), var(--surface-muted));
       border: 1.5px solid var(--border);
       border-radius: 10px;
+      box-shadow: var(--shadow-sm);
     }
     #estimatedBill .projected h4 {
       margin-top: 0;
@@ -323,9 +361,17 @@
     .section-box {
       margin-bottom: 20px;
       padding: 18px;
-      background: var(--surface-muted);
+      background: linear-gradient(180deg, var(--surface-muted), #eef1f7);
       border: 1.5px solid var(--border);
       border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      transition: transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s cubic-bezier(.22,1,.36,1);
+    }
+    @media (hover: hover) {
+      .section-box:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lift);
+      }
     }
     .section-box h3 {
       margin-top: 0;
@@ -336,64 +382,43 @@
     .actions-card {
       margin-top: 25px;
       padding: 18px;
-      background: var(--surface-muted);
+      background: linear-gradient(180deg, var(--surface-muted), #eef1f7);
       border: 1.5px solid var(--border);
       border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
     }
     .actions-card h3 {
       margin-top: 0;
     }
     #backupSection {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-      align-items: stretch;
-    }
-    .action-box {
       display: flex;
-      flex-direction: column;
+      flex-wrap: wrap;
       align-items: center;
-      text-align: center;
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: 16px 12px;
-      gap: 6px;
+      gap: 10px;
     }
-    .action-box-icon {
-      font-size: 26px;
-      line-height: 1;
-    }
-    .action-box-title {
-      font-weight: 700;
-      font-size: 14.5px;
-      color: var(--text-primary);
-    }
-    .action-box-desc {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin: 0 0 6px;
-      line-height: 1.4;
-    }
-    .action-box .action-btn,
-    .action-box .file-input-label {
-      width: 100%;
+    #backupSection .action-btn,
+    #backupSection .file-input-label {
+      flex: 1 1 150px;
+      width: auto;
+      max-width: 220px;
     }
     .action-btn {
       max-width: 260px;
     }
     .action-btn--primary {
-      background: var(--primary);
+      background: linear-gradient(180deg, var(--primary), var(--primary-dark));
       color: #fff;
     }
     .action-btn--accent {
-      background: var(--accent);
+      background: linear-gradient(180deg, var(--accent), #159a68);
       color: #fff;
+      box-shadow: 0 2px 3px rgba(27,175,122,.25), 0 10px 22px -4px rgba(27,175,122,.5);
     }
     .action-btn--outline {
-      background: var(--surface);
+      background: linear-gradient(180deg, var(--surface), var(--surface-muted));
       color: var(--text-secondary);
       border: 1.5px solid var(--border);
+      box-shadow: var(--shadow-sm);
     }
     .visually-hidden-file {
       position: absolute;
@@ -414,7 +439,7 @@
       justify-content: center;
       gap: 6px;
       padding: 9px 14px;
-      background: var(--surface);
+      background: linear-gradient(180deg, var(--surface), var(--surface-muted));
       color: var(--text-secondary);
       border: 1.5px dashed var(--border);
       border-radius: 8px;
@@ -425,19 +450,27 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      transition: border-color .15s ease, color .15s ease;
+      box-shadow: var(--shadow-sm);
+      transition: border-color .15s ease, color .15s ease, transform .15s ease, box-shadow .15s ease;
     }
     .file-input-label:hover {
       border-color: var(--primary);
       color: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-lift);
     }
     /* Instructions styles */
     details {
       margin: 10px 0;
       border: 1.5px solid var(--border);
       border-radius: 10px;
-      background: var(--surface-muted);
+      background: linear-gradient(180deg, var(--surface-muted), #eef1f7);
+      box-shadow: var(--shadow-sm);
       overflow: hidden;
+      transition: box-shadow .2s ease;
+    }
+    details:hover {
+      box-shadow: var(--shadow-lift);
     }
     summary {
       padding: 12px 14px;
@@ -483,17 +516,30 @@
       border-top: 1px dashed var(--border);
       margin: 18px 0;
     }
+    @media (prefers-reduced-motion: reduce) {
+      .container, .section-box, .actions-card, .action-box, .usage-stat,
+      details, button, .file-input-label {
+        transition: none !important;
+      }
+      .section-box:hover, .action-box:hover, .usage-stat:hover,
+      button:hover, .file-input-label:hover {
+        transform: none !important;
+      }
+    }
     /* Print-specific styles */
     @media print {
       body {
         background: none;
         margin: 0;
         padding: 0;
+        perspective: none;
       }
       .container {
         margin: 0;
         padding: 10px;
         box-shadow: none;
+        backdrop-filter: none;
+        background: #fff;
       }
       /* Only 4 reports print: Initial Reading details, Entries Log, Daily
          Usage Tracker, and Projected Month-End -- everything else (intro
@@ -561,6 +607,35 @@
         grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
         gap: 8px;
       }
+      /* Phase / Meter Owner / Connected Load / Banked Units? stay in one
+         row of shrunk-down dropdowns instead of wrapping to several lines;
+         the conditional Banked Units (kWh) input still gets its own
+         full-width row since its label is much longer. */
+      #billingProfile {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+      }
+      /* Grid tracks default to a min-width of their content's min-content
+         size -- a <select>'s longest option ("Below 20kW") can be wider
+         than a quarter of the row, which was forcing the whole grid (and
+         so Connected Load specifically) to overflow onto its own line.
+         min-width: 0 lets the column actually shrink to fit. */
+      #billingProfile > div {
+        min-width: 0;
+      }
+      #billingProfile label {
+        font-size: 10px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      #billingProfile select {
+        padding: 6px 2px;
+        font-size: 11px;
+      }
+      #profile_bankedUnitsWrap {
+        grid-column: 1 / -1;
+      }
       input {
         padding: 8px;
         font-size: 14px;
@@ -583,10 +658,22 @@
       #initialValuesDisplay, #usageInsights {
         font-size: 13px;
       }
-      #backupSection {
-        grid-template-columns: 1fr;
+      /* Backup / Restore / Print stay together in one shrunk-down row; the
+         "Choose file" label (needed only when actually restoring) wraps to
+         its own full-width row below instead of crowding that row. */
+      #backupSection .action-btn {
+        flex: 1 1 0;
+        min-width: 0;
+        max-width: none;
+        padding: 8px 4px;
+        font-size: 11.5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
-      .action-btn, .file-input-label {
+      #backupSection .file-input-label {
+        order: 1;
+        flex: 1 1 100%;
         max-width: 100%;
       }
       summary {
@@ -613,6 +700,16 @@
       form {
         grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
         gap: 6px;
+      }
+      #billingProfile {
+        gap: 4px;
+      }
+      #billingProfile label {
+        font-size: 9px;
+      }
+      #billingProfile select {
+        padding: 5px 2px;
+        font-size: 10.5px;
       }
       input {
         padding: 7px;
@@ -664,7 +761,7 @@
             <li><strong>Set Initial Readings</strong>: Enter your starting values for Solar, T1, T2, T3, and Export from your last bill in the "Initial Reading" section. At least one value must be non-zero. Click 💾 Save Initial.</li>
             <li><strong>Add Current Readings</strong>: Input current readings in the "Current Solar Readings" section and click ➕ Add. Add entries daily or weekly.</li>
             <li><strong>View Insights & Analysis</strong>: After initial readings, see usage warnings (red) or safe messages (green) and cost-saving tips below the "Entries Log".</li>
-            <li><strong>Estimated Bill</strong>: See your estimated bill so far and a projected month-end total, calculated with the same tariff rules as the main Bill Calculator. Click 📊 View Full Bill Breakdown for the detailed T1/T2/T3 breakdown.</li>
+            <li><strong>Estimated Bill</strong>: See your estimated bill so far and a projected month-end total, calculated with the same tariff rules as the main Bill Calculator. Click 📊 Bill Breakdown- Using Solar Calculator for the detailed T1/T2/T3 breakdown.</li>
             <li><strong>Edit/Delete Entries</strong>: Use ✏️ to edit or 🗑️ to delete entries in the log table.</li>
             <li><strong>Backup/Restore</strong>: Save data with 💾 Backup Readings or restore from a JSON file using 📂 Restore Readings.</li>
             <li><strong>Print Report</strong>: Click 🖨️ Generate Printable Report to print the entries log.</li>
@@ -679,7 +776,7 @@
             <li><strong>പ്രാരംഭ റീഡിംഗുകൾ സെറ്റ് ചെയ്യുക</strong>: നിങ്ങളുടെ കഴിഞ്ഞ ബില്ലിൽ നിന്നുള്ള സോളാർ, T1, T2, T3, എക്സ്പോർട്ട് എന്നിവയുടെ ആരംഭ മൂല്യങ്ങൾ "Initial Reading" വിഭാഗത്തിൽ നൽകുക. കുറഞ്ഞത് ഒരു മൂല്യമെങ്കിലും പൂജ്യമല്ലാതെ ഉണ്ടായിരിക്കണം. 💾 Save Initial ക്ലിക്ക് ചെയ്യുക.</li>
             <li><strong>നിലവിലെ റീഡിംഗുകൾ ചേർക്കുക</strong>: "Current Solar Readings" വിഭാഗത്തിൽ നിലവിലെ റീഡിംഗുകൾ നൽകി ➕ Add ക്ലിക്ക് ചെയ്യുക. ദിവസേനയോ ആഴ്ചതോറുമോ എൻട്രികൾ ചേർക്കുക.</li>
             <li><strong>ഇൻസൈറ്റുകളും വിശകലനവും കാണുക</strong>: പ്രാരംഭ റീഡിംഗുകൾക്ക് ശേഷം, "Entries Log"-ന് താഴെ ഉപയോഗ മുന്നറിയിപ്പുകൾ (ചുവപ്പ്) അല്ലെങ്കിൽ സുരക്ഷിത സന്ദേശങ്ങൾ (പച്ച), ചെലവ് ലാഭിക്കാനുള്ള നിർദ്ദേശങ്ങൾ എന്നിവ കാണാം.</li>
-            <li><strong>കണക്കാക്കിയ ബിൽ</strong>: ഇതുവരെയുള്ള കണക്കാക്കിയ ബില്ലും, പ്രധാന ബിൽ കാൽക്കുലേറ്ററിലെ അതേ താരിഫ് നിയമങ്ങൾ ഉപയോഗിച്ച് കണക്കാക്കിയ മാസാവസാന പ്രൊജക്ഷനും കാണാം. വിശദമായ T1/T2/T3 ബ്രേക്ക്ഡൗണിനായി 📊 View Full Bill Breakdown ക്ലിക്ക് ചെയ്യുക.</li>
+            <li><strong>കണക്കാക്കിയ ബിൽ</strong>: ഇതുവരെയുള്ള കണക്കാക്കിയ ബില്ലും, പ്രധാന ബിൽ കാൽക്കുലേറ്ററിലെ അതേ താരിഫ് നിയമങ്ങൾ ഉപയോഗിച്ച് കണക്കാക്കിയ മാസാവസാന പ്രൊജക്ഷനും കാണാം. വിശദമായ T1/T2/T3 ബ്രേക്ക്ഡൗണിനായി 📊 Bill Breakdown- Using Solar Calculator ക്ലിക്ക് ചെയ്യുക.</li>
             <li><strong>എൻട്രികൾ എഡിറ്റ്/ഡിലീറ്റ് ചെയ്യുക</strong>: ലോഗ് ടേബിളിലെ എൻട്രികൾ എഡിറ്റ് ചെയ്യാൻ ✏️ ഉം ഡിലീറ്റ് ചെയ്യാൻ 🗑️ ഉം ഉപയോഗിക്കുക.</li>
             <li><strong>ബാക്കപ്പ്/റീസ്റ്റോർ</strong>: 💾 Backup Readings ഉപയോഗിച്ച് ഡാറ്റ സേവ് ചെയ്യുക അല്ലെങ്കിൽ 📂 Restore Readings ഉപയോഗിച്ച് ഒരു JSON ഫയലിൽ നിന്ന് പുനഃസ്ഥാപിക്കുക.</li>
             <li><strong>റിപ്പോർട്ട് പ്രിന്റ് ചെയ്യുക</strong>: എൻട്രി ലോഗ് പ്രിന്റ് ചെയ്യാൻ 🖨️ Generate Printable Report ക്ലിക്ക് ചെയ്യുക.</li>
@@ -730,6 +827,10 @@
     </div>
     <div class="section-box print-initial-section">
       <h3 id="initialReadingHeading">🔑 June month Initial Reading</h3>
+      <div class="print-hide-section" style="margin: -4px 0 12px;">
+        <label for="initialReadingMonthSelect" style="font-size: 12.5px; color: var(--text-muted); display: block; margin-bottom: 4px;">View month</label>
+        <select id="initialReadingMonthSelect" style="padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; background: var(--surface); color: var(--text-primary); max-width: 260px; width: 100%;"></select>
+      </div>
       <p class="note" id="initialReadingNote">ഈ മാസത്തെ Initial റീഡിങ് ഇവിടെ enter ചെയ്യുക. കഴിഞ്ഞ മാസം ലഭിച്ച ബില്ലിലെ Current റീഡിങ് ആണ് ഈ മാസത്തെ Initial Reading ആയി എടുക്കേണ്ടത്.</p>
       <form id="initialForm">
         <div>
@@ -775,6 +876,7 @@
           <tbody id="entriesBody"></tbody>
         </table>
       </div>
+      <div id="entriesLineChart" class="print-hide-section"></div>
     </div>
     <div class="section-box print-hide-section">
       <div class="usage-grid">
@@ -816,33 +918,18 @@
     </div>
     <div id="estimatedBill"></div>
     <div class="center">
-      <button type="button" id="viewFullBreakdownBtn" style="display: none;">📊 View Full Bill Breakdown</button>
+      <button type="button" id="viewFullBreakdownBtn" style="display: none;">📊 Bill Breakdown- Using Solar Calculator</button>
     </div>
     <div class="actions-card">
       <h3>💾 Backup, Restore &amp; Print</h3>
       <div id="backupSection">
-        <div class="action-box">
-          <div class="action-box-icon">💾</div>
-          <div class="action-box-title">Backup</div>
-          <p class="action-box-desc">Save all your readings to a JSON file.</p>
-          <button class="action-btn action-btn--primary" onclick="backupReadings()">💾 Backup Readings</button>
-        </div>
-        <div class="action-box">
-          <div class="action-box-icon">📂</div>
-          <div class="action-box-title">Restore</div>
-          <p class="action-box-desc">Load readings back from a backup file.</p>
-          <label class="file-input-label" for="restoreFile">
-            📂 <span id="restoreFileName">Choose backup file…</span>
-          </label>
-          <input type="file" id="restoreFile" accept=".json" class="visually-hidden-file">
-          <button class="action-btn action-btn--accent" onclick="restoreReadings()">↩️ Restore Readings</button>
-        </div>
-        <div class="action-box">
-          <div class="action-box-icon">🖨️</div>
-          <div class="action-box-title">Print</div>
-          <p class="action-box-desc">Generate a printable report of your entries.</p>
-          <button class="action-btn action-btn--outline" onclick="generatePrintableReport()">🖨️ Generate Printable Report</button>
-        </div>
+        <button class="action-btn action-btn--primary" onclick="backupReadings()" title="Save all your readings to a JSON file">💾 Backup</button>
+        <label class="file-input-label" for="restoreFile" title="Load readings back from a backup file">
+          📂 <span id="restoreFileName">Choose file…</span>
+        </label>
+        <input type="file" id="restoreFile" accept=".json" class="visually-hidden-file">
+        <button class="action-btn action-btn--accent" onclick="restoreReadings()">↩️ Restore</button>
+        <button class="action-btn action-btn--outline" onclick="generatePrintableReport()" title="Generate a printable report of your entries">🖨️ Print</button>
       </div>
     </div>
     <a href="index.html" class="nav-link">← Back to Calculator</a>
@@ -850,11 +937,12 @@
   <script type="module">
     import { computeBill, BILL_ERRORS } from './js/calculator.js';
 
-    // Set current month in the initial reading heading
+    // Set up the "View month" selector for Initial Reading once the rest of
+    // this script's DOMContentLoaded-independent setup below has run (it
+    // needs initialReadings/monthlyInitialReadings, defined further down).
     document.addEventListener('DOMContentLoaded', () => {
-      const monthHeading = document.getElementById('initialReadingHeading');
-      const currentMonth = new Date().toLocaleString('en-US', { month: 'long' });
-      monthHeading.textContent = `🔑 ${currentMonth} month Initial Reading`;
+      populateInitialReadingMonthSelect();
+      renderInitialReadingForMonth(currentMonthKey());
     });
 
     // Instructions language toggle (English/Malayalam), remembered across visits.
@@ -878,6 +966,118 @@
 
     let initialReadings = JSON.parse(localStorage.getItem("initialReadings")) || null;
     let entries = JSON.parse(localStorage.getItem("entries")) || [];
+
+    // --- Monthly archives -----------------------------------------------
+    // The live `initialReadings`/`entries` above stay a single continuous
+    // timeline (unchanged) -- everything else in this file (Total Days,
+    // Daily Usage Tracker, Estimated Bill) still reads from them exactly as
+    // before. These two archives are purely additive, keyed by "YYYY-MM":
+    //  - monthlyInitialReadings: a snapshot of the Initial Reading saved for
+    //    each month, so a past month's Initial Reading can be browsed via
+    //    the "View month" selector even after a newer one has been saved.
+    //  - monthlyCurrentReadings: the latest "Current Solar Readings" entry
+    //    logged in each month, so next month's Initial Reading form can be
+    //    prefilled with last month's final reading (the note above the form
+    //    already tells the user that's what they should enter).
+    let monthlyInitialReadings = JSON.parse(localStorage.getItem("monthlyInitialReadings")) || {};
+    let monthlyCurrentReadings = JSON.parse(localStorage.getItem("monthlyCurrentReadings")) || {};
+
+    function monthKeyOf(dateStr) {
+      return (dateStr || new Date().toISOString().slice(0, 10)).slice(0, 7);
+    }
+
+    function currentMonthKey() {
+      return monthKeyOf(new Date().toISOString().slice(0, 10));
+    }
+
+    function monthLabelFor(monthKey) {
+      return new Date(`${monthKey}-01T00:00:00`).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
+
+    function previousMonthKey(monthKey) {
+      const d = new Date(`${monthKey}-01T00:00:00`);
+      d.setMonth(d.getMonth() - 1);
+      return d.toISOString().slice(0, 7);
+    }
+
+    function saveMonthlyArchives() {
+      localStorage.setItem("monthlyInitialReadings", JSON.stringify(monthlyInitialReadings));
+      localStorage.setItem("monthlyCurrentReadings", JSON.stringify(monthlyCurrentReadings));
+    }
+
+    // Populates the "View month" dropdown with every month that has an
+    // archived Initial Reading, plus the current month (even if empty),
+    // newest first.
+    function populateInitialReadingMonthSelect() {
+      const select = document.getElementById('initialReadingMonthSelect');
+      const previousValue = select.value;
+      const keys = new Set(Object.keys(monthlyInitialReadings));
+      keys.add(currentMonthKey());
+      const sortedKeys = Array.from(keys).sort((a, b) => b.localeCompare(a));
+      select.innerHTML = sortedKeys.map((key) => `<option value="${key}">${monthLabelFor(key)}</option>`).join('');
+      select.value = sortedKeys.includes(previousValue) ? previousValue : currentMonthKey();
+    }
+
+    // Renders the Initial Reading section for whichever month is selected.
+    // The current month keeps the existing live/editable behavior (backed
+    // by `initialReadings`); any other month is a read-only look at its
+    // archived snapshot, or a "no data" message if nothing was ever saved
+    // for it.
+    function renderInitialReadingForMonth(monthKey) {
+      const monthLabel = monthLabelFor(monthKey);
+      document.getElementById('initialReadingHeading').textContent = `🔑 ${monthLabel} Initial Reading`;
+
+      if (monthKey === currentMonthKey()) {
+        displayInitialValues();
+        return;
+      }
+
+      const el = document.getElementById("initialValuesDisplay");
+      const noteEl = document.getElementById("initialReadingNote");
+      const formEl = document.getElementById("initialForm");
+      const saveBtn = document.getElementById("saveInitialBtn");
+      noteEl.style.display = 'none';
+      formEl.style.display = 'none';
+      saveBtn.classList.add('disabled');
+      saveBtn.setAttribute('disabled', 'disabled');
+
+      const archived = monthlyInitialReadings[monthKey];
+      if (!archived) {
+        el.innerHTML = `<em>No data available for ${monthLabel}.</em>`;
+        return;
+      }
+
+      el.innerHTML = `
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Solar</th>
+                <th>T1</th>
+                <th>T2</th>
+                <th>T3</th>
+                <th>Export</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>${archived.date ? new Date(archived.date + 'T00:00:00').toLocaleDateString() : '—'}</td>
+                <td>${archived.solar}</td>
+                <td>${archived.t1}</td>
+                <td>${archived.t2}</td>
+                <td>${archived.t3}</td>
+                <td>${archived.export}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    document.getElementById('initialReadingMonthSelect').addEventListener('change', (e) => {
+      renderInitialReadingForMonth(e.target.value);
+    });
 
     // --- Billing Profile: phase/meterOwner/connectedLoad/bank, used only to
     // estimate the bill from tracked readings -- separate from the reading
@@ -1125,6 +1325,75 @@
       });
     }
 
+    // A single-series line is the right form for "usage over time" -- shows
+    // each entry's own (incremental, not cumulative-meter) Total Usage, i.e.
+    // the same "solar - export + T1 + T2 + T3" figure used throughout this
+    // page, so the trend reads consistently with the tables above it.
+    function computeEntryUsageSeries() {
+      let prev = initialReadings || { solar: 0, t1: 0, t2: 0, t3: 0, export: 0 };
+      return entries.map((entry) => {
+        const directSolarUsage = (entry.solar - prev.solar) - (entry.export - prev.export);
+        const total = directSolarUsage + (entry.t1 - prev.t1) + (entry.t2 - prev.t2) + (entry.t3 - prev.t3);
+        const label = entry.date;
+        prev = entry;
+        return { label, total };
+      });
+    }
+
+    function renderEntriesLineChart() {
+      const container = document.getElementById('entriesLineChart');
+      if (!container) return;
+
+      const series = computeEntryUsageSeries();
+      if (series.length < 2) {
+        container.innerHTML = '';
+        return;
+      }
+
+      const width = 600;
+      const height = 180;
+      const padTop = 14;
+      const padBottom = 26;
+      const padSide = 8;
+      const maxTotal = Math.max(...series.map((s) => s.total), 0);
+      const minTotal = Math.min(...series.map((s) => s.total), 0);
+      const range = (maxTotal - minTotal) || 1;
+      const plotW = width - padSide * 2;
+      const plotH = height - padTop - padBottom;
+
+      const points = series.map((s, i) => {
+        const x = series.length === 1 ? padSide : padSide + (i / (series.length - 1)) * plotW;
+        const y = padTop + plotH - ((s.total - minTotal) / range) * plotH;
+        return { x, y, s };
+      });
+
+      const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+
+      // Only label a handful of points along the x-axis so labels don't
+      // collide -- always the first/last, spaced roughly evenly between.
+      const maxLabels = 8;
+      const labelStep = Math.max(1, Math.ceil(series.length / maxLabels));
+
+      const circles = points.map((p) => `
+        <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="var(--primary)">
+          <title>${p.s.label}: ${Math.round(p.s.total)} kWh</title>
+        </circle>`).join('');
+
+      const xLabels = points.map((p, i) => {
+        if (i % labelStep !== 0 && i !== points.length - 1) return '';
+        return `<text x="${p.x.toFixed(1)}" y="${height - 8}" font-size="9.5" fill="var(--text-muted)" text-anchor="middle">#${i + 1}</text>`;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="chart-title" style="font-size: 13px; font-weight: 700; color: var(--text-secondary); margin: 14px 0 8px;">📈 Usage Trend (per entry)</div>
+        <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" style="width: 100%; height: 180px; display: block;">
+          <line x1="${padSide}" y1="${padTop + plotH}" x2="${width - padSide}" y2="${padTop + plotH}" stroke="var(--border)" stroke-width="1"></line>
+          <path d="${linePath}" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+          ${circles}
+          ${xLabels}
+        </svg>`;
+    }
+
     function renderEntries() {
       const tbody = document.getElementById("entriesBody");
       const insightsEl = document.getElementById("usageInsights");
@@ -1165,6 +1434,7 @@
       });
 
       renderDailyUsageTracker();
+      renderEntriesLineChart();
 
       if (entries.length > 0 && initialReadings) {
         const lastEntry = entries[entries.length - 1];
@@ -1438,9 +1708,13 @@
 
     function deleteInitial() {
       if (!confirm('Delete the initial reading? You will need to enter and save it again to continue tracking.')) return;
+      const deletedMonthKey = initialReadingDateKey() ? monthKeyOf(initialReadingDateKey()) : currentMonthKey();
       initialReadings = null;
       localStorage.removeItem("initialReadings");
-      displayInitialValues();
+      delete monthlyInitialReadings[deletedMonthKey];
+      saveMonthlyArchives();
+      populateInitialReadingMonthSelect();
+      renderInitialReadingForMonth(currentMonthKey());
       renderEntries();
       document.getElementById("init_date").value = new Date().toISOString().slice(0, 10);
     }
@@ -1448,6 +1722,20 @@
     // Default the Initial Reading date to today so a fresh visit is
     // one less thing to fill in.
     document.getElementById("init_date").value = new Date().toISOString().slice(0, 10);
+
+    // If no Initial Reading has been saved yet this month, prefill the form
+    // with last month's final "Current Solar Readings" entry -- per the
+    // note above the form, that IS this month's Initial Reading.
+    if (!initialReadings) {
+      const prevReading = monthlyCurrentReadings[previousMonthKey(currentMonthKey())];
+      if (prevReading) {
+        document.getElementById("init_solar").value = prevReading.solar;
+        document.getElementById("init_t1").value = prevReading.t1;
+        document.getElementById("init_t2").value = prevReading.t2;
+        document.getElementById("init_t3").value = prevReading.t3;
+        document.getElementById("init_export").value = prevReading.export;
+      }
+    }
 
     document.getElementById("initialForm").addEventListener("submit", e => {
       e.preventDefault();
@@ -1471,7 +1759,10 @@
           timestamp: Date.now()
         };
         updateStorage();
-        displayInitialValues();
+        monthlyInitialReadings[monthKeyOf(dateVal)] = { ...initialReadings };
+        saveMonthlyArchives();
+        populateInitialReadingMonthSelect();
+        renderInitialReadingForMonth(currentMonthKey());
         renderEntries();
         e.target.reset();
         document.getElementById("init_date").value = new Date().toISOString().slice(0, 10);
@@ -1491,6 +1782,10 @@
       };
       entries.push(entry);
       updateStorage();
+      // Keep this month's "latest current reading" archived so it can
+      // prefill next month's Initial Reading form.
+      monthlyCurrentReadings[monthKeyOf(new Date(entry.timestamp).toISOString().slice(0, 10))] = { ...entry };
+      saveMonthlyArchives();
       renderEntries();
       e.target.reset();
     });
@@ -1522,7 +1817,7 @@
 
     // Backup Readings
     function backupReadings() {
-      const data = { initialReadings, entries, billingProfile };
+      const data = { initialReadings, entries, billingProfile, monthlyInitialReadings, monthlyCurrentReadings };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1557,7 +1852,11 @@
             localStorage.setItem('billingProfile', JSON.stringify(billingProfile));
             loadBillingProfileIntoForm();
           }
-          displayInitialValues();
+          if (data.monthlyInitialReadings) monthlyInitialReadings = data.monthlyInitialReadings;
+          if (data.monthlyCurrentReadings) monthlyCurrentReadings = data.monthlyCurrentReadings;
+          saveMonthlyArchives();
+          populateInitialReadingMonthSelect();
+          renderInitialReadingForMonth(currentMonthKey());
           renderEntries();
           alert('Readings restored successfully!');
         } catch (err) {
