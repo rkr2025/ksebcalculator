@@ -69,10 +69,16 @@ export function initReadingGroups() {
         ['importNormal', 'importOffPeak', 'importPeak']);
     const resetExport = setupReadingGroup('exportReadingModeToggle', 'exportDirectFields', 'exportReadingFields',
         ['exportNormal', 'exportOffPeak', 'exportPeak']);
+    const resetSolarGen = setupReadingGroup('solarGenReadingModeToggle', 'solarGenDirectFields', 'solarGenReadingFields',
+        ['solarGeneration']);
+    const resetNetMeter = setupReadingGroup('netMeterReadingModeToggle', 'netMeterDirectFields', 'netMeterReadingFields',
+        ['import', 'export']);
 
     return function resetAllReadingGroups() {
         resetSolar();
         resetImport();
         resetExport();
+        resetSolarGen();
+        resetNetMeter();
     };
 }

@@ -351,10 +351,30 @@
 
                 <!-- Normal Billing Solar Reading Inputs -->
                 <div id="normalBillingSection" style="display: none;">
-                    <div class="field-grid">
+                    <div class="reading-mode-toggle">
+                        <label class="switch">
+                            <input type="checkbox" id="solarGenReadingModeToggle">
+                            <span class="switch-slider"></span>
+                        </label>
+                        <span>Calculate from Initial &amp; Final meter readings</span>
+                    </div>
+
+                    <div class="field-grid" id="solarGenDirectFields">
                         <div class="field">
                             <label for="solarGeneration">Solar Generation (kWh)</label>
                             <input type="number" id="solarGeneration" name="solarGeneration" value="0" required>
+                        </div>
+                    </div>
+
+                    <div class="field-grid" id="solarGenReadingFields" style="display: none;">
+                        <div class="field">
+                            <label>Solar Generation (kWh)</label>
+                            <div class="reading-pair">
+                                <input type="number" id="solarGeneration_initial" placeholder="Initial" min="0">
+                                <input type="number" id="solarGeneration_final" placeholder="Final" min="0">
+                            </div>
+                            <div class="reading-computed" id="solarGeneration_computed">= 0.00 kWh</div>
+                            <div class="reading-warn" id="solarGeneration_warn">Final should be ≥ Initial</div>
                         </div>
                     </div>
                 </div>
@@ -425,7 +445,15 @@
 
                 <!-- Normal Billing KSEB Net Reading Inputs -->
                 <div id="normalNetMeterReadingSection" style="display: none;">
-                    <div class="field-grid field-grid--2">
+                    <div class="reading-mode-toggle">
+                        <label class="switch">
+                            <input type="checkbox" id="netMeterReadingModeToggle">
+                            <span class="switch-slider"></span>
+                        </label>
+                        <span>Calculate from Initial &amp; Final meter readings</span>
+                    </div>
+
+                    <div class="field-grid field-grid--2" id="netMeterDirectFields">
                         <div class="field field--import">
                             <label for="import">Import Total (kWh)</label>
                             <input type="number" id="import" name="import" value="0" required>
@@ -433,6 +461,27 @@
                         <div class="field field--export">
                             <label for="export">Export Total (kWh)</label>
                             <input type="number" id="export" name="export" value="0" required>
+                        </div>
+                    </div>
+
+                    <div class="field-grid field-grid--2" id="netMeterReadingFields" style="display: none;">
+                        <div class="field field--import">
+                            <label>Import Total (kWh)</label>
+                            <div class="reading-pair">
+                                <input type="number" id="import_initial" placeholder="Initial" min="0">
+                                <input type="number" id="import_final" placeholder="Final" min="0">
+                            </div>
+                            <div class="reading-computed" id="import_computed">= 0.00 kWh</div>
+                            <div class="reading-warn" id="import_warn">Final should be ≥ Initial</div>
+                        </div>
+                        <div class="field field--export">
+                            <label>Export Total (kWh)</label>
+                            <div class="reading-pair">
+                                <input type="number" id="export_initial" placeholder="Initial" min="0">
+                                <input type="number" id="export_final" placeholder="Final" min="0">
+                            </div>
+                            <div class="reading-computed" id="export_computed">= 0.00 kWh</div>
+                            <div class="reading-warn" id="export_warn">Final should be ≥ Initial</div>
                         </div>
                     </div>
                 </div>
