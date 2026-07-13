@@ -12,7 +12,6 @@ import {
     getExportOffPeakAdjustmentMessage,
     getExportOffPeakAdjustmentMessageBelow20kW,
     getEnergyCaluculationMessage,
-    renderTelescopicBreakdown,
 } from './render-tables.js';
 import { renderBillBreakdownChart, renderTodComparisonChart } from './render-chart.js';
 import { renderBillAnalysis } from './render-insights.js';
@@ -23,7 +22,7 @@ import { renderWheelingResult } from './render-wheeling.js';
 // results' ENDING_NOTE_HTML below and in a persistent page-footer (rendered
 // by main.js at load time, independent of whether a bill has been
 // calculated yet).
-export const APP_VERSION_LABEL = 'Version 3.0.89: Last updated: 10-July-2026';
+export const APP_VERSION_LABEL = 'Version 3.0.90: Last updated: 13-July-2026';
 
 const ENDING_NOTE_HTML = `
     <div style="background: var(--surface-muted); padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); margin: 20px auto; max-width: 90%; font-family: 'Georgia', serif; border-left: 4px solid #2ecc71;">
@@ -210,65 +209,7 @@ function buildNormalBillingResult(bill) {
         energyCharge, totalBillAmount, accountBalance,
     } = bill;
 
-    const result = `
-            <hr>
-            <h5><u>Energy Usage and Charges</u></h5>
-            <div style="overflow-x: auto; margin: 16px 0;">
-                <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px;">
-                    <thead>
-                        <tr style="background-color: var(--surface-muted);">
-                            <th style="border: 1px solid var(--border); padding: 6px; text-align: left; width: 60%;">Description</th>
-                            <th style="border: 1px solid var(--border); padding: 6px; text-align: right; width: 40%;">Details</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td style="border: 1px solid var(--border); padding: 6px;">Total Solar Generation</td>
-                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="green-text">${solarGeneration} Unit</strong></td>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid var(--border); padding: 6px;">  Total Import</td>
-                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${importReading} Unit</td>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid var(--border); padding: 6px;">  Total Export</td>
-                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${exportReading} Unit</td>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid var(--border); padding: 6px;">Banked Units</td>
-                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${myBankDepositAtKseb} Unit</td>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid var(--border); padding: 6px;">Direct energy usage from Solar<br>(SolarGeneration(${solarGeneration}) - Export(${exportReading}))</td>
-                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="red-text">${generationUsage} Unit</strong></td>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid var(--border); padding: 6px;">Energy Usage from KSEB</td>
-                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="red-text">${importReading} Unit</strong></td>
-                        </tr>
-                        <tr style="background-color: var(--surface-muted);">
-                            <td style="border: 1px solid var(--border); padding: 6px;">Total Consumption<br>(${generationUsage} + ${importReading})</td>
-                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="red-text">${unitsConsumed} Unit</strong></td>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid var(--border); padding: 6px;">Fixed Charge for ${unitsConsumed} Unit (${phase})<br>(w.e.f 1/4/2025)</td>
-                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="red-text">₹${fixedCharge}</strong></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <style>
-                @media (max-width: 600px) {
-                    table {
-                        font-size: 12px;
-                    }
-                    th, td {
-                        padding: 4px;
-                    }
-                }
-            </style>
-            <hr>
-        `;
+    const result = '';
 
     const result1 = importReading > exportPlusBank
         ? `<p>Energy Consumption for the month is <strong class="red-text">${Math.abs(importReading - exportPlusBank).toFixed(2)} Unit </strong>(${importReading}-${exportPlusBank}) - (Energy charge is calculated based on this consumption)</p>`
@@ -279,85 +220,8 @@ function buildNormalBillingResult(bill) {
     let result4;
 
     if (importReading > exportPlusBank) {
-        result2 = `
-                <hr>
-                <h5><u>Energy Usage Summary</u></h5>
-                <div style="overflow-x: auto; margin: 20px 0;">
-                    <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px;">
-                        <thead>
-                            <tr style="background-color: var(--surface-muted);">
-                                <th style="border: 1px solid var(--border); padding: 6px; text-align: left; width: 60%;">Description</th>
-                                <th style="border: 1px solid var(--border); padding: 6px; text-align: right; width: 40%;">Details</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td style="border: 1px solid var(--border); padding: 6px;">  Total Import</td>
-                                <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${importReading || 0} Unit</td>
-                            </tr>
-                            <tr>
-                                <td style="border: 1px solid var(--border); padding: 6px;">  Total Export</td>
-                                <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${exportReading || 0} Unit</td>
-                            </tr>
-                            <tr>
-                                <td style="border: 1px solid var(--border); padding: 6px;">Banking Units</td>
-                                <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${myBankDepositAtKseb || 0} Unit</td>
-                            </tr>
-                            <tr>
-                                <td style="border: 1px solid var(--border); padding: 6px;">Difference to be Charged<br>(${importReading || 0} - ${exportPlusBank || 0})</td>
-                                <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="red-text">${bankAdjustedUnits || 0} Unit</strong></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <style>
-                    @media (max-width: 600px) {
-                        table { font-size: 12px; }
-                        th, td { padding: 4px; }
-                    }
-                </style>
-                <hr>
-            `;
-
-        if (billType === 'Telescopic' || billType === 'Telescopic-ToD') {
-            const breakdown = renderTelescopicBreakdown(breakdownRows, energyCharge, unitRate, bankAdjustedUnits, {
-                highlightTotal: billType === 'Telescopic-ToD',
-            });
-            result3 = `
-                    <p>Your Billing Type: ${billType || 'Unknown'}</p>
-                    <hr>
-                    <h5><u>Energy Charge Calculation</u></h5>
-                    <p>For ${bankAdjustedUnits || 0} Unit:</p>
-                    ${breakdown || 'No breakdown available'}
-                `;
-        } else {
-            result3 = `
-                    <p>Your Billing Type: ${billType || 'Unknown'}</p>
-                    <p>As per the existing tariff Unit rate:  ₹${(unitRate || 0).toFixed(2)}.</p>
-                    <div style="overflow-x: auto; margin: 20px 0;">
-                        <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px;">
-                            <thead>
-                                <tr style="background-color: var(--surface-muted);">
-                                    <th style="border: 1px solid var(--border); padding: 6px; text-align: left; width: 60%;">Description</th>
-                                    <th style="border: 1px solid var(--border); padding: 6px; text-align: right; width: 40%;">Details</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td style="border: 1px solid var(--border); padding: 6px;">Total Energy Charge<br>(${bankAdjustedUnits || 0} x ₹${(unitRate || 0).toFixed(2)})</td>
-                                    <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong>₹${(energyCharge || 0).toFixed(2)}</strong></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <style>
-                        @media (max-width: 600px) {
-                            table { font-size: 12px; }
-                            th, td { padding: 4px; }
-                        }
-                    </style>
-                `;
-        }
+        result2 = '';
+        result3 = '';
 
         result4 = `
                 <h5><u>Total Bill Amount</u></h5>
@@ -365,11 +229,7 @@ function buildNormalBillingResult(bill) {
                 <p style="font-size: 0.9em; font-style: italic;">(GST, Security Deposit interest, Tariff changes, Advance calculation എന്നിവയിൽ മാറ്റങ്ങൾ വരാം)</p>
             `;
     } else {
-        if (importReading === exportPlusBank) {
-            result2 = buildEqualOrSurplusSummary(bill, 'Import = Export, No Energy Charge');
-        } else {
-            result2 = buildEqualOrSurplusSummary(bill, 'Export > Import, No Energy Charge');
-        }
+        result2 = '';
 
         result3 = `
                 <h5><u>Total Bill Amount</u></h5>
@@ -391,49 +251,6 @@ function buildNormalBillingResult(bill) {
     return { result, result1, result2, result3, result4 };
 }
 
-function buildEqualOrSurplusSummary(bill, statusText) {
-    const { importReading, exportReading, myBankDepositAtKseb } = bill;
-    return `
-                    <hr>
-                    <h5><u>Energy Usage Summary</u></h5>
-                    <div style="overflow-x: auto; margin: 20px 0;">
-                        <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px;">
-                            <thead>
-                                <tr style="background-color: var(--surface-muted);">
-                                    <th style="border: 1px solid var(--border); padding: 6px; text-align: left; width: 60%;">Description</th>
-                                    <th style="border: 1px solid var(--border); padding: 6px; text-align: right; width: 40%;">Details</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td style="border: 1px solid var(--border); padding: 6px;">  Total Import</td>
-                                    <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${importReading || 0} Unit</td>
-                                </tr>
-                                <tr>
-                                    <td style="border: 1px solid var(--border); padding: 6px;">  Total Export</td>
-                                    <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${exportReading || 0} Unit</td>
-                                </tr>
-                                <tr>
-                                    <td style="border: 1px solid var(--border); padding: 6px;">Banked Unit</td>
-                                    <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${myBankDepositAtKseb || 0} Unit</td>
-                                </tr>
-                                <tr>
-                                    <td style="border: 1px solid var(--border); padding: 6px;">Adjustment Status</td>
-                                    <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="green-text">${statusText}</strong>😌</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <style>
-                        @media (max-width: 600px) {
-                            table { font-size: 12px; }
-                            th, td { padding: 4px; }
-                        }
-                    </style>
-                    <hr>
-                `;
-}
-
 // The real T1/T2/T3 ToD split path: connected load above 20kW (any billed
 // units), or below 20kW with billed units > 250.
 function buildTodSplitResult(bill) {
@@ -444,61 +261,7 @@ function buildTodSplitResult(bill) {
         todBillingAbove20kW,
     } = bill;
 
-    const result = `
-            <hr>
-            <h5><u>Energy Usage Details</u></h5>
-            <div style="overflow-x: auto; margin: 20px 0;">
-                <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px;">
-                    <thead>
-                        <tr style="background-color: var(--surface-muted);">
-                            <th style="border: 1px solid var(--border); padding: 6px; text-align: left; width: 60%;">Description</th>
-                            <th style="border: 1px solid var(--border); padding: 6px; text-align: right; width: 40%;">Details</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td style="border: 1px solid var(--border); padding: 6px;">Total Solar Generation</td>
-                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="green-text">${solarGeneration} Unit</strong></td>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid var(--border); padding: 6px;">  Total Import<br>(T1 (${importNormal.toFixed(2)}) + T2 (${importPeak.toFixed(2)}) + T3 (${importOffPeak.toFixed(2)}))</td>
-                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${importReading} Unit</td>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid var(--border); padding: 6px;">  Total Export<br>(T1 (${exportNormal.toFixed(2)}) + T2 (${exportPeak}) + T3 (${exportOffPeak}))</td>
-                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${exportReading} Unit</td>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid var(--border); padding: 6px;">Banked Units</td>
-                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${myBankDepositAtKseb} Unit</td>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid var(--border); padding: 6px;">Direct energy Usage from solar<br>(SolarGeneration(${solarGeneration}) - Export(${exportReading}))</td>
-                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="red-text">${generationUsage} Unit</strong></td>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid var(--border); padding: 6px;">KSEB യിൽ നിന്നും ഉപയോഗിച്ചത് (From KSEB)</td>
-                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="red-text">${importReading} Unit</strong></td>
-                        </tr>
-                        <tr style="background-color: var(--surface-muted);">
-                            <td style="border: 1px solid var(--border); padding: 6px;">ആകെ വൈദ്യുതി ഉപയോഗം (Total Consumption)<br>(${generationUsage} + ${importReading})</td>
-                            <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong class="red-text">${unitsConsumed} Unit</strong></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <style>
-                @media (max-width: 600px) {
-                    table {
-                        font-size: 12px;
-                    }
-                    th, td {
-                        padding: 4px;
-                    }
-                }
-            </style>
-            <hr>
-        `;
+    const result = '';
 
     const result1 = `Fixed charge for ${unitsConsumed} Unit (${phase}) =   <strong class="red-text">₹${fixedCharge}</strong> (w.e.f 1/4/2025)`;
 
