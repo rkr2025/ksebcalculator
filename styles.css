@@ -106,7 +106,7 @@ body {
 
 #clockTime {
   font-family: "Share Tech Mono", "Courier New", monospace;
-  font-size: clamp(11px, 2.4vw, 14px);
+  font-size: clamp(15px, 3.6vw, 20px);
   font-weight: 600;
   letter-spacing: 0.5px;
   color: var(--primary);
@@ -119,7 +119,7 @@ body {
 
 #clockDate {
   font-family: "Share Tech Mono", "Courier New", monospace;
-  font-size: clamp(9px, 1.9vw, 11px);
+  font-size: clamp(11px, 2.4vw, 14px);
   letter-spacing: 0.3px;
   text-transform: uppercase;
   color: var(--text-secondary);
