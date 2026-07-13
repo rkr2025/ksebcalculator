@@ -460,6 +460,47 @@ h1 {
   margin-bottom: 14px;
 }
 
+/* Wheeling card is expandable (collapsed by default), same interaction --
+   and same compact collapsed size -- as the FAQ card: its header doubles
+   as the <summary> toggle, and the card's own padding/margin match
+   .faq-card's rather than the larger default .card sizing. */
+#wheelingCard {
+  padding: 0 16px;
+  margin: 0 0 18px;
+}
+
+#wheelingCard > summary.card-header {
+  cursor: pointer;
+  list-style: none;
+  margin-bottom: 0;
+  padding: 8px 0;
+}
+
+/* Once expanded, restore the normal card breathing room around the
+   revealed content (subtitle, fields, wheeling sites). */
+#wheelingCard[open] {
+  padding-bottom: 20px;
+}
+
+#wheelingCard[open] > summary.card-header {
+  margin-bottom: 14px;
+}
+
+#wheelingCard > summary.card-header::-webkit-details-marker {
+  display: none;
+}
+
+#wheelingCard > summary.card-header::after {
+  content: '▸';
+  margin-left: auto;
+  color: var(--card-accent, var(--primary));
+  transition: transform 0.15s ease;
+}
+
+#wheelingCard[open] > summary.card-header::after {
+  transform: rotate(90deg);
+}
+
 .card-icon {
   display: inline-flex;
   align-items: center;
