@@ -1419,7 +1419,7 @@
         total.t3 += delta ? delta.t3 : entry.t3;
         total.export += delta ? delta.export : entry.export;
 
-        tbody.innerHTML += `<tr>
+        tbody.innerHTML += `<tr data-entry-index="${i}">
           <td>${entry.date}</td>
           <td>${entry.solar}</td>
           <td>${entry.t1}</td>
@@ -1427,7 +1427,7 @@
           <td>${entry.t3}</td>
           <td>${entry.export}</td>
           <td>
-            <button class="edit-btn" onclick="editEntry(${i})">✏️</button>
+            <button class="edit-btn" onclick="startEditingEntry(${i})">✏️</button>
             <button class="delete-btn" onclick="deleteEntry(${i})">🗑️</button>
           </td>
         </tr>`;
@@ -1791,21 +1791,59 @@
     });
 
     function deleteEntry(i) {
+      if (!confirm('Delete this entry?')) return;
       entries.splice(i, 1);
       updateStorage();
       renderEntries();
     }
 
-    function editEntry(i) {
+    // Turns one Entries Log row into inline editable fields (Date, Solar,
+    // T1, T2, T3, Export) with Save/Cancel, instead of the old behavior of
+    // deleting the entry and re-filling the Add form above.
+    function startEditingEntry(i) {
       const entry = entries[i];
-      document.getElementById("solar").value = entry.solar;
-      document.getElementById("t1").value = entry.t1;
-      document.getElementById("t2").value = entry.t2;
-      document.getElementById("t3").value = entry.t3;
-      document.getElementById("export").value = entry.export;
-      entries.splice(i, 1);
-      updateStorage();
-      renderEntries();
+      const tr = document.querySelector(`#entriesBody tr[data-entry-index="${i}"]`);
+      if (!entry || !tr) return;
+
+      tr.innerHTML = `
+        <td><input type="text" class="edit-date" style="width: 100%; min-width: 90px;"></td>
+        <td><input type="number" class="edit-solar" style="width: 100%; min-width: 60px;" value="${entry.solar}"></td>
+        <td><input type="number" class="edit-t1" style="width: 100%; min-width: 60px;" value="${entry.t1}"></td>
+        <td><input type="number" class="edit-t2" style="width: 100%; min-width: 60px;" value="${entry.t2}"></td>
+        <td><input type="number" class="edit-t3" style="width: 100%; min-width: 60px;" value="${entry.t3}"></td>
+        <td><input type="number" class="edit-export" style="width: 100%; min-width: 60px;" value="${entry.export}"></td>
+        <td>
+          <button class="edit-btn edit-save-btn" title="Save">💾</button>
+          <button class="delete-btn edit-cancel-btn" title="Cancel">✕</button>
+        </td>`;
+
+      // Date is free-form text (matches entry.date's stored format) --
+      // assign via .value, not interpolated into the template above.
+      tr.querySelector('.edit-date').value = entry.date;
+
+      tr.querySelector('.edit-save-btn').addEventListener('click', () => {
+        const newSolar = parseFloat(tr.querySelector('.edit-solar').value);
+        const newT1 = parseFloat(tr.querySelector('.edit-t1').value);
+        const newT2 = parseFloat(tr.querySelector('.edit-t2').value);
+        const newT3 = parseFloat(tr.querySelector('.edit-t3').value);
+        const newExport = parseFloat(tr.querySelector('.edit-export').value);
+        if ([newSolar, newT1, newT2, newT3, newExport].some((v) => isNaN(v))) {
+          alert('Please enter valid numbers for all fields.');
+          return;
+        }
+        entry.date = tr.querySelector('.edit-date').value.trim() || entry.date;
+        entry.solar = newSolar;
+        entry.t1 = newT1;
+        entry.t2 = newT2;
+        entry.t3 = newT3;
+        entry.export = newExport;
+        updateStorage();
+        renderEntries();
+      });
+
+      tr.querySelector('.edit-cancel-btn').addEventListener('click', () => {
+        renderEntries();
+      });
     }
 
     // Show the chosen file's name on the styled label instead of the
@@ -1880,7 +1918,7 @@
     window.generatePrintableReport = generatePrintableReport;
     window.deleteInitial = deleteInitial;
     window.deleteEntry = deleteEntry;
-    window.editEntry = editEntry;
+    window.startEditingEntry = startEditingEntry;
 
     loadBillingProfileIntoForm();
     displayInitialValues();
