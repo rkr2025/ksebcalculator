@@ -861,7 +861,7 @@
         <button type="submit">➕ Add</button>
       </form>
     </div>
-    <div class="section-box print-show-section">
+    <div class="section-box print-show-section" id="entriesLogSection">
       <h3 style="margin-top: 0;">📋 Entries Log</h3>
       <div class="table-container">
         <table>
@@ -881,9 +881,9 @@
       </div>
       <div id="entriesLineChart" class="print-hide-section"></div>
     </div>
-    <div class="section-box print-hide-section">
+    <div class="section-box print-hide-section" id="usageStatsSection">
       <div class="usage-grid">
-        <div class="usage-stat">
+        <div class="usage-stat" id="totalDaysStat">
           <div class="usage-stat-label">📆 Days Tracked</div>
           <div class="usage-stat-value" id="totalDaysValue">—</div>
           <div class="usage-stat-sub" id="totalDaysSub">for Daily Energy usage</div>
@@ -901,7 +901,7 @@
       </div>
       <div id="usageInsights"></div>
     </div>
-    <div class="section-box print-show-section">
+    <div class="section-box print-show-section" id="dailyUsageTrackerSection">
       <h3 style="margin-top: 0;">📅 Daily Usage Tracker</h3>
       <p class="note">ഇവിടെ daily usage, ഇന്നത്തെ electricity ചാർജും ഒരു മാസത്തെ estimated electricity ചാർജും ലഭിക്കുന്നതാണ്.</p>
       <div class="table-container">
@@ -928,16 +928,16 @@
     <div class="center">
       <button type="button" id="viewFullBreakdownBtn" style="display: none;">📊 Bill Breakdown- Using Solar Calculator</button>
     </div>
-    <div class="actions-card">
+    <div class="actions-card" id="backupCard">
       <h3>💾 Backup, Restore &amp; Print</h3>
       <div id="backupSection">
-        <button class="action-btn action-btn--primary" onclick="backupReadings()" title="Save all your readings to a JSON file">💾 Backup</button>
+        <button class="action-btn action-btn--primary" id="backupBtn" onclick="backupReadings()" title="Save all your readings to a JSON file">💾 Backup</button>
         <label class="file-input-label" for="restoreFile" title="Load readings back from a backup file">
           📂 <span id="restoreFileName">Choose file…</span>
         </label>
         <input type="file" id="restoreFile" accept=".json" class="visually-hidden-file">
         <button class="action-btn action-btn--accent" onclick="restoreReadings()">↩️ Restore</button>
-        <button class="action-btn action-btn--outline" onclick="generatePrintableReport()" title="Generate a printable report of your entries">🖨️ Print</button>
+        <button class="action-btn action-btn--outline" id="printBtn" onclick="generatePrintableReport()" title="Generate a printable report of your entries">🖨️ Print</button>
       </div>
     </div>
     <a href="index.html" class="nav-link">← Back to Calculator</a>
@@ -1418,8 +1418,22 @@
       const insightsEl = document.getElementById("usageInsights");
       tbody.innerHTML = "";
       insightsEl.innerHTML = "";
+      // No point showing an empty Entries Log box if there's nothing logged
+      // yet. Backup/Print act on logged entries too, so hide just those two
+      // buttons in that case -- but Restore has to stay available even with
+      // zero entries, since restoring a backup is exactly how you'd recover
+      // from that state.
+      document.getElementById('entriesLogSection').style.display = entries.length > 0 ? '' : 'none';
+      document.getElementById('backupBtn').style.display = entries.length > 0 ? '' : 'none';
+      document.getElementById('printBtn').style.display = entries.length > 0 ? '' : 'none';
       document.getElementById('dailyUsageStat').style.display = 'none';
       document.getElementById('projectedMonthlyBillStat').style.display = 'none';
+      // Days Tracked / Daily Energy Usage / Projected Monthly Bill and the
+      // whole Daily Usage Tracker table only make sense once this month's
+      // Initial Reading has been saved -- hide the entire boxes rather than
+      // showing empty/placeholder content.
+      document.getElementById('usageStatsSection').style.display = initialReadings ? '' : 'none';
+      document.getElementById('dailyUsageTrackerSection').style.display = initialReadings ? '' : 'none';
       updateTotalDaysDisplay();
 
       let total = { solar: 0, t1: 0, t2: 0, t3: 0, export: 0 };
