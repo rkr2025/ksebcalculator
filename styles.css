@@ -1340,6 +1340,59 @@ td {
   opacity: 0.85;
 }
 
+/* CSS-only lightbox for the tariff chart image (see FAQ answers) --
+   :target shows it when the URL fragment matches this element's id. */
+.tariff-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(10, 14, 26, 0.8);
+}
+
+.tariff-overlay:target {
+  display: flex;
+}
+
+.tariff-overlay-content {
+  position: relative;
+  max-width: 100%;
+  max-height: 90vh;
+}
+
+.tariff-overlay img {
+  display: block;
+  max-width: 100%;
+  max-height: 90vh;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lift);
+}
+
+.tariff-overlay-close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--import);
+  color: #fff;
+  font-size: 16px;
+  text-decoration: none;
+  line-height: 1;
+  box-shadow: var(--shadow-sm);
+}
+
+.tariff-overlay-close:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
 @media print {
   .digital-clock-colon {
     animation: none;
@@ -1351,7 +1404,8 @@ td {
   #billCalculator,
   .print-actions-row,
   .faq-card,
-  .view-counter {
+  .view-counter,
+  .tariff-overlay {
     display: none !important;
   }
 

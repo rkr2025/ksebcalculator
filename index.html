@@ -76,7 +76,7 @@
                 </details>
                 <details class="faq-item">
                     <summary>What tariff and rates does this calculation use?</summary>
-                    <p>LT-I(a) domestic tariff rates effective 01-04-2025 -- fixed charge slabs by phase and monthly units, telescopic rates (up to 250 units) and non-telescopic flat rates (above 250 units), ToD multipliers of 90% (Normal), 125% (Peak) and 100% (Off-Peak) applied to the non-telescopic base rate, plus meter rent and a 10% electricity duty.</p>
+                    <p>LT-I(a) domestic tariff rates effective 01-04-2025 -- fixed charge slabs by phase and monthly units, telescopic rates (up to 250 units) and non-telescopic flat rates (above 250 units), ToD multipliers of 90% (Normal), 125% (Peak) and 100% (Off-Peak) applied to the non-telescopic base rate, plus meter rent and a 10% electricity duty. <a href="#tariffImageOverlay" style="color: var(--primary); font-weight: 600; text-decoration: none;">📷 View current tariff chart</a></p>
                 </details>
                 <details class="faq-item">
                     <summary>What is Wheeling, and how do they charge for it?</summary>
@@ -207,7 +207,7 @@
                 </details>
                 <details class="faq-item">
                     <summary>ഉപയോഗിക്കുന്ന താരിഫും നിരക്കുകളും എന്തൊക്കെയാണ്?</summary>
-                    <p>01-04-2025 മുതൽ പ്രാബല്യത്തിലുള്ള LT-I(a) ഗാർഹിക താരിഫ് നിരക്കുകൾ -- ഫേസ്, പ്രതിമാസ യൂണിറ്റുകൾ അനുസരിച്ചുള്ള ഫിക്സഡ് ചാർജ് സ്ലാബുകൾ, ടെലസ്കോപ്പിക് നിരക്കുകൾ (250 യൂണിറ്റ് വരെ), നോൺ-ടെലസ്കോപ്പിക് ഫ്ലാറ്റ് നിരക്കുകൾ (250-ന് മുകളിൽ), നോൺ-ടെലസ്കോപ്പിക് അടിസ്ഥാന നിരക്കിൽ പ്രയോഗിക്കുന്ന 90% (നോർമൽ), 125% (പീക്ക്), 100% (ഓഫ് പീക്ക്) എന്നീ ToD മൾട്ടിപ്ലയറുകൾ, മീറ്റർ വാടക, 10% ഇലക്ട്രിസിറ്റി ഡ്യൂട്ടി എന്നിവ.</p>
+                    <p>01-04-2025 മുതൽ പ്രാബല്യത്തിലുള്ള LT-I(a) ഗാർഹിക താരിഫ് നിരക്കുകൾ -- ഫേസ്, പ്രതിമാസ യൂണിറ്റുകൾ അനുസരിച്ചുള്ള ഫിക്സഡ് ചാർജ് സ്ലാബുകൾ, ടെലസ്കോപ്പിക് നിരക്കുകൾ (250 യൂണിറ്റ് വരെ), നോൺ-ടെലസ്കോപ്പിക് ഫ്ലാറ്റ് നിരക്കുകൾ (250-ന് മുകളിൽ), നോൺ-ടെലസ്കോപ്പിക് അടിസ്ഥാന നിരക്കിൽ പ്രയോഗിക്കുന്ന 90% (നോർമൽ), 125% (പീക്ക്), 100% (ഓഫ് പീക്ക്) എന്നീ ToD മൾട്ടിപ്ലയറുകൾ, മീറ്റർ വാടക, 10% ഇലക്ട്രിസിറ്റി ഡ്യൂട്ടി എന്നിവ. <a href="#tariffImageOverlay" style="color: var(--primary); font-weight: 600; text-decoration: none;">📷 നിലവിലെ താരിഫ് ചാർട്ട് കാണുക</a></p>
                 </details>
                 <details class="faq-item">
                     <summary>എന്താണ് വീലിംഗ്, അതിന് എങ്ങനെ ചാർജ് ചെയ്യുന്നു?</summary>
@@ -757,6 +757,18 @@
         </div>
         <div id="quote" style="display: none;"></div>
     </div>
+
+    <!-- CSS-only lightbox (no JS needed): the link's #tariffImageOverlay
+         fragment matches this element's id, and the :target rule below
+         shows it; the close link just points back to "#" to clear the
+         fragment and hide it again. -->
+    <div id="tariffImageOverlay" class="tariff-overlay">
+        <div class="tariff-overlay-content">
+            <a href="#" class="tariff-overlay-close" aria-label="Close">✕</a>
+            <img src="tariff_new.png" alt="Current KSEB tariff chart">
+        </div>
+    </div>
+
     <script type="module" src="js/main.js"></script>
 </body>
 </html>
