@@ -230,6 +230,22 @@
       box-shadow: var(--shadow-sm);
     }
     .btn-outline:hover { border-color: var(--primary); color: var(--primary); box-shadow: var(--shadow-lift); }
+    .current-running-entry {
+      font-size: 12.5px;
+      margin-bottom: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: var(--surface-muted);
+    }
+    .current-running-none { color: var(--text-muted); font-style: italic; }
+    .current-running-label { color: var(--text-muted); font-weight: 700; margin-right: 4px; }
+    .current-running-text { color: var(--text-primary); }
+    .current-running-elapsed {
+      font-family: "Consolas", "Courier New", monospace;
+      font-weight: 700;
+      color: var(--accent);
+      margin-left: 6px;
+    }
     .entry-actions {
       display: flex;
       justify-content: flex-end;
@@ -1035,6 +1051,7 @@
     <!-- New entry -->
     <div class="card">
       <h3>✍️ New Entry</h3>
+      <div class="current-running-entry" id="currentRunningEntry"></div>
       <textarea id="entryInput" placeholder="Write what's on your mind..."></textarea>
       <div class="entry-actions">
         <label class="entry-track-toggle" title="When off, this entry won't have any time elapsed against it -- it's saved as a plain diary note.">
@@ -1505,6 +1522,41 @@
         localStorage.setItem(THEME_KEY, 'light');
       }
     });
+
+    // ------------------------ Currently-tracking entry -----------------------
+    // Shows, in the New Entry card, whichever tracked entry (if any) is
+    // still running -- the latest tracked entry across all dates that
+    // hasn't been superseded by a later one or explicitly stopped (endT).
+    // Ticks every second so the elapsed time stays live.
+    function findEntryByTimestamp(entries, t) {
+      for (const k in entries) {
+        const found = entries[k].find((e) => e.t === t);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    function renderCurrentRunningEntry() {
+      const el = document.getElementById('currentRunningEntry');
+      const entries = loadEntries();
+      const { latestTimestamp } = buildEntryTimerInfo(entries);
+      const entry = latestTimestamp ? findEntryByTimestamp(entries, latestTimestamp) : null;
+
+      if (!entry || entry.endT) {
+        el.innerHTML = '<span class="current-running-none">No diary entry is currently tracking.</span>';
+        return;
+      }
+
+      const elapsedMs = Date.now() - new Date(entry.t).getTime();
+      el.innerHTML = '<span class="current-running-label">⏱ Currently tracking:</span> ' +
+        '<span class="current-running-text"></span> ' +
+        `<span class="current-running-elapsed">${formatDuration(elapsedMs)}</span>`;
+      // Entry text is user-authored -- assign via textContent, not innerHTML.
+      el.querySelector('.current-running-text').textContent = entry.text;
+    }
+
+    renderCurrentRunningEntry();
+    setInterval(renderCurrentRunningEntry, 1000);
 
     // ---------------------------- Add an entry ----------------------------
     document.getElementById('addEntryBtn').addEventListener('click', () => {
