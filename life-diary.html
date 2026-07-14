@@ -1355,6 +1355,10 @@
       const entries = loadEntries();
       if (!entries[key]) entries[key] = [];
       entries[key].push({ t: entryDate.toISOString(), text: `📝 Plan: ${text}`, noTrack: true, isPlan: true });
+      // Keep the day's entries in chronological order -- a plan is often
+      // added for a slot earlier or later than "now", so a plain push would
+      // otherwise leave it out of order within its own 3-hour block.
+      entries[key].sort((a, b) => a.t.localeCompare(b.t));
       saveEntries(entries);
 
       document.getElementById('viewDateInput').value = key;
