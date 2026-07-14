@@ -254,6 +254,11 @@
       color: var(--text-muted);
       font-style: italic;
     }
+    .entry-plan-label {
+      color: var(--accent);
+      font-weight: 700;
+      font-style: normal;
+    }
     /* ---------------------------- View controls -------------------------- */
     .view-controls {
       display: flex;
@@ -521,6 +526,7 @@
       .hour-box-grid { grid-template-columns: repeat(4, 1fr); }
     }
     .hour-box {
+      position: relative;
       border: 1.5px solid var(--border);
       border-radius: 8px;
       padding: 6px 4px;
@@ -528,6 +534,13 @@
       background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 60%, var(--surface-muted)), var(--surface-muted));
       box-shadow: var(--shadow-sm);
       transition: transform 0.15s ease;
+    }
+    .hour-box-plan-badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      font-size: 11px;
+      line-height: 1;
     }
     .hour-box-label {
       font-size: 10.5px;
@@ -678,19 +691,23 @@
     .hour-plan-editor-actions {
       display: flex;
       justify-content: flex-end;
+      flex-wrap: wrap;
       gap: 8px;
       margin-top: 8px;
     }
-    .hour-plan-save, .hour-plan-cancel {
+    .hour-plan-save, .hour-plan-cancel, .hour-plan-clear, .hour-plan-diary {
       border: none;
       border-radius: 8px;
       padding: 6px 14px;
       font-size: 12.5px;
       font-weight: 600;
       cursor: pointer;
+      white-space: nowrap;
     }
     .hour-plan-save { background: var(--accent); color: #fff; }
     .hour-plan-cancel { background: var(--surface-muted); color: var(--text-muted); }
+    .hour-plan-clear { background: none; border: 1.5px solid var(--danger, #e5533d); color: var(--danger, #e5533d); }
+    .hour-plan-diary { background: var(--surface-muted); border: 1.5px solid var(--border); color: var(--text-primary); margin-right: auto; }
 
     /* ------------------------------ Calendar ------------------------------ */
     #calendarSection { display: none; }
@@ -963,6 +980,8 @@
           <div class="hour-plan-editor-title" id="hourPlanEditorTitle"></div>
           <textarea id="hourPlanTextarea" placeholder="What's the plan for these 10 minutes?"></textarea>
           <div class="hour-plan-editor-actions">
+            <button class="hour-plan-diary" id="hourPlanDiaryBtn" type="button" title="Add this plan as a diary entry timestamped at this 10-minute slot">📔 Add to Diary</button>
+            <button class="hour-plan-clear" id="hourPlanClearBtn" type="button">Clear</button>
             <button class="hour-plan-save" id="hourPlanSaveBtn" type="button">Save</button>
             <button class="hour-plan-cancel" id="hourPlanCancelBtn" type="button">Cancel</button>
           </div>
@@ -1074,6 +1093,10 @@
       const secondsIntoHour = now.getMinutes() * 60 + now.getSeconds();
       const secondsLeftInHour = 3600 - secondsIntoHour;
 
+      const plans = loadHourPlans();
+      const todayKey = dateKey(now);
+      const hourHasPlan = (h) => Object.keys(plans).some((k) => k.startsWith(`${todayKey}_${h}_`));
+
       let html = '';
       for (let h = 0; h < 24; h++) {
         let stateClass, count;
@@ -1090,7 +1113,9 @@
         const label = String(h).padStart(2, '0') + ':00';
         const clickable = stateClass === 'hour-box--active' || stateClass === 'hour-box--upcoming';
         const title = clickable ? ' title="Click for a 10-minute breakdown"' : '';
+        const planBadge = clickable && hourHasPlan(h) ? '<span class="hour-box-plan-badge" title="Has a plan">📝</span>' : '';
         html += `<div class="hour-box ${stateClass}" data-hour="${h}"${title}>
+          ${planBadge}
           <div class="hour-box-label">${label}</div>
           <div class="hour-box-count">${count}</div>
         </div>`;
@@ -1223,6 +1248,47 @@
     });
 
     document.getElementById('hourPlanCancelBtn').addEventListener('click', closeHourPlanEditor);
+
+    document.getElementById('hourPlanClearBtn').addEventListener('click', () => {
+      const editor = document.getElementById('hourPlanEditor');
+      const circleIndex = parseInt(editor.dataset.circle, 10);
+      const plans = loadHourPlans();
+      delete plans[hourPlanKey(selectedHour, circleIndex)];
+      saveHourPlans(plans);
+      document.getElementById('hourPlanTextarea').value = '';
+      renderHourDetailCircles();
+    });
+
+    // Adds the plan as a real diary entry, timestamped at the start of this
+    // 10-minute circle (today's date + selectedHour + circleIndex*10 min),
+    // prefixed so it's clearly a plan rather than something that happened.
+    document.getElementById('hourPlanDiaryBtn').addEventListener('click', () => {
+      const editor = document.getElementById('hourPlanEditor');
+      const circleIndex = parseInt(editor.dataset.circle, 10);
+      const text = document.getElementById('hourPlanTextarea').value.trim();
+      if (!text) {
+        alert('Enter a plan before adding it to the diary.');
+        return;
+      }
+
+      // Keep the circle's own saved plan in sync with what was just added.
+      const plans = loadHourPlans();
+      plans[hourPlanKey(selectedHour, circleIndex)] = text;
+      saveHourPlans(plans);
+
+      const now = new Date();
+      const entryDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), selectedHour, circleIndex * 10, 0, 0);
+      const key = dateKey(entryDate);
+      const entries = loadEntries();
+      if (!entries[key]) entries[key] = [];
+      entries[key].push({ t: entryDate.toISOString(), text: `📝 Plan: ${text}`, noTrack: true, isPlan: true });
+      saveEntries(entries);
+
+      document.getElementById('viewDateInput').value = key;
+      renderEntries();
+      renderCalendar();
+      closeHourDetailModal();
+    });
 
     function openHourDetailModal(hour) {
       selectedHour = hour;
@@ -1598,7 +1664,7 @@
               <td>${escapeHtml(e.text)}</td>
               <td>${formatTime(e.t)}</td>
               <td>--</td>
-              <td>Not tracked</td>
+              <td>${e.isPlan ? 'Plan' : 'Not tracked'}</td>
             </tr>`;
             return;
           }
@@ -1692,13 +1758,16 @@
           </div>
           ${blockEntries.map((e) => {
             if (e.noTrack) {
+              const label = e.isPlan
+                ? '<span class="entry-not-tracked entry-plan-label" title="This is a plan, not a tracked activity">📋 Plan</span>'
+                : '<span class="entry-not-tracked" title="Time tracking was turned off for this entry">🚫 Not tracked</span>';
               return `
           <div class="entry-line" data-index="${e.index}">
             <span class="entry-time-block">
               <span class="entry-time">${formatTime(e.t)}</span>
             </span>
             <span class="entry-elapsed-block">
-              <span class="entry-not-tracked" title="Time tracking was turned off for this entry">🚫 Not tracked</span>
+              ${label}
             </span>
             <span class="entry-text" data-index="${e.index}"></span>
             <button class="entry-edit" data-index="${e.index}" title="Edit this entry" type="button">✏️</button>
