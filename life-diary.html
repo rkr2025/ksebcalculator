@@ -1844,7 +1844,7 @@
               <td>${escapeHtml(e.text)}</td>
               <td>${formatTime(e.t)}</td>
               <td>--</td>
-              <td>${e.isPlan ? 'Plan' : 'Not tracked'}</td>
+              <td>${e.isPlan ? 'Plan' : 'DiaryNote'}</td>
             </tr>`;
             return;
           }
@@ -1940,7 +1940,7 @@
             if (e.noTrack) {
               const label = e.isPlan
                 ? '<span class="entry-not-tracked entry-plan-label" title="This is a plan, not a tracked activity">📋 Plan</span>'
-                : '<span class="entry-not-tracked" title="Time tracking was turned off for this entry">🚫 Not tracked</span>';
+                : '<span class="entry-not-tracked" title="Time tracking was turned off for this entry">DiaryNote</span>';
               return `
           <div class="entry-line" data-index="${e.index}">
             <span class="entry-time-block">
