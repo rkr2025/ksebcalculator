@@ -1067,11 +1067,15 @@
       <h3>🍅 Pomodoro Timer</h3>
       <div class="pomodoro-settings">
         <label for="pomodoroWorkMinutesInput">Work session length</label>
-        <input type="number" id="pomodoroWorkMinutesInput" min="1" max="180" value="25"> min
+        <input type="number" id="pomodoroWorkMinutesInput" min="1" max="180" value="10"> min
       </div>
       <div class="pomodoro-settings">
         <label for="pomodoroBreakMinutesInput">Break length</label>
-        <input type="number" id="pomodoroBreakMinutesInput" min="0" max="120" value="5"> min
+        <input type="number" id="pomodoroBreakMinutesInput" min="0" max="120" value="0"> min
+      </div>
+      <div class="pomodoro-settings">
+        <label for="pomodoroTotalSessionsInput">Total sessions</label>
+        <input type="number" id="pomodoroTotalSessionsInput" min="1" max="50" value="6">
       </div>
       <label class="pomodoro-popup-toggle">
         <input type="checkbox" id="pomodoroPopupToggle">
@@ -1586,17 +1590,28 @@
 
     // ----------------------------- Pomodoro timer ---------------------------
     // A simple standalone work/break timer next to the New Entry box. Both
-    // work and break length are user-editable (defaults 25 / 5 min). "Log
+    // work and break length are user-editable (defaults 10 / 0 min). "Log
     // to Diary" pushes a real, time-tracked diary entry for the focused
     // minutes so far; Reset stops that entry's own timer (sets endT) rather
     // than leaving it running forever, since the pomodoro session it was
     // tracking has ended.
-    const DEFAULT_POMODORO_WORK_MINUTES = 25;
-    const DEFAULT_POMODORO_BREAK_MINUTES = 5;
+    //
+    // State survives a browser close/reload: it's persisted to localStorage
+    // on every tick and every user action, and reloaded on page load. If it
+    // was running, elapsed real time since the last save is fast-forwarded
+    // through (advancePomodoro), correctly walking through any phase
+    // completions that happened while the page was closed -- without
+    // popping up an alert for each one.
+    const POMODORO_STATE_KEY = 'life_diary_pomodoro_state';
+    const DEFAULT_POMODORO_WORK_MINUTES = 10;
+    const DEFAULT_POMODORO_BREAK_MINUTES = 0;
+    const DEFAULT_POMODORO_TOTAL_SESSIONS = 6;
     let pomodoroWorkSeconds = DEFAULT_POMODORO_WORK_MINUTES * 60;
     let pomodoroBreakSeconds = DEFAULT_POMODORO_BREAK_MINUTES * 60;
+    let pomodoroTotalSessions = DEFAULT_POMODORO_TOTAL_SESSIONS;
     let pomodoroMode = 'work'; // 'work' | 'break'
     let pomodoroRemaining = pomodoroWorkSeconds;
+    let pomodoroRunning = false;
     let pomodoroIntervalId = null;
     let pomodoroWorkSecondsThisSession = 0;
     let pomodoroBreakSecondsThisSession = 0;
@@ -1606,6 +1621,80 @@
     // current session, so Reset can stop its running timer.
     let pomodoroLoggedEntry = null; // { key, t } | null
 
+    function savePomodoroState() {
+      localStorage.setItem(POMODORO_STATE_KEY, JSON.stringify({
+        workSeconds: pomodoroWorkSeconds,
+        breakSeconds: pomodoroBreakSeconds,
+        totalSessions: pomodoroTotalSessions,
+        mode: pomodoroMode,
+        remaining: pomodoroRemaining,
+        running: pomodoroRunning,
+        workSecondsThisSession: pomodoroWorkSecondsThisSession,
+        breakSecondsThisSession: pomodoroBreakSecondsThisSession,
+        sessionsCompleted: pomodoroSessionsCompleted,
+        breaksCompleted: pomodoroBreaksCompleted,
+        loggedEntry: pomodoroLoggedEntry,
+        taskText: document.getElementById('pomodoroTaskInput').value,
+        popupEnabled: document.getElementById('pomodoroPopupToggle').checked,
+        lastSavedAt: new Date().toISOString(),
+      }));
+    }
+
+    // Applies `deltaSeconds` of real elapsed time to the timer, walking
+    // through as many phase completions as needed (e.g. if the browser was
+    // closed for longer than the remaining time). `onPhaseComplete(mode)` is
+    // called with the mode that just finished ('work', 'break', or
+    // 'set-complete' once pomodoroTotalSessions work sessions are done), for
+    // callers that want to pop up an alert for a live tick but stay silent
+    // during reload catch-up. Returns true if the whole set just completed,
+    // so the caller can pause rather than keep counting down.
+    function advancePomodoro(deltaSeconds, onPhaseComplete) {
+      let seconds = deltaSeconds;
+      let setComplete = false;
+      while (seconds > 0) {
+        if (seconds < pomodoroRemaining) {
+          if (pomodoroMode === 'work') pomodoroWorkSecondsThisSession += seconds;
+          else pomodoroBreakSecondsThisSession += seconds;
+          pomodoroRemaining -= seconds;
+          seconds = 0;
+        } else {
+          const spent = pomodoroRemaining;
+          if (pomodoroMode === 'work') pomodoroWorkSecondsThisSession += spent;
+          else pomodoroBreakSecondsThisSession += spent;
+          seconds -= spent;
+
+          const completedMode = pomodoroMode;
+          if (completedMode === 'work') {
+            pomodoroSessionsCompleted++;
+            if (pomodoroTotalSessions > 0 && pomodoroSessionsCompleted >= pomodoroTotalSessions) {
+              // The whole set of sessions is done -- stop here rather than
+              // starting another break/session, leaving it ready for a
+              // fresh work session if the user starts again.
+              pomodoroMode = 'work';
+              pomodoroRemaining = pomodoroWorkSeconds;
+              setComplete = true;
+              onPhaseComplete('set-complete');
+              seconds = 0;
+              break;
+            }
+            if (pomodoroBreakSeconds > 0) {
+              pomodoroMode = 'break';
+              pomodoroRemaining = pomodoroBreakSeconds;
+            } else {
+              pomodoroMode = 'work';
+              pomodoroRemaining = pomodoroWorkSeconds;
+            }
+          } else {
+            pomodoroBreaksCompleted++;
+            pomodoroMode = 'work';
+            pomodoroRemaining = pomodoroWorkSeconds;
+          }
+          onPhaseComplete(completedMode);
+        }
+      }
+      return setComplete;
+    }
+
     function formatPomodoroTime(totalSeconds) {
       const m = Math.floor(totalSeconds / 60);
       const s = totalSeconds % 60;
@@ -1614,7 +1703,10 @@
 
     function updatePomodoroDisplay() {
       document.getElementById('pomodoroDisplay').textContent = formatPomodoroTime(pomodoroRemaining);
-      document.getElementById('pomodoroMode').textContent = pomodoroMode === 'work' ? '🎯 Work Session' : '☕ Break';
+      const modeLabel = pomodoroMode === 'work' ? '🎯 Work Session' : '☕ Break';
+      const sessionNumber = Math.min(pomodoroSessionsCompleted + 1, Math.max(pomodoroTotalSessions, 1));
+      const sessionLabel = pomodoroTotalSessions > 0 ? ` (Session ${sessionNumber} of ${pomodoroTotalSessions})` : '';
+      document.getElementById('pomodoroMode').textContent = modeLabel + sessionLabel;
 
       const statsEl = document.getElementById('pomodoroStats');
       if (pomodoroWorkSecondsThisSession <= 0 && pomodoroBreakSecondsThisSession <= 0) {
@@ -1642,47 +1734,42 @@
     }
 
     function pomodoroTick() {
-      pomodoroRemaining--;
-      if (pomodoroMode === 'work') pomodoroWorkSecondsThisSession++;
-      else pomodoroBreakSecondsThisSession++;
-
-      if (pomodoroRemaining <= 0) {
-        const showPopup = document.getElementById('pomodoroPopupToggle').checked;
-        if (pomodoroMode === 'work') {
-          pomodoroSessionsCompleted++;
-          if (pomodoroBreakSeconds > 0) {
-            pomodoroMode = 'break';
-            pomodoroRemaining = pomodoroBreakSeconds;
-            if (showPopup) alert('🍅 Work session complete! Time for a break.');
-          } else {
-            // Break length set to 0 -- skip straight into the next work session.
-            pomodoroMode = 'work';
-            pomodoroRemaining = pomodoroWorkSeconds;
-            if (showPopup) alert('🍅 Work session complete! Starting the next one.');
-          }
-        } else {
-          pomodoroBreaksCompleted++;
-          pomodoroMode = 'work';
-          pomodoroRemaining = pomodoroWorkSeconds;
-          if (showPopup) alert('☕ Break over! Back to a work session.');
+      const showPopup = document.getElementById('pomodoroPopupToggle').checked;
+      const setComplete = advancePomodoro(1, (completedMode) => {
+        if (!showPopup) return;
+        if (completedMode === 'work') {
+          alert(pomodoroBreakSeconds > 0
+            ? '🍅 Work session complete! Time for a break.'
+            : '🍅 Work session complete! Starting the next one.');
+        } else if (completedMode === 'break') {
+          alert('☕ Break over! Back to a work session.');
+        } else if (completedMode === 'set-complete') {
+          alert(`🎉 All ${pomodoroTotalSessions} sessions completed!`);
         }
-      }
+      });
       updatePomodoroDisplay();
+      savePomodoroState();
+      if (setComplete) pausePomodoro();
     }
 
     function startPomodoro() {
       if (pomodoroIntervalId) return;
+      pomodoroRunning = true;
       pomodoroIntervalId = setInterval(pomodoroTick, 1000);
       document.getElementById('pomodoroStartBtn').style.display = 'none';
       document.getElementById('pomodoroPauseBtn').style.display = '';
       document.getElementById('pomodoroWorkMinutesInput').disabled = true;
       document.getElementById('pomodoroBreakMinutesInput').disabled = true;
+      document.getElementById('pomodoroTotalSessionsInput').disabled = true;
+      savePomodoroState();
     }
 
     function pausePomodoro() {
       if (pomodoroIntervalId) { clearInterval(pomodoroIntervalId); pomodoroIntervalId = null; }
+      pomodoroRunning = false;
       document.getElementById('pomodoroStartBtn').style.display = '';
       document.getElementById('pomodoroPauseBtn').style.display = 'none';
+      savePomodoroState();
     }
 
     // Stops the diary entry (if any) that "Log to Diary" created for this
@@ -1713,9 +1800,11 @@
       pomodoroBreaksCompleted = 0;
       document.getElementById('pomodoroWorkMinutesInput').disabled = false;
       document.getElementById('pomodoroBreakMinutesInput').disabled = false;
+      document.getElementById('pomodoroTotalSessionsInput').disabled = false;
       document.getElementById('pomodoroTaskInput').value = '';
       document.getElementById('pomodoroLogStatus').textContent = '';
       updatePomodoroDisplay();
+      localStorage.removeItem(POMODORO_STATE_KEY);
     }
 
     document.getElementById('pomodoroStartBtn').addEventListener('click', startPomodoro);
@@ -1726,7 +1815,10 @@
     // confirmation no longer describes what's in the box, so clear it.
     document.getElementById('pomodoroTaskInput').addEventListener('input', () => {
       document.getElementById('pomodoroLogStatus').textContent = '';
+      savePomodoroState();
     });
+
+    document.getElementById('pomodoroPopupToggle').addEventListener('change', savePomodoroState);
 
     // Editing the work/break length while idle immediately updates the
     // countdown shown; both are disabled once a session is running so
@@ -1739,6 +1831,7 @@
         pomodoroRemaining = pomodoroWorkSeconds;
         updatePomodoroDisplay();
       }
+      savePomodoroState();
     });
 
     document.getElementById('pomodoroBreakMinutesInput').addEventListener('change', (e) => {
@@ -1749,6 +1842,15 @@
         pomodoroRemaining = pomodoroBreakSeconds;
         updatePomodoroDisplay();
       }
+      savePomodoroState();
+    });
+
+    document.getElementById('pomodoroTotalSessionsInput').addEventListener('change', (e) => {
+      const count = Math.max(1, Math.min(50, parseInt(e.target.value, 10) || DEFAULT_POMODORO_TOTAL_SESSIONS));
+      e.target.value = count;
+      pomodoroTotalSessions = count;
+      updatePomodoroDisplay();
+      savePomodoroState();
     });
 
     document.getElementById('pomodoroLogBtn').addEventListener('click', () => {
@@ -1769,6 +1871,7 @@
       entries[key].push({ t, text });
       saveEntries(entries);
       pomodoroLoggedEntry = { key, t };
+      savePomodoroState();
 
       document.getElementById('viewDateInput').value = key;
       renderEntries();
@@ -1777,7 +1880,41 @@
       document.getElementById('pomodoroLogStatus').textContent = '✅ Session added to Diary Entries.';
     });
 
-    updatePomodoroDisplay();
+    // Restore any saved timer state (settings, counters, running/paused) so
+    // a reload or reopening the browser doesn't disturb it. If it was
+    // actively running, fast-forward through however much real time passed
+    // while the page was closed, silently (no popups for missed phases).
+    (function restorePomodoroState() {
+      let saved = null;
+      try { saved = JSON.parse(localStorage.getItem(POMODORO_STATE_KEY)); } catch { saved = null; }
+      if (!saved) { updatePomodoroDisplay(); return; }
+
+      pomodoroWorkSeconds = saved.workSeconds || pomodoroWorkSeconds;
+      pomodoroBreakSeconds = Number.isFinite(saved.breakSeconds) ? saved.breakSeconds : pomodoroBreakSeconds;
+      pomodoroTotalSessions = saved.totalSessions || pomodoroTotalSessions;
+      pomodoroMode = saved.mode || pomodoroMode;
+      pomodoroRemaining = Number.isFinite(saved.remaining) ? saved.remaining : pomodoroRemaining;
+      pomodoroWorkSecondsThisSession = saved.workSecondsThisSession || 0;
+      pomodoroBreakSecondsThisSession = saved.breakSecondsThisSession || 0;
+      pomodoroSessionsCompleted = saved.sessionsCompleted || 0;
+      pomodoroBreaksCompleted = saved.breaksCompleted || 0;
+      pomodoroLoggedEntry = saved.loggedEntry || null;
+
+      document.getElementById('pomodoroWorkMinutesInput').value = Math.round(pomodoroWorkSeconds / 60);
+      document.getElementById('pomodoroBreakMinutesInput').value = Math.round(pomodoroBreakSeconds / 60);
+      document.getElementById('pomodoroTotalSessionsInput').value = pomodoroTotalSessions;
+      document.getElementById('pomodoroTaskInput').value = saved.taskText || '';
+      document.getElementById('pomodoroPopupToggle').checked = !!saved.popupEnabled;
+
+      if (saved.running && saved.lastSavedAt) {
+        const elapsed = Math.max(0, Math.floor((Date.now() - new Date(saved.lastSavedAt).getTime()) / 1000));
+        // No popups for phases (or a completed set) missed while away.
+        const setComplete = elapsed > 0 ? advancePomodoro(elapsed, () => {}) : false;
+        if (!setComplete) startPomodoro();
+      }
+
+      updatePomodoroDisplay();
+    })();
 
     // ------------------------------- Search ---------------------------------
     // Wraps every case-insensitive match of `query` inside `text` in <mark>,
