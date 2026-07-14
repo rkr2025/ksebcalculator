@@ -246,6 +246,17 @@
       color: var(--accent);
       margin-left: 6px;
     }
+    .current-running-stop-btn {
+      margin-left: 8px;
+      border: 1.5px solid var(--danger, #e5533d);
+      color: var(--danger, #e5533d);
+      background: none;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
     .entry-actions {
       display: flex;
       justify-content: flex-end;
@@ -1531,11 +1542,13 @@
     // Shows, in the New Entry card, whichever tracked entry (if any) is
     // still running -- the latest tracked entry across all dates that
     // hasn't been superseded by a later one or explicitly stopped (endT).
-    // Ticks every second so the elapsed time stays live.
-    function findEntryByTimestamp(entries, t) {
+    // Ticks every second so the elapsed time stays live. A Stop button lets
+    // the user end it early (with confirmation) by giving it an endT, same
+    // mechanism the Pomodoro timer uses when it resets.
+    function findEntryLocation(entries, t) {
       for (const k in entries) {
-        const found = entries[k].find((e) => e.t === t);
-        if (found) return found;
+        const entry = entries[k].find((e) => e.t === t);
+        if (entry) return { key: k, entry };
       }
       return null;
     }
@@ -1544,7 +1557,8 @@
       const el = document.getElementById('currentRunningEntry');
       const entries = loadEntries();
       const { latestTimestamp } = buildEntryTimerInfo(entries);
-      const entry = latestTimestamp ? findEntryByTimestamp(entries, latestTimestamp) : null;
+      const location = latestTimestamp ? findEntryLocation(entries, latestTimestamp) : null;
+      const entry = location ? location.entry : null;
 
       if (!entry || entry.endT) {
         el.innerHTML = '<span class="current-running-none">No diary entry is currently tracking.</span>';
@@ -1554,10 +1568,28 @@
       const elapsedMs = Date.now() - new Date(entry.t).getTime();
       el.innerHTML = '<span class="current-running-label">⏱ Currently tracking:</span> ' +
         '<span class="current-running-text"></span> ' +
-        `<span class="current-running-elapsed">${formatDuration(elapsedMs)}</span>`;
+        `<span class="current-running-elapsed">${formatDuration(elapsedMs)}</span> ` +
+        `<button class="current-running-stop-btn" type="button" data-t="${entry.t}" title="Stop tracking this entry now">⏹ Stop</button>`;
       // Entry text is user-authored -- assign via textContent, not innerHTML.
       el.querySelector('.current-running-text').textContent = entry.text;
     }
+
+    // Delegated once (rather than re-bound on every render, since the Stop
+    // button's innerHTML is rebuilt every second by the interval below).
+    document.getElementById('currentRunningEntry').addEventListener('click', (e) => {
+      const btn = e.target.closest('.current-running-stop-btn');
+      if (!btn) return;
+      if (!confirm('Stop tracking this diary entry now?')) return;
+
+      const entries = loadEntries();
+      const location = findEntryLocation(entries, btn.dataset.t);
+      if (!location || location.entry.endT) { renderCurrentRunningEntry(); return; }
+
+      location.entry.endT = new Date().toISOString();
+      saveEntries(entries);
+      if (viewDateInput.value === location.key) renderEntries();
+      renderCurrentRunningEntry();
+    });
 
     renderCurrentRunningEntry();
     setInterval(renderCurrentRunningEntry, 1000);
