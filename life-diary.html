@@ -568,9 +568,9 @@
       padding: 16px;
       overflow-y: auto;
     }
-    .hour-detail-box { margin-top: 24px; }
     .hour-detail-box {
       position: relative;
+      margin-top: 24px;
       background: var(--surface);
       border: 1.5px solid var(--border);
       border-radius: 14px;
@@ -610,6 +610,7 @@
       gap: 10px;
     }
     .hour-detail-circle {
+      position: relative;
       width: 52px;
       height: 52px;
       border-radius: 50%;
@@ -639,6 +640,57 @@
       opacity: 0.5;
       filter: grayscale(1);
     }
+    .hour-detail-circle--clickable { cursor: pointer; }
+    .hour-detail-circle--has-plan::after {
+      content: '📝';
+      position: absolute;
+      bottom: -6px;
+      right: -4px;
+      font-size: 12px;
+      filter: none;
+      opacity: 1;
+    }
+
+    /* ------------------------- Hour plan editor ---------------------------- */
+    .hour-plan-editor {
+      margin-top: 16px;
+      text-align: left;
+    }
+    .hour-plan-editor-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+    .hour-plan-editor textarea {
+      width: 100%;
+      min-height: 64px;
+      resize: vertical;
+      font-family: inherit;
+      font-size: 13px;
+      padding: 8px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text-primary);
+      box-sizing: border-box;
+    }
+    .hour-plan-editor-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .hour-plan-save, .hour-plan-cancel {
+      border: none;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .hour-plan-save { background: var(--accent); color: #fff; }
+    .hour-plan-cancel { background: var(--surface-muted); color: var(--text-muted); }
 
     /* ------------------------------ Calendar ------------------------------ */
     #calendarSection { display: none; }
@@ -902,11 +954,19 @@
 
     <!-- Popup: 6 x 10-minute circle breakdown for the currently active hour -->
     <div class="hour-detail-overlay" id="hourDetailOverlay">
-      <div class="hour-detail-box">
+      <div class="hour-detail-box" id="hourDetailBox">
         <button class="hour-detail-close" id="hourDetailClose" type="button" aria-label="Close">✕</button>
         <div class="hour-detail-title" id="hourDetailTitle"></div>
         <div class="hour-detail-circles" id="hourDetailCircles"></div>
-        <p class="hour-detail-sub">Each circle is 10 minutes (600 seconds). Passed circles grey out; the current one counts down live.</p>
+        <p class="hour-detail-sub" id="hourDetailSub">Each circle is 10 minutes (600 seconds). Passed circles grey out; the current one counts down live. Click an active/upcoming circle to add a plan.</p>
+        <div class="hour-plan-editor" id="hourPlanEditor" style="display: none;">
+          <div class="hour-plan-editor-title" id="hourPlanEditorTitle"></div>
+          <textarea id="hourPlanTextarea" placeholder="What's the plan for these 10 minutes?"></textarea>
+          <div class="hour-plan-editor-actions">
+            <button class="hour-plan-save" id="hourPlanSaveBtn" type="button">Save</button>
+            <button class="hour-plan-cancel" id="hourPlanCancelBtn" type="button">Cancel</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1028,8 +1088,9 @@
           count = 3600;
         }
         const label = String(h).padStart(2, '0') + ':00';
-        const title = stateClass === 'hour-box--active' ? ' title="Click for a 10-minute breakdown"' : '';
-        html += `<div class="hour-box ${stateClass}"${title}>
+        const clickable = stateClass === 'hour-box--active' || stateClass === 'hour-box--upcoming';
+        const title = clickable ? ' title="Click for a 10-minute breakdown"' : '';
+        html += `<div class="hour-box ${stateClass}" data-hour="${h}"${title}>
           <div class="hour-box-label">${label}</div>
           <div class="hour-box-count">${count}</div>
         </div>`;
@@ -1040,55 +1101,148 @@
     renderHourBoxes();
     setInterval(renderHourBoxes, 1000);
 
-    // Clicking the currently-active hour box opens a popup breaking that
-    // hour's 3600 seconds into 6 circles of 600 seconds (10 minutes) each --
-    // circles before the current one grey out as "passed", the current one
-    // counts its own 600 seconds down live, and later ones stay filled/
-    // upcoming. Delegated on the grid since its contents are re-rendered
-    // every second.
+    // Clicking the active hour box, or any still-upcoming hour box, opens a
+    // popup breaking that hour's 3600 seconds into 6 circles of 600 seconds
+    // (10 minutes) each: for the hour that's actually running, circles
+    // before "now" grey out as passed and the current one counts its own
+    // 600 seconds down live; for an hour that hasn't started yet, all 6
+    // circles just sit filled/upcoming (and if the popup is left open until
+    // that hour arrives, it naturally starts counting down on its own,
+    // since this re-checks the real clock every second).
     let hourDetailTimerId = null;
+    let selectedHour = null;
     const CIRCLE_SECONDS = 600; // 3600 seconds / 6 circles
+
+    // ------------------------------ Hour plans -------------------------------
+    // A short free-text "plan" a user can attach to any not-yet-finished
+    // 10-minute circle. Shape: { "YYYY-MM-DD_H_C": "plan text", ... },
+    // keyed by today's date + hour + circle index (0-5) so plans don't
+    // collide across different days.
+    const HOUR_PLAN_KEY = 'life_diary_hour_plans';
+
+    function loadHourPlans() {
+      try { return JSON.parse(localStorage.getItem(HOUR_PLAN_KEY)) || {}; } catch { return {}; }
+    }
+    function saveHourPlans(plans) {
+      localStorage.setItem(HOUR_PLAN_KEY, JSON.stringify(plans));
+    }
+    function hourPlanKey(hour, circleIndex) {
+      return `${dateKey(new Date())}_${hour}_${circleIndex}`;
+    }
+    function getHourPlan(hour, circleIndex) {
+      return loadHourPlans()[hourPlanKey(hour, circleIndex)] || '';
+    }
 
     function renderHourDetailCircles() {
       const now = new Date();
-      const secondsIntoHour = now.getMinutes() * 60 + now.getSeconds();
-      const activeCircle = Math.floor(secondsIntoHour / CIRCLE_SECONDS);
+      const currentHour = now.getHours();
+      const hour = selectedHour;
+      const plans = loadHourPlans();
+      const planIndicator = (i) => plans[hourPlanKey(hour, i)] ? ' hour-detail-circle--has-plan' : '';
 
       let html = '';
-      for (let i = 0; i < 6; i++) {
-        if (i < activeCircle) {
+      if (hour > currentHour) {
+        // Hasn't started yet -- nothing to grey out or count down, but a
+        // plan can still be entered for any of these circles.
+        for (let i = 0; i < 6; i++) {
+          html += `<div class="hour-detail-circle hour-detail-circle--upcoming hour-detail-circle--clickable${planIndicator(i)}" data-circle="${i}" data-base-title="Upcoming">10:00</div>`;
+        }
+      } else if (hour < currentHour) {
+        // Already fully elapsed -- no plan entry for the past.
+        for (let i = 0; i < 6; i++) {
           html += `<div class="hour-detail-circle hour-detail-circle--passed" title="Passed"></div>`;
-        } else if (i === activeCircle) {
-          const remaining = CIRCLE_SECONDS - (secondsIntoHour % CIRCLE_SECONDS);
-          const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
-          const ss = String(remaining % 60).padStart(2, '0');
-          html += `<div class="hour-detail-circle hour-detail-circle--active" title="Counting down">${mm}:${ss}</div>`;
-        } else {
-          html += `<div class="hour-detail-circle hour-detail-circle--upcoming" title="Upcoming"></div>`;
+        }
+      } else {
+        const secondsIntoHour = now.getMinutes() * 60 + now.getSeconds();
+        const activeCircle = Math.floor(secondsIntoHour / CIRCLE_SECONDS);
+        for (let i = 0; i < 6; i++) {
+          if (i < activeCircle) {
+            html += `<div class="hour-detail-circle hour-detail-circle--passed" title="Passed"></div>`;
+          } else if (i === activeCircle) {
+            const remaining = CIRCLE_SECONDS - (secondsIntoHour % CIRCLE_SECONDS);
+            const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
+            const ss = String(remaining % 60).padStart(2, '0');
+            html += `<div class="hour-detail-circle hour-detail-circle--active hour-detail-circle--clickable${planIndicator(i)}" data-circle="${i}" data-base-title="Counting down">${mm}:${ss}</div>`;
+          } else {
+            html += `<div class="hour-detail-circle hour-detail-circle--upcoming hour-detail-circle--clickable${planIndicator(i)}" data-circle="${i}" data-base-title="Upcoming">10:00</div>`;
+          }
         }
       }
       document.getElementById('hourDetailCircles').innerHTML = html;
 
-      const h = now.getHours();
-      const nextH = (h + 1) % 24;
+      // Plan text is user-authored -- assign via the `title` DOM property
+      // (not string-concatenated into the HTML above) so it can never break
+      // out of the attribute or inject markup.
+      document.querySelectorAll('#hourDetailCircles [data-circle]').forEach((el) => {
+        const i = parseInt(el.dataset.circle, 10);
+        const planText = plans[hourPlanKey(hour, i)];
+        el.title = planText ? `${el.dataset.baseTitle} -- Plan: ${planText}` : el.dataset.baseTitle;
+      });
+
+      const nextH = (hour + 1) % 24;
       document.getElementById('hourDetailTitle').textContent =
-        `${String(h).padStart(2, '0')}:00 – ${String(nextH).padStart(2, '0')}:00`;
+        `${String(hour).padStart(2, '0')}:00 – ${String(nextH).padStart(2, '0')}:00`;
     }
 
-    function openHourDetailModal() {
+    function circleLabel(hour, circleIndex) {
+      const startMin = circleIndex * 10;
+      const endMin = startMin + 10;
+      const fmt = (m) => `${String(hour).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      return `${fmt(startMin)} – ${endMin === 60 ? `${String((hour + 1) % 24).padStart(2, '0')}:00` : fmt(endMin)}`;
+    }
+
+    function openHourPlanEditor(circleIndex) {
+      const editor = document.getElementById('hourPlanEditor');
+      const textarea = document.getElementById('hourPlanTextarea');
+      document.getElementById('hourPlanEditorTitle').textContent = `Plan for ${circleLabel(selectedHour, circleIndex)}`;
+      textarea.value = getHourPlan(selectedHour, circleIndex);
+      editor.dataset.circle = circleIndex;
+      editor.style.display = 'block';
+      textarea.focus();
+    }
+
+    function closeHourPlanEditor() {
+      document.getElementById('hourPlanEditor').style.display = 'none';
+    }
+
+    document.getElementById('hourDetailCircles').addEventListener('click', (e) => {
+      const circle = e.target.closest('.hour-detail-circle--clickable');
+      if (circle) openHourPlanEditor(parseInt(circle.dataset.circle, 10));
+    });
+
+    document.getElementById('hourPlanSaveBtn').addEventListener('click', () => {
+      const editor = document.getElementById('hourPlanEditor');
+      const circleIndex = parseInt(editor.dataset.circle, 10);
+      const text = document.getElementById('hourPlanTextarea').value.trim();
+      const plans = loadHourPlans();
+      const key = hourPlanKey(selectedHour, circleIndex);
+      if (text) plans[key] = text; else delete plans[key];
+      saveHourPlans(plans);
+      closeHourPlanEditor();
+      renderHourDetailCircles();
+    });
+
+    document.getElementById('hourPlanCancelBtn').addEventListener('click', closeHourPlanEditor);
+
+    function openHourDetailModal(hour) {
+      selectedHour = hour;
       document.getElementById('hourDetailOverlay').style.display = 'flex';
+      closeHourPlanEditor();
       renderHourDetailCircles();
       if (hourDetailTimerId) clearInterval(hourDetailTimerId);
       hourDetailTimerId = setInterval(renderHourDetailCircles, 1000);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function closeHourDetailModal() {
       document.getElementById('hourDetailOverlay').style.display = 'none';
+      closeHourPlanEditor();
       if (hourDetailTimerId) { clearInterval(hourDetailTimerId); hourDetailTimerId = null; }
     }
 
     document.getElementById('hourBoxGrid').addEventListener('click', (e) => {
-      if (e.target.closest('.hour-box--active')) openHourDetailModal();
+      const box = e.target.closest('.hour-box--active, .hour-box--upcoming');
+      if (box) openHourDetailModal(parseInt(box.dataset.hour, 10));
     });
     document.getElementById('hourDetailClose').addEventListener('click', closeHourDetailModal);
     document.getElementById('hourDetailOverlay').addEventListener('click', (e) => {
