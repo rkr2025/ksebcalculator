@@ -306,13 +306,40 @@
       font-size: 44px;
       font-weight: 800;
       color: var(--accent);
-      margin-bottom: 14px;
+      margin-bottom: 4px;
     }
+    .pomodoro-stats {
+      text-align: center;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      min-height: 14px;
+    }
+    .pomodoro-popup-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 12.5px;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+      margin-bottom: 12px;
+    }
+    .pomodoro-popup-toggle input { cursor: pointer; }
     .pomodoro-actions {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
       gap: 10px;
+    }
+    .pomodoro-log-status {
+      text-align: center;
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 600;
+      margin: 10px 0 0;
+      min-height: 15px;
     }
     /* ---------------------------- View controls -------------------------- */
     .view-controls {
@@ -1025,15 +1052,25 @@
         <label for="pomodoroWorkMinutesInput">Work session length</label>
         <input type="number" id="pomodoroWorkMinutesInput" min="1" max="180" value="25"> min
       </div>
+      <div class="pomodoro-settings">
+        <label for="pomodoroBreakMinutesInput">Break length</label>
+        <input type="number" id="pomodoroBreakMinutesInput" min="0" max="120" value="5"> min
+      </div>
+      <label class="pomodoro-popup-toggle">
+        <input type="checkbox" id="pomodoroPopupToggle">
+        🔔 Show a popup when a session/break completes
+      </label>
       <input type="text" id="pomodoroTaskInput" class="pomodoro-task-input" placeholder="What are you working on? (optional)">
       <div class="pomodoro-mode" id="pomodoroMode">🎯 Work Session</div>
       <div class="pomodoro-display" id="pomodoroDisplay">25:00</div>
+      <div class="pomodoro-stats" id="pomodoroStats"></div>
       <div class="pomodoro-actions">
         <button class="btn" id="pomodoroStartBtn" type="button">▶ Start</button>
         <button class="btn-outline btn" id="pomodoroPauseBtn" type="button" style="display: none;">⏸ Pause</button>
         <button class="btn-outline btn" id="pomodoroResetBtn" type="button">↺ Reset</button>
         <button class="btn-outline btn" id="pomodoroLogBtn" type="button" title="Add this session's focused minutes as a new, time-tracked diary entry">📔 Log to Diary</button>
       </div>
+      <p class="pomodoro-log-status" id="pomodoroLogStatus"></p>
     </div>
 
     <!-- 24-hour countdown -->
@@ -1496,19 +1533,26 @@
     });
 
     // ----------------------------- Pomodoro timer ---------------------------
-    // A simple standalone work / 5-minute break timer next to the New Entry
-    // box. Work session length is user-editable (default 25 min). "Log to
-    // Diary" pushes a real, time-tracked diary entry for the focused
-    // minutes so far -- unlike other entries it's added directly (not via
-    // the New Entry textarea) since the "how long" is already known from
-    // the timer itself.
-    const POMODORO_BREAK_SECONDS = 5 * 60;
+    // A simple standalone work/break timer next to the New Entry box. Both
+    // work and break length are user-editable (defaults 25 / 5 min). "Log
+    // to Diary" pushes a real, time-tracked diary entry for the focused
+    // minutes so far; Reset stops that entry's own timer (sets endT) rather
+    // than leaving it running forever, since the pomodoro session it was
+    // tracking has ended.
     const DEFAULT_POMODORO_WORK_MINUTES = 25;
+    const DEFAULT_POMODORO_BREAK_MINUTES = 5;
     let pomodoroWorkSeconds = DEFAULT_POMODORO_WORK_MINUTES * 60;
+    let pomodoroBreakSeconds = DEFAULT_POMODORO_BREAK_MINUTES * 60;
     let pomodoroMode = 'work'; // 'work' | 'break'
     let pomodoroRemaining = pomodoroWorkSeconds;
     let pomodoroIntervalId = null;
     let pomodoroWorkSecondsThisSession = 0;
+    let pomodoroBreakSecondsThisSession = 0;
+    let pomodoroSessionsCompleted = 0;
+    let pomodoroBreaksCompleted = 0;
+    // Identifies the diary entry (if any) created by "Log to Diary" for the
+    // current session, so Reset can stop its running timer.
+    let pomodoroLoggedEntry = null; // { key, t } | null
 
     function formatPomodoroTime(totalSeconds) {
       const m = Math.floor(totalSeconds / 60);
@@ -1519,20 +1563,56 @@
     function updatePomodoroDisplay() {
       document.getElementById('pomodoroDisplay').textContent = formatPomodoroTime(pomodoroRemaining);
       document.getElementById('pomodoroMode').textContent = pomodoroMode === 'work' ? '🎯 Work Session' : '☕ Break';
+
+      const statsEl = document.getElementById('pomodoroStats');
+      if (pomodoroWorkSecondsThisSession <= 0 && pomodoroBreakSecondsThisSession <= 0) {
+        statsEl.textContent = '';
+        return;
+      }
+
+      // Break stats only matter when breaks are actually in use.
+      const showBreakStats = pomodoroBreakSeconds > 0 || pomodoroBreaksCompleted > 0;
+      const totalWithBreaks = pomodoroWorkSecondsThisSession + pomodoroBreakSecondsThisSession;
+
+      const lines = showBreakStats
+        ? [
+            `Total elapsed : ${formatPomodoroTime(totalWithBreaks)} (Work+Break)`,
+            `Work elapsed: ${formatPomodoroTime(pomodoroWorkSecondsThisSession)} (work-only)`,
+            `Break elapsed: ${formatPomodoroTime(pomodoroBreakSecondsThisSession)} (breaks-only)`,
+          ]
+        : [`Total elapsed: ${formatPomodoroTime(pomodoroWorkSecondsThisSession)} (work)`];
+
+      lines.push(
+        `${pomodoroSessionsCompleted} session${pomodoroSessionsCompleted === 1 ? '' : 's'} completed` +
+          (showBreakStats ? ` · ${pomodoroBreaksCompleted} break${pomodoroBreaksCompleted === 1 ? '' : 's'} completed` : '')
+      );
+      statsEl.innerHTML = lines.map((l) => `<div>${l}</div>`).join('');
     }
 
     function pomodoroTick() {
       pomodoroRemaining--;
       if (pomodoroMode === 'work') pomodoroWorkSecondsThisSession++;
+      else pomodoroBreakSecondsThisSession++;
+
       if (pomodoroRemaining <= 0) {
+        const showPopup = document.getElementById('pomodoroPopupToggle').checked;
         if (pomodoroMode === 'work') {
-          pomodoroMode = 'break';
-          pomodoroRemaining = POMODORO_BREAK_SECONDS;
-          alert('🍅 Work session complete! Time for a 5-minute break.');
+          pomodoroSessionsCompleted++;
+          if (pomodoroBreakSeconds > 0) {
+            pomodoroMode = 'break';
+            pomodoroRemaining = pomodoroBreakSeconds;
+            if (showPopup) alert('🍅 Work session complete! Time for a break.');
+          } else {
+            // Break length set to 0 -- skip straight into the next work session.
+            pomodoroMode = 'work';
+            pomodoroRemaining = pomodoroWorkSeconds;
+            if (showPopup) alert('🍅 Work session complete! Starting the next one.');
+          }
         } else {
+          pomodoroBreaksCompleted++;
           pomodoroMode = 'work';
           pomodoroRemaining = pomodoroWorkSeconds;
-          alert('☕ Break over! Back to a work session.');
+          if (showPopup) alert('☕ Break over! Back to a work session.');
         }
       }
       updatePomodoroDisplay();
@@ -1544,6 +1624,7 @@
       document.getElementById('pomodoroStartBtn').style.display = 'none';
       document.getElementById('pomodoroPauseBtn').style.display = '';
       document.getElementById('pomodoroWorkMinutesInput').disabled = true;
+      document.getElementById('pomodoroBreakMinutesInput').disabled = true;
     }
 
     function pausePomodoro() {
@@ -1552,13 +1633,36 @@
       document.getElementById('pomodoroPauseBtn').style.display = 'none';
     }
 
+    // Stops the diary entry (if any) that "Log to Diary" created for this
+    // session, by giving it an explicit endT -- otherwise it would keep
+    // counting as "still running" forever after the pomodoro is reset.
+    function stopLoggedDiaryEntry() {
+      if (!pomodoroLoggedEntry) return;
+      const { key, t } = pomodoroLoggedEntry;
+      const entries = loadEntries();
+      const dayEntries = entries[key] || [];
+      const entry = dayEntries.find((e) => e.t === t);
+      if (entry && !entry.endT) {
+        entry.endT = new Date().toISOString();
+        saveEntries(entries);
+        if (viewDateInput.value === key) renderEntries();
+      }
+      pomodoroLoggedEntry = null;
+    }
+
     function resetPomodoro() {
       pausePomodoro();
+      stopLoggedDiaryEntry();
       pomodoroMode = 'work';
       pomodoroRemaining = pomodoroWorkSeconds;
       pomodoroWorkSecondsThisSession = 0;
+      pomodoroBreakSecondsThisSession = 0;
+      pomodoroSessionsCompleted = 0;
+      pomodoroBreaksCompleted = 0;
       document.getElementById('pomodoroWorkMinutesInput').disabled = false;
+      document.getElementById('pomodoroBreakMinutesInput').disabled = false;
       document.getElementById('pomodoroTaskInput').value = '';
+      document.getElementById('pomodoroLogStatus').textContent = '';
       updatePomodoroDisplay();
     }
 
@@ -1566,15 +1670,31 @@
     document.getElementById('pomodoroPauseBtn').addEventListener('click', pausePomodoro);
     document.getElementById('pomodoroResetBtn').addEventListener('click', resetPomodoro);
 
-    // Editing the work length while idle immediately updates the countdown
-    // shown (and next reset); it's disabled once a session is running so
-    // changing it mid-countdown can't happen.
+    // Editing the task text after logging means the last "added to Diary"
+    // confirmation no longer describes what's in the box, so clear it.
+    document.getElementById('pomodoroTaskInput').addEventListener('input', () => {
+      document.getElementById('pomodoroLogStatus').textContent = '';
+    });
+
+    // Editing the work/break length while idle immediately updates the
+    // countdown shown; both are disabled once a session is running so
+    // changing them mid-countdown can't happen.
     document.getElementById('pomodoroWorkMinutesInput').addEventListener('change', (e) => {
       const minutes = Math.max(1, Math.min(180, parseInt(e.target.value, 10) || DEFAULT_POMODORO_WORK_MINUTES));
       e.target.value = minutes;
       pomodoroWorkSeconds = minutes * 60;
       if (pomodoroMode === 'work' && !pomodoroIntervalId) {
         pomodoroRemaining = pomodoroWorkSeconds;
+        updatePomodoroDisplay();
+      }
+    });
+
+    document.getElementById('pomodoroBreakMinutesInput').addEventListener('change', (e) => {
+      const minutes = Math.max(0, Math.min(120, parseInt(e.target.value, 10)));
+      e.target.value = Number.isFinite(minutes) ? minutes : DEFAULT_POMODORO_BREAK_MINUTES;
+      pomodoroBreakSeconds = (Number.isFinite(minutes) ? minutes : DEFAULT_POMODORO_BREAK_MINUTES) * 60;
+      if (pomodoroMode === 'break' && !pomodoroIntervalId) {
+        pomodoroRemaining = pomodoroBreakSeconds;
         updatePomodoroDisplay();
       }
     });
@@ -1593,12 +1713,16 @@
       const key = dateKey(now);
       const entries = loadEntries();
       if (!entries[key]) entries[key] = [];
-      entries[key].push({ t: now.toISOString(), text });
+      const t = now.toISOString();
+      entries[key].push({ t, text });
       saveEntries(entries);
+      pomodoroLoggedEntry = { key, t };
 
       document.getElementById('viewDateInput').value = key;
       renderEntries();
       renderCalendar();
+
+      document.getElementById('pomodoroLogStatus').textContent = '✅ Session added to Diary Entries.';
     });
 
     updatePomodoroDisplay();
