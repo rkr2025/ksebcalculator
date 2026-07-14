@@ -330,10 +330,20 @@
     .pomodoro-display {
       text-align: center;
       font-family: "Consolas", "Courier New", monospace;
-      font-size: 44px;
+      font-size: 64px;
       font-weight: 800;
       color: var(--accent);
       margin-bottom: 4px;
+    }
+    .pomodoro-clocks {
+      text-align: center;
+      font-size: 12.5px;
+      color: var(--text-secondary, var(--text-muted));
+      margin-bottom: 8px;
+    }
+    .pomodoro-clocks strong {
+      font-family: "Consolas", "Courier New", monospace;
+      color: var(--accent);
     }
     .pomodoro-stats {
       text-align: center;
@@ -1095,6 +1105,7 @@
       <input type="text" id="pomodoroTaskInput" class="pomodoro-task-input" placeholder="What are you working on? (optional)">
       <div class="pomodoro-mode" id="pomodoroMode">🎯 Work Session</div>
       <div class="pomodoro-display" id="pomodoroDisplay">25:00</div>
+      <div class="pomodoro-clocks" id="pomodoroClocks"></div>
       <div class="pomodoro-stats" id="pomodoroStats"></div>
       <div class="pomodoro-actions">
         <button class="btn" id="pomodoroStartBtn" type="button">▶ Start</button>
@@ -1733,12 +1744,40 @@
       return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
 
+    function formatClockTime(date) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    // How many seconds from right now until the whole set of
+    // pomodoroTotalSessions work sessions is done -- current phase's
+    // remaining time, plus every full work session and break still ahead
+    // (work-only sessions never need a trailing break, since breaks only
+    // sit between two sessions).
+    function secondsUntilSetComplete() {
+      const workSessionsRemaining = Math.max(0, pomodoroTotalSessions - pomodoroSessionsCompleted - (pomodoroMode === 'work' ? 1 : 0));
+      const breaksRemaining = pomodoroMode === 'work' ? workSessionsRemaining : Math.max(0, workSessionsRemaining - 1);
+      return pomodoroRemaining + workSessionsRemaining * pomodoroWorkSeconds + breaksRemaining * pomodoroBreakSeconds;
+    }
+
     function updatePomodoroDisplay() {
       document.getElementById('pomodoroDisplay').textContent = formatPomodoroTime(pomodoroRemaining);
       const modeLabel = pomodoroMode === 'work' ? '🎯 Work Session' : '☕ Break';
       const sessionNumber = Math.min(pomodoroSessionsCompleted + 1, Math.max(pomodoroTotalSessions, 1));
       const sessionLabel = pomodoroTotalSessions > 0 ? ` (Session ${sessionNumber} of ${pomodoroTotalSessions})` : '';
       document.getElementById('pomodoroMode').textContent = modeLabel + sessionLabel;
+
+      const clocksEl = document.getElementById('pomodoroClocks');
+      if (pomodoroRunning) {
+        const now = Date.now();
+        const phaseEndClock = formatClockTime(new Date(now + pomodoroRemaining * 1000));
+        const setEndClock = formatClockTime(new Date(now + secondsUntilSetComplete() * 1000));
+        const phaseNoun = pomodoroMode === 'work' ? 'session' : 'break';
+        clocksEl.innerHTML =
+          `<div>This ${phaseNoun} ends at <strong>${phaseEndClock}</strong></div>` +
+          `<div>All sessions end at <strong>${setEndClock}</strong></div>`;
+      } else {
+        clocksEl.innerHTML = '';
+      }
 
       const statsEl = document.getElementById('pomodoroStats');
       if (pomodoroWorkSecondsThisSession <= 0 && pomodoroBreakSecondsThisSession <= 0) {
