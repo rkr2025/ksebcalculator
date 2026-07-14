@@ -1111,7 +1111,7 @@
         <button class="btn" id="pomodoroStartBtn" type="button">▶ Start</button>
         <button class="btn-outline btn" id="pomodoroPauseBtn" type="button" style="display: none;">⏸ Pause</button>
         <button class="btn-outline btn" id="pomodoroResetBtn" type="button">↺ Reset</button>
-        <button class="btn-outline btn" id="pomodoroLogBtn" type="button" title="Add this session's focused minutes as a new, time-tracked diary entry">📔 Log to Diary</button>
+        <button class="btn-outline btn" id="pomodoroLogBtn" type="button" style="display: none;" title="Add this session's focused minutes as a new, time-tracked diary entry">📔 Log to Diary</button>
       </div>
       <p class="pomodoro-log-status" id="pomodoroLogStatus"></p>
     </div>
@@ -1851,6 +1851,7 @@
       pomodoroIntervalId = setInterval(pomodoroTick, 1000);
       document.getElementById('pomodoroStartBtn').style.display = 'none';
       document.getElementById('pomodoroPauseBtn').style.display = '';
+      document.getElementById('pomodoroLogBtn').style.display = '';
       document.getElementById('pomodoroWorkMinutesInput').disabled = true;
       document.getElementById('pomodoroBreakMinutesInput').disabled = true;
       document.getElementById('pomodoroTotalSessionsInput').disabled = true;
@@ -1867,6 +1868,7 @@
       pomodoroPhaseEndAt = null;
       document.getElementById('pomodoroStartBtn').style.display = '';
       document.getElementById('pomodoroPauseBtn').style.display = 'none';
+      document.getElementById('pomodoroLogBtn').style.display = 'none';
       savePomodoroState();
     }
 
@@ -1888,8 +1890,22 @@
     }
 
     function resetPomodoro() {
+      // If Reset is pressed while already paused/idle, treat it as a full
+      // "restore defaults" -- otherwise (pressed while actively running)
+      // just abort the current run and clear its counters, keeping
+      // whatever work/break/session lengths the user had configured.
+      const restoreDefaults = !pomodoroRunning;
+
       pausePomodoro();
       stopLoggedDiaryEntry();
+      if (restoreDefaults) {
+        pomodoroWorkSeconds = DEFAULT_POMODORO_WORK_MINUTES * 60;
+        pomodoroBreakSeconds = DEFAULT_POMODORO_BREAK_MINUTES * 60;
+        pomodoroTotalSessions = DEFAULT_POMODORO_TOTAL_SESSIONS;
+        document.getElementById('pomodoroWorkMinutesInput').value = DEFAULT_POMODORO_WORK_MINUTES;
+        document.getElementById('pomodoroBreakMinutesInput').value = DEFAULT_POMODORO_BREAK_MINUTES;
+        document.getElementById('pomodoroTotalSessionsInput').value = DEFAULT_POMODORO_TOTAL_SESSIONS;
+      }
       pomodoroMode = 'work';
       pomodoroRemaining = pomodoroWorkSeconds;
       pomodoroPhaseEndAt = null;
