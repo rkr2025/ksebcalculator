@@ -238,6 +238,22 @@
       gap: 10px;
       flex-wrap: wrap;
     }
+    .entry-track-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: auto;
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+    .entry-track-toggle input { cursor: pointer; }
+    .entry-not-tracked {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-style: italic;
+    }
     /* ---------------------------- View controls -------------------------- */
     .view-controls {
       display: flex;
@@ -785,6 +801,10 @@
       <h3>✍️ New Entry</h3>
       <textarea id="entryInput" placeholder="Write what's on your mind..."></textarea>
       <div class="entry-actions">
+        <label class="entry-track-toggle" title="When off, this entry won't have any time elapsed against it -- it's saved as a plain diary note.">
+          <input type="checkbox" id="trackTimeCheckbox" checked>
+          ⏱️ Track time for this entry
+        </label>
         <button class="btn" id="addEntryBtn" type="button">Save Entry</button>
       </div>
     </div>
@@ -1009,13 +1029,17 @@
         input.focus();
         return;
       }
+      const trackTimeCheckbox = document.getElementById('trackTimeCheckbox');
       const now = new Date();
       const key = dateKey(now);
       const entries = loadEntries();
       if (!entries[key]) entries[key] = [];
-      entries[key].push({ t: now.toISOString(), text });
+      const entry = { t: now.toISOString(), text };
+      if (!trackTimeCheckbox.checked) entry.noTrack = true;
+      entries[key].push(entry);
       saveEntries(entries);
       input.value = '';
+      trackTimeCheckbox.checked = true;
 
       // Jump the view to today so the new entry is immediately visible.
       document.getElementById('viewDateInput').value = key;
@@ -1141,27 +1165,34 @@
     // (showing how long that entry "ran" for) and the next entry's timer
     // starts from zero. Flattened across all dates so it works across day
     // boundaries too.
+    //
+    // Entries saved with "Track time" switched off (noTrack) are excluded
+    // entirely from this chain -- they get no elapsed time of their own, and
+    // they're skipped over when finding "the next entry" so a tracked entry
+    // keeps running through any untracked entries in between, exactly as if
+    // the untracked ones weren't there.
     function buildEntryTimerInfo(allEntries) {
       const flat = [];
       for (const k in allEntries) {
         allEntries[k].forEach((e) => flat.push(e));
       }
       flat.sort((a, b) => a.t.localeCompare(b.t));
+      const trackedFlat = flat.filter((e) => !e.noTrack);
       const frozenElapsed = {};
-      flat.forEach((e, i) => {
-        if (i < flat.length - 1) {
-          frozenElapsed[e.t] = new Date(flat[i + 1].t) - new Date(e.t);
+      trackedFlat.forEach((e, i) => {
+        if (i < trackedFlat.length - 1) {
+          frozenElapsed[e.t] = new Date(trackedFlat[i + 1].t) - new Date(e.t);
         }
       });
       // A manually-set end time (endT) overrides the "until the next entry"
       // default -- lets a manually-added entry have a definite duration
       // instead of inheriting whatever gap happens to follow it.
-      flat.forEach((e) => {
+      trackedFlat.forEach((e) => {
         if (e.endT) {
           frozenElapsed[e.t] = new Date(e.endT) - new Date(e.t);
         }
       });
-      const latestTimestamp = flat.length ? flat[flat.length - 1].t : null;
+      const latestTimestamp = trackedFlat.length ? trackedFlat[trackedFlat.length - 1].t : null;
       return { frozenElapsed, latestTimestamp };
     }
 
@@ -1185,15 +1216,24 @@
         : (frozenElapsed[e.t] || 0);
     }
 
+    // Untracked entries (noTrack) don't carry any elapsed time, so they're
+    // excluded from the count/average/busiest stats -- otherwise they'd
+    // silently drag the average down and inflate "tracked across N entries".
     function computeBlockStats(blockEntries, frozenElapsed, latestTimestamp) {
+      const trackedEntries = blockEntries.filter((e) => !e.noTrack);
       let totalMs = 0;
       let busiest = null;
-      blockEntries.forEach((e) => {
+      trackedEntries.forEach((e) => {
         const ms = currentElapsedForEntry(e, frozenElapsed, latestTimestamp);
         totalMs += ms;
         if (!busiest || ms > busiest.ms) busiest = { ms, text: e.text };
       });
-      return { totalMs, count: blockEntries.length, avgMs: totalMs / blockEntries.length, busiest };
+      return {
+        totalMs,
+        count: trackedEntries.length,
+        avgMs: trackedEntries.length ? totalMs / trackedEntries.length : 0,
+        busiest,
+      };
     }
 
     function groupEntriesByThreeHours(dayEntries) {
@@ -1248,6 +1288,15 @@
             </thead>
             <tbody>`;
         blockEntries.forEach((e) => {
+          if (e.noTrack) {
+            html += `<tr>
+              <td>${escapeHtml(e.text)}</td>
+              <td>${formatTime(e.t)}</td>
+              <td>--</td>
+              <td>Not tracked</td>
+            </tr>`;
+            return;
+          }
           const durationMs = currentElapsedForEntry(e, frozenElapsed, latestTimestamp);
           const endMs = new Date(e.t).getTime() + durationMs;
           const isLive = e.t === latestTimestamp;
@@ -1325,17 +1374,32 @@
           <div class="entry-group-empty" data-empty-block="${b}"></div>
         </div>`;
         }
+        const trackedCount = blockEntries.filter((e) => !e.noTrack).length;
         return `
         <div class="entry-group">
           <div class="entry-group-heading">${THREE_HOUR_BLOCK_LABELS[b]}</div>
           <div class="entry-group-insight" data-block="${b}">
-            ⏳ <strong><span class="insight-total"></span></strong> tracked across ${blockEntries.length} entr${blockEntries.length === 1 ? 'y' : 'ies'}
+            ⏳ <strong><span class="insight-total"></span></strong> tracked across ${trackedCount} entr${trackedCount === 1 ? 'y' : 'ies'}
             — <span class="insight-highlight"><span class="insight-pct"></span></span> of today's tracked time.
             Avg <span class="insight-avg"></span> per entry.
             <span class="insight-longest"></span>
             <span class="insight-overflow"></span>
           </div>
           ${blockEntries.map((e) => {
+            if (e.noTrack) {
+              return `
+          <div class="entry-line" data-index="${e.index}">
+            <span class="entry-time-block">
+              <span class="entry-time">${formatTime(e.t)}</span>
+            </span>
+            <span class="entry-elapsed-block">
+              <span class="entry-not-tracked" title="Time tracking was turned off for this entry">🚫 Not tracked</span>
+            </span>
+            <span class="entry-text" data-index="${e.index}"></span>
+            <button class="entry-edit" data-index="${e.index}" title="Edit this entry" type="button">✏️</button>
+            <button class="entry-delete" data-index="${e.index}" title="Delete this entry" type="button">✕</button>
+          </div>`;
+            }
             const isLive = e.t === latestTimestamp && !e.endT;
             const elapsedMs = isLive ? (Date.now() - new Date(e.t).getTime()) : (frozenElapsed[e.t] || 0);
             const endTimeMs = new Date(e.t).getTime() + elapsedMs;
