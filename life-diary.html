@@ -374,6 +374,19 @@
       align-items: center;
       justify-content: center;
     }
+    /* On small screens, more than 10 segments in one squeezed-flat row
+       becomes unreadable -- cap it at 10 per row and wrap the rest onto
+       additional rows instead. Only applied (via JS, based on the actual
+       session count) when there are more than 10 sessions -- with 10 or
+       fewer, the plain single-row layout above is already fine. */
+    @media (max-width: 480px) {
+      .pomodoro-set-segments.pomodoro-set-segments--wrap {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        grid-auto-rows: 20px;
+        height: auto;
+      }
+    }
     .pomodoro-set-segment-fill {
       position: absolute;
       inset: 0;
@@ -1873,6 +1886,7 @@
       // counted), and upcoming sessions stay empty. Each segment shows its
       // own session number.
       const segmentsEl = document.getElementById('pomodoroSetSegments');
+      segmentsEl.classList.toggle('pomodoro-set-segments--wrap', pomodoroTotalSessions > 10);
       if (pomodoroTotalSessions > 0) {
         const inProgressCredit = pomodoroMode === 'work' && pomodoroWorkSeconds > 0
           ? currentPhaseElapsed() / pomodoroWorkSeconds
