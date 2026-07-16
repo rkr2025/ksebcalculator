@@ -1807,9 +1807,13 @@
           if (pomodoroTotalSessions > 0 && pomodoroSessionsCompleted >= pomodoroTotalSessions) {
             // The whole set of sessions is done -- stop here rather than
             // starting another break/session, leaving it ready for a
-            // fresh work session if the user starts again.
+            // fresh work session if the user starts again. phaseEndAt is
+            // re-synced to match (not left pointing at the just-expired
+            // phase) so pausePomodoro()'s "freeze remaining" recompute
+            // doesn't clobber this back down to 0.
             pomodoroMode = 'work';
             pomodoroRemaining = pomodoroWorkSeconds;
+            pomodoroPhaseEndAt = Date.now() + pomodoroRemaining * 1000;
             setComplete = true;
             onPhaseComplete('set-complete');
             break;
@@ -1957,9 +1961,19 @@
           alert(`🎉 All ${pomodoroTotalSessions} sessions completed!`);
         }
       });
+      if (setComplete) {
+        pausePomodoro();
+        stopLoggedDiaryEntry();
+        // Clear this cycle's counters so the progress bars/stats start
+        // fresh for the next round, rather than sitting at 100% forever
+        // until the user manually hits Reset.
+        pomodoroWorkSecondsCommitted = 0;
+        pomodoroBreakSecondsCommitted = 0;
+        pomodoroSessionsCompleted = 0;
+        pomodoroBreaksCompleted = 0;
+      }
       updatePomodoroDisplay();
       savePomodoroState();
-      if (setComplete) pausePomodoro();
     }
 
     function startPomodoro() {
@@ -2154,6 +2168,11 @@
         } else {
           pomodoroRunning = false;
           pomodoroPhaseEndAt = null;
+          stopLoggedDiaryEntry();
+          pomodoroWorkSecondsCommitted = 0;
+          pomodoroBreakSecondsCommitted = 0;
+          pomodoroSessionsCompleted = 0;
+          pomodoroBreaksCompleted = 0;
         }
       }
 
