@@ -408,6 +408,19 @@
       color: var(--text-muted);
       margin-bottom: 10px;
     }
+    .pomodoro-preview-end {
+      text-align: center;
+      font-size: 12.5px;
+      color: var(--text-secondary, var(--text-muted));
+      margin-bottom: 8px;
+      opacity: 1;
+      transition: opacity 0.6s ease;
+    }
+    .pomodoro-preview-end.fading { opacity: 0; }
+    .pomodoro-preview-end strong {
+      font-family: "Consolas", "Courier New", monospace;
+      color: var(--accent);
+    }
     .pomodoro-clocks {
       text-align: center;
       font-size: 12.5px;
@@ -1193,12 +1206,15 @@
       <input type="text" id="pomodoroTaskInput" class="pomodoro-task-input" placeholder="What are you working on? (optional)">
       <div class="pomodoro-mode" id="pomodoroMode">🎯 Work Session</div>
       <div class="pomodoro-display" id="pomodoroDisplay">25:00</div>
-      <div class="pomodoro-progress-track" id="pomodoroProgressTrack" title="Progress through the current session/break">
-        <div class="pomodoro-progress-fill" id="pomodoroProgressFill"></div>
+      <div class="pomodoro-preview-end" id="pomodoroPreviewEnd" style="display: none;"></div>
+      <div id="pomodoroProgressSection" style="display: none;">
+        <div class="pomodoro-progress-track" id="pomodoroProgressTrack" title="Progress through the current session/break">
+          <div class="pomodoro-progress-fill" id="pomodoroProgressFill"></div>
+        </div>
+        <div class="pomodoro-progress-label" id="pomodoroProgressLabel"></div>
+        <div class="pomodoro-set-segments" id="pomodoroSetSegments" title="Progress across all sessions"></div>
+        <div class="pomodoro-progress-label" id="pomodoroSetProgressLabel"></div>
       </div>
-      <div class="pomodoro-progress-label" id="pomodoroProgressLabel"></div>
-      <div class="pomodoro-set-segments" id="pomodoroSetSegments" title="Progress across all sessions"></div>
-      <div class="pomodoro-progress-label" id="pomodoroSetProgressLabel"></div>
       <div class="pomodoro-clocks" id="pomodoroClocks"></div>
       <div class="pomodoro-stats" id="pomodoroStats"></div>
       <div class="pomodoro-actions">
@@ -1872,12 +1888,38 @@
       return pomodoroRemaining + workSessionsRemaining * pomodoroWorkSeconds + breaksRemaining * pomodoroBreakSeconds;
     }
 
+    // Briefly previews the projected session-set end time right after the
+    // user changes "Total sessions" -- useful feedback even while the timer
+    // isn't running yet, since secondsUntilSetComplete() works off whatever
+    // remaining/mode/counters currently hold either way. Fades out and
+    // hides itself after 3 seconds.
+    let pomodoroPreviewEndTimeoutId = null;
+    function showSessionEndPreview() {
+      const el = document.getElementById('pomodoroPreviewEnd');
+      if (pomodoroPreviewEndTimeoutId) { clearTimeout(pomodoroPreviewEndTimeoutId); pomodoroPreviewEndTimeoutId = null; }
+
+      const endClock = formatClockTime(new Date(Date.now() + secondsUntilSetComplete() * 1000));
+      el.innerHTML = `All sessions would end at <strong>${endClock}</strong>`;
+      el.classList.remove('fading');
+      el.style.display = '';
+
+      pomodoroPreviewEndTimeoutId = setTimeout(() => {
+        el.classList.add('fading');
+        setTimeout(() => { el.style.display = 'none'; }, 600); // matches the CSS fade duration
+        pomodoroPreviewEndTimeoutId = null;
+      }, 3000);
+    }
+
     function updatePomodoroDisplay() {
       document.getElementById('pomodoroDisplay').textContent = formatPomodoroTime(pomodoroRemaining);
       const modeLabel = pomodoroMode === 'work' ? '🎯 Work Session' : '☕ Break';
       const sessionNumber = Math.min(pomodoroSessionsCompleted + 1, Math.max(pomodoroTotalSessions, 1));
       const sessionLabel = pomodoroTotalSessions > 0 ? ` (Session ${sessionNumber} of ${pomodoroTotalSessions})` : '';
       document.getElementById('pomodoroMode').textContent = modeLabel + sessionLabel;
+
+      // Both progress bars only make sense while the timer is actually
+      // counting down -- hide the whole section otherwise (paused/idle).
+      document.getElementById('pomodoroProgressSection').style.display = pomodoroRunning ? '' : 'none';
 
       // Overall progress across the whole set of sessions, one segment per
       // session: fully-completed sessions are 100% filled, the in-progress
@@ -2115,6 +2157,7 @@
       pomodoroTotalSessions = count;
       updatePomodoroDisplay();
       savePomodoroState();
+      showSessionEndPreview();
     });
 
     document.getElementById('pomodoroLogBtn').addEventListener('click', () => {
