@@ -906,11 +906,23 @@
       font-size: 14px;
     }
     .cal-nav:hover { border-color: var(--primary); color: var(--primary); }
+    .cal-header--today { justify-content: center; margin-bottom: 8px; }
+    .cal-today-btn { font-size: 12.5px; padding: 4px 10px; }
     .cal-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       gap: 4px;
     }
+    .cal-grid--with-week { grid-template-columns: 28px repeat(7, 1fr); }
+    .cal-week-num {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .cal-week-num.cal-dow-placeholder { font-size: 9px; text-transform: uppercase; }
     .cal-dow {
       text-align: center;
       font-size: 11px;
@@ -1126,7 +1138,10 @@
         <span class="cal-title" id="calTitle"></span>
         <button class="cal-nav" id="calNextBtn" type="button">›</button>
       </div>
-      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-header cal-header--today">
+        <button class="cal-nav cal-today-btn" id="calTodayBtn" type="button" title="Jump the calendar back to today">📍 Today</button>
+      </div>
+      <div class="cal-grid cal-grid--with-week" id="calGrid"></div>
     </div>
 
     <!-- New entry -->
@@ -2774,6 +2789,20 @@
       renderCalendar();
     });
 
+    // Jumps the calendar's displayed month back to today's month (not just
+    // the selected date) and selects today -- calPrevBtn/calNextBtn can
+    // page the view arbitrarily far away, and the existing "Today" button
+    // in the Diary Entries card only changes the selected date, not which
+    // month the calendar is currently showing.
+    document.getElementById('calTodayBtn').addEventListener('click', () => {
+      const today = new Date();
+      calYear = today.getFullYear();
+      calMonth = today.getMonth();
+      viewDateInput.value = dateKey(today);
+      renderEntries();
+      renderCalendar();
+    });
+
     function renderCalendar() {
       const grid = document.getElementById('calGrid');
       const title = document.getElementById('calTitle');
@@ -2785,22 +2814,34 @@
         .toLocaleDateString([], { month: 'long', year: 'numeric' });
 
       const dows = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      let html = dows.map((d, i) =>
-        `<div class="cal-dow${i === 0 || i === 6 ? ' weekend' : ''}">${d}</div>`).join('');
+      let html = '<div class="cal-week-num cal-dow-placeholder">Wk</div>' +
+        dows.map((d, i) => `<div class="cal-dow${i === 0 || i === 6 ? ' weekend' : ''}">${d}</div>`).join('');
 
       const firstDow = new Date(calYear, calMonth, 1).getDay();
       const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+      const totalRows = Math.ceil((firstDow + daysInMonth) / 7);
 
-      for (let i = 0; i < firstDow; i++) html += '<div class="cal-day empty"></div>';
+      for (let row = 0; row < totalRows; row++) {
+        // The Sunday this row starts on -- may fall in the previous or next
+        // month for a partial first/last row, but that's still the correct
+        // week to number the row by.
+        const rowSunday = new Date(calYear, calMonth, 1 - firstDow + row * 7);
+        html += `<div class="cal-week-num">${getWeekNumber(rowSunday)}</div>`;
 
-      for (let day = 1; day <= daysInMonth; day++) {
-        const key = dateKey(new Date(calYear, calMonth, day));
-        const classes = ['cal-day'];
-        if (isWeekendKey(key)) classes.push('weekend');
-        if (key === todayKey) classes.push('today');
-        if (key === selectedKey) classes.push('selected');
-        const dot = entries[key] && entries[key].length > 0 ? '<span class="dot"></span>' : '';
-        html += `<div class="${classes.join(' ')}" data-key="${key}">${day}${dot}</div>`;
+        for (let col = 0; col < 7; col++) {
+          const day = row * 7 + col - firstDow + 1;
+          if (day < 1 || day > daysInMonth) {
+            html += '<div class="cal-day empty"></div>';
+            continue;
+          }
+          const key = dateKey(new Date(calYear, calMonth, day));
+          const classes = ['cal-day'];
+          if (isWeekendKey(key)) classes.push('weekend');
+          if (key === todayKey) classes.push('today');
+          if (key === selectedKey) classes.push('selected');
+          const dot = entries[key] && entries[key].length > 0 ? '<span class="dot"></span>' : '';
+          html += `<div class="${classes.join(' ')}" data-key="${key}">${day}${dot}</div>`;
+        }
       }
 
       grid.innerHTML = html;
