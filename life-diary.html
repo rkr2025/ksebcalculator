@@ -1212,35 +1212,43 @@
       <div class="pomodoro-settings-row">
         <div class="pomodoro-settings">
           <label for="pomodoroWorkMinutesInput">Work session length</label>
-          <select id="pomodoroWorkMinutesInput">
-            <option value="5">5 min</option>
-            <option value="10" selected>10 min</option>
-            <option value="15">15 min</option>
-            <option value="20">20 min</option>
-            <option value="25">25 min</option>
-            <option value="30">30 min</option>
-            <option value="45">45 min</option>
-            <option value="60">60 min</option>
-            <option value="90">90 min</option>
-            <option value="120">120 min</option>
-            <option value="150">150 min</option>
-            <option value="180">180 min</option>
-          </select>
+          <div class="pomodoro-settings-stepper">
+            <button class="pomodoro-stepper-btn" id="pomodoroWorkMinutesMinusBtn" type="button" title="Decrease by 1 minute" aria-label="Decrease work session length by 1 minute">−</button>
+            <select id="pomodoroWorkMinutesInput">
+              <option value="5">5 min</option>
+              <option value="10" selected>10 min</option>
+              <option value="15">15 min</option>
+              <option value="20">20 min</option>
+              <option value="25">25 min</option>
+              <option value="30">30 min</option>
+              <option value="45">45 min</option>
+              <option value="60">60 min</option>
+              <option value="90">90 min</option>
+              <option value="120">120 min</option>
+              <option value="150">150 min</option>
+              <option value="180">180 min</option>
+            </select>
+            <button class="pomodoro-stepper-btn" id="pomodoroWorkMinutesPlusBtn" type="button" title="Increase by 1 minute" aria-label="Increase work session length by 1 minute">+</button>
+          </div>
         </div>
         <div class="pomodoro-settings">
           <label for="pomodoroBreakMinutesInput">Break length</label>
-          <select id="pomodoroBreakMinutesInput">
-            <option value="0" selected>0 min</option>
-            <option value="5">5 min</option>
-            <option value="10">10 min</option>
-            <option value="15">15 min</option>
-            <option value="20">20 min</option>
-            <option value="30">30 min</option>
-            <option value="45">45 min</option>
-            <option value="60">60 min</option>
-            <option value="90">90 min</option>
-            <option value="120">120 min</option>
-          </select>
+          <div class="pomodoro-settings-stepper">
+            <button class="pomodoro-stepper-btn" id="pomodoroBreakMinutesMinusBtn" type="button" title="Decrease by 1 minute" aria-label="Decrease break length by 1 minute">−</button>
+            <select id="pomodoroBreakMinutesInput">
+              <option value="0" selected>0 min</option>
+              <option value="5">5 min</option>
+              <option value="10">10 min</option>
+              <option value="15">15 min</option>
+              <option value="20">20 min</option>
+              <option value="30">30 min</option>
+              <option value="45">45 min</option>
+              <option value="60">60 min</option>
+              <option value="90">90 min</option>
+              <option value="120">120 min</option>
+            </select>
+            <button class="pomodoro-stepper-btn" id="pomodoroBreakMinutesPlusBtn" type="button" title="Increase by 1 minute" aria-label="Increase break length by 1 minute">+</button>
+          </div>
         </div>
         <div class="pomodoro-settings">
           <label for="pomodoroTotalSessionsInput">Total sessions</label>
@@ -2110,6 +2118,10 @@
       document.getElementById('pomodoroWorkMinutesInput').disabled = true;
       document.getElementById('pomodoroBreakMinutesInput').disabled = true;
       document.getElementById('pomodoroTotalSessionsInput').disabled = true;
+      document.getElementById('pomodoroWorkMinutesMinusBtn').disabled = true;
+      document.getElementById('pomodoroWorkMinutesPlusBtn').disabled = true;
+      document.getElementById('pomodoroBreakMinutesMinusBtn').disabled = true;
+      document.getElementById('pomodoroBreakMinutesPlusBtn').disabled = true;
       document.getElementById('pomodoroTotalSessionsMinusBtn').disabled = true;
       document.getElementById('pomodoroTotalSessionsPlusBtn').disabled = true;
       savePomodoroState();
@@ -2173,6 +2185,10 @@
       document.getElementById('pomodoroWorkMinutesInput').disabled = false;
       document.getElementById('pomodoroBreakMinutesInput').disabled = false;
       document.getElementById('pomodoroTotalSessionsInput').disabled = false;
+      document.getElementById('pomodoroWorkMinutesMinusBtn').disabled = false;
+      document.getElementById('pomodoroWorkMinutesPlusBtn').disabled = false;
+      document.getElementById('pomodoroBreakMinutesMinusBtn').disabled = false;
+      document.getElementById('pomodoroBreakMinutesPlusBtn').disabled = false;
       document.getElementById('pomodoroTotalSessionsMinusBtn').disabled = false;
       document.getElementById('pomodoroTotalSessionsPlusBtn').disabled = false;
       document.getElementById('pomodoroTaskInput').value = '';
@@ -2232,24 +2248,36 @@
     // only lists common round numbers, so if stepping lands on a value
     // that isn't already an option (e.g. 6 -> 7), add it in sorted order
     // first so the select can actually show/select it.
-    function stepTotalSessions(delta) {
-      const select = document.getElementById('pomodoroTotalSessionsInput');
-      const newCount = Math.max(1, Math.min(144, (parseInt(select.value, 10) || DEFAULT_POMODORO_TOTAL_SESSIONS) + delta));
+    function stepSelectValue(selectId, delta, min, max, fallback, optionLabel) {
+      const select = document.getElementById(selectId);
+      const newValue = Math.max(min, Math.min(max, (parseInt(select.value, 10) || fallback) + delta));
 
-      if (!Array.from(select.options).some((opt) => parseInt(opt.value, 10) === newCount)) {
+      if (!Array.from(select.options).some((opt) => parseInt(opt.value, 10) === newValue)) {
         const option = document.createElement('option');
-        option.value = newCount;
-        option.textContent = newCount;
-        const before = Array.from(select.options).find((opt) => parseInt(opt.value, 10) > newCount);
+        option.value = newValue;
+        option.textContent = optionLabel(newValue);
+        const before = Array.from(select.options).find((opt) => parseInt(opt.value, 10) > newValue);
         select.insertBefore(option, before || null);
       }
 
-      select.value = newCount;
+      select.value = newValue;
       select.dispatchEvent(new Event('change'));
     }
 
-    document.getElementById('pomodoroTotalSessionsMinusBtn').addEventListener('click', () => stepTotalSessions(-1));
-    document.getElementById('pomodoroTotalSessionsPlusBtn').addEventListener('click', () => stepTotalSessions(1));
+    document.getElementById('pomodoroWorkMinutesMinusBtn').addEventListener('click', () =>
+      stepSelectValue('pomodoroWorkMinutesInput', -1, 1, 180, DEFAULT_POMODORO_WORK_MINUTES, (v) => `${v} min`));
+    document.getElementById('pomodoroWorkMinutesPlusBtn').addEventListener('click', () =>
+      stepSelectValue('pomodoroWorkMinutesInput', 1, 1, 180, DEFAULT_POMODORO_WORK_MINUTES, (v) => `${v} min`));
+
+    document.getElementById('pomodoroBreakMinutesMinusBtn').addEventListener('click', () =>
+      stepSelectValue('pomodoroBreakMinutesInput', -1, 0, 120, DEFAULT_POMODORO_BREAK_MINUTES, (v) => `${v} min`));
+    document.getElementById('pomodoroBreakMinutesPlusBtn').addEventListener('click', () =>
+      stepSelectValue('pomodoroBreakMinutesInput', 1, 0, 120, DEFAULT_POMODORO_BREAK_MINUTES, (v) => `${v} min`));
+
+    document.getElementById('pomodoroTotalSessionsMinusBtn').addEventListener('click', () =>
+      stepSelectValue('pomodoroTotalSessionsInput', -1, 1, 144, DEFAULT_POMODORO_TOTAL_SESSIONS, (v) => `${v}`));
+    document.getElementById('pomodoroTotalSessionsPlusBtn').addEventListener('click', () =>
+      stepSelectValue('pomodoroTotalSessionsInput', 1, 1, 144, DEFAULT_POMODORO_TOTAL_SESSIONS, (v) => `${v}`));
 
     document.getElementById('pomodoroLogBtn').addEventListener('click', () => {
       const totalSeconds = getWorkSecondsThisSession();
