@@ -2124,6 +2124,10 @@
       document.getElementById('pomodoroBreakMinutesPlusBtn').disabled = true;
       document.getElementById('pomodoroTotalSessionsMinusBtn').disabled = true;
       document.getElementById('pomodoroTotalSessionsPlusBtn').disabled = true;
+      // The live "All sessions end at" clock (in pomodoroClocks) takes over
+      // once running -- this "would end at" preview is only useful while
+      // still configuring things beforehand.
+      document.getElementById('pomodoroPreviewEnd').style.display = 'none';
       savePomodoroState();
     }
 
