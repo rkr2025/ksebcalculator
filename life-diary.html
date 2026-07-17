@@ -314,6 +314,25 @@
       text-align: center;
       cursor: pointer;
     }
+    .pomodoro-settings-stepper {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .pomodoro-stepper-btn {
+      width: 22px;
+      height: 22px;
+      line-height: 1;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0;
+    }
+    .pomodoro-stepper-btn:hover { border-color: var(--accent); color: var(--accent); }
     .pomodoro-task-input {
       display: block;
       width: 100%;
@@ -1225,28 +1244,32 @@
         </div>
         <div class="pomodoro-settings">
           <label for="pomodoroTotalSessionsInput">Total sessions</label>
-          <select id="pomodoroTotalSessionsInput">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6" selected>6</option>
-            <option value="8">8</option>
-            <option value="10">10</option>
-            <option value="12">12</option>
-            <option value="16">16</option>
-            <option value="20">20</option>
-            <option value="24">24</option>
-            <option value="30">30</option>
-            <option value="36">36</option>
-            <option value="48">48</option>
-            <option value="60">60</option>
-            <option value="72">72</option>
-            <option value="96">96</option>
-            <option value="120">120</option>
-            <option value="144">144</option>
-          </select>
+          <div class="pomodoro-settings-stepper">
+            <button class="pomodoro-stepper-btn" id="pomodoroTotalSessionsMinusBtn" type="button" title="Decrease by 1" aria-label="Decrease total sessions by 1">−</button>
+            <select id="pomodoroTotalSessionsInput">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6" selected>6</option>
+              <option value="8">8</option>
+              <option value="10">10</option>
+              <option value="12">12</option>
+              <option value="16">16</option>
+              <option value="20">20</option>
+              <option value="24">24</option>
+              <option value="30">30</option>
+              <option value="36">36</option>
+              <option value="48">48</option>
+              <option value="60">60</option>
+              <option value="72">72</option>
+              <option value="96">96</option>
+              <option value="120">120</option>
+              <option value="144">144</option>
+            </select>
+            <button class="pomodoro-stepper-btn" id="pomodoroTotalSessionsPlusBtn" type="button" title="Increase by 1" aria-label="Increase total sessions by 1">+</button>
+          </div>
         </div>
       </div>
       <label class="pomodoro-popup-toggle">
@@ -2087,6 +2110,8 @@
       document.getElementById('pomodoroWorkMinutesInput').disabled = true;
       document.getElementById('pomodoroBreakMinutesInput').disabled = true;
       document.getElementById('pomodoroTotalSessionsInput').disabled = true;
+      document.getElementById('pomodoroTotalSessionsMinusBtn').disabled = true;
+      document.getElementById('pomodoroTotalSessionsPlusBtn').disabled = true;
       savePomodoroState();
     }
 
@@ -2148,6 +2173,8 @@
       document.getElementById('pomodoroWorkMinutesInput').disabled = false;
       document.getElementById('pomodoroBreakMinutesInput').disabled = false;
       document.getElementById('pomodoroTotalSessionsInput').disabled = false;
+      document.getElementById('pomodoroTotalSessionsMinusBtn').disabled = false;
+      document.getElementById('pomodoroTotalSessionsPlusBtn').disabled = false;
       document.getElementById('pomodoroTaskInput').value = '';
       document.getElementById('pomodoroLogStatus').textContent = '';
       updatePomodoroDisplay();
@@ -2200,6 +2227,29 @@
       savePomodoroState();
       showSessionEndPreview();
     });
+
+    // +/- steppers adjust the actual count by exactly 1 -- the dropdown
+    // only lists common round numbers, so if stepping lands on a value
+    // that isn't already an option (e.g. 6 -> 7), add it in sorted order
+    // first so the select can actually show/select it.
+    function stepTotalSessions(delta) {
+      const select = document.getElementById('pomodoroTotalSessionsInput');
+      const newCount = Math.max(1, Math.min(144, (parseInt(select.value, 10) || DEFAULT_POMODORO_TOTAL_SESSIONS) + delta));
+
+      if (!Array.from(select.options).some((opt) => parseInt(opt.value, 10) === newCount)) {
+        const option = document.createElement('option');
+        option.value = newCount;
+        option.textContent = newCount;
+        const before = Array.from(select.options).find((opt) => parseInt(opt.value, 10) > newCount);
+        select.insertBefore(option, before || null);
+      }
+
+      select.value = newCount;
+      select.dispatchEvent(new Event('change'));
+    }
+
+    document.getElementById('pomodoroTotalSessionsMinusBtn').addEventListener('click', () => stepTotalSessions(-1));
+    document.getElementById('pomodoroTotalSessionsPlusBtn').addEventListener('click', () => stepTotalSessions(1));
 
     document.getElementById('pomodoroLogBtn').addEventListener('click', () => {
       const totalSeconds = getWorkSecondsThisSession();
