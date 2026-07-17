@@ -2099,6 +2099,7 @@
         pomodoroBreakSecondsCommitted = 0;
         pomodoroSessionsCompleted = 0;
         pomodoroBreaksCompleted = 0;
+        showSessionEndPreview();
       }
       updatePomodoroDisplay();
       savePomodoroState();
@@ -2143,6 +2144,7 @@
       document.getElementById('pomodoroPauseBtn').style.display = 'none';
       document.getElementById('pomodoroLogBtn').style.display = 'none';
       savePomodoroState();
+      showSessionEndPreview();
     }
 
     // Stops the diary entry (if any) that "Log to Diary" created for this
@@ -2199,6 +2201,7 @@
       document.getElementById('pomodoroLogStatus').textContent = '';
       updatePomodoroDisplay();
       localStorage.removeItem(POMODORO_STATE_KEY);
+      showSessionEndPreview();
     }
 
     document.getElementById('pomodoroStartBtn').addEventListener('click', startPomodoro);
@@ -2322,7 +2325,7 @@
     (function restorePomodoroState() {
       let saved = null;
       try { saved = JSON.parse(localStorage.getItem(POMODORO_STATE_KEY)); } catch { saved = null; }
-      if (!saved) { updatePomodoroDisplay(); return; }
+      if (!saved) { updatePomodoroDisplay(); showSessionEndPreview(); return; }
 
       pomodoroWorkSeconds = saved.workSeconds || pomodoroWorkSeconds;
       pomodoroBreakSeconds = Number.isFinite(saved.breakSeconds) ? saved.breakSeconds : pomodoroBreakSeconds;
@@ -2359,6 +2362,7 @@
       }
 
       updatePomodoroDisplay();
+      if (!pomodoroRunning) showSessionEndPreview();
     })();
 
     // ------------------------------- Search ---------------------------------
