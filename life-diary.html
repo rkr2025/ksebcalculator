@@ -230,6 +230,21 @@
       box-shadow: var(--shadow-sm);
     }
     .btn-outline:hover { border-color: var(--primary); color: var(--primary); box-shadow: var(--shadow-lift); }
+    .whats-special-toggle-btn { width: 100%; }
+    .whats-special-status {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin: 10px 0 0;
+    }
+    .whats-special-text {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: var(--surface-muted);
+      font-size: 13.5px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
     .current-running-entry {
       font-size: 12.5px;
       margin-bottom: 10px;
@@ -390,6 +405,7 @@
       margin-bottom: 4px;
       gap: 1px;
     }
+    .pomodoro-set-segments--break { margin-top: 8px; }
     .pomodoro-set-segment {
       position: relative;
       flex: 1;
@@ -418,6 +434,9 @@
       width: 0%;
       background: linear-gradient(90deg, #8a5cf6, color-mix(in srgb, #8a5cf6 70%, #fff));
       transition: width 0.3s ease;
+    }
+    .pomodoro-set-segment-fill--break {
+      background: linear-gradient(90deg, #14b8a6, color-mix(in srgb, #14b8a6 70%, #fff));
     }
     .pomodoro-set-segment-number {
       position: relative;
@@ -1192,6 +1211,15 @@
       <div class="cal-grid cal-grid--with-week" id="calGrid"></div>
     </div>
 
+    <!-- What's special today (Gemini AI, cached once per day in localStorage) -->
+    <div class="card">
+      <button class="btn-outline btn whats-special-toggle-btn" id="whatsSpecialToggleBtn" type="button">✨ What's special Today?</button>
+      <div id="whatsSpecialContent" style="display: none;">
+        <p class="whats-special-status" id="whatsSpecialStatus" style="display: none;"></p>
+        <div class="whats-special-text" id="whatsSpecialText" style="display: none;"></div>
+      </div>
+    </div>
+
     <!-- New entry -->
     <div class="card">
       <h3>✍️ New Entry</h3>
@@ -1295,6 +1323,10 @@
         <div class="pomodoro-progress-label" id="pomodoroProgressLabel"></div>
         <div class="pomodoro-set-segments" id="pomodoroSetSegments" title="Progress across all sessions"></div>
         <div class="pomodoro-progress-label" id="pomodoroSetProgressLabel"></div>
+        <div id="pomodoroBreakSetSection" style="display: none;">
+          <div class="pomodoro-set-segments pomodoro-set-segments--break" id="pomodoroBreakSetSegments" title="Progress across all breaks"></div>
+          <div class="pomodoro-progress-label" id="pomodoroBreakSetProgressLabel"></div>
+        </div>
       </div>
       <div class="pomodoro-clocks" id="pomodoroClocks"></div>
       <div class="pomodoro-stats" id="pomodoroStats"></div>
@@ -1954,6 +1986,15 @@
       return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
 
+    // Once a duration passes an hour, mm:ss (e.g. "97:42") gets hard to
+    // read at a glance -- switch to hours:minutes instead.
+    function formatPomodoroDuration(totalSeconds) {
+      if (totalSeconds < 3600) return formatPomodoroTime(totalSeconds);
+      const h = Math.floor(totalSeconds / 3600);
+      const m = Math.floor((totalSeconds % 3600) / 60);
+      return `${h}:${String(m).padStart(2, '0')} hrs`;
+    }
+
     function formatClockTime(date) {
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
     }
@@ -2026,6 +2067,40 @@
         document.getElementById('pomodoroSetProgressLabel').textContent = '';
       }
 
+      // Same idea, but for breaks specifically -- only shown once the user
+      // has actually set a break length above 0. A break sits after each
+      // work session except the very last one, so there's one fewer break
+      // than there are sessions.
+      const breakSetSection = document.getElementById('pomodoroBreakSetSection');
+      const totalBreaks = Math.max(0, pomodoroTotalSessions - 1);
+      if (pomodoroBreakSeconds > 0 && totalBreaks > 0) {
+        breakSetSection.style.display = '';
+        const breakSegmentsEl = document.getElementById('pomodoroBreakSetSegments');
+        breakSegmentsEl.classList.toggle('pomodoro-set-segments--wrap', totalBreaks > 10);
+
+        const breakInProgressCredit = pomodoroMode === 'break'
+          ? currentPhaseElapsed() / pomodoroBreakSeconds
+          : 0;
+        let breakSegmentsHtml = '';
+        for (let i = 1; i <= totalBreaks; i++) {
+          let fillPct;
+          if (i <= pomodoroBreaksCompleted) fillPct = 100;
+          else if (i === pomodoroBreaksCompleted + 1) fillPct = Math.min(100, Math.max(0, breakInProgressCredit * 100));
+          else fillPct = 0;
+          breakSegmentsHtml += `<div class="pomodoro-set-segment">` +
+            `<div class="pomodoro-set-segment-fill pomodoro-set-segment-fill--break" style="width:${fillPct}%"></div>` +
+            `<span class="pomodoro-set-segment-number">${i}</span></div>`;
+        }
+        breakSegmentsEl.innerHTML = breakSegmentsHtml;
+
+        const breakSetProgressPct = Math.min(100, Math.max(0,
+          ((pomodoroBreaksCompleted + breakInProgressCredit) / totalBreaks) * 100));
+        document.getElementById('pomodoroBreakSetProgressLabel').textContent =
+          `${Math.round(breakSetProgressPct)}% of all ${totalBreaks} break${totalBreaks === 1 ? '' : 's'} complete`;
+      } else {
+        breakSetSection.style.display = 'none';
+      }
+
       const phaseDuration = pomodoroMode === 'work' ? pomodoroWorkSeconds : pomodoroBreakSeconds;
       const phaseProgressPct = phaseDuration > 0
         ? Math.min(100, Math.max(0, (currentPhaseElapsed() / phaseDuration) * 100))
@@ -2062,11 +2137,11 @@
 
       const lines = showBreakStats
         ? [
-            `Total elapsed : ${formatPomodoroTime(totalWithBreaks)} (Work+Break)`,
+            `Total elapsed : ${formatPomodoroDuration(totalWithBreaks)} (Work+Break)`,
             `Work elapsed: ${formatPomodoroTime(workSecondsThisSession)} (work-only)`,
             `Break elapsed: ${formatPomodoroTime(breakSecondsThisSession)} (breaks-only)`,
           ]
-        : [`Total elapsed: ${formatPomodoroTime(workSecondsThisSession)} (work)`];
+        : [`Total elapsed: ${formatPomodoroDuration(workSecondsThisSession)} (work)`];
 
       lines.push(
         `${pomodoroSessionsCompleted} session${pomodoroSessionsCompleted === 1 ? '' : 's'} completed` +
@@ -3429,6 +3504,105 @@
       }
       throw lastError || new Error('no Gemini model responded');
     }
+
+    // ---------------------------- What's special today ----------------------
+    // Same Gemini key/models as the diary AI summary above, different
+    // prompt. Result is cached in localStorage per calendar date, so it's
+    // only ever fetched once per day (opening the panel again the same day,
+    // or reloading the page, reads the cached text instead of calling the
+    // API again).
+    const WHATS_SPECIAL_KEY_PREFIX = 'life_diary_whats_special_';
+    function whatsSpecialStorageKey() {
+      return WHATS_SPECIAL_KEY_PREFIX + dateKey(new Date());
+    }
+
+    async function fetchWhatsSpecialToday(geminiKey) {
+      const dateLabel = new Date().toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const body = JSON.stringify({
+        contents: [{
+          parts: [{
+            text: `What is special about today, ${dateLabel}, for Kerala, India, and internationally? ` +
+              'List any notable festivals, observances, historical events, or holidays. Keep it factual and concise, ' +
+              'organized under three short headings: Kerala, India, International. Use brief bullet points under each heading.',
+          }],
+        }],
+      });
+
+      let lastError = null;
+      for (const model of GEMINI_MODELS) {
+        const response = await withTimeout(
+          fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey },
+            body,
+          }),
+          60000,
+          'the Gemini API took too long to respond',
+        );
+
+        if (response.status === 404) { lastError = new Error(`model ${model} not found`); continue; }
+        if (response.status === 400 || response.status === 401 || response.status === 403) {
+          throw new Error('Your Gemini API key was rejected (invalid or restricted). Remove the saved key below (in AI Summary) and enter a new one from aistudio.google.com.');
+        }
+        if (response.status === 429) {
+          throw new Error('The free Gemini quota is used up for now -- try again in a minute (or tomorrow if the daily limit is hit).');
+        }
+        if (!response.ok) { lastError = new Error(`Gemini API error (HTTP ${response.status})`); continue; }
+
+        const data = await response.json();
+        const parts = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
+        const text = parts ? parts.map((p) => p.text || '').join('').trim() : '';
+        if (!text) throw new Error('the Gemini API returned no text');
+        return text;
+      }
+      throw lastError || new Error('no Gemini model responded');
+    }
+
+    let whatsSpecialLoaded = false;
+    document.getElementById('whatsSpecialToggleBtn').addEventListener('click', async () => {
+      const content = document.getElementById('whatsSpecialContent');
+      const showing = content.style.display === 'block';
+      content.style.display = showing ? 'none' : 'block';
+      if (showing || whatsSpecialLoaded) return;
+
+      const statusEl = document.getElementById('whatsSpecialStatus');
+      const textEl = document.getElementById('whatsSpecialText');
+
+      const cached = localStorage.getItem(whatsSpecialStorageKey());
+      if (cached) {
+        statusEl.style.display = 'none';
+        textEl.textContent = cached;
+        textEl.style.display = 'block';
+        whatsSpecialLoaded = true;
+        return;
+      }
+
+      const geminiKey = localStorage.getItem(GEMINI_KEY_STORAGE);
+      if (!geminiKey) {
+        statusEl.textContent = 'Add your free Gemini API key in the "AI Summary" section (under Diary Entries, below) to enable this -- get one at aistudio.google.com.';
+        statusEl.style.display = 'block';
+        textEl.style.display = 'none';
+        return;
+      }
+
+      statusEl.textContent = "✨ Finding out what's special today...";
+      statusEl.style.display = 'block';
+      textEl.style.display = 'none';
+
+      try {
+        const text = await fetchWhatsSpecialToday(geminiKey);
+        localStorage.setItem(whatsSpecialStorageKey(), text);
+        statusEl.style.display = 'none';
+        // Model output is plain text, not user-authored -- still assigned
+        // via textContent (not innerHTML) to be safe by default.
+        textEl.textContent = text;
+        textEl.style.display = 'block';
+        whatsSpecialLoaded = true;
+      } catch (err) {
+        statusEl.textContent = `⚠️ ${(err && err.message) || "Could not fetch today's special info."}`;
+        statusEl.style.display = 'block';
+      }
+    });
 
     async function fetchBrowserAiSummary(key, dayEntries) {
       // availability() should answer near-instantly; if it hangs (seen on
