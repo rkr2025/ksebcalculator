@@ -243,8 +243,16 @@
       background: var(--surface-muted);
       font-size: 13.5px;
       line-height: 1.6;
-      white-space: pre-wrap;
     }
+    .whats-special-text h4 {
+      margin: 12px 0 6px;
+      font-size: 13.5px;
+      color: var(--accent);
+    }
+    .whats-special-text h4:first-child { margin-top: 0; }
+    .whats-special-text p { margin: 0 0 8px; }
+    .whats-special-text ul { margin: 0 0 8px; padding-left: 20px; }
+    .whats-special-text li { margin-bottom: 4px; }
     .whats-special-delete-btn {
       margin-top: 8px;
       font-size: 12px;
@@ -3524,6 +3532,39 @@
       return WHATS_SPECIAL_KEY_PREFIX + dateKey(new Date());
     }
 
+    // Gemini replies in markdown (###/**/*), which looked like literal
+    // hashes and asterisks when dumped as plain text. Escape first (so any
+    // stray < & etc. in the model's output can't become real markup), then
+    // turn just the handful of markdown constructs it actually uses back
+    // into real tags -- headings, bullet lists, bold, italics.
+    function inlineMarkdownLite(escaped) {
+      return escaped
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g, '<em>$1</em>');
+    }
+    function renderMarkdownLite(raw) {
+      const lines = escapeHtml(raw).split('\n');
+      let html = '';
+      let inList = false;
+      const closeList = () => { if (inList) { html += '</ul>'; inList = false; } };
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) { closeList(); continue; }
+        const heading = trimmed.match(/^#{1,6}\s+(.*)$/);
+        if (heading) { closeList(); html += `<h4>${inlineMarkdownLite(heading[1])}</h4>`; continue; }
+        const bullet = trimmed.match(/^[*-]\s+(.*)$/);
+        if (bullet) {
+          if (!inList) { html += '<ul>'; inList = true; }
+          html += `<li>${inlineMarkdownLite(bullet[1])}</li>`;
+          continue;
+        }
+        closeList();
+        html += `<p>${inlineMarkdownLite(trimmed)}</p>`;
+      }
+      closeList();
+      return html;
+    }
+
     async function fetchWhatsSpecialToday(geminiKey) {
       const today = new Date();
       const dateLabel = today.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -3582,7 +3623,7 @@
       const cached = localStorage.getItem(whatsSpecialStorageKey());
       if (cached) {
         statusEl.style.display = 'none';
-        textEl.textContent = cached;
+        textEl.innerHTML = renderMarkdownLite(cached);
         textEl.style.display = 'block';
         deleteBtn.style.display = '';
         whatsSpecialLoaded = true;
@@ -3607,9 +3648,11 @@
         const text = await fetchWhatsSpecialToday(geminiKey);
         localStorage.setItem(whatsSpecialStorageKey(), text);
         statusEl.style.display = 'none';
-        // Model output is plain text, not user-authored -- still assigned
-        // via textContent (not innerHTML) to be safe by default.
-        textEl.textContent = text;
+        // Model output is markdown -- rendered via renderMarkdownLite(),
+        // which escapes the raw text first and only reintroduces a small,
+        // controlled set of tags (h4/ul/li/p/strong/em), so no unescaped
+        // model output ever reaches innerHTML.
+        textEl.innerHTML = renderMarkdownLite(text);
         textEl.style.display = 'block';
         deleteBtn.style.display = '';
         whatsSpecialLoaded = true;
