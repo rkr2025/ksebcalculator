@@ -1116,6 +1116,37 @@
       padding: 6px 12px;
       font-size: 12.5px;
     }
+    .settings-toggle-btn { padding: 8px 12px; font-size: 15px; }
+    .settings-theme-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 10px;
+      margin-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+    }
+    .settings-note {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: 8px 0 0;
+    }
+    .settings-key-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .settings-key-row input {
+      flex: 1;
+      min-width: 180px;
+      padding: 7px 10px;
+      font-size: 12.5px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+    }
 
     /* --------------------------- Backup / restore ------------------------- */
     .backup-row {
@@ -1196,16 +1227,32 @@
 <body>
   <div class="container">
     <div class="top-bar">
-      <div class="theme-toggle">
-        <span>☀️</span>
-        <label class="switch">
-          <input type="checkbox" id="themeToggle">
-          <span class="switch-slider"></span>
-        </label>
-        <span>🌙</span>
-      </div>
       <h1>📔 Life Diary</h1>
       <button class="btn-outline btn" id="calendarToggleBtn" type="button">📅 Calendar</button>
+      <button class="btn-outline btn settings-toggle-btn" id="settingsToggleBtn" type="button" title="Settings -- theme, AI API key">⚙️</button>
+    </div>
+
+    <!-- Settings (hidden until toggled) -->
+    <div class="card" id="settingsPanel" style="display: none;">
+      <h3>⚙️ Settings</h3>
+      <div class="settings-theme-row">
+        <span class="settings-note" style="margin: 0;">Theme</span>
+        <div class="theme-toggle">
+          <span>☀️</span>
+          <label class="switch">
+            <input type="checkbox" id="themeToggle">
+            <span class="switch-slider"></span>
+          </label>
+          <span>🌙</span>
+        </div>
+      </div>
+      <p class="settings-note">API key used for "AI Summary" and "What's special Today?" -- stored only in this browser, never sent anywhere except directly to the AI provider.</p>
+      <div class="settings-key-row">
+        <input type="password" id="settingsApiKeyInput" placeholder="AIza... (Gemini) or sk-ant-... (Claude)">
+        <button class="btn btn-small" id="settingsSaveKeyBtn" type="button">Save Key</button>
+      </div>
+      <p class="settings-note" id="settingsKeyStatus"></p>
+      <p class="settings-note"><a href="#" id="settingsRemoveKeyLink" style="display: none;">Remove saved API key</a></p>
     </div>
     <p class="year-progress" id="yearProgress"></p>
     <p class="day-countdown" id="dayCountdown"></p>
@@ -3823,6 +3870,56 @@
       localStorage.removeItem(API_KEY_STORAGE);
       localStorage.removeItem(GEMINI_KEY_STORAGE);
       renderSummary();
+    });
+
+    // ------------------------------- Settings --------------------------------
+    // A second, more discoverable entry point (gear icon up top) for the
+    // same API key used by "AI Summary" and "What's special Today?" -- reads
+    // and writes the exact same localStorage keys as the AI Summary panel's
+    // own key entry, just without triggering renderSummary()/opening the
+    // Diary Entries summary panel as a side effect.
+    function updateSettingsKeyStatus() {
+      const hasGemini = !!localStorage.getItem(GEMINI_KEY_STORAGE);
+      const hasClaude = !!localStorage.getItem(API_KEY_STORAGE);
+      const statusEl = document.getElementById('settingsKeyStatus');
+      const removeLink = document.getElementById('settingsRemoveKeyLink');
+      if (hasGemini || hasClaude) {
+        statusEl.textContent = `✅ ${hasGemini ? 'Gemini' : 'Claude'} API key is saved on this device.`;
+        removeLink.style.display = '';
+      } else {
+        statusEl.textContent = 'No API key saved yet.';
+        removeLink.style.display = 'none';
+      }
+    }
+
+    document.getElementById('settingsToggleBtn').addEventListener('click', () => {
+      const panel = document.getElementById('settingsPanel');
+      const showing = panel.style.display === 'block';
+      panel.style.display = showing ? 'none' : 'block';
+      if (!showing) updateSettingsKeyStatus();
+    });
+
+    document.getElementById('settingsSaveKeyBtn').addEventListener('click', () => {
+      const input = document.getElementById('settingsApiKeyInput');
+      const key = input.value.trim();
+      if (!key) { input.focus(); return; }
+      // Auto-detect the provider from the key format, same as the AI
+      // Summary panel: Google keys start with "AIza", Anthropic with "sk-ant-".
+      if (key.indexOf('sk-ant-') === 0) {
+        localStorage.setItem(API_KEY_STORAGE, key);
+      } else {
+        localStorage.setItem(GEMINI_KEY_STORAGE, key);
+      }
+      input.value = '';
+      updateSettingsKeyStatus();
+    });
+
+    document.getElementById('settingsRemoveKeyLink').addEventListener('click', (e) => {
+      e.preventDefault();
+      if (!confirm('Remove the saved API key(s) from this browser?')) return;
+      localStorage.removeItem(API_KEY_STORAGE);
+      localStorage.removeItem(GEMINI_KEY_STORAGE);
+      updateSettingsKeyStatus();
     });
 
     // Hide the summary panel when switching dates so a stale summary never
