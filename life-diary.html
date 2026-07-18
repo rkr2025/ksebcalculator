@@ -245,6 +245,13 @@
       line-height: 1.6;
       white-space: pre-wrap;
     }
+    .whats-special-delete-btn {
+      margin-top: 8px;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-color: var(--danger, #e5533d);
+      color: var(--danger, #e5533d);
+    }
     .current-running-entry {
       font-size: 12.5px;
       margin-bottom: 10px;
@@ -1217,6 +1224,7 @@
       <div id="whatsSpecialContent" style="display: none;">
         <p class="whats-special-status" id="whatsSpecialStatus" style="display: none;"></p>
         <div class="whats-special-text" id="whatsSpecialText" style="display: none;"></div>
+        <button class="btn-outline btn whats-special-delete-btn" id="whatsSpecialDeleteBtn" type="button" style="display: none;">🗑️ Delete</button>
       </div>
     </div>
 
@@ -3517,11 +3525,13 @@
     }
 
     async function fetchWhatsSpecialToday(geminiKey) {
-      const dateLabel = new Date().toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const today = new Date();
+      const dateLabel = today.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const isoDate = dateKey(today);
       const body = JSON.stringify({
         contents: [{
           parts: [{
-            text: `What is special about today, ${dateLabel}, for Kerala, India, and internationally? ` +
+            text: `Today's date is ${isoDate} (${dateLabel}). What is special about today for Kerala, India, and internationally? ` +
               'List any notable festivals, observances, historical events, or holidays. Keep it factual and concise, ' +
               'organized under three short headings: Kerala, India, International. Use brief bullet points under each heading.',
           }],
@@ -3567,12 +3577,14 @@
 
       const statusEl = document.getElementById('whatsSpecialStatus');
       const textEl = document.getElementById('whatsSpecialText');
+      const deleteBtn = document.getElementById('whatsSpecialDeleteBtn');
 
       const cached = localStorage.getItem(whatsSpecialStorageKey());
       if (cached) {
         statusEl.style.display = 'none';
         textEl.textContent = cached;
         textEl.style.display = 'block';
+        deleteBtn.style.display = '';
         whatsSpecialLoaded = true;
         return;
       }
@@ -3582,12 +3594,14 @@
         statusEl.textContent = 'Add your free Gemini API key in the "AI Summary" section (under Diary Entries, below) to enable this -- get one at aistudio.google.com.';
         statusEl.style.display = 'block';
         textEl.style.display = 'none';
+        deleteBtn.style.display = 'none';
         return;
       }
 
       statusEl.textContent = "✨ Finding out what's special today...";
       statusEl.style.display = 'block';
       textEl.style.display = 'none';
+      deleteBtn.style.display = 'none';
 
       try {
         const text = await fetchWhatsSpecialToday(geminiKey);
@@ -3597,11 +3611,26 @@
         // via textContent (not innerHTML) to be safe by default.
         textEl.textContent = text;
         textEl.style.display = 'block';
+        deleteBtn.style.display = '';
         whatsSpecialLoaded = true;
       } catch (err) {
         statusEl.textContent = `⚠️ ${(err && err.message) || "Could not fetch today's special info."}`;
         statusEl.style.display = 'block';
       }
+    });
+
+    // Clears today's cached result -- collapses back to just the status
+    // message, and re-fetches (if a key is available) the next time the
+    // panel is expanded, since whatsSpecialLoaded is reset too.
+    document.getElementById('whatsSpecialDeleteBtn').addEventListener('click', () => {
+      if (!confirm("Delete today's generated content? You can regenerate it by expanding this panel again.")) return;
+      localStorage.removeItem(whatsSpecialStorageKey());
+      whatsSpecialLoaded = false;
+      document.getElementById('whatsSpecialText').style.display = 'none';
+      document.getElementById('whatsSpecialDeleteBtn').style.display = 'none';
+      const statusEl = document.getElementById('whatsSpecialStatus');
+      statusEl.textContent = 'Deleted. Collapse and expand this panel again to regenerate it.';
+      statusEl.style.display = 'block';
     });
 
     async function fetchBrowserAiSummary(key, dayEntries) {
