@@ -260,6 +260,12 @@
       border-color: var(--danger, #e5533d);
       color: var(--danger, #e5533d);
     }
+    .copy-ai-text-btn {
+      margin-top: 8px;
+      margin-right: 8px;
+      font-size: 12px;
+      padding: 4px 10px;
+    }
     .current-running-entry {
       font-size: 12.5px;
       margin-bottom: 10px;
@@ -1279,6 +1285,7 @@
       <div id="whatsSpecialContent" style="display: none;">
         <p class="whats-special-status" id="whatsSpecialStatus" style="display: none;"></p>
         <div class="whats-special-text" id="whatsSpecialText" style="display: none;"></div>
+        <button class="btn-outline btn btn-small copy-ai-text-btn" id="whatsSpecialCopyBtn" type="button" style="display: none;">📋 Copy</button>
         <button class="btn-outline btn whats-special-delete-btn" id="whatsSpecialDeleteBtn" type="button" style="display: none;">🗑️ Delete</button>
       </div>
     </div>
@@ -1457,6 +1464,7 @@
         <div id="aiSummarySection">
           <h4>🤖 AI Summary</h4>
           <div id="aiSummaryText" style="display: none;"></div>
+          <button class="btn-outline btn btn-small copy-ai-text-btn" id="aiSummaryCopyBtn" type="button" style="display: none;">📋 Copy</button>
           <p class="ai-note" id="aiStatusNote"></p>
           <div class="ai-key-row" id="aiKeyRow" style="display: none;">
             <input type="password" id="apiKeyInput" placeholder="AIza... (free Gemini key from aistudio.google.com)">
@@ -3505,6 +3513,7 @@
       document.getElementById('aiKeyManageRow').style.display = showManage ? 'block' : 'none';
       textEl.style.display = aiText ? 'block' : 'none';
       if (aiText) textEl.textContent = aiText;
+      document.getElementById('aiSummaryCopyBtn').style.display = aiText ? '' : 'none';
     }
 
     // Free on-device AI via the browser's built-in Summarizer API
@@ -3666,13 +3675,16 @@
       const statusEl = document.getElementById('whatsSpecialStatus');
       const textEl = document.getElementById('whatsSpecialText');
       const deleteBtn = document.getElementById('whatsSpecialDeleteBtn');
+      const copyBtn = document.getElementById('whatsSpecialCopyBtn');
 
       const cached = localStorage.getItem(whatsSpecialStorageKey());
       if (cached) {
         statusEl.style.display = 'none';
         textEl.innerHTML = renderMarkdownLite(cached);
+        textEl.dataset.rawText = cached;
         textEl.style.display = 'block';
         deleteBtn.style.display = '';
+        copyBtn.style.display = '';
         whatsSpecialLoaded = true;
         return;
       }
@@ -3683,6 +3695,7 @@
         statusEl.style.display = 'block';
         textEl.style.display = 'none';
         deleteBtn.style.display = 'none';
+        copyBtn.style.display = 'none';
         return;
       }
 
@@ -3690,6 +3703,7 @@
       statusEl.style.display = 'block';
       textEl.style.display = 'none';
       deleteBtn.style.display = 'none';
+      copyBtn.style.display = 'none';
 
       try {
         const text = await fetchWhatsSpecialToday(geminiKey);
@@ -3698,10 +3712,14 @@
         // Model output is markdown -- rendered via renderMarkdownLite(),
         // which escapes the raw text first and only reintroduces a small,
         // controlled set of tags (h4/ul/li/p/strong/em), so no unescaped
-        // model output ever reaches innerHTML.
+        // model output ever reaches innerHTML. The raw text is kept in a
+        // data attribute so "Copy" can copy the clean original instead of
+        // having to strip the rendered HTML back out.
         textEl.innerHTML = renderMarkdownLite(text);
+        textEl.dataset.rawText = text;
         textEl.style.display = 'block';
         deleteBtn.style.display = '';
+        copyBtn.style.display = '';
         whatsSpecialLoaded = true;
       } catch (err) {
         statusEl.textContent = `⚠️ ${(err && err.message) || "Could not fetch today's special info."}`;
@@ -3718,9 +3736,35 @@
       whatsSpecialLoaded = false;
       document.getElementById('whatsSpecialText').style.display = 'none';
       document.getElementById('whatsSpecialDeleteBtn').style.display = 'none';
+      document.getElementById('whatsSpecialCopyBtn').style.display = 'none';
       const statusEl = document.getElementById('whatsSpecialStatus');
       statusEl.textContent = 'Deleted. Collapse and expand this panel again to regenerate it.';
       statusEl.style.display = 'block';
+    });
+
+    // ------------------------------- Copy to clipboard -----------------------
+    // Shared by both AI-generated text panels (AI Summary and What's special
+    // Today). Briefly relabels the button to confirm the copy instead of a
+    // separate status message.
+    async function copyTextToClipboard(text, btn) {
+      const original = btn.textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.textContent = '✅ Copied!';
+      } catch {
+        btn.textContent = '⚠️ Copy failed';
+      }
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    }
+
+    document.getElementById('whatsSpecialCopyBtn').addEventListener('click', (e) => {
+      const text = document.getElementById('whatsSpecialText').dataset.rawText || '';
+      copyTextToClipboard(text, e.currentTarget);
+    });
+
+    document.getElementById('aiSummaryCopyBtn').addEventListener('click', (e) => {
+      const text = document.getElementById('aiSummaryText').textContent || '';
+      copyTextToClipboard(text, e.currentTarget);
     });
 
     async function fetchBrowserAiSummary(key, dayEntries) {
