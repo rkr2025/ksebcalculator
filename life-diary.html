@@ -1123,18 +1123,36 @@
       font-size: 12.5px;
     }
     .settings-toggle-btn { padding: 8px 12px; font-size: 15px; }
-    .settings-theme-row {
+    .settings-list {
+      display: flex;
+      flex-direction: column;
+    }
+    .settings-list-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding-bottom: 10px;
-      margin-bottom: 4px;
+      gap: 10px;
+      padding: 12px 0;
       border-bottom: 1px solid var(--border);
+    }
+    .settings-list-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .settings-list-item--column { flex-direction: column; align-items: stretch; }
+    .settings-list-label {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text);
     }
     .settings-note {
       font-size: 12px;
       color: var(--text-muted);
       margin: 8px 0 0;
+    }
+    .settings-key-status-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 8px;
     }
     .settings-key-row {
       display: flex;
@@ -1241,24 +1259,36 @@
     <!-- Settings (hidden until toggled) -->
     <div class="card" id="settingsPanel" style="display: none;">
       <h3>⚙️ Settings</h3>
-      <div class="settings-theme-row">
-        <span class="settings-note" style="margin: 0;">Theme</span>
-        <div class="theme-toggle">
-          <span>☀️</span>
-          <label class="switch">
-            <input type="checkbox" id="themeToggle">
-            <span class="switch-slider"></span>
-          </label>
-          <span>🌙</span>
+      <div class="settings-list">
+        <div class="settings-list-item">
+          <span class="settings-list-label">Theme</span>
+          <div class="theme-toggle">
+            <span>☀️</span>
+            <label class="switch">
+              <input type="checkbox" id="themeToggle">
+              <span class="switch-slider"></span>
+            </label>
+            <span>🌙</span>
+          </div>
+        </div>
+        <div class="settings-list-item settings-list-item--column">
+          <span class="settings-list-label">API Key</span>
+          <p class="settings-note" style="margin: 4px 0 0;">Used for "AI Summary" and "What's special Today?" -- stored only in this browser, never sent anywhere except directly to the AI provider.</p>
+
+          <!-- Shown once a key is already saved -- no need to re-enter it. -->
+          <div class="settings-key-status-row" id="settingsApiKeyDisplay" style="display: none;">
+            <span class="settings-note" id="settingsKeyStatus" style="margin: 0;"></span>
+            <a href="#" id="settingsChangeKeyLink">Change</a>
+            <a href="#" id="settingsRemoveKeyLink">Remove</a>
+          </div>
+
+          <!-- Shown only when no key is saved yet, or after "Change" is clicked. -->
+          <div class="settings-key-row" id="settingsApiKeyEntry">
+            <input type="password" id="settingsApiKeyInput" placeholder="AIza... (Gemini) or sk-ant-... (Claude)">
+            <button class="btn btn-small" id="settingsSaveKeyBtn" type="button">Save Key</button>
+          </div>
         </div>
       </div>
-      <p class="settings-note">API key used for "AI Summary" and "What's special Today?" -- stored only in this browser, never sent anywhere except directly to the AI provider.</p>
-      <div class="settings-key-row">
-        <input type="password" id="settingsApiKeyInput" placeholder="AIza... (Gemini) or sk-ant-... (Claude)">
-        <button class="btn btn-small" id="settingsSaveKeyBtn" type="button">Save Key</button>
-      </div>
-      <p class="settings-note" id="settingsKeyStatus"></p>
-      <p class="settings-note"><a href="#" id="settingsRemoveKeyLink" style="display: none;">Remove saved API key</a></p>
     </div>
     <p class="year-progress" id="yearProgress"></p>
     <p class="day-countdown" id="dayCountdown"></p>
@@ -3922,18 +3952,17 @@
     // and writes the exact same localStorage keys as the AI Summary panel's
     // own key entry, just without triggering renderSummary()/opening the
     // Diary Entries summary panel as a side effect.
+    // If a key is already saved, show its status (+ Change/Remove) instead
+    // of the entry row -- no need to re-enter a key that's already there.
+    // "Change" swaps back to the entry row on demand.
     function updateSettingsKeyStatus() {
       const hasGemini = !!localStorage.getItem(GEMINI_KEY_STORAGE);
       const hasClaude = !!localStorage.getItem(API_KEY_STORAGE);
-      const statusEl = document.getElementById('settingsKeyStatus');
-      const removeLink = document.getElementById('settingsRemoveKeyLink');
-      if (hasGemini || hasClaude) {
-        statusEl.textContent = `✅ ${hasGemini ? 'Gemini' : 'Claude'} API key is saved on this device.`;
-        removeLink.style.display = '';
-      } else {
-        statusEl.textContent = 'No API key saved yet.';
-        removeLink.style.display = 'none';
-      }
+      const hasKey = hasGemini || hasClaude;
+      document.getElementById('settingsKeyStatus').textContent =
+        hasKey ? `✅ ${hasGemini ? 'Gemini' : 'Claude'} API key is saved on this device.` : '';
+      document.getElementById('settingsApiKeyDisplay').style.display = hasKey ? 'flex' : 'none';
+      document.getElementById('settingsApiKeyEntry').style.display = hasKey ? 'none' : 'flex';
     }
 
     document.getElementById('settingsToggleBtn').addEventListener('click', () => {
@@ -3956,6 +3985,13 @@
       }
       input.value = '';
       updateSettingsKeyStatus();
+    });
+
+    document.getElementById('settingsChangeKeyLink').addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('settingsApiKeyDisplay').style.display = 'none';
+      document.getElementById('settingsApiKeyEntry').style.display = 'flex';
+      document.getElementById('settingsApiKeyInput').focus();
     });
 
     document.getElementById('settingsRemoveKeyLink').addEventListener('click', (e) => {
