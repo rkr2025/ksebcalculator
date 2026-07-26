@@ -872,6 +872,16 @@
       line-height: 1;
     }
     .hour-detail-close:hover { color: var(--danger); }
+    #helpBox {
+      max-width: 560px;
+      text-align: left;
+    }
+    #helpBox .hour-detail-title { text-align: center; }
+    #helpText {
+      margin-top: 12px;
+      max-height: 65vh;
+      overflow-y: auto;
+    }
     .hour-detail-title {
       font-weight: 700;
       font-size: 15px;
@@ -1254,6 +1264,7 @@
       <h1>📔 Life Diary</h1>
       <button class="btn-outline btn" id="calendarToggleBtn" type="button">📅 Calendar</button>
       <button class="btn-outline btn settings-toggle-btn" id="settingsToggleBtn" type="button" title="Settings -- theme, AI API key">⚙️</button>
+      <button class="btn-outline btn settings-toggle-btn" id="helpToggleBtn" type="button" title="Help -- how to use this app">❓</button>
     </div>
 
     <!-- Settings (hidden until toggled) -->
@@ -1290,6 +1301,70 @@
         </div>
       </div>
     </div>
+    <!-- Help (hidden until toggled) -->
+    <div class="hour-detail-overlay" id="helpOverlay">
+      <div class="hour-detail-box" id="helpBox">
+        <button class="hour-detail-close" id="helpClose" type="button" aria-label="Close">✕</button>
+        <div class="hour-detail-title">📔 How to Use Life Diary</div>
+        <div class="whats-special-text" id="helpText">
+          <p>Life Diary lives entirely in this browser -- everything you write is saved automatically to this device as you go, and nothing is uploaded anywhere unless you turn on an optional AI feature below.</p>
+
+          <h4>1. Writing a diary entry</h4>
+          <ul>
+            <li>Type what's on your mind into the <strong>✍️ New Entry</strong> box.</li>
+            <li>Leave <strong>⏱️ Track time for this entry</strong> checked if you want it to measure elapsed time -- it keeps running until your next tracked entry starts, or until you press Stop. Uncheck it for a plain note that shouldn't count toward tracked time.</li>
+            <li>Click <strong>Save Entry</strong>. It's filed under today's date and the Diary Entries list below jumps straight to it.</li>
+          </ul>
+
+          <h4>2. Currently tracking</h4>
+          <p>The New Entry card also shows whichever entry is currently "running", with its elapsed time updating live. Press <strong>⏹ Stop</strong> to end it early instead of waiting for the next entry to start.</p>
+
+          <h4>3. Pomodoro Timer</h4>
+          <ul>
+            <li>Set a work session length, break length, and total session count with the dropdowns or the +/- steppers.</li>
+            <li>Optionally note what you're working on, and turn on the popup alert to get notified when a session or break ends.</li>
+            <li>Press <strong>▶ Start</strong>. The progress bars track the current session, all sessions, and (if used) all breaks.</li>
+            <li>Press <strong>📔 Log to Diary</strong> at any time to save the focused minutes so far as a real, time-tracked diary entry.</li>
+            <li><strong>⏸ Pause</strong> freezes the countdown; <strong>↺ Reset</strong> stops the current run (press again while idle to restore the default lengths).</li>
+            <li>The timer keeps going even if you close the tab or reload the page -- it catches up automatically when you come back.</li>
+          </ul>
+
+          <h4>4. Hours of the Day</h4>
+          <ul>
+            <li>24 boxes, one per hour of today. Past hours grey out, the current hour counts down live in seconds, and future hours just wait their turn.</li>
+            <li>Click the active hour, or any upcoming hour, to open a breakdown into six 10-minute circles.</li>
+            <li>Click a circle to write a short plan for that 10-minute slot. <strong>Save</strong> keeps the plan attached to the circle; <strong>📔 Add to Diary</strong> also drops it into your diary, timestamped at the start of that slot.</li>
+          </ul>
+
+          <h4>5. Diary Entries, Search &amp; Calendar</h4>
+          <ul>
+            <li>Use the date picker (or the <strong>Today</strong> button) under <strong>📖 Diary Entries</strong> to jump to any day's entries.</li>
+            <li>Use <strong>🔍 Search Entries</strong> to find a word or phrase across every day you've ever written.</li>
+            <li>Click <strong>📅 Calendar</strong> at the top to browse month by month -- days with a dot already have entries; click a day to view it.</li>
+            <li>Hover any entry to edit (pencil) or delete (trash) it.</li>
+          </ul>
+
+          <h4>6. Day Summary &amp; AI features (optional)</h4>
+          <ul>
+            <li>Press <strong>✨ Summary</strong> on any day for an instant, offline recap: entry count, first/last time, word count, and a timeline.</li>
+            <li>For an AI-written narrative of your day, or for <strong>✨ What's special Today?</strong>, add a free Gemini API key once (get one at aistudio.google.com) in that AI Summary panel or under <strong>⚙️ Settings</strong>. The key is stored only in this browser and sent directly to Google -- never to any other server.</li>
+          </ul>
+
+          <h4>7. Backup &amp; Restore</h4>
+          <ul>
+            <li>Press <strong>💾 Backup</strong> once to choose a file -- after that, every change is saved to it automatically (Chrome/Edge). Other browsers download a fresh backup file each time instead.</li>
+            <li><strong>⬆️ Restore from File</strong> merges an old backup back in without deleting or duplicating anything you already have.</li>
+            <li><strong>🖨️ Print This Day's Log</strong> gives you a clean, printable page of the selected day's entries.</li>
+          </ul>
+
+          <h4>8. Settings</h4>
+          <p>Toggle light/dark theme and manage your saved AI API key from the ⚙️ gear icon at the top.</p>
+
+          <p><strong>Tip:</strong> everything you write stays only in this browser. Set up Backup (or auto-backup) early so you never lose it.</p>
+        </div>
+      </div>
+    </div>
+
     <p class="year-progress" id="yearProgress"></p>
     <p class="day-countdown" id="dayCountdown"></p>
     <div class="day-progress-track" id="dayProgressTrack" title="Time left today">
@@ -4006,6 +4081,17 @@
     // sits under a different date's entries.
     viewDateInput.addEventListener('change', () => {
       document.getElementById('summaryPanel').style.display = 'none';
+    });
+
+    // --------------------------------- Help -----------------------------------
+    document.getElementById('helpToggleBtn').addEventListener('click', () => {
+      document.getElementById('helpOverlay').style.display = 'flex';
+    });
+    document.getElementById('helpClose').addEventListener('click', () => {
+      document.getElementById('helpOverlay').style.display = 'none';
+    });
+    document.getElementById('helpOverlay').addEventListener('click', (e) => {
+      if (e.target.id === 'helpOverlay') document.getElementById('helpOverlay').style.display = 'none';
     });
 
     // ------------------------------- Init ---------------------------------
