@@ -104,12 +104,23 @@ function billSite(site, unitsAfterWheeling, splitAfterWheeling) {
 // carry forward as banked credit, now offered to `sites` instead. Sites are
 // processed in order; each site's leftover post-loss balance becomes the
 // next site's opening balance.
-export function computeWheelingResult(availableBankUnits, sites) {
+//
+// `lossOverrides` lets the Admin Option fields in index.html substitute the
+// current KSEB distribution-loss percentages (4.99% / 7.14%) with new ones
+// if KSEB revises them -- either percentage falls back to its tariff-rates.js
+// constant when not a finite number (e.g. the field is left at its default,
+// or main.js is called without overrides at all).
+export function computeWheelingResult(availableBankUnits, sites, lossOverrides = {}) {
     if (!sites || sites.length === 0) {
         return {
             sites: [], totalAdjustedUnits: 0, totalEnergyLost: 0, totalSaving: 0, wheelingCharge: 0, finalBankBalance: Math.max(availableBankUnits || 0, 0),
         };
     }
+
+    const sameTransformerPct = Number.isFinite(lossOverrides.sameTransformerPct)
+        ? lossOverrides.sameTransformerPct : DIST_LOSS_SAME_TRANSFORMER;
+    const differentTransformerPct = Number.isFinite(lossOverrides.differentTransformerPct)
+        ? lossOverrides.differentTransformerPct : DIST_LOSS_DIFFERENT_TRANSFORMER;
 
     let newBank = Math.max(availableBankUnits || 0, 0);
     const results = [];
@@ -118,7 +129,7 @@ export function computeWheelingResult(availableBankUnits, sites) {
     let totalSaving = 0;
 
     sites.forEach((site, index) => {
-        const distLossPct = site.sameTransformer ? DIST_LOSS_SAME_TRANSFORMER : DIST_LOSS_DIFFERENT_TRANSFORMER;
+        const distLossPct = site.sameTransformer ? sameTransformerPct : differentTransformerPct;
         const lossFactor = 1 - distLossPct / 100;
 
         const bankOpening = newBank;

@@ -718,6 +718,34 @@
                 </div>
 
                 <div id="wheelingSitesWrapper" style="display: none; margin-top: 14px;">
+                    <!-- Distribution Loss %: defaults to the current KSEB
+                         rates (4.99% same transformer / 7.14% different
+                         transformer) from js/tariff-rates.js, but editable
+                         here in case KSEB revises those percentages in the
+                         future -- computeWheelingResult() uses whatever is
+                         entered instead of the hardcoded constants. -->
+                    <details id="wheelingLossContainer" style="margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px dashed var(--border);">
+                        <summary class="sub-row-badge">🛠️ Admin Option: Distribution Loss %</summary>
+                        <p style="margin: 8px 0 12px; font-size: 12px; color: var(--text-muted);">⚠️ Change the below values only if KSEB revises the distribution loss percentages.</p>
+                        <div class="reading-mode-toggle">
+                            <label class="switch">
+                                <input type="checkbox" id="wheelingLossEditToggle">
+                                <span class="switch-slider"></span>
+                            </label>
+                            <span>Edit these values</span>
+                        </div>
+                        <div class="field-grid field-grid--2" id="wheelingLossFields">
+                            <div class="field">
+                                <label for="wheelSameTransformerLoss">Same Transformer Loss (%)</label>
+                                <input type="number" id="wheelSameTransformerLoss" name="wheelSameTransformerLoss" value="4.99" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="wheelDiffTransformerLoss">Different Transformer Loss (%)</label>
+                                <input type="number" id="wheelDiffTransformerLoss" name="wheelDiffTransformerLoss" value="7.14" min="0" step="0.01" disabled>
+                            </div>
+                        </div>
+                    </details>
+
                     <div id="wheelingSitesContainer"></div>
                     <button type="button" id="addWheelingSiteButton" class="add-site-button">+ Add Wheeling Site</button>
                 </div>

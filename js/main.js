@@ -113,7 +113,11 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
     }
 
     if (wheelingUI.isEnabled()) {
-        const wheelingResult = computeWheelingResult(bill.accountBalance, wheelingUI.getSites());
+        const lossOverrides = {
+            sameTransformerPct: num('wheelSameTransformerLoss'),
+            differentTransformerPct: num('wheelDiffTransformerLoss'),
+        };
+        const wheelingResult = computeWheelingResult(bill.accountBalance, wheelingUI.getSites(), lossOverrides);
         if (wheelingResult.sites.length > 0) {
             bill.wheelingResult = wheelingResult;
             bill.totalBillAmount = Math.round((bill.totalBillAmount + wheelingResult.wheelingCharge) * 100) / 100;
@@ -184,6 +188,13 @@ document.getElementById('meterRentEditToggle').addEventListener('change', functi
     if (!this.checked) updateMeterRentDefault();
 });
 updateMeterRentDefault();
+
+// Wheeling's distribution-loss percentages (4.99% / 7.14%) start greyed out
+// at the current KSEB defaults too, same pattern as Duty/Fuel Surcharge above.
+document.getElementById('wheelingLossEditToggle').addEventListener('change', function () {
+    document.getElementById('wheelSameTransformerLoss').disabled = !this.checked;
+    document.getElementById('wheelDiffTransformerLoss').disabled = !this.checked;
+});
 
 // Trigger the change events on page load so the visible sections match
 // whichever options are marked `selected` in index.html.
@@ -259,12 +270,15 @@ function resetCalculator() {
     document.getElementById('connectedLoadContainer').open = false;
     document.getElementById('dutySurchargeContainer').open = false;
     document.getElementById('meterRentContainer').open = false;
+    document.getElementById('wheelingLossContainer').open = false;
     // form.reset() restores the Edit-these-rates checkboxes to unchecked,
     // but it doesn't touch the `disabled` property on the rate inputs --
     // re-sync them so Reset also greys the fields back out.
     document.getElementById('dutyRatePercent').disabled = true;
     document.getElementById('fuelSurchargeInput').disabled = true;
     document.getElementById('meterRentInput').disabled = true;
+    document.getElementById('wheelSameTransformerLoss').disabled = true;
+    document.getElementById('wheelDiffTransformerLoss').disabled = true;
     updateMeterRentDefault();
 
     updateBillingTypeSections(document.getElementById('billingType').value);

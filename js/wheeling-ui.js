@@ -11,7 +11,17 @@
 
 import { setupReadingGroup } from './reading-inputs.js';
 
-function siteTemplate(n) {
+// Reads the Admin Option loss-percentage fields (index.html) so a newly
+// added site's dropdown labels show whatever's actually configured, not the
+// hardcoded 4.99%/7.14% KSEB defaults -- falls back to those defaults if the
+// fields are missing or hold something unparseable.
+function currentLossPct(id, fallback) {
+    const el = document.getElementById(id);
+    const val = el ? parseFloat(el.value) : NaN;
+    return Number.isFinite(val) ? val : fallback;
+}
+
+function siteTemplate(n, sameLossLabel, diffLossLabel) {
     return `
         <div class="wheeling-site" data-site-index="${n}">
             <div class="wheeling-site-header">
@@ -35,9 +45,9 @@ function siteTemplate(n) {
             <div class="field-grid field-grid--2" style="margin-top: 10px;">
                 <div class="field">
                     <label for="wheelSiteTransformer-${n}">Same Transformer as Generation Site?</label>
-                    <select id="wheelSiteTransformer-${n}">
-                        <option value="Yes">Yes (4.99% loss)</option>
-                        <option value="No">No (7.14% loss)</option>
+                    <select id="wheelSiteTransformer-${n}" class="wheel-site-transformer-select">
+                        <option value="Yes" class="wheel-loss-option-same">Yes (${sameLossLabel}% loss)</option>
+                        <option value="No" class="wheel-loss-option-diff">No (${diffLossLabel}% loss)</option>
                     </select>
                 </div>
                 <div class="field">
@@ -125,8 +135,10 @@ export function initWheelingUI() {
     function addSite() {
         siteCounter += 1;
         const n = siteCounter;
+        const sameLossLabel = currentLossPct('wheelSameTransformerLoss', 4.99);
+        const diffLossLabel = currentLossPct('wheelDiffTransformerLoss', 7.14);
         const wrapperEl = document.createElement('div');
-        wrapperEl.innerHTML = siteTemplate(n).trim();
+        wrapperEl.innerHTML = siteTemplate(n, sameLossLabel, diffLossLabel).trim();
         const siteEl = wrapperEl.firstElementChild;
         container.appendChild(siteEl);
 
@@ -157,6 +169,23 @@ export function initWheelingUI() {
 
     isWheelingSelect.addEventListener('change', toggleWheelingVisibility);
     addButton.addEventListener('click', addSite);
+
+    // Keep already-added sites' dropdown labels honest if the Admin Option
+    // loss percentages are edited after those sites were created.
+    function syncLossLabels() {
+        const sameLossLabel = currentLossPct('wheelSameTransformerLoss', 4.99);
+        const diffLossLabel = currentLossPct('wheelDiffTransformerLoss', 7.14);
+        container.querySelectorAll('.wheel-loss-option-same').forEach((opt) => {
+            opt.textContent = `Yes (${sameLossLabel}% loss)`;
+        });
+        container.querySelectorAll('.wheel-loss-option-diff').forEach((opt) => {
+            opt.textContent = `No (${diffLossLabel}% loss)`;
+        });
+    }
+    const sameLossInput = document.getElementById('wheelSameTransformerLoss');
+    const diffLossInput = document.getElementById('wheelDiffTransformerLoss');
+    if (sameLossInput) sameLossInput.addEventListener('input', syncLossLabels);
+    if (diffLossInput) diffLossInput.addEventListener('input', syncLossLabels);
 
     function num(id) {
         const el = document.getElementById(id);
