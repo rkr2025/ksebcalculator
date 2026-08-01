@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>⏳ Event Countdown &amp; Milestone Tracker</title>
+<style>
+  :root {
+    --primary: #2a78d6;
+    --primary-dark: #1f5fac;
+    --primary-light: #eaf2fc;
+    --accent: #1baf7a;
+    --accent-dark: #148f60;
+    --danger: #e34948;
+    --warn: #c97e00;
+    --surface: #ffffff;
+    --surface-muted: #f6f8fb;
+    --border: #e3e7ef;
+    --text-primary: #17203a;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --radius: 14px;
+    --shadow: 0 2px 4px rgba(23,32,58,.06), 0 12px 28px -6px rgba(23,32,58,.14), 0 28px 56px -20px rgba(23,32,58,.16);
+    --shadow-sm: 0 1px 2px rgba(23,32,58,.06), 0 6px 14px -4px rgba(23,32,58,.12);
+    --shadow-lift: 0 6px 12px rgba(23,32,58,.08), 0 22px 44px -10px rgba(23,32,58,.22), 0 36px 70px -24px rgba(23,32,58,.22);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px 10px 32px;
+    font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(42,120,214,.16), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(27,175,122,.14), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(227,73,72,.10), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(201,126,0,.10), transparent 55%),
+      linear-gradient(160deg, #eef1f7, #e4ebf7 60%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    perspective: 1400px;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+  h1 {
+    text-align: center; font-size: 24px; font-weight: 700; margin: 6px 0 4px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 2px 3px rgba(23,32,58,.15));
+  }
+  .subtitle { text-align: center; color: var(--text-muted); font-size: 13px; margin: 0 0 18px; }
+  .card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.82));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.6);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .card h2 { font-size: 15px; margin: 0 0 14px; color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .card h2 .count-badge { font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: none; }
+
+  button {
+    position: relative;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: filter .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0) 55%);
+    pointer-events: none;
+  }
+  button:hover { filter: brightness(0.97); transform: translateY(-1px); }
+  button:active { transform: translateY(1px); filter: brightness(0.93); }
+  .btn-add {
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color: #fff;
+    box-shadow: 0 2px 3px rgba(27,175,122,.25), 0 10px 22px -4px rgba(27,175,122,.5);
+  }
+  .btn-add:hover { box-shadow: 0 4px 8px rgba(27,175,122,.3), 0 16px 30px -6px rgba(27,175,122,.55); }
+  .btn-outline {
+    background: linear-gradient(180deg, #ffffff, var(--surface-muted));
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-outline:hover { box-shadow: var(--shadow-lift); }
+  .btn-small { padding: 6px 10px; font-size: 12.5px; white-space: nowrap; }
+  .icon-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 15px; padding: 2px 6px; box-shadow: none; }
+  .icon-btn:hover { color: var(--primary); filter: none; transform: none; }
+  .icon-btn.danger:hover { color: var(--danger); }
+
+  input {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 9px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: inset 0 1px 3px rgba(23,32,58,.05);
+    transition: border-color .15s ease, box-shadow .15s ease;
+    width: 100%;
+  }
+  input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light), inset 0 1px 3px rgba(23,32,58,.05);
+  }
+  label { font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .02em; display: block; margin-bottom: 4px; }
+
+  .field-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+  .field { flex: 1 1 200px; min-width: 0; }
+
+  .icon-picker { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 12px; }
+  .icon-pick-btn {
+    background: var(--surface-muted);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 18px;
+    line-height: 1;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  .icon-pick-btn:hover { border-color: var(--primary); }
+
+  .card-form-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+  .empty-note { color: var(--text-muted); font-style: italic; font-size: 13px; padding: 6px 0; }
+
+  .import-list { margin: 0 0 14px; padding-left: 20px; font-size: 13.5px; }
+  .import-list li { margin-bottom: 4px; }
+
+  /* -------- Event cards -------- */
+  .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+  .event-card {
+    background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.82));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.6);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    text-align: center;
+    transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s cubic-bezier(.22,1,.36,1);
+  }
+  @media (hover: hover) {
+    .event-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lift); }
+  }
+  .event-card-icon { font-size: 34px; margin-bottom: 4px; }
+  .event-card-title { font-size: 15.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; word-break: break-word; }
+  .event-card-direction { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--text-muted); margin-bottom: 10px; }
+  .event-card-timer { display: flex; justify-content: center; gap: 6px; margin-bottom: 10px; }
+  .timer-unit { background: var(--surface-muted); border-radius: 8px; padding: 8px 4px; flex: 1 1 0; min-width: 0; box-shadow: var(--shadow-sm); }
+  .timer-unit-value { font-family: "Consolas", "Courier New", monospace; font-size: 18px; font-weight: 700; color: var(--text-primary); }
+  .timer-unit-label { font-size: 8.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .02em; margin-top: 2px; }
+  .event-card-date { font-size: 11.5px; color: var(--text-muted); margin-bottom: 12px; }
+  .event-card-actions { display: flex; justify-content: center; gap: 4px; }
+
+  .actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+    background: linear-gradient(180deg, #26314f, var(--text-primary)); color: #fff; padding: 10px 18px; border-radius: 999px;
+    font-size: 13.5px; font-weight: 600; box-shadow: var(--shadow-lift);
+    opacity: 0; pointer-events: none; transition: opacity .25s ease; z-index: 50;
+  }
+  .toast.show { opacity: 1; }
+  .toast.error { background: var(--danger); }
+
+  .nav-link { display: block; text-align: center; margin-top: 8px; text-decoration: none; color: var(--primary); font-size: 13.5px; }
+
+  @media (max-width: 480px) {
+    body { padding: 10px 6px 24px; }
+    .card { padding: 14px; }
+    h1 { font-size: 20px; }
+    .actions-row button { flex: 1 1 auto; }
+    .timer-unit-value { font-size: 15px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    button, .event-card, .event-card:hover { transition: none !important; transform: none !important; }
+  }
+
+  @media print {
+    body { background: none; perspective: none; }
+    h1 { background: none; -webkit-background-clip: initial; background-clip: initial; color: var(--text-primary); filter: none; }
+    .nav-link, .actions-row, .toast, .view-counter, #importBanner,
+    .card:has(.icon-picker), .event-card-actions {
+      display: none !important;
+    }
+    .card, .event-card { box-shadow: none; border: 1px solid #ccc; backdrop-filter: none; background: #fff; transform: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>⏳ Event Countdown &amp; Milestone Tracker</h1>
+    <p class="subtitle">Track birthdays, holidays, deadlines, and milestones with a live countdown.</p>
+
+    <!-- Shared-link import -->
+    <div class="card" id="importBanner" style="display: none; border: 2px solid var(--accent);">
+      <h2>📬 Someone shared event(s) with you</h2>
+      <ul class="import-list" id="importBannerList"></ul>
+      <div class="actions-row">
+        <button class="btn-add" id="importAddBtn" type="button">➕ Add to My Events</button>
+        <button class="btn-outline" id="importDismissBtn" type="button">✕ Dismiss</button>
+      </div>
+    </div>
+
+    <!-- Add / edit event -->
+    <div class="card">
+      <h2 id="formTitle">➕ Add New Event</h2>
+      <div class="field-row">
+        <div class="field" style="flex: 2 1 220px;">
+          <label for="eventTitleInput">Title</label>
+          <input type="text" id="eventTitleInput" placeholder="e.g. Mom's Birthday, Project Deadline">
+        </div>
+        <div class="field" style="flex: 0 0 90px;">
+          <label for="eventIconInput">Icon</label>
+          <input type="text" id="eventIconInput" maxlength="4" value="🎯">
+        </div>
+      </div>
+      <div class="icon-picker" id="iconPicker">
+        <button type="button" class="icon-pick-btn" data-icon="🎂">🎂</button>
+        <button type="button" class="icon-pick-btn" data-icon="🎉">🎉</button>
+        <button type="button" class="icon-pick-btn" data-icon="🎄">🎄</button>
+        <button type="button" class="icon-pick-btn" data-icon="💍">💍</button>
+        <button type="button" class="icon-pick-btn" data-icon="🎓">🎓</button>
+        <button type="button" class="icon-pick-btn" data-icon="✈️">✈️</button>
+        <button type="button" class="icon-pick-btn" data-icon="💼">💼</button>
+        <button type="button" class="icon-pick-btn" data-icon="🚀">🚀</button>
+        <button type="button" class="icon-pick-btn" data-icon="🏆">🏆</button>
+        <button type="button" class="icon-pick-btn" data-icon="❤️">❤️</button>
+        <button type="button" class="icon-pick-btn" data-icon="⏳">⏳</button>
+        <button type="button" class="icon-pick-btn" data-icon="🎯">🎯</button>
+      </div>
+      <div class="field">
+        <label for="eventDateInput">Target Date &amp; Time</label>
+        <input type="datetime-local" id="eventDateInput">
+      </div>
+      <div class="card-form-actions" style="margin-top: 14px;">
+        <button class="btn-outline btn-small" id="cancelEditEventBtn" type="button" style="display: none;">✕ Cancel</button>
+        <button class="btn-add" id="saveEventBtn" type="button">➕ Add Event</button>
+      </div>
+    </div>
+
+    <!-- Events -->
+    <div class="card">
+      <h2>📋 Your Events <span class="count-badge" id="eventCountBadge"></span></h2>
+      <div class="events-grid" id="eventsGrid"></div>
+      <p class="empty-note" id="eventsEmptyNote">No events yet -- add your first countdown above.</p>
+    </div>
+
+    <!-- Actions -->
+    <div class="card">
+      <div class="actions-row">
+        <button class="btn-outline" id="shareAllBtn" type="button">🔗 Share All</button>
+        <button class="btn-outline" id="backupBtn" type="button">💾 Backup</button>
+        <button class="btn-outline" id="restoreBtn" type="button">📂 Restore</button>
+        <button class="btn-outline" id="printBtn" type="button">🖨️ Print</button>
+        <input type="file" id="restoreFileInput" accept=".json" style="display:none;">
+        <button class="btn-outline" id="clearAllBtn" type="button">🗑️ Clear All</button>
+      </div>
+    </div>
+
+    <a href="tools.html" class="nav-link">← Back to Tools</a>
+    <div class="view-counter" style="text-align: center; margin-top: 10px;">
+      <img src="https://hits.sh/rkr2025.github.io/ksebcalculator/countdown.svg?style=flat-square&label=Views" alt="No. of views" loading="lazy">
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ------------------------------ Storage ---------------------------------
+    // Shape: array of {id, title, icon, targetDateTime (ISO, UTC), createdAt}.
+    const STORAGE_KEY = 'countdownEvents';
+    let events = [];
+    let lastId = 0;
+
+    function nextId() {
+      let id = Date.now();
+      if (id <= lastId) id = lastId + 1;
+      lastId = id;
+      return id;
+    }
+
+    function loadData() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        events = Array.isArray(stored) ? stored : [];
+      } catch {
+        events = [];
+      }
+      lastId = events.reduce((max, e) => Math.max(max, e.id || 0), 0);
+    }
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // datetime-local values ("YYYY-MM-DDTHH:MM") parse as LOCAL time, so
+    // `new Date(value)` is safe when reading the form. Going the other way
+    // (formatting a stored UTC ISO string back into the input) needs this
+    // helper -- otherwise the edit form would show the UTC time misread as
+    // if it were local, silently shifting by the timezone offset.
+    function formatDateTimeLocalInput(date) {
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    function dateKey(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    const toast = document.getElementById('toast');
+    function showToast(message, isError) {
+      toast.textContent = message;
+      toast.className = 'toast show' + (isError ? ' error' : '');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => { toast.className = 'toast'; }, 2600);
+    }
+
+    // ------------------------------ Add / edit event -----------------------------
+    const formTitle = document.getElementById('formTitle');
+    const eventTitleInput = document.getElementById('eventTitleInput');
+    const eventIconInput = document.getElementById('eventIconInput');
+    const eventDateInput = document.getElementById('eventDateInput');
+    const saveEventBtn = document.getElementById('saveEventBtn');
+    const cancelEditEventBtn = document.getElementById('cancelEditEventBtn');
+
+    document.getElementById('iconPicker').addEventListener('click', (e) => {
+      const btn = e.target.closest('.icon-pick-btn');
+      if (!btn) return;
+      eventIconInput.value = btn.dataset.icon;
+    });
+
+    let editingEventId = null;
+
+    function resetForm() {
+      editingEventId = null;
+      eventTitleInput.value = '';
+      eventIconInput.value = '🎯';
+      eventDateInput.value = '';
+      saveEventBtn.textContent = '➕ Add Event';
+      cancelEditEventBtn.style.display = 'none';
+      formTitle.textContent = '➕ Add New Event';
+    }
+
+    function startEditEvent(id) {
+      const ev = events.find((e) => e.id === id);
+      if (!ev) return;
+      editingEventId = id;
+      eventTitleInput.value = ev.title;
+      eventIconInput.value = ev.icon || '🎯';
+      eventDateInput.value = formatDateTimeLocalInput(new Date(ev.targetDateTime));
+      saveEventBtn.textContent = '💾 Save Changes';
+      cancelEditEventBtn.style.display = '';
+      formTitle.textContent = '✎ Edit Event';
+      eventTitleInput.focus();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    cancelEditEventBtn.addEventListener('click', resetForm);
+
+    saveEventBtn.addEventListener('click', () => {
+      const title = eventTitleInput.value.trim();
+      const icon = eventIconInput.value.trim() || '📌';
+      const dateVal = eventDateInput.value;
+      if (!title) { showToast('Enter a title first.', true); return; }
+      if (!dateVal) { showToast('Choose a target date and time.', true); return; }
+      const targetDateTime = new Date(dateVal).toISOString();
+
+      if (editingEventId !== null) {
+        const ev = events.find((e) => e.id === editingEventId);
+        if (ev) { ev.title = title; ev.icon = icon; ev.targetDateTime = targetDateTime; }
+        showToast('Event updated.');
+      } else {
+        events.push({ id: nextId(), title, icon, targetDateTime, createdAt: new Date().toISOString() });
+        showToast('Event added.');
+      }
+      saveData();
+      resetForm();
+      renderEvents();
+    });
+
+    function deleteEvent(id) {
+      const ev = events.find((e) => e.id === id);
+      if (!ev) return;
+      if (!confirm(`Delete "${ev.title}"?`)) return;
+      events = events.filter((e) => e.id !== id);
+      if (editingEventId === id) resetForm();
+      saveData();
+      renderEvents();
+    }
+
+    // -------------------------------- Countdown math -----------------------------
+    // Pure and exact -- integer seconds, no calendar-month ambiguity to
+    // worry about here (unlike a full date-diff tool), since the request
+    // only calls for days/hours/minutes/seconds.
+    function computeDiff(targetIso) {
+      const diffMs = new Date(targetIso).getTime() - Date.now();
+      const future = diffMs >= 0;
+      const totalSeconds = Math.floor(Math.abs(diffMs) / 1000);
+      return {
+        future,
+        days: Math.floor(totalSeconds / 86400),
+        hours: Math.floor((totalSeconds % 86400) / 3600),
+        minutes: Math.floor((totalSeconds % 3600) / 60),
+        seconds: totalSeconds % 60,
+      };
+    }
+
+    // --------------------------------- Rendering ---------------------------------
+    const eventsGrid = document.getElementById('eventsGrid');
+    const eventsEmptyNote = document.getElementById('eventsEmptyNote');
+    const eventCountBadge = document.getElementById('eventCountBadge');
+
+    function renderEventCard(e) {
+      return `
+        <div class="event-card" data-id="${e.id}">
+          <div class="event-card-icon">${escapeHtml(e.icon || '📌')}</div>
+          <div class="event-card-title">${escapeHtml(e.title)}</div>
+          <div class="event-card-direction" id="ev-direction-${e.id}">Time Until</div>
+          <div class="event-card-timer">
+            <div class="timer-unit"><div class="timer-unit-value" id="ev-days-${e.id}">00</div><div class="timer-unit-label">Days</div></div>
+            <div class="timer-unit"><div class="timer-unit-value" id="ev-hours-${e.id}">00</div><div class="timer-unit-label">Hrs</div></div>
+            <div class="timer-unit"><div class="timer-unit-value" id="ev-minutes-${e.id}">00</div><div class="timer-unit-label">Min</div></div>
+            <div class="timer-unit"><div class="timer-unit-value" id="ev-seconds-${e.id}">00</div><div class="timer-unit-label">Sec</div></div>
+          </div>
+          <div class="event-card-date">${escapeHtml(new Date(e.targetDateTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }))}</div>
+          <div class="event-card-actions">
+            <button class="icon-btn" data-action="edit" data-id="${e.id}" title="Edit">✎</button>
+            <button class="icon-btn" data-action="share" data-id="${e.id}" title="Share">🔗</button>
+            <button class="icon-btn danger" data-action="delete" data-id="${e.id}" title="Delete">🗑️</button>
+          </div>
+        </div>`;
+    }
+
+    function renderEvents() {
+      eventCountBadge.textContent = events.length ? `${events.length} event${events.length === 1 ? '' : 's'}` : '';
+      eventsEmptyNote.style.display = events.length ? 'none' : 'block';
+      eventsGrid.innerHTML = events.map(renderEventCard).join('');
+      tickCountdowns();
+    }
+
+    eventsGrid.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const id = Number(btn.dataset.id);
+      if (btn.dataset.action === 'edit') startEditEvent(id);
+      else if (btn.dataset.action === 'delete') deleteEvent(id);
+      else if (btn.dataset.action === 'share') shareEvent(id);
+    });
+
+    // Only touches the digit textContent every second -- no re-render of
+    // the card grid, so editing/scrolling/focus state is never disturbed
+    // by the live tick.
+    function tickCountdowns() {
+      events.forEach((e) => {
+        const daysEl = document.getElementById(`ev-days-${e.id}`);
+        if (!daysEl) return;
+        const d = computeDiff(e.targetDateTime);
+        daysEl.textContent = String(d.days).padStart(2, '0');
+        document.getElementById(`ev-hours-${e.id}`).textContent = String(d.hours).padStart(2, '0');
+        document.getElementById(`ev-minutes-${e.id}`).textContent = String(d.minutes).padStart(2, '0');
+        document.getElementById(`ev-seconds-${e.id}`).textContent = String(d.seconds).padStart(2, '0');
+        document.getElementById(`ev-direction-${e.id}`).textContent = d.future ? 'Time Until' : '🎉 Time Since';
+      });
+    }
+    setInterval(tickCountdowns, 1000);
+
+    // ------------------------------- Sharing ------------------------------------
+    // Encodes event data as base64url in a `?share=` query param -- a
+    // UTF-8-safe encode/decode pair (handles emoji icons and non-ASCII
+    // titles) without the deprecated escape()/unescape() trick.
+    function encodeShareData(obj) {
+      const bytes = new TextEncoder().encode(JSON.stringify(obj));
+      let binary = '';
+      bytes.forEach((b) => { binary += String.fromCharCode(b); });
+      return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+    function decodeShareData(str) {
+      const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
+      const binary = atob(padded);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return JSON.parse(new TextDecoder().decode(bytes));
+    }
+
+    async function copyToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    async function doShare(eventList, successMessage) {
+      const encoded = encodeShareData({ v: 1, events: eventList });
+      const url = `${location.origin}${location.pathname}?share=${encoded}`;
+      const ok = await copyToClipboard(url);
+      if (ok) showToast(successMessage);
+      else prompt('Copy this share link:', url);
+    }
+
+    function shareEvent(id) {
+      const ev = events.find((e) => e.id === id);
+      if (!ev) return;
+      doShare([{ title: ev.title, icon: ev.icon, targetDateTime: ev.targetDateTime }], `Share link for "${ev.title}" copied!`);
+    }
+
+    document.getElementById('shareAllBtn').addEventListener('click', () => {
+      if (events.length === 0) { showToast('Add an event first.', true); return; }
+      doShare(events.map((e) => ({ title: e.title, icon: e.icon, targetDateTime: e.targetDateTime })), `Share link for all ${events.length} events copied!`);
+    });
+
+    function clearShareParamFromUrl() {
+      const url = new URL(location.href);
+      url.searchParams.delete('share');
+      history.replaceState({}, '', url.toString());
+    }
+
+    // Import is opt-in: a shared link never silently adds events on its
+    // own -- it shows what's in the link and waits for an explicit click,
+    // so opening someone else's link can't clobber your own tracked list.
+    function checkForSharedImport() {
+      const shareParam = new URLSearchParams(location.search).get('share');
+      if (!shareParam) return;
+      let data;
+      try { data = decodeShareData(shareParam); } catch { return; }
+      if (!data || !Array.isArray(data.events) || data.events.length === 0) return;
+
+      const banner = document.getElementById('importBanner');
+      document.getElementById('importBannerList').innerHTML = data.events.map((e) =>
+        `<li>${escapeHtml(e.icon || '📌')} <strong>${escapeHtml(e.title)}</strong> — ${escapeHtml(new Date(e.targetDateTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }))}</li>`
+      ).join('');
+      banner.style.display = 'block';
+
+      document.getElementById('importAddBtn').onclick = () => {
+        data.events.forEach((e) => {
+          events.push({ id: nextId(), title: e.title, icon: e.icon || '📌', targetDateTime: e.targetDateTime, createdAt: new Date().toISOString() });
+        });
+        saveData();
+        renderEvents();
+        banner.style.display = 'none';
+        clearShareParamFromUrl();
+        showToast(`Added ${data.events.length} shared event${data.events.length === 1 ? '' : 's'}.`);
+      };
+      document.getElementById('importDismissBtn').onclick = () => {
+        banner.style.display = 'none';
+        clearShareParamFromUrl();
+      };
+    }
+
+    // ----------------------------- Backup / restore -----------------------------
+    document.getElementById('backupBtn').addEventListener('click', () => {
+      const dataStr = JSON.stringify(events, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `countdown-events-backup-${dateKey(new Date())}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Backed up.');
+    });
+
+    const restoreFileInput = document.getElementById('restoreFileInput');
+    document.getElementById('restoreBtn').addEventListener('click', () => restoreFileInput.click());
+    document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+    restoreFileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const restored = JSON.parse(e.target.result);
+          if (Array.isArray(restored)) {
+            events = restored;
+            lastId = events.reduce((max, ev) => Math.max(max, ev.id || 0), lastId);
+            resetForm();
+            saveData();
+            renderEvents();
+            showToast('Restored.');
+          } else {
+            showToast('Invalid backup file.', true);
+          }
+        } catch (err) {
+          console.error('Error parsing restore file:', err);
+          showToast('Error restoring: invalid JSON file.', true);
+        }
+      };
+      reader.onerror = () => showToast('Error reading file.', true);
+      reader.readAsText(file);
+      restoreFileInput.value = '';
+    });
+
+    document.getElementById('clearAllBtn').addEventListener('click', () => {
+      if (!confirm('Clear all events? This cannot be undone.')) return;
+      events = [];
+      resetForm();
+      saveData();
+      renderEvents();
+      showToast('Cleared.');
+    });
+
+    // --------------------------------- Init ---------------------------------
+    loadData();
+    renderEvents();
+    checkForSharedImport();
+  </script>
+</body>
+</html>

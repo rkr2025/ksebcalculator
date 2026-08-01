@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>📆 Date &amp; Time Difference Calculator</title>
+<style>
+  :root {
+    --primary: #2a78d6;
+    --primary-dark: #1f5fac;
+    --primary-light: #eaf2fc;
+    --accent: #1baf7a;
+    --accent-dark: #148f60;
+    --danger: #e34948;
+    --warn: #c97e00;
+    --surface: #ffffff;
+    --surface-muted: #f6f8fb;
+    --border: #e3e7ef;
+    --text-primary: #17203a;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --radius: 14px;
+    --shadow: 0 2px 4px rgba(23,32,58,.06), 0 12px 28px -6px rgba(23,32,58,.14), 0 28px 56px -20px rgba(23,32,58,.16);
+    --shadow-sm: 0 1px 2px rgba(23,32,58,.06), 0 6px 14px -4px rgba(23,32,58,.12);
+    --shadow-lift: 0 6px 12px rgba(23,32,58,.08), 0 22px 44px -10px rgba(23,32,58,.22), 0 36px 70px -24px rgba(23,32,58,.22);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px 10px 32px;
+    font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(42,120,214,.16), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(27,175,122,.14), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(227,73,72,.10), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(201,126,0,.10), transparent 55%),
+      linear-gradient(160deg, #eef1f7, #e4ebf7 60%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    perspective: 1400px;
+  }
+  .container { max-width: 720px; margin: 0 auto; }
+  h1 {
+    text-align: center; font-size: 24px; font-weight: 700; margin: 6px 0 4px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 2px 3px rgba(23,32,58,.15));
+  }
+  .subtitle { text-align: center; color: var(--text-muted); font-size: 13px; margin: 0 0 18px; }
+  .card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.82));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.6);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .card h2 { font-size: 15px; margin: 0 0 14px; color: var(--text-secondary); }
+  .card h3 { font-size: 12.5px; margin: 18px 0 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .02em; }
+  .card h3:first-of-type { margin-top: 4px; }
+
+  button {
+    position: relative;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: filter .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0) 55%);
+    pointer-events: none;
+  }
+  button:hover { filter: brightness(0.97); transform: translateY(-1px); }
+  button:active { transform: translateY(1px); filter: brightness(0.93); }
+  .btn-add {
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color: #fff;
+    box-shadow: 0 2px 3px rgba(27,175,122,.25), 0 10px 22px -4px rgba(27,175,122,.5);
+  }
+  .btn-add:hover { box-shadow: 0 4px 8px rgba(27,175,122,.3), 0 16px 30px -6px rgba(27,175,122,.55); }
+  .btn-subtract {
+    background: linear-gradient(180deg, #f2726f, var(--danger));
+    color: #fff;
+    box-shadow: 0 2px 3px rgba(227,73,72,.25), 0 10px 22px -4px rgba(227,73,72,.5);
+  }
+  .btn-subtract:hover { box-shadow: 0 4px 8px rgba(227,73,72,.3), 0 16px 30px -6px rgba(227,73,72,.55); }
+  .btn-outline {
+    background: linear-gradient(180deg, #ffffff, var(--surface-muted));
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-outline:hover { box-shadow: var(--shadow-lift); }
+  .btn-small { padding: 6px 10px; font-size: 12.5px; white-space: nowrap; }
+
+  input, select {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 9px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: inset 0 1px 3px rgba(23,32,58,.05);
+    transition: border-color .15s ease, box-shadow .15s ease;
+    width: 100%;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light), inset 0 1px 3px rgba(23,32,58,.05);
+  }
+  label { font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .02em; display: block; margin-bottom: 4px; }
+
+  .field-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+  .field { flex: 1 1 220px; min-width: 0; }
+
+  .empty-note { color: var(--text-muted); font-style: italic; font-size: 13px; padding: 6px 0; }
+  .swap-note { text-align: center; font-size: 12px; color: var(--warn); margin: 10px 0 0; }
+
+  .diff-summary { text-align: center; font-size: 15px; font-weight: 600; color: var(--text-primary); margin: 4px 0 16px; }
+
+  .stats-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+  .stat-tile {
+    flex: 1 1 90px;
+    text-align: center;
+    background: linear-gradient(160deg, #ffffff, var(--surface-muted));
+    border-radius: 10px;
+    padding: 12px 8px;
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-tile-label { font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .02em; }
+  .stat-tile-value { font-size: 19px; font-weight: 700; color: var(--text-primary); margin-top: 3px; }
+
+  .result-banner {
+    display: none;
+    text-align: center;
+    background: linear-gradient(160deg, #ffffff, var(--surface-muted));
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 14px;
+    box-shadow: var(--shadow-sm);
+  }
+  .result-banner-date { font-size: 21px; font-weight: 700; color: var(--accent-dark); }
+  .result-banner-relative { font-size: 12.5px; color: var(--text-muted); margin-top: 4px; }
+
+  .actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+
+  .nav-link { display: block; text-align: center; margin-top: 8px; text-decoration: none; color: var(--primary); font-size: 13.5px; }
+
+  @media (max-width: 480px) {
+    body { padding: 10px 6px 24px; }
+    .card { padding: 14px; }
+    h1 { font-size: 20px; }
+    .actions-row button { flex: 1 1 auto; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    button { transition: none !important; transform: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>📆 Date &amp; Time Difference Calculator</h1>
+    <p class="subtitle">Find the exact duration between two moments, or add/subtract days from a date.</p>
+
+    <!-- Date difference -->
+    <div class="card">
+      <h2>⏳ Date Difference</h2>
+      <div class="field-row">
+        <div class="field">
+          <label for="diffFromInput">From</label>
+          <input type="datetime-local" id="diffFromInput">
+        </div>
+        <div class="field">
+          <label for="diffToInput">To</label>
+          <input type="datetime-local" id="diffToInput">
+        </div>
+      </div>
+      <p class="swap-note" id="swapNote" style="display: none;">Note: "To" was earlier than "From" -- showing the absolute difference.</p>
+
+      <h3>Calendar Breakdown</h3>
+      <p class="diff-summary" id="diffSummary"></p>
+      <div class="stats-row">
+        <div class="stat-tile"><div class="stat-tile-label">Years</div><div class="stat-tile-value" id="diffYears">0</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Months</div><div class="stat-tile-value" id="diffMonths">0</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Days</div><div class="stat-tile-value" id="diffDays">0</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Hours</div><div class="stat-tile-value" id="diffHours">0</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Minutes</div><div class="stat-tile-value" id="diffMinutes">0</div></div>
+      </div>
+
+      <h3>Totals</h3>
+      <div class="stats-row">
+        <div class="stat-tile"><div class="stat-tile-label">Total Weeks</div><div class="stat-tile-value" id="totalWeeks">0</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Total Days</div><div class="stat-tile-value" id="totalDays">0</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Total Hours</div><div class="stat-tile-value" id="totalHours">0</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Total Minutes</div><div class="stat-tile-value" id="totalMinutes">0</div></div>
+      </div>
+    </div>
+
+    <!-- Add / subtract days -->
+    <div class="card">
+      <h2>📅 Add / Subtract Days</h2>
+      <div class="field-row">
+        <div class="field">
+          <label for="baseDateInput">Base Date</label>
+          <input type="date" id="baseDateInput">
+        </div>
+        <div class="field">
+          <label for="daysAmountInput">Number of Days</label>
+          <input type="number" id="daysAmountInput" min="0" value="30">
+        </div>
+      </div>
+      <div class="actions-row">
+        <button class="btn-add" id="addDaysBtn" type="button">➕ Add Days</button>
+        <button class="btn-subtract" id="subtractDaysBtn" type="button">➖ Subtract Days</button>
+      </div>
+      <div class="result-banner" id="dateResultBanner">
+        <div class="result-banner-date" id="dateResultValue"></div>
+        <div class="result-banner-relative" id="dateResultRelative"></div>
+      </div>
+    </div>
+
+    <a href="tools.html" class="nav-link">← Back to Tools</a>
+    <div class="view-counter" style="text-align: center; margin-top: 10px;">
+      <img src="https://hits.sh/rkr2025.github.io/ksebcalculator/date-diff.svg?style=flat-square&label=Views" alt="No. of views" loading="lazy">
+    </div>
+  </div>
+
+  <script>
+    // ------------------------------ Date helpers -----------------------------
+    // datetime-local values ("YYYY-MM-DDTHH:MM", no timezone suffix) parse
+    // as LOCAL time per spec, so `new Date(value)` is safe there. Plain
+    // date-only values ("YYYY-MM-DD") parse as UTC MIDNIGHT instead -- a
+    // classic off-by-one trap where the displayed date can shift a day
+    // depending on the viewer's timezone. parseDateOnly() below always
+    // builds those via the local-time Date(y, m, d) constructor instead.
+    function parseDateOnly(value) {
+      const [y, m, d] = value.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+    function formatDateOnlyInput(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    function formatDateTimeLocalInput(date) {
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    // Adds `monthsToAdd` calendar months to `date`. If the resulting month
+    // is shorter than the original day-of-month (e.g. Jan 31 + 1 month),
+    // the result clamps to that month's last day rather than rolling over
+    // into the following month the way native Date math would (new
+    // Date(2020,1,31) silently becomes early March) -- clamping is what
+    // "add a month" intuitively means for calendar arithmetic.
+    function addMonthsClamped(date, monthsToAdd) {
+      const targetIndex = date.getMonth() + monthsToAdd;
+      const targetYear = date.getFullYear() + Math.floor(targetIndex / 12);
+      const targetMonth = ((targetIndex % 12) + 12) % 12;
+      const daysInTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+      const day = Math.min(date.getDate(), daysInTargetMonth);
+      return new Date(targetYear, targetMonth, day, date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
+    }
+
+    // Calendar-accurate Y/M/D/H/M breakdown between two dates (start <=
+    // end). Finds the largest whole number of (clamped) calendar months
+    // that can be added to `start` without passing `end`, then expresses
+    // whatever's left over as exact days/hours/minutes -- robust against
+    // month-length edge cases (see the Jan 31 -> Mar 1 test case) because
+    // it searches forward for the best whole-month count instead of doing
+    // naive Y/M/D subtraction with ad hoc borrowing.
+    function calendarDiff(start, end) {
+      let totalMonths = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+      while (totalMonths > 0 && addMonthsClamped(start, totalMonths) > end) totalMonths--;
+      while (addMonthsClamped(start, totalMonths + 1) <= end) totalMonths++;
+
+      const afterMonths = addMonthsClamped(start, totalMonths);
+      const remainderMs = end - afterMonths;
+
+      const years = Math.floor(totalMonths / 12);
+      const months = totalMonths % 12;
+      const days = Math.floor(remainderMs / 86400000);
+      const hours = Math.floor((remainderMs % 86400000) / 3600000);
+      const minutes = Math.floor((remainderMs % 3600000) / 60000);
+
+      return { years, months, days, hours, minutes };
+    }
+
+    function pluralize(n, singular) {
+      return `${n.toLocaleString()} ${singular}${n === 1 ? '' : 's'}`;
+    }
+
+    // -------------------------------- Difference -------------------------------
+    const diffFromInput = document.getElementById('diffFromInput');
+    const diffToInput = document.getElementById('diffToInput');
+    const swapNote = document.getElementById('swapNote');
+    const diffSummary = document.getElementById('diffSummary');
+
+    function recomputeDiff() {
+      if (!diffFromInput.value || !diffToInput.value) return;
+      const a = new Date(diffFromInput.value);
+      const b = new Date(diffToInput.value);
+      if (isNaN(a) || isNaN(b)) return;
+
+      const reversed = b < a;
+      const start = reversed ? b : a;
+      const end = reversed ? a : b;
+      swapNote.style.display = reversed ? 'block' : 'none';
+
+      const { years, months, days, hours, minutes } = calendarDiff(start, end);
+      document.getElementById('diffYears').textContent = years.toLocaleString();
+      document.getElementById('diffMonths').textContent = months.toLocaleString();
+      document.getElementById('diffDays').textContent = days.toLocaleString();
+      document.getElementById('diffHours').textContent = hours.toLocaleString();
+      document.getElementById('diffMinutes').textContent = minutes.toLocaleString();
+      diffSummary.textContent = `${pluralize(years, 'year')}, ${pluralize(months, 'month')}, ${pluralize(days, 'day')}, `
+        + `${pluralize(hours, 'hour')}, and ${pluralize(minutes, 'minute')}`;
+
+      const totalMs = end - start;
+      const totalMinutesExact = Math.round(totalMs / 60000);
+      document.getElementById('totalMinutes').textContent = totalMinutesExact.toLocaleString();
+      document.getElementById('totalHours').textContent = (totalMs / 3600000).toLocaleString(undefined, { maximumFractionDigits: 2 });
+      document.getElementById('totalDays').textContent = (totalMs / 86400000).toLocaleString(undefined, { maximumFractionDigits: 2 });
+      document.getElementById('totalWeeks').textContent = (totalMs / (86400000 * 7)).toLocaleString(undefined, { maximumFractionDigits: 2 });
+    }
+
+    diffFromInput.addEventListener('input', recomputeDiff);
+    diffToInput.addEventListener('input', recomputeDiff);
+
+    // ---------------------------- Add / subtract days -----------------------------
+    const baseDateInput = document.getElementById('baseDateInput');
+    const daysAmountInput = document.getElementById('daysAmountInput');
+    const dateResultBanner = document.getElementById('dateResultBanner');
+    const dateResultValue = document.getElementById('dateResultValue');
+    const dateResultRelative = document.getElementById('dateResultRelative');
+
+    function applyDaysOffset(direction) {
+      if (!baseDateInput.value) return;
+      const amount = parseInt(daysAmountInput.value, 10);
+      if (!Number.isFinite(amount)) return;
+
+      const base = parseDateOnly(baseDateInput.value);
+      const delta = direction === 'subtract' ? -Math.abs(amount) : Math.abs(amount);
+      const result = new Date(base.getFullYear(), base.getMonth(), base.getDate() + delta);
+
+      dateResultValue.textContent = result.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+      const today = new Date();
+      const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const daysFromToday = Math.round((result - todayMidnight) / 86400000);
+      dateResultRelative.textContent = daysFromToday === 0 ? '(that\'s today)'
+        : daysFromToday > 0 ? `(${pluralize(daysFromToday, 'day')} from today)`
+        : `(${pluralize(Math.abs(daysFromToday), 'day')} ago)`;
+
+      dateResultBanner.style.display = 'block';
+    }
+
+    document.getElementById('addDaysBtn').addEventListener('click', () => applyDaysOffset('add'));
+    document.getElementById('subtractDaysBtn').addEventListener('click', () => applyDaysOffset('subtract'));
+
+    // --------------------------------- Init ---------------------------------
+    const now = new Date();
+    diffFromInput.value = formatDateTimeLocalInput(now);
+    diffToInput.value = formatDateTimeLocalInput(now);
+    baseDateInput.value = formatDateOnlyInput(now);
+    recomputeDiff();
+  </script>
+</body>
+</html>
