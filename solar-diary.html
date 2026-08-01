@@ -1684,8 +1684,7 @@
     function renderEstimatedBill(usage, totalDays) {
       const el = document.getElementById('estimatedBill');
       const viewBtn = document.getElementById('viewFullBreakdownBtn');
-      const todayLabel = new Date().toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric' });
-      let html = `<hr style="margin-top: 20px;"><h4>💰 Estimated Total Bill as on ${todayLabel}</h4>`;
+      let html = `<hr style="margin-top: 20px;">`;
 
       const bill = computeBill(billInputsFromUsage(usage));
       if (bill.error) {
@@ -1694,9 +1693,6 @@
         viewBtn.style.display = 'none';
         return;
       }
-
-      html += '<p>Based on your tracked readings so far:</p>';
-      html += billSummaryRows(bill);
 
       // Connected Load only changes the bill when there's an export surplus
       // to carry from Normal into Peak hours (see js/calculator.js,
