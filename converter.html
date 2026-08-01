@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🔄 Unit &amp; Currency Quick-Converter</title>
+<style>
+  :root {
+    --primary: #2a78d6;
+    --primary-dark: #1f5fac;
+    --primary-light: #eaf2fc;
+    --accent: #1baf7a;
+    --accent-dark: #148f60;
+    --danger: #e34948;
+    --warn: #c97e00;
+    --surface: #ffffff;
+    --surface-muted: #f6f8fb;
+    --border: #e3e7ef;
+    --text-primary: #17203a;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --radius: 14px;
+    --shadow: 0 2px 4px rgba(23,32,58,.06), 0 12px 28px -6px rgba(23,32,58,.14), 0 28px 56px -20px rgba(23,32,58,.16);
+    --shadow-sm: 0 1px 2px rgba(23,32,58,.06), 0 6px 14px -4px rgba(23,32,58,.12);
+    --shadow-lift: 0 6px 12px rgba(23,32,58,.08), 0 22px 44px -10px rgba(23,32,58,.22), 0 36px 70px -24px rgba(23,32,58,.22);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px 10px 32px;
+    font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(42,120,214,.16), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(27,175,122,.14), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(227,73,72,.10), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(201,126,0,.10), transparent 55%),
+      linear-gradient(160deg, #eef1f7, #e4ebf7 60%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    perspective: 1400px;
+  }
+  .container { max-width: 720px; margin: 0 auto; }
+  h1 {
+    text-align: center; font-size: 24px; font-weight: 700; margin: 6px 0 4px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 2px 3px rgba(23,32,58,.15));
+  }
+  .subtitle { text-align: center; color: var(--text-muted); font-size: 13px; margin: 0 0 18px; }
+  .card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.82));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.6);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+
+  /* -------- Buttons (shared) -------- */
+  button {
+    position: relative;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: filter .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0) 55%);
+    pointer-events: none;
+  }
+  button:hover { filter: brightness(0.97); transform: translateY(-1px); }
+  button:active { transform: translateY(1px); filter: brightness(0.93); }
+  .btn-outline {
+    background: linear-gradient(180deg, #ffffff, var(--surface-muted));
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-outline:hover { box-shadow: var(--shadow-lift); }
+  .btn-small { padding: 6px 10px; font-size: 12.5px; white-space: nowrap; }
+
+  input, select {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 9px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: inset 0 1px 3px rgba(23,32,58,.05);
+    transition: border-color .15s ease, box-shadow .15s ease;
+    width: 100%;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light), inset 0 1px 3px rgba(23,32,58,.05);
+  }
+  label { font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .02em; }
+
+  /* -------- Tabs -------- */
+  .tab-bar { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-bottom: 16px; }
+  .tab-btn {
+    background: linear-gradient(180deg, #ffffff, var(--surface-muted));
+    color: var(--text-secondary);
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .tab-btn:hover { transform: translateY(-1px); }
+  .tab-btn.active {
+    background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border-color: var(--primary);
+    box-shadow: 0 3px 6px rgba(42,120,214,.3), 0 10px 20px -6px rgba(42,120,214,.4);
+  }
+
+  /* -------- Converter -------- */
+  .converter-row { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 8px; }
+  .converter-field { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  .converter-field input[type="number"] { font-size: 21px; font-weight: 700; padding: 10px 12px; }
+  .converter-field input[readonly] { background: var(--surface-muted); color: var(--text-primary); cursor: default; }
+  .converter-field select { font-size: 13px; }
+  .swap-btn {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+    color: #fff;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-bottom: 4px;
+    box-shadow: 0 2px 3px rgba(27,175,122,.25), 0 10px 22px -4px rgba(27,175,122,.5);
+  }
+  .swap-btn:hover { box-shadow: 0 4px 8px rgba(27,175,122,.3), 0 16px 30px -6px rgba(27,175,122,.55); }
+  .conversion-formula { text-align: center; font-size: 12.5px; color: var(--text-muted); margin: 10px 0 0; }
+  .rate-status { text-align: center; font-size: 12px; color: var(--text-muted); margin: 0 0 16px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+    background: linear-gradient(180deg, #26314f, var(--text-primary)); color: #fff; padding: 10px 18px; border-radius: 999px;
+    font-size: 13.5px; font-weight: 600; box-shadow: var(--shadow-lift);
+    opacity: 0; pointer-events: none; transition: opacity .25s ease; z-index: 50;
+  }
+  .toast.show { opacity: 1; }
+  .toast.error { background: var(--danger); }
+
+  .nav-link { display: block; text-align: center; margin-top: 8px; text-decoration: none; color: var(--primary); font-size: 13.5px; }
+
+  @media (max-width: 480px) {
+    body { padding: 10px 6px 24px; }
+    .card { padding: 14px; }
+    h1 { font-size: 20px; }
+    .converter-row { flex-direction: column; align-items: stretch; }
+    .swap-btn { align-self: center; margin: -4px 0; transform: rotate(90deg); }
+    .swap-btn:hover { transform: rotate(90deg) translateY(-1px); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    button, .tab-btn { transition: none !important; transform: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔄 Unit &amp; Currency Quick-Converter</h1>
+    <p class="subtitle">Instant conversions for everyday measurements and global currencies.</p>
+
+    <div class="tab-bar" id="tabBar">
+      <button class="tab-btn" data-tab="length" type="button">📏 Length</button>
+      <button class="tab-btn" data-tab="weight" type="button">⚖️ Weight</button>
+      <button class="tab-btn" data-tab="temperature" type="button">🌡️ Temperature</button>
+      <button class="tab-btn" data-tab="data" type="button">💾 Data Storage</button>
+      <button class="tab-btn" data-tab="currency" type="button">💱 Currency</button>
+    </div>
+
+    <!-- Length -->
+    <div class="card tab-panel" data-tab-panel="length" style="display: none;">
+      <div class="converter-row">
+        <div class="converter-field">
+          <label for="lengthFromValue">From</label>
+          <input type="number" id="lengthFromValue" value="1">
+          <select id="lengthFromUnit"></select>
+        </div>
+        <button class="swap-btn" id="lengthSwapBtn" type="button" title="Swap units">⇄</button>
+        <div class="converter-field">
+          <label for="lengthToValue">To</label>
+          <input type="number" id="lengthToValue" readonly>
+          <select id="lengthToUnit"></select>
+        </div>
+      </div>
+      <p class="conversion-formula" id="lengthFormula"></p>
+    </div>
+
+    <!-- Weight -->
+    <div class="card tab-panel" data-tab-panel="weight" style="display: none;">
+      <div class="converter-row">
+        <div class="converter-field">
+          <label for="weightFromValue">From</label>
+          <input type="number" id="weightFromValue" value="1">
+          <select id="weightFromUnit"></select>
+        </div>
+        <button class="swap-btn" id="weightSwapBtn" type="button" title="Swap units">⇄</button>
+        <div class="converter-field">
+          <label for="weightToValue">To</label>
+          <input type="number" id="weightToValue" readonly>
+          <select id="weightToUnit"></select>
+        </div>
+      </div>
+      <p class="conversion-formula" id="weightFormula"></p>
+    </div>
+
+    <!-- Temperature -->
+    <div class="card tab-panel" data-tab-panel="temperature" style="display: none;">
+      <div class="converter-row">
+        <div class="converter-field">
+          <label for="tempFromValue">From</label>
+          <input type="number" id="tempFromValue" value="0">
+          <select id="tempFromUnit">
+            <option value="C">Celsius (°C)</option>
+            <option value="F">Fahrenheit (°F)</option>
+            <option value="K">Kelvin (K)</option>
+          </select>
+        </div>
+        <button class="swap-btn" id="tempSwapBtn" type="button" title="Swap units">⇄</button>
+        <div class="converter-field">
+          <label for="tempToValue">To</label>
+          <input type="number" id="tempToValue" readonly>
+          <select id="tempToUnit">
+            <option value="F">Fahrenheit (°F)</option>
+            <option value="C">Celsius (°C)</option>
+            <option value="K">Kelvin (K)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Storage -->
+    <div class="card tab-panel" data-tab-panel="data" style="display: none;">
+      <div class="converter-row">
+        <div class="converter-field">
+          <label for="dataFromValue">From</label>
+          <input type="number" id="dataFromValue" value="1">
+          <select id="dataFromUnit"></select>
+        </div>
+        <button class="swap-btn" id="dataSwapBtn" type="button" title="Swap units">⇄</button>
+        <div class="converter-field">
+          <label for="dataToValue">To</label>
+          <input type="number" id="dataToValue" readonly>
+          <select id="dataToUnit"></select>
+        </div>
+      </div>
+      <p class="conversion-formula" id="dataFormula"></p>
+      <p class="conversion-formula" style="margin-top: 2px;">(binary: 1 KB = 1024 B, 1 MB = 1024 KB, etc.)</p>
+    </div>
+
+    <!-- Currency -->
+    <div class="card tab-panel" data-tab-panel="currency" style="display: none;">
+      <p class="rate-status" id="rateStatus">Loading exchange rates...</p>
+      <div class="converter-row">
+        <div class="converter-field">
+          <label for="currencyFromValue">Amount</label>
+          <input type="number" id="currencyFromValue" value="1">
+          <select id="currencyFromUnit"></select>
+        </div>
+        <button class="swap-btn" id="currencySwapBtn" type="button" title="Swap currencies">⇄</button>
+        <div class="converter-field">
+          <label for="currencyToValue">Converted</label>
+          <input type="number" id="currencyToValue" readonly>
+          <select id="currencyToUnit"></select>
+        </div>
+      </div>
+      <p class="conversion-formula" id="currencyFormula"></p>
+      <div style="text-align: center; margin-top: 14px;">
+        <button class="btn-outline btn-small" id="refreshRatesBtn" type="button">🔄 Refresh Rates</button>
+      </div>
+    </div>
+
+    <a href="tools.html" class="nav-link">← Back to Tools</a>
+    <div class="view-counter" style="text-align: center; margin-top: 10px;">
+      <img src="https://hits.sh/rkr2025.github.io/ksebcalculator/converter.svg?style=flat-square&label=Views" alt="No. of views" loading="lazy">
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ------------------------------- Prefs -----------------------------------
+    // Just remembers the active tab and each tab's last-used unit pair --
+    // there's no user-created content here worth a JSON backup/restore
+    // (unlike the site's other tools), so this is the only persisted state.
+    const PREFS_KEY = 'converterPrefs';
+    let prefs = {};
+    function loadPrefs() {
+      try { prefs = JSON.parse(localStorage.getItem(PREFS_KEY)) || {}; } catch { prefs = {}; }
+    }
+    function savePrefs() {
+      localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+    }
+
+    const toast = document.getElementById('toast');
+    function showToast(message, isError) {
+      toast.textContent = message;
+      toast.className = 'toast show' + (isError ? ' error' : '');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => { toast.className = 'toast'; }, 2600);
+    }
+
+    function withTimeout(promise, ms, message) {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms)),
+      ]);
+    }
+
+    // Adaptive precision -- small ratios (e.g. 1 inch in km) need several
+    // decimal places to not just show "0", large ones don't need many.
+    // Trailing zeros are trimmed so "2.500000" reads as "2.5".
+    function formatResult(n) {
+      if (!Number.isFinite(n)) return '';
+      if (n === 0) return '0';
+      const abs = Math.abs(n);
+      const decimals = abs < 1 ? 6 : abs < 1000 ? 4 : 2;
+      return n.toFixed(decimals).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+    }
+
+    // --------------------------------- Tabs -----------------------------------
+    const TAB_IDS = ['length', 'weight', 'temperature', 'data', 'currency'];
+    function selectTab(tab) {
+      TAB_IDS.forEach((t) => {
+        document.querySelector(`.tab-btn[data-tab="${t}"]`).classList.toggle('active', t === tab);
+        document.querySelector(`.tab-panel[data-tab-panel="${t}"]`).style.display = t === tab ? '' : 'none';
+      });
+      prefs.activeTab = tab;
+      savePrefs();
+      if (tab === 'currency' && !currencyRatesData) initCurrencyTab();
+    }
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => selectTab(btn.dataset.tab));
+    });
+
+    // ------------------------- Linear unit converters ---------------------------
+    // Length, Weight, and Data Storage all reduce to the same shape: every
+    // unit has a fixed multiplying factor to a common base unit, so any
+    // pair converts via amount * fromFactor / toFactor. Temperature is
+    // wired up separately below since C/F/K need offsets, not just a factor.
+    const UNIT_CATEGORIES = {
+      length: {
+        units: [
+          { id: 'mm', label: 'Millimeter (mm)', factor: 0.001 },
+          { id: 'cm', label: 'Centimeter (cm)', factor: 0.01 },
+          { id: 'm', label: 'Meter (m)', factor: 1 },
+          { id: 'km', label: 'Kilometer (km)', factor: 1000 },
+          { id: 'in', label: 'Inch (in)', factor: 0.0254 },
+          { id: 'ft', label: 'Foot (ft)', factor: 0.3048 },
+          { id: 'yd', label: 'Yard (yd)', factor: 0.9144 },
+          { id: 'mi', label: 'Mile (mi)', factor: 1609.344 },
+        ],
+        defaultFrom: 'km', defaultTo: 'mi',
+      },
+      weight: {
+        units: [
+          { id: 'mg', label: 'Milligram (mg)', factor: 0.000001 },
+          { id: 'g', label: 'Gram (g)', factor: 0.001 },
+          { id: 'kg', label: 'Kilogram (kg)', factor: 1 },
+          { id: 't', label: 'Metric Ton (t)', factor: 1000 },
+          { id: 'oz', label: 'Ounce (oz)', factor: 0.028349523125 },
+          { id: 'lb', label: 'Pound (lb)', factor: 0.45359237 },
+          { id: 'st', label: 'Stone (st)', factor: 6.35029318 },
+        ],
+        defaultFrom: 'kg', defaultTo: 'lb',
+      },
+      data: {
+        units: [
+          { id: 'bit', label: 'Bit', factor: 0.125 },
+          { id: 'B', label: 'Byte (B)', factor: 1 },
+          { id: 'KB', label: 'Kilobyte (KB)', factor: 1024 },
+          { id: 'MB', label: 'Megabyte (MB)', factor: 1024 ** 2 },
+          { id: 'GB', label: 'Gigabyte (GB)', factor: 1024 ** 3 },
+          { id: 'TB', label: 'Terabyte (TB)', factor: 1024 ** 4 },
+        ],
+        defaultFrom: 'GB', defaultTo: 'MB',
+      },
+    };
+
+    function populateUnitSelect(select, units) {
+      select.innerHTML = units.map((u) => `<option value="${u.id}">${u.label}</option>`).join('');
+    }
+
+    function setupLinearConverter(key, config) {
+      const fromValueEl = document.getElementById(`${key}FromValue`);
+      const fromUnitEl = document.getElementById(`${key}FromUnit`);
+      const toValueEl = document.getElementById(`${key}ToValue`);
+      const toUnitEl = document.getElementById(`${key}ToUnit`);
+      const swapBtn = document.getElementById(`${key}SwapBtn`);
+      const formulaEl = document.getElementById(`${key}Formula`);
+
+      populateUnitSelect(fromUnitEl, config.units);
+      populateUnitSelect(toUnitEl, config.units);
+      fromUnitEl.value = prefs[`${key}From`] || config.defaultFrom;
+      toUnitEl.value = prefs[`${key}To`] || config.defaultTo;
+
+      const unitById = (id) => config.units.find((u) => u.id === id);
+      const shortLabel = (u) => u.label.replace(/\s*\(.*\)$/, '');
+
+      function recompute() {
+        const amount = parseFloat(fromValueEl.value);
+        const fromUnit = unitById(fromUnitEl.value);
+        const toUnit = unitById(toUnitEl.value);
+        if (!Number.isFinite(amount) || !fromUnit || !toUnit) {
+          toValueEl.value = '';
+          formulaEl.textContent = '';
+          return;
+        }
+        toValueEl.value = formatResult((amount * fromUnit.factor) / toUnit.factor);
+        formulaEl.textContent = `1 ${shortLabel(fromUnit)} = ${formatResult(fromUnit.factor / toUnit.factor)} ${shortLabel(toUnit)}`;
+      }
+
+      fromValueEl.addEventListener('input', recompute);
+      fromUnitEl.addEventListener('change', () => { prefs[`${key}From`] = fromUnitEl.value; savePrefs(); recompute(); });
+      toUnitEl.addEventListener('change', () => { prefs[`${key}To`] = toUnitEl.value; savePrefs(); recompute(); });
+      swapBtn.addEventListener('click', () => {
+        const f = fromUnitEl.value;
+        fromUnitEl.value = toUnitEl.value;
+        toUnitEl.value = f;
+        prefs[`${key}From`] = fromUnitEl.value;
+        prefs[`${key}To`] = toUnitEl.value;
+        savePrefs();
+        recompute();
+      });
+
+      recompute();
+    }
+
+    // ------------------------------ Temperature ----------------------------------
+    function toCelsius(value, unit) {
+      if (unit === 'C') return value;
+      if (unit === 'F') return (value - 32) * 5 / 9;
+      return value - 273.15; // K
+    }
+    function fromCelsius(celsius, unit) {
+      if (unit === 'C') return celsius;
+      if (unit === 'F') return celsius * 9 / 5 + 32;
+      return celsius + 273.15; // K
+    }
+
+    function setupTemperatureConverter() {
+      const fromValueEl = document.getElementById('tempFromValue');
+      const fromUnitEl = document.getElementById('tempFromUnit');
+      const toValueEl = document.getElementById('tempToValue');
+      const toUnitEl = document.getElementById('tempToUnit');
+      const swapBtn = document.getElementById('tempSwapBtn');
+
+      fromUnitEl.value = prefs.tempFrom || 'C';
+      toUnitEl.value = prefs.tempTo || 'F';
+
+      function recompute() {
+        const amount = parseFloat(fromValueEl.value);
+        if (!Number.isFinite(amount)) { toValueEl.value = ''; return; }
+        toValueEl.value = formatResult(fromCelsius(toCelsius(amount, fromUnitEl.value), toUnitEl.value));
+      }
+
+      fromValueEl.addEventListener('input', recompute);
+      fromUnitEl.addEventListener('change', () => { prefs.tempFrom = fromUnitEl.value; savePrefs(); recompute(); });
+      toUnitEl.addEventListener('change', () => { prefs.tempTo = toUnitEl.value; savePrefs(); recompute(); });
+      swapBtn.addEventListener('click', () => {
+        const f = fromUnitEl.value;
+        fromUnitEl.value = toUnitEl.value;
+        toUnitEl.value = f;
+        prefs.tempFrom = fromUnitEl.value;
+        prefs.tempTo = toUnitEl.value;
+        savePrefs();
+        recompute();
+      });
+
+      recompute();
+    }
+
+    // -------------------------------- Currency ------------------------------------
+    // Free, keyless, CORS-open endpoint (exchangerate-api.com's "open"
+    // access tier) -- refreshed on their end about once a day, so caching
+    // client-side for 24h matches their own update cadence instead of
+    // hammering it on every page load.
+    const CURRENCY_API = 'https://open.er-api.com/v6/latest/USD';
+    const CURRENCY_CACHE_KEY = 'converterCurrencyRates';
+    const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+    let currencyRatesData = null; // { base, rates: {CODE: rate-per-USD}, fetchedAt, apiUpdatedAt }
+
+    function loadCachedRates() {
+      try { return JSON.parse(localStorage.getItem(CURRENCY_CACHE_KEY)); } catch { return null; }
+    }
+    function saveCachedRates(data) {
+      localStorage.setItem(CURRENCY_CACHE_KEY, JSON.stringify(data));
+    }
+    function isFresh(cache) {
+      return !!cache && (Date.now() - new Date(cache.fetchedAt).getTime()) < CACHE_MAX_AGE_MS;
+    }
+
+    async function fetchFreshRates() {
+      const response = await withTimeout(fetch(CURRENCY_API), 8000, 'The exchange rate service took too long to respond.');
+      if (!response.ok) throw new Error(`Exchange rate service returned HTTP ${response.status}.`);
+      const data = await response.json();
+      if (data.result !== 'success' || !data.rates) throw new Error('Unexpected response from the exchange rate service.');
+      const fresh = {
+        base: data.base_code || 'USD',
+        rates: data.rates,
+        fetchedAt: new Date().toISOString(),
+        apiUpdatedAt: data.time_last_update_utc || null,
+      };
+      saveCachedRates(fresh);
+      return fresh;
+    }
+
+    function populateCurrencySelectors() {
+      const codes = Object.keys(currencyRatesData.rates).sort();
+      const fromSel = document.getElementById('currencyFromUnit');
+      const toSel = document.getElementById('currencyToUnit');
+      const optionsHtml = codes.map((c) => `<option value="${c}">${c}</option>`).join('');
+      fromSel.innerHTML = optionsHtml;
+      toSel.innerHTML = optionsHtml;
+      fromSel.value = prefs.currencyFrom && codes.includes(prefs.currencyFrom) ? prefs.currencyFrom : 'USD';
+      const defaultTo = codes.includes('INR') ? 'INR' : codes.find((c) => c !== fromSel.value) || codes[0];
+      toSel.value = prefs.currencyTo && codes.includes(prefs.currencyTo) ? prefs.currencyTo : defaultTo;
+    }
+
+    function recomputeCurrency() {
+      const amount = parseFloat(document.getElementById('currencyFromValue').value);
+      const from = document.getElementById('currencyFromUnit').value;
+      const to = document.getElementById('currencyToUnit').value;
+      const toValueEl = document.getElementById('currencyToValue');
+      const formulaEl = document.getElementById('currencyFormula');
+      if (!currencyRatesData || !Number.isFinite(amount) || !currencyRatesData.rates[from] || !currencyRatesData.rates[to]) {
+        toValueEl.value = '';
+        formulaEl.textContent = '';
+        return;
+      }
+      const rate = currencyRatesData.rates[to] / currencyRatesData.rates[from];
+      toValueEl.value = formatResult(amount * rate);
+      formulaEl.textContent = `1 ${from} = ${formatResult(rate)} ${to}`;
+    }
+
+    function updateRateStatus() {
+      const rateStatus = document.getElementById('rateStatus');
+      if (!currencyRatesData) { rateStatus.textContent = ''; return; }
+      const updated = currencyRatesData.apiUpdatedAt
+        ? new Date(currencyRatesData.apiUpdatedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
+        : 'unknown';
+      const stale = !isFresh(currencyRatesData);
+      rateStatus.textContent = `Rates as of ${updated}${stale ? ' (cached -- tap Refresh when online)' : ''} · via exchangerate-api.com`;
+    }
+
+    function afterRatesLoaded() {
+      populateCurrencySelectors();
+      updateRateStatus();
+      recomputeCurrency();
+    }
+
+    let currencyWired = false;
+    function wireCurrencyInputsOnce() {
+      if (currencyWired) return;
+      currencyWired = true;
+      const fromValueEl = document.getElementById('currencyFromValue');
+      const fromUnitEl = document.getElementById('currencyFromUnit');
+      const toUnitEl = document.getElementById('currencyToUnit');
+      const swapBtn = document.getElementById('currencySwapBtn');
+
+      fromValueEl.addEventListener('input', recomputeCurrency);
+      fromUnitEl.addEventListener('change', () => { prefs.currencyFrom = fromUnitEl.value; savePrefs(); recomputeCurrency(); });
+      toUnitEl.addEventListener('change', () => { prefs.currencyTo = toUnitEl.value; savePrefs(); recomputeCurrency(); });
+      swapBtn.addEventListener('click', () => {
+        const f = fromUnitEl.value;
+        fromUnitEl.value = toUnitEl.value;
+        toUnitEl.value = f;
+        prefs.currencyFrom = fromUnitEl.value;
+        prefs.currencyTo = toUnitEl.value;
+        savePrefs();
+        recomputeCurrency();
+      });
+      document.getElementById('refreshRatesBtn').addEventListener('click', async () => {
+        document.getElementById('rateStatus').textContent = 'Refreshing...';
+        try {
+          currencyRatesData = await fetchFreshRates();
+          afterRatesLoaded();
+          showToast('Exchange rates refreshed.');
+        } catch (err) {
+          updateRateStatus();
+          showToast((err && err.message) || 'Could not refresh rates.', true);
+        }
+      });
+    }
+
+    // Lazily fetched -- only hit the network once the Currency tab is
+    // actually opened (immediately on load if it was the last-used tab).
+    async function initCurrencyTab() {
+      wireCurrencyInputsOnce();
+      const cached = loadCachedRates();
+      if (isFresh(cached)) {
+        currencyRatesData = cached;
+        afterRatesLoaded();
+        return;
+      }
+      try {
+        currencyRatesData = await fetchFreshRates();
+        afterRatesLoaded();
+      } catch (err) {
+        if (cached) {
+          currencyRatesData = cached;
+          afterRatesLoaded();
+          showToast('Could not refresh exchange rates -- showing the last cached rates.', true);
+        } else {
+          document.getElementById('rateStatus').textContent =
+            `⚠️ ${(err && err.message) || 'Could not load exchange rates.'} No cached rates yet -- check your connection and try Refresh.`;
+        }
+      }
+    }
+
+    // --------------------------------- Init ---------------------------------
+    loadPrefs();
+    setupLinearConverter('length', UNIT_CATEGORIES.length);
+    setupLinearConverter('weight', UNIT_CATEGORIES.weight);
+    setupLinearConverter('data', UNIT_CATEGORIES.data);
+    setupTemperatureConverter();
+    selectTab(TAB_IDS.includes(prefs.activeTab) ? prefs.activeTab : 'length');
+  </script>
+</body>
+</html>
