@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🤝 Expense Splitter &amp; Calculator</title>
+<style>
+  :root {
+    --primary: #2a78d6;
+    --primary-dark: #1f5fac;
+    --primary-light: #eaf2fc;
+    --accent: #1baf7a;
+    --accent-dark: #148f60;
+    --danger: #e34948;
+    --warn: #c97e00;
+    --surface: #ffffff;
+    --surface-muted: #f6f8fb;
+    --border: #e3e7ef;
+    --text-primary: #17203a;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --radius: 14px;
+    --shadow: 0 2px 4px rgba(23,32,58,.06), 0 12px 28px -6px rgba(23,32,58,.14), 0 28px 56px -20px rgba(23,32,58,.16);
+    --shadow-sm: 0 1px 2px rgba(23,32,58,.06), 0 6px 14px -4px rgba(23,32,58,.12);
+    --shadow-lift: 0 6px 12px rgba(23,32,58,.08), 0 22px 44px -10px rgba(23,32,58,.22), 0 36px 70px -24px rgba(23,32,58,.22);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px 10px 32px;
+    font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(42,120,214,.16), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(27,175,122,.14), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(227,73,72,.10), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(201,126,0,.10), transparent 55%),
+      linear-gradient(160deg, #eef1f7, #e4ebf7 60%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    perspective: 1400px;
+  }
+  .container { max-width: 820px; margin: 0 auto; }
+  h1 {
+    text-align: center; font-size: 24px; font-weight: 700; margin: 6px 0 4px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 2px 3px rgba(23,32,58,.15));
+  }
+  .subtitle { text-align: center; color: var(--text-muted); font-size: 13px; margin: 0 0 18px; }
+  .card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.82));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.6);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 16px;
+    transform-style: preserve-3d;
+    transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s cubic-bezier(.22,1,.36,1);
+  }
+  @media (hover: hover) {
+    .card:hover { transform: translateY(-6px) rotateX(1deg) rotateY(-0.6deg); box-shadow: var(--shadow-lift); }
+  }
+  .card h2 { font-size: 15px; margin: 0 0 14px; color: var(--text-secondary); }
+
+  /* -------- Buttons (shared) -------- */
+  button {
+    position: relative;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: filter .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0) 55%);
+    pointer-events: none;
+  }
+  button:hover { filter: brightness(0.97); transform: translateY(-1px); }
+  button:active { transform: translateY(1px); filter: brightness(0.93); }
+  .btn-add {
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color: #fff;
+    box-shadow: 0 2px 3px rgba(27,175,122,.25), 0 10px 22px -4px rgba(27,175,122,.5);
+  }
+  .btn-add:hover { box-shadow: 0 4px 8px rgba(27,175,122,.3), 0 16px 30px -6px rgba(27,175,122,.55); }
+  .btn-outline {
+    background: linear-gradient(180deg, #ffffff, var(--surface-muted));
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-outline:hover { box-shadow: var(--shadow-lift); }
+  .btn-small { padding: 6px 10px; font-size: 12.5px; white-space: nowrap; }
+
+  input, select {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 9px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: inset 0 1px 3px rgba(23,32,58,.05);
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light), inset 0 1px 3px rgba(23,32,58,.05);
+  }
+  label { font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px; }
+
+  /* -------- Participants -------- */
+  .participant-form { display: flex; gap: 8px; margin-bottom: 12px; }
+  .participant-form input { flex: 1; }
+  .participant-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .participant-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,.35);
+  }
+  .participant-chip button {
+    background: rgba(255,255,255,.25);
+    border: none;
+    color: #fff;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    line-height: 1;
+    font-size: 11px;
+    padding: 0;
+    cursor: pointer;
+  }
+  .empty-note { color: var(--text-muted); font-style: italic; font-size: 13px; padding: 6px 0; }
+  .stats-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .stat-tile {
+    flex: 1 1 140px;
+    text-align: center;
+    background: linear-gradient(160deg, #ffffff, var(--surface-muted));
+    border-radius: 10px;
+    padding: 12px 10px;
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-tile-label { font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .02em; }
+  .stat-tile-value { font-size: 19px; font-weight: 700; color: var(--text-primary); margin-top: 3px; }
+
+  /* -------- Add expense form -------- */
+  .expense-form-hint { color: var(--text-muted); font-style: italic; font-size: 13px; padding: 6px 0 2px; }
+  .expense-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .expense-form input, .expense-form select { width: 100%; }
+  .split-among-group {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    padding: 10px 12px;
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .split-check { display: flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 500; color: var(--text-primary); cursor: pointer; margin: 0; }
+  .split-check input { width: auto; padding: 0; box-shadow: none; }
+  .expense-form-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; }
+
+  /* -------- Expense log table -------- */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th { color: var(--text-muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .02em; background: linear-gradient(180deg, var(--surface-muted), #eef1f7); }
+  td.desc-cell, td.split-cell { white-space: normal; }
+  tfoot td { font-weight: 700; border-bottom: none; border-top: 2px solid var(--border); }
+  .delete-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 0 4px; }
+  .delete-btn:hover { color: var(--danger); }
+
+  /* -------- Balances -------- */
+  .balance-list { display: flex; flex-direction: column; gap: 4px; }
+  .balance-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--surface-muted);
+    font-size: 14px;
+  }
+  .balance-name { font-weight: 700; color: var(--text-primary); }
+  .balance-amount { font-weight: 700; font-size: 13.5px; }
+  .balance-amount.positive { color: var(--accent-dark); }
+  .balance-amount.negative { color: var(--danger); }
+  .balance-amount.settled { color: var(--text-muted); font-weight: 500; font-style: italic; }
+
+  /* -------- Settlement -------- */
+  .settlement-count { font-size: 13.5px; font-weight: 700; color: var(--text-secondary); margin-bottom: 10px; }
+  .settlement-list { display: flex; flex-direction: column; gap: 8px; }
+  .settlement-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: linear-gradient(180deg, var(--surface-muted), #eef1f7);
+    box-shadow: var(--shadow-sm);
+    font-size: 14px;
+    flex-wrap: wrap;
+  }
+  .settle-from { font-weight: 700; color: var(--danger); }
+  .settle-to { font-weight: 700; color: var(--accent-dark); }
+  .settle-arrow { color: var(--text-muted); }
+  .settle-amt { margin-left: auto; font-weight: 700; color: var(--text-primary); }
+  .settlement-success { text-align: center; font-size: 14px; color: var(--accent-dark); font-weight: 700; padding: 10px 0; }
+
+  .actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+    background: linear-gradient(180deg, #26314f, var(--text-primary)); color: #fff; padding: 10px 18px; border-radius: 999px;
+    font-size: 13.5px; font-weight: 600; box-shadow: var(--shadow-lift);
+    opacity: 0; pointer-events: none; transition: opacity .25s ease; z-index: 50;
+  }
+  .toast.show { opacity: 1; }
+  .toast.error { background: var(--danger); }
+
+  .nav-link { display: block; text-align: center; margin-top: 8px; text-decoration: none; color: var(--primary); font-size: 13.5px; }
+
+  @media (max-width: 480px) {
+    body { padding: 10px 6px 24px; }
+    .card { padding: 14px; }
+    h1 { font-size: 20px; }
+    .expense-form { grid-template-columns: 1fr; }
+    .expense-form-actions { justify-content: stretch; }
+    .expense-form-actions button { width: 100%; }
+    .actions-row button { flex: 1 1 auto; }
+    th, td { padding: 7px 8px; font-size: 12.5px; }
+    .settle-amt { margin-left: 0; width: 100%; text-align: right; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card, .card:hover, button {
+      transition: none !important;
+      transform: none !important;
+    }
+  }
+
+  @media print {
+    body { background: none; perspective: none; }
+    h1 { background: none; -webkit-background-clip: initial; background-clip: initial; color: var(--text-primary); filter: none; }
+    .nav-link, .actions-row, .card:has(.participant-form), .card:has(.expense-form), .toast, .view-counter {
+      display: none !important;
+    }
+    .card { box-shadow: none; border: 1px solid #ccc; backdrop-filter: none; background: #fff; transform: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>🤝 Expense Splitter &amp; Calculator</h1>
+    <p class="subtitle">Split travel or household expenses fairly, and settle up in the fewest payments possible.</p>
+
+    <!-- Participants -->
+    <div class="card">
+      <h2>👥 Participants</h2>
+      <div class="participant-form">
+        <input type="text" id="participantNameInput" placeholder="Add a person's name...">
+        <button class="btn-add" id="addParticipantBtn" type="button">➕ Add</button>
+      </div>
+      <div class="participant-list" id="participantList"></div>
+      <p class="empty-note" id="participantEmptyNote">No participants yet -- add at least two people to start splitting expenses.</p>
+    </div>
+
+    <!-- Add expense -->
+    <div class="card">
+      <h2>💵 Add Expense</h2>
+      <p class="expense-form-hint" id="expenseFormHint" style="display: none;">Add at least two participants above before logging an expense.</p>
+      <div class="expense-form" id="expenseForm">
+        <div>
+          <label for="expDate">Date</label>
+          <input type="date" id="expDate">
+        </div>
+        <div style="grid-column: span 2;">
+          <label for="expDesc">Description</label>
+          <input type="text" id="expDesc" placeholder="What was this for?">
+        </div>
+        <div>
+          <label for="expAmount">Amount (₹)</label>
+          <input type="number" id="expAmount" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div>
+          <label for="expPaidBy">Paid By</label>
+          <select id="expPaidBy"></select>
+        </div>
+        <div class="split-among-group" id="splitAmongGroup"></div>
+        <div class="expense-form-actions">
+          <button class="btn-add" id="addExpenseBtn" type="button">➕ Add Expense</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expense log -->
+    <div class="card">
+      <h2>📋 Expense Log</h2>
+      <div class="stats-row" id="statsRow"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th>Amount</th>
+              <th>Paid By</th>
+              <th>Split Among</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="expenseLogBody"></tbody>
+          <tfoot id="expenseLogFoot"></tfoot>
+        </table>
+      </div>
+      <p class="empty-note" id="noExpensesMessage">No expenses logged yet.</p>
+    </div>
+
+    <!-- Balances -->
+    <div class="card">
+      <h2>⚖️ Balances</h2>
+      <div class="balance-list" id="balanceList"></div>
+      <p class="empty-note" id="balanceEmptyNote">Add participants to see balances.</p>
+    </div>
+
+    <!-- Settle up -->
+    <div class="card">
+      <h2>🤝 Settle Up</h2>
+      <p class="settlement-count" id="settlementCount" style="display: none;"></p>
+      <div class="settlement-list" id="settlementList"></div>
+      <p class="empty-note" id="settlementEmptyNote"></p>
+    </div>
+
+    <!-- Actions -->
+    <div class="card">
+      <div class="actions-row">
+        <button class="btn-outline" id="backupBtn" type="button">💾 Backup</button>
+        <button class="btn-outline" id="restoreBtn" type="button">📂 Restore</button>
+        <button class="btn-outline" id="printBtn" type="button">🖨️ Print</button>
+        <input type="file" id="restoreFileInput" accept=".json" style="display:none;">
+        <button class="btn-outline" id="clearAllBtn" type="button">🗑️ Clear All</button>
+      </div>
+    </div>
+
+    <a href="tools.html" class="nav-link">← Back to Tools</a>
+    <div class="view-counter" style="text-align: center; margin-top: 10px;">
+      <img src="https://hits.sh/rkr2025.github.io/ksebcalculator/expense-splitter.svg?style=flat-square&label=Views" alt="No. of views" loading="lazy">
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ------------------------------ Storage ---------------------------------
+    // Shape: { participants: [{id, name}], expenses: [{id, description,
+    // amount, paidBy, splitAmong: [participantId,...], date}] }. A single
+    // active group/split -- like expense.html, there's no multi-trip
+    // nesting; "Clear All" (or a fresh Backup beforehand) is how a
+    // finished trip gets archived and a new one started.
+    const STORAGE_KEY = 'expenseSplitterData';
+    const PALETTE = ['#2a78d6', '#1baf7a', '#eda100', '#008300', '#4a3aa7', '#e34948'];
+
+    let participants = [];
+    let expenses = [];
+
+    function loadData() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        participants = Array.isArray(stored && stored.participants) ? stored.participants : [];
+        expenses = Array.isArray(stored && stored.expenses) ? stored.expenses : [];
+      } catch {
+        participants = [];
+        expenses = [];
+      }
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ participants, expenses }));
+    }
+
+    function dateKey(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function formatCurrency(n) {
+      return `₹${n.toFixed(2)}`;
+    }
+
+    // Names are user-typed free text, so anywhere one is interpolated into
+    // an HTML string (not assigned via .textContent) must escape it.
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function participantColor(id) {
+      const idx = participants.findIndex((p) => p.id === id);
+      return PALETTE[(idx < 0 ? 0 : idx) % PALETTE.length];
+    }
+
+    function participantName(id) {
+      const p = participants.find((p) => p.id === id);
+      return p ? p.name : '(removed)';
+    }
+
+    const toast = document.getElementById('toast');
+    function showToast(message, isError) {
+      toast.textContent = message;
+      toast.className = 'toast show' + (isError ? ' error' : '');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => { toast.className = 'toast'; }, 2200);
+    }
+
+    // ----------------------------- Participants ------------------------------
+    const participantNameInput = document.getElementById('participantNameInput');
+    const addParticipantBtn = document.getElementById('addParticipantBtn');
+    const participantList = document.getElementById('participantList');
+    const participantEmptyNote = document.getElementById('participantEmptyNote');
+
+    function addParticipant() {
+      const name = participantNameInput.value.trim();
+      if (!name) { showToast('Enter a name first.', true); return; }
+      if (participants.some((p) => p.name.toLowerCase() === name.toLowerCase())) {
+        showToast('That participant already exists.', true);
+        return;
+      }
+      participants.push({ id: Date.now(), name });
+      saveData();
+      participantNameInput.value = '';
+      participantNameInput.focus();
+      renderAll();
+    }
+
+    addParticipantBtn.addEventListener('click', addParticipant);
+    participantNameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addParticipant();
+    });
+
+    // Deleting is blocked (rather than silently cascading) whenever the
+    // person is referenced by any expense -- either as payer or as one of
+    // the people it's split among -- so a removal can never quietly corrupt
+    // an existing balance calculation.
+    function deleteParticipant(id) {
+      const inUse = expenses.some((e) => e.paidBy === id || e.splitAmong.includes(id));
+      if (inUse) {
+        showToast('Delete or edit the expense(s) involving this person before removing them.', true);
+        return;
+      }
+      const p = participants.find((p) => p.id === id);
+      if (!confirm(`Remove "${p ? p.name : 'this person'}" from the group?`)) return;
+      participants = participants.filter((p) => p.id !== id);
+      saveData();
+      renderAll();
+    }
+
+    function renderParticipants() {
+      participantList.innerHTML = '';
+      participantEmptyNote.style.display = participants.length ? 'none' : 'block';
+      participants.forEach((p) => {
+        const chip = document.createElement('span');
+        chip.className = 'participant-chip';
+        chip.style.background = participantColor(p.id);
+
+        const label = document.createElement('span');
+        label.textContent = p.name;
+        chip.appendChild(label);
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.textContent = '✕';
+        delBtn.title = `Remove ${p.name}`;
+        delBtn.addEventListener('click', () => deleteParticipant(p.id));
+        chip.appendChild(delBtn);
+
+        participantList.appendChild(chip);
+      });
+    }
+
+    // ----------------------------- Add expense --------------------------------
+    const expenseFormHint = document.getElementById('expenseFormHint');
+    const expenseForm = document.getElementById('expenseForm');
+    const expDateInput = document.getElementById('expDate');
+    const expDescInput = document.getElementById('expDesc');
+    const expAmountInput = document.getElementById('expAmount');
+    const expPaidBySelect = document.getElementById('expPaidBy');
+    const splitAmongGroup = document.getElementById('splitAmongGroup');
+    const addExpenseBtn = document.getElementById('addExpenseBtn');
+
+    function renderExpenseFormOptions() {
+      const enough = participants.length >= 2;
+      expenseFormHint.style.display = enough ? 'none' : 'block';
+      expenseForm.style.display = enough ? 'grid' : 'none';
+      if (!enough) return;
+
+      expPaidBySelect.innerHTML = participants
+        .map((p) => `<option value="${p.id}">${escapeHtml(p.name)}</option>`)
+        .join('');
+
+      // Split-among checkboxes always default to everyone selected -- the
+      // common case for most expenses -- rather than trying to remember a
+      // prior selection, which gets ambiguous the moment a new participant
+      // is added mid-session.
+      splitAmongGroup.innerHTML = participants
+        .map((p) => `<label class="split-check"><input type="checkbox" value="${p.id}" checked> ${escapeHtml(p.name)}</label>`)
+        .join('');
+    }
+
+    function addExpense() {
+      if (participants.length < 2) { showToast('Add at least two participants first.', true); return; }
+
+      const description = expDescInput.value.trim();
+      const amount = parseFloat(expAmountInput.value);
+      const paidBy = Number(expPaidBySelect.value);
+      const splitAmong = Array.from(splitAmongGroup.querySelectorAll('input:checked')).map((cb) => Number(cb.value));
+      const date = expDateInput.value || dateKey(new Date());
+
+      if (!description) { showToast('Enter a description.', true); return; }
+      if (!(amount > 0)) { showToast('Enter a valid amount.', true); return; }
+      if (!paidBy) { showToast('Choose who paid.', true); return; }
+      if (splitAmong.length === 0) { showToast('Select at least one person to split this among.', true); return; }
+
+      expenses.push({ id: Date.now(), description, amount, paidBy, splitAmong, date });
+      saveData();
+
+      expDescInput.value = '';
+      expAmountInput.value = '';
+      expDateInput.value = dateKey(new Date());
+
+      renderAll();
+      showToast('Expense added.');
+    }
+
+    addExpenseBtn.addEventListener('click', addExpense);
+
+    function deleteExpense(id) {
+      if (!confirm('Delete this expense?')) return;
+      expenses = expenses.filter((e) => e.id !== id);
+      saveData();
+      renderAll();
+    }
+
+    // ----------------------------- Expense log --------------------------------
+    const expenseLogBody = document.getElementById('expenseLogBody');
+    const expenseLogFoot = document.getElementById('expenseLogFoot');
+    const noExpensesMessage = document.getElementById('noExpensesMessage');
+    const statsRow = document.getElementById('statsRow');
+
+    function renderExpenseLog() {
+      if (expenses.length === 0) {
+        expenseLogBody.innerHTML = '';
+        expenseLogFoot.innerHTML = '';
+        noExpensesMessage.style.display = 'block';
+        return;
+      }
+      noExpensesMessage.style.display = 'none';
+
+      const sorted = expenses.slice().sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
+      expenseLogBody.innerHTML = sorted.map((e) => {
+        const splitLabel = e.splitAmong.length === participants.length
+          ? 'All'
+          : e.splitAmong.map((id) => escapeHtml(participantName(id))).join(', ');
+        return `<tr>
+          <td>${e.date}</td>
+          <td class="desc-cell">${escapeHtml(e.description)}</td>
+          <td>${formatCurrency(e.amount)}</td>
+          <td>${escapeHtml(participantName(e.paidBy))}</td>
+          <td class="split-cell">${splitLabel}</td>
+          <td><button class="delete-btn" data-id="${e.id}" title="Delete">🗑️</button></td>
+        </tr>`;
+      }).join('');
+
+      expenseLogBody.querySelectorAll('.delete-btn').forEach((btn) => {
+        btn.addEventListener('click', () => deleteExpense(Number(btn.dataset.id)));
+      });
+
+      const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+      expenseLogFoot.innerHTML = `<tr><td colspan="2">Total</td><td>${formatCurrency(total)}</td><td colspan="3"></td></tr>`;
+    }
+
+    function renderStats() {
+      const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+      statsRow.innerHTML = `
+        <div class="stat-tile"><div class="stat-tile-label">Total Spent</div><div class="stat-tile-value">${formatCurrency(total)}</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Expenses</div><div class="stat-tile-value">${expenses.length}</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Participants</div><div class="stat-tile-value">${participants.length}</div></div>`;
+    }
+
+    // ------------------------------- Balances ---------------------------------
+    // Each participant's net balance = what they paid, minus their share of
+    // every expense they're included in. Positive = they're owed money;
+    // negative = they owe money. If the payer of an expense isn't a current
+    // participant (shouldn't normally happen -- deleteParticipant() blocks
+    // removing anyone referenced by an expense) it's just skipped rather
+    // than throwing.
+    function computeBalances() {
+      const balances = new Map(participants.map((p) => [p.id, 0]));
+      expenses.forEach((e) => {
+        const among = e.splitAmong.filter((id) => balances.has(id));
+        if (among.length === 0) return;
+        const share = e.amount / among.length;
+        among.forEach((id) => balances.set(id, balances.get(id) - share));
+        if (balances.has(e.paidBy)) balances.set(e.paidBy, balances.get(e.paidBy) + e.amount);
+      });
+      return balances;
+    }
+
+    const balanceList = document.getElementById('balanceList');
+    const balanceEmptyNote = document.getElementById('balanceEmptyNote');
+
+    function renderBalances(balances) {
+      balanceList.innerHTML = '';
+      balanceEmptyNote.style.display = participants.length ? 'none' : 'block';
+
+      participants.forEach((p) => {
+        const amt = balances.get(p.id) || 0;
+        const row = document.createElement('div');
+        row.className = 'balance-row';
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'balance-name';
+        nameEl.textContent = p.name;
+
+        const amtEl = document.createElement('span');
+        if (Math.abs(amt) < 0.005) {
+          amtEl.className = 'balance-amount settled';
+          amtEl.textContent = 'settled up';
+        } else if (amt > 0) {
+          amtEl.className = 'balance-amount positive';
+          amtEl.textContent = `is owed ${formatCurrency(amt)}`;
+        } else {
+          amtEl.className = 'balance-amount negative';
+          amtEl.textContent = `owes ${formatCurrency(-amt)}`;
+        }
+
+        row.appendChild(nameEl);
+        row.appendChild(amtEl);
+        balanceList.appendChild(row);
+      });
+    }
+
+    // ------------------------------ Settlement ---------------------------------
+    // Reduces everyone's balances to the smallest possible number of
+    // payments. Below EXACT_LIMIT non-settled participants, exactSettlement()
+    // does a full backtracking search (LeetCode "Optimal Account Balancing"
+    // style) that's provably minimal; the search is worst-case exponential,
+    // so past that size a greedy largest-creditor/largest-debtor pass is
+    // used instead -- always correct, just not guaranteed globally minimal
+    // for unusually large groups.
+    const EXACT_SETTLEMENT_LIMIT = 10;
+
+    function greedySettlement(entries) {
+      const creditors = entries.filter((e) => e.amt > 0).map((e) => ({ ...e })).sort((a, b) => b.amt - a.amt);
+      const debtors = entries.filter((e) => e.amt < 0).map((e) => ({ id: e.id, amt: -e.amt })).sort((a, b) => b.amt - a.amt);
+      const path = [];
+      let ci = 0;
+      let di = 0;
+      while (ci < creditors.length && di < debtors.length) {
+        const pay = Math.min(creditors[ci].amt, debtors[di].amt);
+        if (pay >= 0.005) path.push({ from: debtors[di].id, to: creditors[ci].id, amt: Math.round(pay * 100) / 100 });
+        creditors[ci].amt -= pay;
+        debtors[di].amt -= pay;
+        if (creditors[ci].amt < 0.005) ci++;
+        if (debtors[di].amt < 0.005) di++;
+      }
+      return path;
+    }
+
+    // Backtracking search: fully resolve the first not-yet-zero record by
+    // pairing it with an opposite-signed record and folding the smaller
+    // one's amount into the larger's. Whichever of the pair had the larger
+    // magnitude "survives" with the residual balance, so its `owner` is
+    // carried forward onto the merged slot -- this is what lets the search
+    // reconstruct real from/to transactions afterward, not just a count.
+    // Same-amount siblings are tried only once per branch (`seenAmt`) since
+    // swapping between two people with an identical balance can't change
+    // the achievable minimum, only which of them gets picked first.
+    function exactSettlement(entries) {
+      const records = entries.map((e) => ({ amt: e.amt, owner: e.id }));
+      let best = null;
+      const path = [];
+
+      function recurse(start) {
+        while (start < records.length && Math.abs(records[start].amt) < 0.005) start++;
+        if (start === records.length) {
+          if (!best || path.length < best.length) best = path.slice();
+          return;
+        }
+        if (best && path.length + 1 >= best.length) return;
+
+        const rs = records[start];
+        const seenAmt = new Set();
+        for (let i = start + 1; i < records.length; i++) {
+          const ri = records[i];
+          if (Math.abs(ri.amt) < 0.005) continue;
+          if ((rs.amt > 0) === (ri.amt > 0)) continue; // same sign -- can't settle each other
+          const key = ri.amt.toFixed(2);
+          if (seenAmt.has(key)) continue;
+          seenAmt.add(key);
+
+          const amt = Math.min(Math.abs(rs.amt), Math.abs(ri.amt));
+          const from = rs.amt < 0 ? rs.owner : ri.owner;
+          const to = rs.amt < 0 ? ri.owner : rs.owner;
+
+          const prevAmt = ri.amt;
+          const prevOwner = ri.owner;
+          const startAmt = rs.amt;
+
+          ri.amt = prevAmt + startAmt;
+          ri.owner = Math.abs(startAmt) > Math.abs(prevAmt) ? rs.owner : prevOwner;
+          rs.amt = 0;
+
+          path.push({ from, to, amt: Math.round(amt * 100) / 100 });
+          recurse(start + 1);
+          path.pop();
+
+          rs.amt = startAmt;
+          ri.amt = prevAmt;
+          ri.owner = prevOwner;
+        }
+      }
+
+      recurse(0);
+      return best || [];
+    }
+
+    function computeSettlement(balances) {
+      // Full precision, not rounded to cents -- unequal splits (e.g.
+      // amount / 3) produce repeating decimals, and rounding each person's
+      // balance independently before this point can leave the set not
+      // summing to exactly zero (off by a cent or two), which then makes
+      // both algorithms below unable to fully resolve every balance to
+      // zero. Individual transaction amounts are still rounded for display
+      // inside exactSettlement()/greedySettlement().
+      const entries = participants
+        .map((p) => ({ id: p.id, amt: balances.get(p.id) || 0 }))
+        .filter((e) => Math.abs(e.amt) >= 0.005);
+      if (entries.length === 0) return [];
+      return entries.length <= EXACT_SETTLEMENT_LIMIT ? exactSettlement(entries) : greedySettlement(entries);
+    }
+
+    const settlementCount = document.getElementById('settlementCount');
+    const settlementList = document.getElementById('settlementList');
+    const settlementEmptyNote = document.getElementById('settlementEmptyNote');
+
+    function renderSettlement(transactions) {
+      settlementList.innerHTML = '';
+
+      if (participants.length === 0) {
+        settlementCount.style.display = 'none';
+        settlementEmptyNote.textContent = 'Add participants and expenses to see settlement suggestions.';
+        settlementEmptyNote.style.display = 'block';
+        return;
+      }
+      if (transactions.length === 0) {
+        settlementCount.style.display = 'none';
+        settlementEmptyNote.textContent = '🎉 Everyone is settled up!';
+        settlementEmptyNote.style.display = 'block';
+        return;
+      }
+
+      settlementEmptyNote.style.display = 'none';
+      settlementCount.style.display = 'block';
+      settlementCount.textContent = `Settle up in ${transactions.length} payment${transactions.length === 1 ? '' : 's'}:`;
+
+      transactions.forEach((tx) => {
+        const item = document.createElement('div');
+        item.className = 'settlement-item';
+
+        const fromEl = document.createElement('span');
+        fromEl.className = 'settle-from';
+        fromEl.textContent = participantName(tx.from);
+
+        const arrowEl = document.createElement('span');
+        arrowEl.className = 'settle-arrow';
+        arrowEl.textContent = '→';
+
+        const toEl = document.createElement('span');
+        toEl.className = 'settle-to';
+        toEl.textContent = participantName(tx.to);
+
+        const amtEl = document.createElement('span');
+        amtEl.className = 'settle-amt';
+        amtEl.textContent = formatCurrency(tx.amt);
+
+        item.appendChild(fromEl);
+        item.appendChild(arrowEl);
+        item.appendChild(toEl);
+        item.appendChild(amtEl);
+        settlementList.appendChild(item);
+      });
+    }
+
+    // -------------------------------- Render all --------------------------------
+    function renderAll() {
+      renderParticipants();
+      renderExpenseFormOptions();
+      renderExpenseLog();
+      renderStats();
+      const balances = computeBalances();
+      renderBalances(balances);
+      renderSettlement(computeSettlement(balances));
+    }
+
+    // ----------------------------- Backup / restore -----------------------------
+    const backupBtn = document.getElementById('backupBtn');
+    const restoreBtn = document.getElementById('restoreBtn');
+    const restoreFileInput = document.getElementById('restoreFileInput');
+    const printBtn = document.getElementById('printBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+
+    backupBtn.addEventListener('click', () => {
+      const dataStr = JSON.stringify({ participants, expenses }, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `expense-splitter-backup-${dateKey(new Date())}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Backed up.');
+    });
+
+    restoreBtn.addEventListener('click', () => restoreFileInput.click());
+    printBtn.addEventListener('click', () => window.print());
+
+    restoreFileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const restored = JSON.parse(e.target.result);
+          if (restored && Array.isArray(restored.participants) && Array.isArray(restored.expenses)) {
+            participants = restored.participants;
+            expenses = restored.expenses;
+            saveData();
+            renderAll();
+            showToast('Restored.');
+          } else {
+            showToast('Invalid backup file.', true);
+          }
+        } catch (err) {
+          console.error('Error parsing restore file:', err);
+          showToast('Error restoring: invalid JSON file.', true);
+        }
+      };
+      reader.onerror = () => showToast('Error reading file.', true);
+      reader.readAsText(file);
+      restoreFileInput.value = '';
+    });
+
+    clearAllBtn.addEventListener('click', () => {
+      if (!confirm('Clear all participants and expenses? This cannot be undone.')) return;
+      participants = [];
+      expenses = [];
+      saveData();
+      renderAll();
+      showToast('Cleared.');
+    });
+
+    // --------------------------------- Init ---------------------------------
+    loadData();
+    expDateInput.value = dateKey(new Date());
+    renderAll();
+  </script>
+</body>
+</html>
