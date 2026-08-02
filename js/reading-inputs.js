@@ -12,11 +12,31 @@ function clampNonNegative(n) {
 // Exported so wheeling-ui.js can wire up the same Initial/Final toggle for
 // dynamically-created wheeling-site TOD field groups, which don't exist at
 // page load and so can't go through initReadingGroups() below.
-export function setupReadingGroup(toggleId, directContainerId, readingContainerId, fieldIds) {
+//
+// `orderToggleId` is optional (wheeling-ui.js's per-site groups don't pass
+// one) -- when given, it's a per-GROUP "Enter Present Reading first"
+// switch, defaulting on, shown only while this group's own reading mode is
+// enabled (found via its closest .reading-order-toggle row). Purely visual:
+// flips a class on readingContainer that styles.css uses to reverse the
+// .reading-pair boxes -- the Previous/Present field IDs underneath never
+// change, so nothing else in the app needs to know this happened.
+export function setupReadingGroup(toggleId, directContainerId, readingContainerId, fieldIds, orderToggleId) {
     const toggle = document.getElementById(toggleId);
     const directContainer = document.getElementById(directContainerId);
     const readingContainer = document.getElementById(readingContainerId);
     if (!toggle || !directContainer || !readingContainer) return () => {};
+
+    const orderToggle = orderToggleId ? document.getElementById(orderToggleId) : null;
+    const orderRow = orderToggle ? orderToggle.closest('.reading-order-toggle') : null;
+
+    function applyOrder() {
+        if (!orderToggle) return;
+        readingContainer.classList.toggle('reading-order-swapped', orderToggle.checked);
+    }
+    if (orderToggle) {
+        orderToggle.addEventListener('change', applyOrder);
+        applyOrder();
+    }
 
     function updateComputed(fieldId) {
         const initialInput = document.getElementById(`${fieldId}_initial`);
@@ -42,6 +62,7 @@ export function setupReadingGroup(toggleId, directContainerId, readingContainerI
         const useReadings = toggle.checked;
         directContainer.style.display = useReadings ? 'none' : 'grid';
         readingContainer.style.display = useReadings ? 'grid' : 'none';
+        if (orderRow) orderRow.style.display = useReadings ? 'flex' : 'none';
         if (useReadings) {
             fieldIds.forEach(updateComputed);
         }
@@ -52,6 +73,10 @@ export function setupReadingGroup(toggleId, directContainerId, readingContainerI
 
     return function resetGroup() {
         toggle.checked = false;
+        if (orderToggle) {
+            orderToggle.checked = true; // back to the default: Present Reading first
+            applyOrder();
+        }
         fieldIds.forEach((fieldId) => {
             document.getElementById(`${fieldId}_initial`).value = '';
             document.getElementById(`${fieldId}_final`).value = '';
@@ -64,15 +89,15 @@ export function setupReadingGroup(toggleId, directContainerId, readingContainerI
 
 export function initReadingGroups() {
     const resetSolar = setupReadingGroup('solarReadingModeToggle', 'solarDirectFields', 'solarReadingFields',
-        ['solarNormal', 'solarOffPeak', 'solarPeak']);
+        ['solarNormal', 'solarOffPeak', 'solarPeak'], 'solarReadingOrderToggle');
     const resetImport = setupReadingGroup('importReadingModeToggle', 'importDirectFields', 'importReadingFields',
-        ['importNormal', 'importOffPeak', 'importPeak']);
+        ['importNormal', 'importOffPeak', 'importPeak'], 'importReadingOrderToggle');
     const resetExport = setupReadingGroup('exportReadingModeToggle', 'exportDirectFields', 'exportReadingFields',
-        ['exportNormal', 'exportOffPeak', 'exportPeak']);
+        ['exportNormal', 'exportOffPeak', 'exportPeak'], 'exportReadingOrderToggle');
     const resetSolarGen = setupReadingGroup('solarGenReadingModeToggle', 'solarGenDirectFields', 'solarGenReadingFields',
-        ['solarGeneration']);
+        ['solarGeneration'], 'solarGenReadingOrderToggle');
     const resetNetMeter = setupReadingGroup('netMeterReadingModeToggle', 'netMeterDirectFields', 'netMeterReadingFields',
-        ['import', 'export']);
+        ['import', 'export'], 'netMeterReadingOrderToggle');
 
     return function resetAllReadingGroups() {
         resetSolar();

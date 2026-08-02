@@ -196,6 +196,7 @@ document.getElementById('wheelingLossEditToggle').addEventListener('change', fun
     document.getElementById('wheelDiffTransformerLoss').disabled = !this.checked;
 });
 
+
 // Trigger the change events on page load so the visible sections match
 // whichever options are marked `selected` in index.html.
 document.getElementById('billingType').dispatchEvent(new Event('change'));

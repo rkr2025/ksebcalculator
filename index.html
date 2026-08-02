@@ -455,7 +455,14 @@
                             <input type="checkbox" id="solarGenReadingModeToggle">
                             <span class="switch-slider"></span>
                         </label>
-                        <span>Calculate from Initial &amp; Final meter readings</span>
+                        <span>Calculate from Previous &amp; Present meter readings</span>
+                    </div>
+                    <div class="reading-mode-toggle reading-order-toggle" id="solarGenReadingOrderRow" style="display: none;">
+                        <label class="switch">
+                            <input type="checkbox" id="solarGenReadingOrderToggle" checked>
+                            <span class="switch-slider"></span>
+                        </label>
+                        <span>Enter Present Reading first</span>
                     </div>
 
                     <div class="field-grid" id="solarGenDirectFields">
@@ -465,15 +472,15 @@
                         </div>
                     </div>
 
-                    <div class="field-grid" id="solarGenReadingFields" style="display: none;">
+                    <div class="field-grid reading-order-swapped" id="solarGenReadingFields" style="display: none;">
                         <div class="field">
                             <label>Solar Generation (kWh)</label>
                             <div class="reading-pair">
-                                <input type="number" id="solarGeneration_initial" placeholder="Initial" min="0">
-                                <input type="number" id="solarGeneration_final" placeholder="Final" min="0">
+                                <input type="number" id="solarGeneration_initial" placeholder="Previous Reading" min="0">
+                                <input type="number" id="solarGeneration_final" placeholder="Present Reading" min="0">
                             </div>
                             <div class="reading-computed" id="solarGeneration_computed">= 0.00 kWh</div>
-                            <div class="reading-warn" id="solarGeneration_warn">Final should be ≥ Initial</div>
+                            <div class="reading-warn" id="solarGeneration_warn">Present Reading should be ≥ Previous Reading</div>
                         </div>
                     </div>
                 </div>
@@ -485,7 +492,14 @@
                             <input type="checkbox" id="solarReadingModeToggle">
                             <span class="switch-slider"></span>
                         </label>
-                        <span>Calculate from Initial &amp; Final meter readings</span>
+                        <span>Calculate from Previous &amp; Present meter readings</span>
+                    </div>
+                    <div class="reading-mode-toggle reading-order-toggle" id="solarReadingOrderRow" style="display: none;">
+                        <label class="switch">
+                            <input type="checkbox" id="solarReadingOrderToggle" checked>
+                            <span class="switch-slider"></span>
+                        </label>
+                        <span>Enter Present Reading first</span>
                     </div>
 
                     <div class="field-grid" id="solarDirectFields">
@@ -503,33 +517,33 @@
                         </div>
                     </div>
 
-                    <div class="field-grid" id="solarReadingFields" style="display: none;">
+                    <div class="field-grid reading-order-swapped" id="solarReadingFields" style="display: none;">
                         <div class="field">
                             <label>Normal <span class="field-tag">6am–6pm</span></label>
                             <div class="reading-pair">
-                                <input type="number" id="solarNormal_initial" placeholder="Initial" min="0">
-                                <input type="number" id="solarNormal_final" placeholder="Final" min="0">
+                                <input type="number" id="solarNormal_initial" placeholder="Previous Reading" min="0">
+                                <input type="number" id="solarNormal_final" placeholder="Present Reading" min="0">
                             </div>
                             <div class="reading-computed" id="solarNormal_computed">= 0.00 kWh</div>
-                            <div class="reading-warn" id="solarNormal_warn">Final should be ≥ Initial</div>
+                            <div class="reading-warn" id="solarNormal_warn">Present Reading should be ≥ Previous Reading</div>
                         </div>
                         <div class="field">
                             <label>Off Peak <span class="field-tag">10pm–6am</span></label>
                             <div class="reading-pair">
-                                <input type="number" id="solarOffPeak_initial" placeholder="Initial" min="0">
-                                <input type="number" id="solarOffPeak_final" placeholder="Final" min="0">
+                                <input type="number" id="solarOffPeak_initial" placeholder="Previous Reading" min="0">
+                                <input type="number" id="solarOffPeak_final" placeholder="Present Reading" min="0">
                             </div>
                             <div class="reading-computed" id="solarOffPeak_computed">= 0.00 kWh</div>
-                            <div class="reading-warn" id="solarOffPeak_warn">Final should be ≥ Initial</div>
+                            <div class="reading-warn" id="solarOffPeak_warn">Present Reading should be ≥ Previous Reading</div>
                         </div>
                         <div class="field">
                             <label>Peak <span class="field-tag">6pm–10pm</span></label>
                             <div class="reading-pair">
-                                <input type="number" id="solarPeak_initial" placeholder="Initial" min="0">
-                                <input type="number" id="solarPeak_final" placeholder="Final" min="0">
+                                <input type="number" id="solarPeak_initial" placeholder="Previous Reading" min="0">
+                                <input type="number" id="solarPeak_final" placeholder="Present Reading" min="0">
                             </div>
                             <div class="reading-computed" id="solarPeak_computed">= 0.00 kWh</div>
-                            <div class="reading-warn" id="solarPeak_warn">Final should be ≥ Initial</div>
+                            <div class="reading-warn" id="solarPeak_warn">Present Reading should be ≥ Previous Reading</div>
                         </div>
                     </div>
                 </div>
@@ -549,7 +563,14 @@
                             <input type="checkbox" id="netMeterReadingModeToggle">
                             <span class="switch-slider"></span>
                         </label>
-                        <span>Calculate from Initial &amp; Final meter readings</span>
+                        <span>Calculate from Previous &amp; Present meter readings</span>
+                    </div>
+                    <div class="reading-mode-toggle reading-order-toggle" id="netMeterReadingOrderRow" style="display: none;">
+                        <label class="switch">
+                            <input type="checkbox" id="netMeterReadingOrderToggle" checked>
+                            <span class="switch-slider"></span>
+                        </label>
+                        <span>Enter Present Reading first</span>
                     </div>
 
                     <div class="field-grid field-grid--2" id="netMeterDirectFields">
@@ -563,24 +584,24 @@
                         </div>
                     </div>
 
-                    <div class="field-grid field-grid--2" id="netMeterReadingFields" style="display: none;">
+                    <div class="field-grid field-grid--2 reading-order-swapped" id="netMeterReadingFields" style="display: none;">
                         <div class="field field--import">
                             <label>Import Total (kWh)</label>
                             <div class="reading-pair">
-                                <input type="number" id="import_initial" placeholder="Initial" min="0">
-                                <input type="number" id="import_final" placeholder="Final" min="0">
+                                <input type="number" id="import_initial" placeholder="Previous Reading" min="0">
+                                <input type="number" id="import_final" placeholder="Present Reading" min="0">
                             </div>
                             <div class="reading-computed" id="import_computed">= 0.00 kWh</div>
-                            <div class="reading-warn" id="import_warn">Final should be ≥ Initial</div>
+                            <div class="reading-warn" id="import_warn">Present Reading should be ≥ Previous Reading</div>
                         </div>
                         <div class="field field--export">
                             <label>Export Total (kWh)</label>
                             <div class="reading-pair">
-                                <input type="number" id="export_initial" placeholder="Initial" min="0">
-                                <input type="number" id="export_final" placeholder="Final" min="0">
+                                <input type="number" id="export_initial" placeholder="Previous Reading" min="0">
+                                <input type="number" id="export_final" placeholder="Present Reading" min="0">
                             </div>
                             <div class="reading-computed" id="export_computed">= 0.00 kWh</div>
-                            <div class="reading-warn" id="export_warn">Final should be ≥ Initial</div>
+                            <div class="reading-warn" id="export_warn">Present Reading should be ≥ Previous Reading</div>
                         </div>
                     </div>
                 </div>
@@ -593,7 +614,14 @@
                             <input type="checkbox" id="importReadingModeToggle">
                             <span class="switch-slider"></span>
                         </label>
-                        <span>Calculate from Initial &amp; Final meter readings</span>
+                        <span>Calculate from Previous &amp; Present meter readings</span>
+                    </div>
+                    <div class="reading-mode-toggle reading-order-toggle" id="importReadingOrderRow" style="display: none;">
+                        <label class="switch">
+                            <input type="checkbox" id="importReadingOrderToggle" checked>
+                            <span class="switch-slider"></span>
+                        </label>
+                        <span>Enter Present Reading first</span>
                     </div>
 
                     <div class="field-grid" id="importDirectFields">
@@ -611,33 +639,33 @@
                         </div>
                     </div>
 
-                    <div class="field-grid" id="importReadingFields" style="display: none;">
+                    <div class="field-grid reading-order-swapped" id="importReadingFields" style="display: none;">
                         <div class="field field--import">
                             <label>Normal <span class="field-tag">6am–6pm</span></label>
                             <div class="reading-pair">
-                                <input type="number" id="importNormal_initial" placeholder="Initial" min="0">
-                                <input type="number" id="importNormal_final" placeholder="Final" min="0">
+                                <input type="number" id="importNormal_initial" placeholder="Previous Reading" min="0">
+                                <input type="number" id="importNormal_final" placeholder="Present Reading" min="0">
                             </div>
                             <div class="reading-computed" id="importNormal_computed">= 0.00 kWh</div>
-                            <div class="reading-warn" id="importNormal_warn">Final should be ≥ Initial</div>
+                            <div class="reading-warn" id="importNormal_warn">Present Reading should be ≥ Previous Reading</div>
                         </div>
                         <div class="field field--import">
                             <label>Off Peak <span class="field-tag">10pm–6am</span></label>
                             <div class="reading-pair">
-                                <input type="number" id="importOffPeak_initial" placeholder="Initial" min="0">
-                                <input type="number" id="importOffPeak_final" placeholder="Final" min="0">
+                                <input type="number" id="importOffPeak_initial" placeholder="Previous Reading" min="0">
+                                <input type="number" id="importOffPeak_final" placeholder="Present Reading" min="0">
                             </div>
                             <div class="reading-computed" id="importOffPeak_computed">= 0.00 kWh</div>
-                            <div class="reading-warn" id="importOffPeak_warn">Final should be ≥ Initial</div>
+                            <div class="reading-warn" id="importOffPeak_warn">Present Reading should be ≥ Previous Reading</div>
                         </div>
                         <div class="field field--import">
                             <label>Peak <span class="field-tag">6pm–10pm</span></label>
                             <div class="reading-pair">
-                                <input type="number" id="importPeak_initial" placeholder="Initial" min="0">
-                                <input type="number" id="importPeak_final" placeholder="Final" min="0">
+                                <input type="number" id="importPeak_initial" placeholder="Previous Reading" min="0">
+                                <input type="number" id="importPeak_final" placeholder="Present Reading" min="0">
                             </div>
                             <div class="reading-computed" id="importPeak_computed">= 0.00 kWh</div>
-                            <div class="reading-warn" id="importPeak_warn">Final should be ≥ Initial</div>
+                            <div class="reading-warn" id="importPeak_warn">Present Reading should be ≥ Previous Reading</div>
                         </div>
                     </div>
 
@@ -647,7 +675,14 @@
                             <input type="checkbox" id="exportReadingModeToggle">
                             <span class="switch-slider"></span>
                         </label>
-                        <span>Calculate from Initial &amp; Final meter readings</span>
+                        <span>Calculate from Previous &amp; Present meter readings</span>
+                    </div>
+                    <div class="reading-mode-toggle reading-order-toggle" id="exportReadingOrderRow" style="display: none;">
+                        <label class="switch">
+                            <input type="checkbox" id="exportReadingOrderToggle" checked>
+                            <span class="switch-slider"></span>
+                        </label>
+                        <span>Enter Present Reading first</span>
                     </div>
 
                     <div class="field-grid" id="exportDirectFields">
@@ -665,33 +700,33 @@
                         </div>
                     </div>
 
-                    <div class="field-grid" id="exportReadingFields" style="display: none;">
+                    <div class="field-grid reading-order-swapped" id="exportReadingFields" style="display: none;">
                         <div class="field field--export">
                             <label>Normal <span class="field-tag">6am–6pm</span></label>
                             <div class="reading-pair">
-                                <input type="number" id="exportNormal_initial" placeholder="Initial" min="0">
-                                <input type="number" id="exportNormal_final" placeholder="Final" min="0">
+                                <input type="number" id="exportNormal_initial" placeholder="Previous Reading" min="0">
+                                <input type="number" id="exportNormal_final" placeholder="Present Reading" min="0">
                             </div>
                             <div class="reading-computed" id="exportNormal_computed">= 0.00 kWh</div>
-                            <div class="reading-warn" id="exportNormal_warn">Final should be ≥ Initial</div>
+                            <div class="reading-warn" id="exportNormal_warn">Present Reading should be ≥ Previous Reading</div>
                         </div>
                         <div class="field field--export">
                             <label>Off Peak <span class="field-tag">10pm–6am</span></label>
                             <div class="reading-pair">
-                                <input type="number" id="exportOffPeak_initial" placeholder="Initial" min="0">
-                                <input type="number" id="exportOffPeak_final" placeholder="Final" min="0">
+                                <input type="number" id="exportOffPeak_initial" placeholder="Previous Reading" min="0">
+                                <input type="number" id="exportOffPeak_final" placeholder="Present Reading" min="0">
                             </div>
                             <div class="reading-computed" id="exportOffPeak_computed">= 0.00 kWh</div>
-                            <div class="reading-warn" id="exportOffPeak_warn">Final should be ≥ Initial</div>
+                            <div class="reading-warn" id="exportOffPeak_warn">Present Reading should be ≥ Previous Reading</div>
                         </div>
                         <div class="field field--export">
                             <label>Peak <span class="field-tag">6pm–10pm</span></label>
                             <div class="reading-pair">
-                                <input type="number" id="exportPeak_initial" placeholder="Initial" min="0">
-                                <input type="number" id="exportPeak_final" placeholder="Final" min="0">
+                                <input type="number" id="exportPeak_initial" placeholder="Previous Reading" min="0">
+                                <input type="number" id="exportPeak_final" placeholder="Present Reading" min="0">
                             </div>
                             <div class="reading-computed" id="exportPeak_computed">= 0.00 kWh</div>
-                            <div class="reading-warn" id="exportPeak_warn">Final should be ≥ Initial</div>
+                            <div class="reading-warn" id="exportPeak_warn">Present Reading should be ≥ Previous Reading</div>
                         </div>
                     </div>
                 </div>
