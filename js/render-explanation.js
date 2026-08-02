@@ -61,11 +61,11 @@ function usageItems(bill) {
     return [
         {
             en: `<strong>Solar Generation (${u(bill.solarGeneration)} units${solarBreakdown}):</strong> the electricity your rooftop panels produced this month, as read directly off your solar generation meter.`,
-            ml: `<strong>Solar Generation (${u(bill.solarGeneration)} യൂണിറ്റ്${solarBreakdown}):</strong> ഈ മാസം നിങ്ങളുടെ മേൽക്കൂരയിലെ സോളാർ പാനലുകൾ ഉത്പാദിപ്പിച്ച വൈദ്യുതി, സോളാർ ജനറേഷൻ മീറ്ററിൽ നിന്ന് നേരിട്ട് എടുത്തത് .`,
+            ml: `<strong>Solar Generation (${u(bill.solarGeneration)} യൂണിറ്റ്${solarBreakdown}):</strong> ഈ മാസം നിങ്ങളുടെ മേൽക്കൂരയിലെ സോളാർ പാനലുകൾ ഉത്പാദിപ്പിച്ച വൈദ്യുതി, സോളാർ ജനറേഷൻ മീറ്ററിൽ നിന്നും എടുത്തത് .`,
         },
         {
             en: `<strong>Import Total (${u(bill.importReading)} units${importBreakdown}):</strong> the electricity you drew from the KSEB grid — the part of your usage that your own solar power didn't cover.`,
-            ml: `<strong>Import Total (${u(bill.importReading)} യൂണിറ്റ്${importBreakdown}):</strong> KSEB ഗ്രിഡിൽ നിന്ന് നിങ്ങൾ എടുത്ത വൈദ്യുതി — നിങ്ങളുടെ സ്വന്തം സോളാർ കവർ ചെയ്യാതെ പോയ ഭാഗം.`,
+            ml: `<strong>Import Total (${u(bill.importReading)} യൂണിറ്റ്${importBreakdown}):</strong> KSEB ഗ്രിഡിൽ നിന്ന് നിങ്ങൾ നേരിട്ട് എടുത്ത് ഉപയോഗിച്ച വൈദ്യുതി — നിങ്ങളുടെ സ്വന്തം സോളാർ കവർ ചെയ്യാതെ പോയ ഭാഗം.`,
         },
         {
             en: `<strong>Export Total (${u(bill.exportReading)} units${exportBreakdown}):</strong> solar power your panels generated but you didn't use immediately at home, so it was sent back out to the KSEB grid instead.`,

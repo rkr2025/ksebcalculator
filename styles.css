@@ -1420,6 +1420,13 @@ td {
   background: rgba(255, 255, 255, 0.28);
 }
 
+/* Print-only recap of the entered Billing Setup / Solar Generation / KSEB
+   Net Meter Consumption values -- populated by main.js alongside the other
+   result panels, but (unlike those) never shown on screen. */
+#printInputsSummary {
+  display: none !important;
+}
+
 @media print {
   .digital-clock-colon {
     animation: none;
@@ -1441,6 +1448,10 @@ td {
     display: block !important;
   }
 
+  #printInputsSummary {
+    display: block !important;
+  }
+
   body {
     background: none;
     perspective: none;
@@ -1456,6 +1467,7 @@ td {
 
   .card,
   #billDetails,
+  #printInputsSummary,
   .result {
     box-shadow: none;
     backdrop-filter: none;

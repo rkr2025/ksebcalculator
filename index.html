@@ -794,6 +794,11 @@
             <a href="#billingCard" class="move-to-top-link" style="margin-top: 10px;">Move to Top</a>
 
         </form>
+        <!-- Print-only recap of the Billing Setup / Solar Generation / KSEB
+             Net Meter Consumption values entered above -- the interactive
+             form itself is hidden when printing, so without this the
+             printed page has no record of which inputs produced the bill. -->
+        <div id="printInputsSummary"></div>
         <div id="billDetails" style="display: none;">
             <table id="billTable">
                 <tbody id="billInfo">

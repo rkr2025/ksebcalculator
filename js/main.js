@@ -14,6 +14,10 @@ const resetReadingGroups = initReadingGroups();
 const wheelingUI = initWheelingUI();
 
 const RESULT_PANEL_IDS = ['billExplanation', 'billChart', 'billAnalysis', 'wheelingBreakdown', 'result', 'result1', 'result2', 'result3', 'result4', 'result6'];
+// Print-only -- populated/cleared alongside the panels above, but never
+// shown on screen (styles.css forces display:none outside @media print),
+// so it's handled separately from RESULT_PANEL_IDS's show/hide-on-screen loop.
+const PRINT_ONLY_PANEL_ID = 'printInputsSummary';
 
 function num(id) {
     return parseFloat(document.getElementById(id).value) || 0;
@@ -60,6 +64,7 @@ function clearResultPanels() {
     RESULT_PANEL_IDS.forEach((id) => {
         document.getElementById(id).innerHTML = '';
     });
+    document.getElementById(PRINT_ONLY_PANEL_ID).innerHTML = '';
 }
 
 function showResultPanels() {
@@ -78,6 +83,13 @@ function hideResultPanels() {
     document.getElementById('billDetails').style.display = 'none';
     document.getElementById('printActionsRow').style.display = 'none';
     document.getElementById('quote').style.display = 'none';
+    // Unlike the panels above, printInputsSummary's on-screen-hidden state
+    // comes from an !important stylesheet rule (so @media print can
+    // override it) rather than this inline style -- so a direct Ctrl+P
+    // print right after Reset/hide, before recalculating, would otherwise
+    // still render whatever stale bill it was last populated with. Clearing
+    // it here (not just hiding it) closes that gap.
+    document.getElementById(PRINT_ONLY_PANEL_ID).innerHTML = '';
 }
 
 function updateBillingTypeSections(billingType) {
@@ -133,6 +145,7 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
         document.getElementById(id).innerHTML = panels[id];
     });
     document.getElementById('billInfo').innerHTML = panels.billInfo;
+    document.getElementById(PRINT_ONLY_PANEL_ID).innerHTML = panels.printInputsSummary;
 
     // Daily Thought only appears once a bill has actually been calculated --
     // show a static quote immediately (instant, no network wait), then swap
