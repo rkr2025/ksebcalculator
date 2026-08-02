@@ -99,6 +99,23 @@ export function initReadingGroups() {
     const resetNetMeter = setupReadingGroup('netMeterReadingModeToggle', 'netMeterDirectFields', 'netMeterReadingFields',
         ['import', 'export'], 'netMeterReadingOrderToggle');
 
+    // ToD Import and Export are read off the same net meter at the same
+    // time, so there's rarely a reason to enter one from Previous/Present
+    // readings and the other as a plain total -- turning Import's reading
+    // mode on also turns Export's on (one-directional: this only follows
+    // Import -> Export, so a user who wants Export back in direct-entry
+    // mode can still switch it off again independently afterward).
+    const importModeToggle = document.getElementById('importReadingModeToggle');
+    const exportModeToggle = document.getElementById('exportReadingModeToggle');
+    if (importModeToggle && exportModeToggle) {
+        importModeToggle.addEventListener('change', () => {
+            if (importModeToggle.checked && !exportModeToggle.checked) {
+                exportModeToggle.checked = true;
+                exportModeToggle.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+
     return function resetAllReadingGroups() {
         resetSolar();
         resetImport();

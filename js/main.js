@@ -60,6 +60,34 @@ function readFormInputs() {
     return inputs;
 }
 
+// For the print-only "Entered Values" summary: the actual Previous/Present
+// meter readings the user typed, for whichever fields had "Calculate from
+// Previous & Present meter readings" enabled -- readFormInputs() only sees
+// the computed diff (written into the real field by reading-inputs.js), so
+// this has to separately re-read the _initial/_final boxes themselves.
+// Fields left in plain-total mode are simply omitted, not backfilled with a
+// fabricated reading pair.
+function collectReadingPairs() {
+    const pairs = {};
+    function addIfEnabled(toggleId, fieldIds) {
+        const toggle = document.getElementById(toggleId);
+        if (!toggle || !toggle.checked) return;
+        fieldIds.forEach((fieldId) => {
+            const initial = document.getElementById(`${fieldId}_initial`);
+            const final = document.getElementById(`${fieldId}_final`);
+            if (initial && final) {
+                pairs[fieldId] = { previous: parseFloat(initial.value) || 0, present: parseFloat(final.value) || 0 };
+            }
+        });
+    }
+    addIfEnabled('solarGenReadingModeToggle', ['solarGeneration']);
+    addIfEnabled('solarReadingModeToggle', ['solarNormal', 'solarOffPeak', 'solarPeak']);
+    addIfEnabled('netMeterReadingModeToggle', ['import', 'export']);
+    addIfEnabled('importReadingModeToggle', ['importNormal', 'importOffPeak', 'importPeak']);
+    addIfEnabled('exportReadingModeToggle', ['exportNormal', 'exportOffPeak', 'exportPeak']);
+    return pairs;
+}
+
 function clearResultPanels() {
     RESULT_PANEL_IDS.forEach((id) => {
         document.getElementById(id).innerHTML = '';
@@ -140,7 +168,7 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
         }
     }
 
-    const panels = renderBillResults(bill);
+    const panels = renderBillResults(bill, collectReadingPairs());
     RESULT_PANEL_IDS.forEach((id) => {
         document.getElementById(id).innerHTML = panels[id];
     });
