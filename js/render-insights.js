@@ -153,6 +153,15 @@ function solarImpactInsight(bill) {
         connectedLoad: bill.connectedLoad,
         hasBankBalance: false,
         bankedUnits: 0,
+        // Without these, computeBill() falls back to the hardcoded tariff
+        // defaults (10% duty, ₹0.00 fuel surcharge, default meter rent)
+        // instead of whatever the real bill actually used -- silently wrong
+        // whenever Admin Options has these overridden (e.g. a non-zero fuel
+        // surcharge, which KSEB revises periodically and this app expects
+        // users to keep current).
+        dutyRatePercent: bill.dutyRate * 100,
+        fuelSurchargePaise: bill.fuelSurchargePerUnit * 100,
+        meterRentOverride: bill.meterRent,
     };
 
     const whatIfInputs = bill.billingType === 'normal'
