@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>⏱️ Multi-Lap Stopwatch &amp; Interval Timer</title>
+<style>
+  :root {
+    --primary: #2a78d6;
+    --primary-dark: #1f5fac;
+    --primary-light: #eaf2fc;
+    --accent: #1baf7a;
+    --accent-dark: #148f60;
+    --danger: #e34948;
+    --warn: #c97e00;
+    --surface: #ffffff;
+    --surface-muted: #f6f8fb;
+    --border: #e3e7ef;
+    --text-primary: #17203a;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --radius: 14px;
+    --shadow: 0 2px 4px rgba(23,32,58,.06), 0 12px 28px -6px rgba(23,32,58,.14), 0 28px 56px -20px rgba(23,32,58,.16);
+    --shadow-sm: 0 1px 2px rgba(23,32,58,.06), 0 6px 14px -4px rgba(23,32,58,.12);
+    --shadow-lift: 0 6px 12px rgba(23,32,58,.08), 0 22px 44px -10px rgba(23,32,58,.22), 0 36px 70px -24px rgba(23,32,58,.22);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px 10px 32px;
+    font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(42,120,214,.16), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(27,175,122,.14), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(227,73,72,.10), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(201,126,0,.10), transparent 55%),
+      linear-gradient(160deg, #eef1f7, #e4ebf7 60%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    perspective: 1400px;
+  }
+  .container { max-width: 720px; margin: 0 auto; }
+  h1 {
+    text-align: center; font-size: 24px; font-weight: 700; margin: 6px 0 4px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 2px 3px rgba(23,32,58,.15));
+  }
+  .subtitle { text-align: center; color: var(--text-muted); font-size: 13px; margin: 0 0 18px; }
+  .card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.82));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.6);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .card h2 { font-size: 15px; margin: 0 0 14px; color: var(--text-secondary); }
+
+  button {
+    position: relative;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: filter .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0) 55%);
+    pointer-events: none;
+  }
+  button:hover { filter: brightness(0.97); transform: translateY(-1px); }
+  button:active { transform: translateY(1px); filter: brightness(0.93); }
+  button:disabled { opacity: .45; cursor: not-allowed; filter: none; transform: none; }
+  .btn-add {
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color: #fff;
+    box-shadow: 0 2px 3px rgba(27,175,122,.25), 0 10px 22px -4px rgba(27,175,122,.5);
+  }
+  .btn-add:hover { box-shadow: 0 4px 8px rgba(27,175,122,.3), 0 16px 30px -6px rgba(27,175,122,.55); }
+  .btn-subtract {
+    background: linear-gradient(180deg, #f2726f, var(--danger));
+    color: #fff;
+    box-shadow: 0 2px 3px rgba(227,73,72,.25), 0 10px 22px -4px rgba(227,73,72,.5);
+  }
+  .btn-subtract:hover { box-shadow: 0 4px 8px rgba(227,73,72,.3), 0 16px 30px -6px rgba(227,73,72,.55); }
+  .btn-outline {
+    background: linear-gradient(180deg, #ffffff, var(--surface-muted));
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-outline:hover { box-shadow: var(--shadow-lift); }
+
+  input {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 9px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: inset 0 1px 3px rgba(23,32,58,.05);
+    transition: border-color .15s ease, box-shadow .15s ease;
+    width: 100%;
+  }
+  input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light), inset 0 1px 3px rgba(23,32,58,.05);
+  }
+  input:disabled { background: var(--surface-muted); color: var(--text-muted); }
+  label { font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .02em; display: block; margin-bottom: 4px; }
+
+  .field-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+  .field { flex: 1 1 140px; min-width: 0; }
+
+  .actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; justify-content: center; }
+
+  .empty-note { color: var(--text-muted); font-style: italic; font-size: 13px; padding: 6px 0; text-align: center; }
+
+  /* -------- Stopwatch -------- */
+  .stopwatch-display {
+    text-align: center;
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 52px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 4px 0 6px;
+    letter-spacing: .02em;
+  }
+
+  .stats-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0 4px; }
+  .stat-tile {
+    flex: 1 1 90px;
+    text-align: center;
+    background: linear-gradient(160deg, #ffffff, var(--surface-muted));
+    border-radius: 10px;
+    padding: 12px 8px;
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-tile-label { font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .02em; }
+  .stat-tile-value { font-family: "Consolas", "Courier New", monospace; font-size: 17px; font-weight: 700; color: var(--text-primary); margin-top: 3px; }
+
+  .lap-list { display: flex; flex-direction: column; gap: 4px; margin: 14px 0 4px; max-height: 320px; overflow-y: auto; }
+  .lap-row {
+    display: grid;
+    grid-template-columns: 44px 1fr 1fr 92px;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--surface-muted);
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 13px;
+  }
+  .lap-row-header {
+    background: none;
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .02em;
+    padding: 0 10px;
+  }
+  .lap-row.lap-best { box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .lap-row.lap-worst { box-shadow: inset 0 0 0 1.5px var(--danger); }
+  .lap-tag { font-size: 10.5px; font-weight: 700; text-align: right; font-family: inherit; }
+  .lap-tag.best { color: var(--accent-dark); }
+  .lap-tag.worst { color: var(--danger); }
+
+  /* -------- Interval timer -------- */
+  .interval-display { text-align: center; margin: 4px 0 10px; }
+  .interval-phase { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin-bottom: 4px; }
+  .interval-phase.work { color: var(--accent-dark); }
+  .interval-phase.rest { color: var(--warn); }
+  .interval-phase.done { color: var(--primary-dark); }
+  .interval-time { font-family: "Consolas", "Courier New", monospace; font-size: 48px; font-weight: 700; color: var(--text-primary); }
+  .interval-round { font-size: 12.5px; color: var(--text-muted); margin-top: 4px; }
+
+  .progress-bar { height: 8px; border-radius: 999px; background: var(--surface-muted); overflow: hidden; box-shadow: var(--shadow-sm); margin: 12px 0 2px; }
+  .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: width .15s linear, background-color .2s ease; }
+  .progress-bar-fill.rest { background: linear-gradient(90deg, var(--warn), #e0a030); }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+    background: linear-gradient(180deg, #26314f, #17203a); color: #fff; padding: 10px 18px; border-radius: 999px;
+    font-size: 13.5px; font-weight: 600; box-shadow: var(--shadow-lift);
+    opacity: 0; pointer-events: none; transition: opacity .25s ease; z-index: 50;
+  }
+  .toast.show { opacity: 1; }
+  .toast.error { background: var(--danger); }
+
+  .nav-link { display: block; text-align: center; margin-top: 8px; text-decoration: none; color: var(--primary); font-size: 13.5px; }
+
+  @media (max-width: 480px) {
+    body { padding: 10px 6px 24px; }
+    .card { padding: 14px; }
+    h1 { font-size: 20px; }
+    .stopwatch-display { font-size: 38px; }
+    .interval-time { font-size: 36px; }
+    .lap-row { grid-template-columns: 36px 1fr 1fr 74px; font-size: 12px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    button, .progress-bar-fill { transition: none !important; transform: none !important; }
+  }
+
+  @media print {
+    body { background: none; perspective: none; }
+    h1 { background: none; -webkit-background-clip: initial; background-clip: initial; color: var(--text-primary); filter: none; }
+    .nav-link, .actions-row, .toast, .view-counter { display: none !important; }
+    .card { box-shadow: none; border: 1px solid #ccc; backdrop-filter: none; background: #fff; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>⏱️ Multi-Lap Stopwatch &amp; Interval Timer</h1>
+    <p class="subtitle">A high-precision timer for sports, workouts, and productivity -- record laps, run work/rest intervals, and export your splits.</p>
+
+    <!-- Stopwatch -->
+    <div class="card">
+      <h2>⏱️ Stopwatch</h2>
+      <div class="stopwatch-display" id="swDisplay">00:00.00</div>
+      <div class="actions-row">
+        <button class="btn-add" id="swStartPauseBtn" type="button">▶ Start</button>
+        <button class="btn-outline" id="swLapBtn" type="button" disabled>🏁 Lap</button>
+        <button class="btn-subtract" id="swResetBtn" type="button">↺ Reset</button>
+      </div>
+
+      <div class="stats-row" id="swStatsRow" style="display: none;">
+        <div class="stat-tile"><div class="stat-tile-label">Fastest Lap</div><div class="stat-tile-value" id="swFastest">--</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Slowest Lap</div><div class="stat-tile-value" id="swSlowest">--</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Average Lap</div><div class="stat-tile-value" id="swAverage">--</div></div>
+      </div>
+
+      <div class="lap-list" id="swLapList"></div>
+      <p class="empty-note" id="swLapEmptyNote">No laps recorded yet -- press Lap while running to record a split.</p>
+
+      <div class="actions-row">
+        <button class="btn-outline" id="swExportBtn" type="button">📤 Export Laps as Text</button>
+      </div>
+    </div>
+
+    <!-- Interval timer -->
+    <div class="card">
+      <h2>⏲️ Interval Timer</h2>
+      <div class="field-row">
+        <div class="field">
+          <label for="workDurationInput">Work (mm:ss)</label>
+          <input type="text" id="workDurationInput" value="00:30" inputmode="numeric" placeholder="00:30">
+        </div>
+        <div class="field">
+          <label for="restDurationInput">Rest (mm:ss)</label>
+          <input type="text" id="restDurationInput" value="00:15" inputmode="numeric" placeholder="00:15">
+        </div>
+        <div class="field">
+          <label for="roundsInput">Rounds</label>
+          <input type="number" id="roundsInput" min="1" value="8">
+        </div>
+      </div>
+
+      <div class="interval-display">
+        <div class="interval-phase" id="intPhaseLabel">Ready</div>
+        <div class="interval-time" id="intTimeDisplay">00:30</div>
+        <div class="interval-round" id="intRoundLabel"></div>
+      </div>
+      <div class="progress-bar"><div class="progress-bar-fill" id="intProgressFill"></div></div>
+
+      <div class="actions-row">
+        <button class="btn-add" id="intStartBtn" type="button">▶ Start</button>
+        <button class="btn-outline" id="intPauseBtn" type="button" style="display: none;">⏸ Pause</button>
+        <button class="btn-subtract" id="intResetBtn" type="button">↺ Reset</button>
+      </div>
+    </div>
+
+    <a href="tools.html" class="nav-link">← Back to Tools</a>
+    <div class="view-counter" style="text-align: center; margin-top: 10px;">
+      <img src="https://hits.sh/rkr2025.github.io/ksebcalculator/stopwatch.svg?style=flat-square&label=Views" alt="No. of views" loading="lazy">
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ------------------------------ Shared helpers -----------------------------
+    function dateKey(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    const toast = document.getElementById('toast');
+    function showToast(message, isError) {
+      toast.textContent = message;
+      toast.className = 'toast show' + (isError ? ' error' : '');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => { toast.className = 'toast'; }, 2600);
+    }
+
+    function vibrate(pattern) {
+      if (navigator.vibrate) { try { navigator.vibrate(pattern); } catch { /* unsupported */ } }
+    }
+
+    // Short WebAudio beep -- created lazily inside a click handler so the
+    // browser's autoplay policy (which requires a user gesture) is satisfied.
+    let audioCtx = null;
+    function beep(freq, durationMs) {
+      try {
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + durationMs / 1000);
+        osc.start(now);
+        osc.stop(now + durationMs / 1000 + 0.03);
+      } catch { /* no audio support */ }
+    }
+
+    // ================================ Stopwatch =================================
+    // Elapsed time is derived from real wall-clock timestamps (Date.now()),
+    // not from counting ticks -- so it stays accurate even if the tab is
+    // throttled in the background, and survives a page reload while running
+    // (the state below is persisted after every change).
+    const SW_KEY = 'stopwatchState';
+    let sw = { baseMs: 0, runStart: null, laps: [] };
+
+    function loadSw() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(SW_KEY));
+        if (stored && typeof stored === 'object') {
+          sw = {
+            baseMs: Number(stored.baseMs) || 0,
+            runStart: Number.isFinite(stored.runStart) ? stored.runStart : null,
+            laps: Array.isArray(stored.laps) ? stored.laps : [],
+          };
+        }
+      } catch { /* ignore malformed storage */ }
+    }
+    function saveSw() { localStorage.setItem(SW_KEY, JSON.stringify(sw)); }
+
+    function swRunning() { return sw.runStart !== null; }
+    function swElapsed() { return sw.baseMs + (sw.runStart ? Date.now() - sw.runStart : 0); }
+
+    function formatStopwatch(ms) {
+      const totalCs = Math.floor(Math.max(0, ms) / 10);
+      const cs = totalCs % 100;
+      const totalSec = Math.floor(totalCs / 100);
+      const s = totalSec % 60;
+      const totalMin = Math.floor(totalSec / 60);
+      const m = totalMin % 60;
+      const h = Math.floor(totalMin / 60);
+      const p2 = (n) => String(n).padStart(2, '0');
+      return h > 0 ? `${p2(h)}:${p2(m)}:${p2(s)}.${p2(cs)}` : `${p2(m)}:${p2(s)}.${p2(cs)}`;
+    }
+
+    const swDisplay = document.getElementById('swDisplay');
+    const swStartPauseBtn = document.getElementById('swStartPauseBtn');
+    const swLapBtn = document.getElementById('swLapBtn');
+    const swResetBtn = document.getElementById('swResetBtn');
+    const swLapList = document.getElementById('swLapList');
+    const swLapEmptyNote = document.getElementById('swLapEmptyNote');
+    const swStatsRow = document.getElementById('swStatsRow');
+
+    function renderSwDisplay() { swDisplay.textContent = formatStopwatch(swElapsed()); }
+
+    function renderSwControls() {
+      const running = swRunning();
+      swStartPauseBtn.textContent = running ? '⏸ Pause' : ((sw.baseMs > 0 || sw.laps.length) ? '▶ Resume' : '▶ Start');
+      swStartPauseBtn.className = running ? 'btn-subtract' : 'btn-add';
+      swLapBtn.disabled = !running;
+    }
+
+    function lapDeltas() { return sw.laps.map((total, i) => total - (i > 0 ? sw.laps[i - 1] : 0)); }
+    function extremeIdx(deltas) {
+      let bestIdx = 0, worstIdx = 0;
+      deltas.forEach((d, i) => {
+        if (d < deltas[bestIdx]) bestIdx = i;
+        if (d > deltas[worstIdx]) worstIdx = i;
+      });
+      return { bestIdx, worstIdx };
+    }
+
+    function renderLaps() {
+      if (sw.laps.length === 0) {
+        swLapList.innerHTML = '';
+        swLapEmptyNote.style.display = 'block';
+        swStatsRow.style.display = 'none';
+        return;
+      }
+      swLapEmptyNote.style.display = 'none';
+
+      const deltas = lapDeltas();
+      const { bestIdx, worstIdx } = extremeIdx(deltas);
+      const showTags = sw.laps.length > 1;
+
+      const rowsHtml = sw.laps.map((total, i) => {
+        const delta = deltas[i];
+        let tagClass = '', tagLabel = '<span class="lap-tag"></span>';
+        if (showTags && i === bestIdx) { tagClass = 'lap-best'; tagLabel = '<span class="lap-tag best">🟢 Fastest</span>'; }
+        else if (showTags && i === worstIdx) { tagClass = 'lap-worst'; tagLabel = '<span class="lap-tag worst">🔴 Slowest</span>'; }
+        return `<div class="lap-row ${tagClass}">
+          <span class="lap-num">#${i + 1}</span>
+          <span class="lap-split">${formatStopwatch(delta)}</span>
+          <span class="lap-total">${formatStopwatch(total)}</span>
+          ${tagLabel}
+        </div>`;
+      }).reverse().join('');
+
+      swLapList.innerHTML = `
+        <div class="lap-row lap-row-header">
+          <span>Lap</span><span>Split</span><span>Total</span><span></span>
+        </div>` + rowsHtml;
+
+      const avg = deltas.reduce((a, b) => a + b, 0) / deltas.length;
+      document.getElementById('swFastest').textContent = formatStopwatch(deltas[bestIdx]);
+      document.getElementById('swSlowest').textContent = formatStopwatch(deltas[worstIdx]);
+      document.getElementById('swAverage').textContent = formatStopwatch(avg);
+      swStatsRow.style.display = 'flex';
+    }
+
+    swStartPauseBtn.addEventListener('click', () => {
+      if (swRunning()) {
+        sw.baseMs = swElapsed();
+        sw.runStart = null;
+      } else {
+        sw.runStart = Date.now();
+      }
+      saveSw();
+      renderSwDisplay();
+      renderSwControls();
+    });
+
+    swLapBtn.addEventListener('click', () => {
+      if (!swRunning()) return;
+      sw.laps.push(swElapsed());
+      saveSw();
+      renderLaps();
+    });
+
+    swResetBtn.addEventListener('click', () => {
+      if ((sw.laps.length > 0 || swElapsed() > 0) && !confirm('Reset the stopwatch? Lap history will be cleared.')) return;
+      sw = { baseMs: 0, runStart: null, laps: [] };
+      saveSw();
+      renderSwDisplay();
+      renderSwControls();
+      renderLaps();
+    });
+
+    document.getElementById('swExportBtn').addEventListener('click', () => {
+      if (sw.laps.length === 0) { showToast('No laps recorded yet.', true); return; }
+      const deltas = lapDeltas();
+      const { bestIdx, worstIdx } = extremeIdx(deltas);
+      const avg = deltas.reduce((a, b) => a + b, 0) / deltas.length;
+
+      const lines = [];
+      lines.push('Multi-Lap Stopwatch -- Lap Report');
+      lines.push(`Exported: ${new Date().toLocaleString()}`);
+      lines.push(`Total Elapsed: ${formatStopwatch(swElapsed())}`);
+      lines.push('');
+      lines.push('Lap    Split         Total');
+      sw.laps.forEach((total, i) => {
+        lines.push(`${String(i + 1).padEnd(6)} ${formatStopwatch(deltas[i]).padEnd(13)} ${formatStopwatch(total)}`);
+      });
+      lines.push('');
+      lines.push(`Fastest Lap: #${bestIdx + 1} (${formatStopwatch(deltas[bestIdx])})`);
+      lines.push(`Slowest Lap: #${worstIdx + 1} (${formatStopwatch(deltas[worstIdx])})`);
+      lines.push(`Average Lap: ${formatStopwatch(avg)}`);
+
+      const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `stopwatch-laps-${dateKey(new Date())}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Lap history exported.');
+    });
+
+    // ============================== Interval timer ==============================
+    // remainingMs + phaseEndEpoch follow the same wall-clock-based pattern as
+    // the stopwatch above, and the whole state is persisted so a running
+    // interval survives a reload instead of silently resetting.
+    const IV_KEY = 'intervalTimerState';
+    const INTERVAL_CFG_KEY = 'intervalTimerConfig';
+    let iv = { phase: 'idle', round: 0, totalRounds: 0, workMs: 0, restMs: 0, remainingMs: 0, phaseEndEpoch: null };
+
+    function loadIv() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(IV_KEY));
+        if (stored && typeof stored === 'object' && stored.phase) iv = Object.assign({}, iv, stored);
+      } catch { /* ignore malformed storage */ }
+    }
+    function saveIv() { localStorage.setItem(IV_KEY, JSON.stringify(iv)); }
+
+    const workDurationInput = document.getElementById('workDurationInput');
+    const restDurationInput = document.getElementById('restDurationInput');
+    const roundsInput = document.getElementById('roundsInput');
+
+    function loadIntervalConfig() {
+      try {
+        const cfg = JSON.parse(localStorage.getItem(INTERVAL_CFG_KEY));
+        if (cfg) {
+          if (cfg.work) workDurationInput.value = cfg.work;
+          if (cfg.rest) restDurationInput.value = cfg.rest;
+          if (cfg.rounds) roundsInput.value = cfg.rounds;
+        }
+      } catch { /* ignore malformed storage */ }
+    }
+    function saveIntervalConfig() {
+      localStorage.setItem(INTERVAL_CFG_KEY, JSON.stringify({
+        work: workDurationInput.value, rest: restDurationInput.value, rounds: roundsInput.value,
+      }));
+    }
+    [workDurationInput, restDurationInput, roundsInput].forEach((el) => el.addEventListener('change', saveIntervalConfig));
+
+    function parseMMSS(value) {
+      const m = String(value).trim().match(/^(\d{1,2}):([0-5]\d)$/);
+      if (!m) return null;
+      return (parseInt(m[1], 10) * 60 + parseInt(m[2], 10)) * 1000;
+    }
+    function formatMMSS(ms) {
+      const totalSec = Math.max(0, Math.ceil(ms / 1000));
+      const m = Math.floor(totalSec / 60);
+      const s = totalSec % 60;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function advanceIntervalPhase() {
+      if (iv.phase === 'work') {
+        if (iv.round >= iv.totalRounds) { finishInterval(); return; }
+        if (iv.restMs > 0) {
+          iv.phase = 'rest';
+          iv.remainingMs = iv.restMs;
+          beep(440, 180);
+        } else {
+          iv.round += 1;
+          iv.phase = 'work';
+          iv.remainingMs = iv.workMs;
+          beep(880, 180);
+        }
+        vibrate(150);
+      } else if (iv.phase === 'rest') {
+        iv.round += 1;
+        iv.phase = 'work';
+        iv.remainingMs = iv.workMs;
+        beep(880, 180);
+        vibrate(150);
+      }
+      iv.phaseEndEpoch = Date.now() + iv.remainingMs;
+      saveIv();
+    }
+
+    function finishInterval() {
+      iv.phase = 'done';
+      iv.phaseEndEpoch = null;
+      iv.remainingMs = 0;
+      beep(1046, 150);
+      setTimeout(() => beep(1318, 150), 200);
+      setTimeout(() => beep(1568, 220), 400);
+      vibrate([200, 100, 200, 100, 200]);
+      saveIv();
+    }
+
+    function renderInterval() {
+      const phaseLabelEl = document.getElementById('intPhaseLabel');
+      const timeEl = document.getElementById('intTimeDisplay');
+      const roundEl = document.getElementById('intRoundLabel');
+      const fillEl = document.getElementById('intProgressFill');
+      const startBtn = document.getElementById('intStartBtn');
+      const pauseBtn = document.getElementById('intPauseBtn');
+
+      phaseLabelEl.className = 'interval-phase' + (iv.phase !== 'idle' ? ` ${iv.phase}` : '');
+      fillEl.className = 'progress-bar-fill' + (iv.phase === 'rest' ? ' rest' : '');
+
+      let remaining;
+      if (iv.phase === 'idle') {
+        phaseLabelEl.textContent = 'Ready';
+        remaining = parseMMSS(workDurationInput.value) || 0;
+        roundEl.textContent = '';
+        fillEl.style.width = '0%';
+      } else if (iv.phase === 'done') {
+        phaseLabelEl.textContent = '🎉 Workout Complete';
+        remaining = 0;
+        roundEl.textContent = `${iv.totalRounds} of ${iv.totalRounds} rounds complete`;
+        fillEl.style.width = '100%';
+      } else {
+        phaseLabelEl.textContent = iv.phase === 'work' ? '💪 Work' : '😮‍💨 Rest';
+        remaining = iv.phaseEndEpoch ? iv.phaseEndEpoch - Date.now() : iv.remainingMs;
+        const phaseDuration = iv.phase === 'work' ? iv.workMs : iv.restMs;
+        roundEl.textContent = `Round ${iv.round} of ${iv.totalRounds}`;
+        const pct = phaseDuration > 0 ? Math.max(0, Math.min(100, 100 - (remaining / phaseDuration) * 100)) : 100;
+        fillEl.style.width = `${pct}%`;
+      }
+      timeEl.textContent = formatMMSS(Math.max(0, remaining));
+
+      const running = iv.phaseEndEpoch !== null;
+      startBtn.style.display = running ? 'none' : '';
+      pauseBtn.style.display = running ? '' : 'none';
+      startBtn.textContent = (iv.phase === 'idle' || iv.phase === 'done') ? '▶ Start' : '▶ Resume';
+
+      const configLocked = iv.phase === 'work' || iv.phase === 'rest';
+      workDurationInput.disabled = configLocked;
+      restDurationInput.disabled = configLocked;
+      roundsInput.disabled = configLocked;
+    }
+
+    document.getElementById('intStartBtn').addEventListener('click', () => {
+      if (iv.phase === 'idle' || iv.phase === 'done') {
+        const workMs = parseMMSS(workDurationInput.value);
+        const restMs = parseMMSS(restDurationInput.value);
+        const rounds = parseInt(roundsInput.value, 10);
+        if (workMs === null || workMs <= 0) { showToast('Enter a valid work time (mm:ss).', true); return; }
+        if (restMs === null) { showToast('Enter a valid rest time (mm:ss), or 00:00 for none.', true); return; }
+        if (!Number.isFinite(rounds) || rounds < 1) { showToast('Enter at least 1 round.', true); return; }
+        iv = { phase: 'work', round: 1, totalRounds: rounds, workMs, restMs, remainingMs: workMs, phaseEndEpoch: Date.now() + workMs };
+        saveIntervalConfig();
+        beep(880, 180);
+        vibrate(150);
+      } else {
+        iv.phaseEndEpoch = Date.now() + iv.remainingMs;
+      }
+      saveIv();
+      renderInterval();
+    });
+
+    document.getElementById('intPauseBtn').addEventListener('click', () => {
+      if (iv.phaseEndEpoch) {
+        iv.remainingMs = iv.phaseEndEpoch - Date.now();
+        iv.phaseEndEpoch = null;
+        saveIv();
+        renderInterval();
+      }
+    });
+
+    document.getElementById('intResetBtn').addEventListener('click', () => {
+      if (iv.phase !== 'idle' && !confirm('Reset the interval timer? Current progress will be lost.')) return;
+      iv = { phase: 'idle', round: 0, totalRounds: 0, workMs: 0, restMs: 0, remainingMs: 0, phaseEndEpoch: null };
+      saveIv();
+      renderInterval();
+    });
+
+    // --------------------------------- Main loop ---------------------------------
+    function mainTick() {
+      if (swRunning()) renderSwDisplay();
+      if (iv.phaseEndEpoch) {
+        if (iv.phaseEndEpoch - Date.now() <= 0) advanceIntervalPhase();
+        renderInterval();
+      }
+    }
+    setInterval(mainTick, 50);
+
+    // --------------------------------- Init ---------------------------------
+    loadSw();
+    loadIv();
+    loadIntervalConfig();
+    renderSwDisplay();
+    renderSwControls();
+    renderLaps();
+    renderInterval();
+  </script>
+</body>
+</html>
