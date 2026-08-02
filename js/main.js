@@ -13,7 +13,7 @@ import { computeWheelingResult } from './wheeling-calculator.js';
 const resetReadingGroups = initReadingGroups();
 const wheelingUI = initWheelingUI();
 
-const RESULT_PANEL_IDS = ['billChart', 'billAnalysis', 'wheelingBreakdown', 'result', 'result1', 'result2', 'result3', 'result4', 'result6'];
+const RESULT_PANEL_IDS = ['billExplanation', 'billChart', 'billAnalysis', 'wheelingBreakdown', 'result', 'result1', 'result2', 'result3', 'result4', 'result6'];
 
 function num(id) {
     return parseFloat(document.getElementById(id).value) || 0;
@@ -347,5 +347,19 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     }
+
+    // Bill Explanation language toggle (English/Malayalam), same look as
+    // the FAQ one above -- delegated rather than bound directly, since
+    // render-explanation.js's HTML is replaced fresh on every "Calculate
+    // Bill" click (each recalculation's markup already defaults to
+    // Malayalam active, so no extra initial-state JS is needed here).
+    document.getElementById('billExplanation').addEventListener('click', (e) => {
+        const btn = e.target.closest('.bill-explain-lang-btn');
+        if (!btn) return;
+        const container = e.currentTarget;
+        const lang = btn.dataset.billLang;
+        container.querySelectorAll('.bill-explain-lang-btn').forEach((b) => b.classList.toggle('active', b.dataset.billLang === lang));
+        container.querySelectorAll('[data-bill-lang-content]').forEach((el) => { el.hidden = el.dataset.billLangContent !== lang; });
+    });
 
 });

@@ -16,13 +16,14 @@ import {
 import { renderBillBreakdownChart, renderTodComparisonChart } from './render-chart.js';
 import { renderBillAnalysis } from './render-insights.js';
 import { renderWheelingResult } from './render-wheeling.js';
+import { buildBillExplanation } from './render-explanation.js';
 
 // Single source of truth for the version stamp -- bump this on every app
 // modification (per the project's versioning convention). Shown both in the
 // results' ENDING_NOTE_HTML below and in a persistent page-footer (rendered
 // by main.js at load time, independent of whether a bill has been
 // calculated yet).
-export const APP_VERSION_LABEL = 'Version 3.0.91: Last updated: 31-July-2026';
+export const APP_VERSION_LABEL = 'Version 3.0.93: Last updated: 02-August-2026';
 
 const ENDING_NOTE_HTML = `
     <div style="background: var(--surface-muted); padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); margin: 20px auto; max-width: 90%; font-family: 'Georgia', serif; border-left: 4px solid #2ecc71;">
@@ -317,12 +318,14 @@ export function renderBillResults(bill) {
     const billChart = renderBillBreakdownChart(bill) + renderTodComparisonChart(bill);
     const billAnalysis = renderBillAnalysis(bill);
     const wheelingBreakdown = renderWheelingResult(bill.wheelingResult);
+    const billExplanation = buildBillExplanation(bill);
 
     return {
         billInfo,
         billChart,
         billAnalysis,
         wheelingBreakdown,
+        billExplanation,
         result: panels.result,
         result1: panels.result1,
         result2: panels.result2,
