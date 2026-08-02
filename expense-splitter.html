@@ -651,10 +651,10 @@
           amtEl.textContent = 'settled up';
         } else if (amt > 0) {
           amtEl.className = 'balance-amount positive';
-          amtEl.textContent = `is owed ${formatCurrency(amt)}`;
+          amtEl.textContent = `will get ${formatCurrency(amt)}`;
         } else {
           amtEl.className = 'balance-amount negative';
-          amtEl.textContent = `owes ${formatCurrency(-amt)}`;
+          amtEl.textContent = `should give ${formatCurrency(-amt)}`;
         }
 
         row.appendChild(nameEl);
@@ -807,10 +807,17 @@
         amtEl.className = 'settle-amt';
         amtEl.textContent = formatCurrency(tx.amt);
 
+        // The From -> To row above is quick to scan, but spelling it out as
+        // a plain sentence too leaves no room for misreading who pays whom.
+        const sentenceEl = document.createElement('div');
+        sentenceEl.className = 'settle-sentence';
+        sentenceEl.textContent = `${participantName(tx.from)} should give ${formatCurrency(tx.amt)} to ${participantName(tx.to)}.`;
+
         item.appendChild(fromEl);
         item.appendChild(arrowEl);
         item.appendChild(toEl);
         item.appendChild(amtEl);
+        item.appendChild(sentenceEl);
         settlementList.appendChild(item);
       });
     }
