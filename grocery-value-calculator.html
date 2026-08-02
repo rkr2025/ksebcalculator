@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🛒 Unit Price &amp; Best Value Grocery Calculator</title>
+<style>
+  :root {
+    --primary: #2a78d6;
+    --primary-dark: #1f5fac;
+    --primary-light: #eaf2fc;
+    --accent: #1baf7a;
+    --accent-dark: #148f60;
+    --danger: #e34948;
+    --warn: #c97e00;
+    --surface: #ffffff;
+    --surface-muted: #f6f8fb;
+    --border: #e3e7ef;
+    --text-primary: #17203a;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --radius: 14px;
+    --shadow: 0 2px 4px rgba(23,32,58,.06), 0 12px 28px -6px rgba(23,32,58,.14), 0 28px 56px -20px rgba(23,32,58,.16);
+    --shadow-sm: 0 1px 2px rgba(23,32,58,.06), 0 6px 14px -4px rgba(23,32,58,.12);
+    --shadow-lift: 0 6px 12px rgba(23,32,58,.08), 0 22px 44px -10px rgba(23,32,58,.22), 0 36px 70px -24px rgba(23,32,58,.22);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px 10px 32px;
+    font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(42,120,214,.16), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(27,175,122,.14), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(227,73,72,.10), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(201,126,0,.10), transparent 55%),
+      linear-gradient(160deg, #eef1f7, #e4ebf7 60%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    perspective: 1400px;
+  }
+  .container { max-width: 720px; margin: 0 auto; }
+  h1 {
+    text-align: center; font-size: 24px; font-weight: 700; margin: 6px 0 4px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 2px 3px rgba(23,32,58,.15));
+  }
+  .subtitle { text-align: center; color: var(--text-muted); font-size: 13px; margin: 0 0 18px; }
+  .card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.82));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.6);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .card h2 { font-size: 15px; margin: 0 0 14px; color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .card h2 .count-badge { font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: none; }
+
+  button {
+    position: relative;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: filter .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0) 55%);
+    pointer-events: none;
+  }
+  button:hover { filter: brightness(0.97); transform: translateY(-1px); }
+  button:active { transform: translateY(1px); filter: brightness(0.93); }
+  .btn-add {
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color: #fff;
+    box-shadow: 0 2px 3px rgba(27,175,122,.25), 0 10px 22px -4px rgba(27,175,122,.5);
+  }
+  .btn-add:hover { box-shadow: 0 4px 8px rgba(27,175,122,.3), 0 16px 30px -6px rgba(27,175,122,.55); }
+  .icon-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 15px; padding: 4px 6px; box-shadow: none; flex: none; }
+  .icon-btn:hover { color: var(--danger); filter: none; transform: none; }
+
+  input, select {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 9px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: inset 0 1px 3px rgba(23,32,58,.05);
+    transition: border-color .15s ease, box-shadow .15s ease;
+    width: 100%;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light), inset 0 1px 3px rgba(23,32,58,.05);
+  }
+  label { font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .02em; display: block; margin-bottom: 4px; }
+
+  .field-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .field { flex: 1 1 160px; min-width: 0; }
+  .field.narrow { flex: 0 1 160px; }
+
+  .actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .empty-note { color: var(--text-muted); font-style: italic; font-size: 13px; padding: 10px 4px; text-align: center; }
+
+  /* -------- Item rows -------- */
+  .items-list { display: flex; flex-direction: column; gap: 10px; }
+  .item-row {
+    background: var(--surface-muted); border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; transition: border-color .15s ease, background-color .15s ease;
+  }
+  .item-row.best-value { border-color: var(--accent); background: rgba(27,175,122,.08); }
+  .item-row-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .item-row-top .item-name { flex: 1 1 auto; font-weight: 600; }
+  .item-row-fields { display: flex; gap: 8px; }
+  .item-row-fields .item-qty { flex: 1 1 70px; }
+  .item-row-fields .item-unit { flex: 0 1 68px; }
+  .item-row-fields .item-unit-static {
+    flex: 0 1 68px; display: flex; align-items: center; justify-content: center;
+    font-size: 12.5px; font-weight: 700; color: var(--text-muted); background: var(--surface);
+    border: 1.5px solid var(--border); border-radius: 8px; padding: 0 8px;
+  }
+  .item-row-fields .item-price { flex: 1 1 90px; }
+  .item-result { margin-top: 8px; font-size: 12.5px; color: var(--text-secondary); min-height: 18px; }
+  .item-result-hint { color: var(--text-muted); font-style: italic; }
+  .item-result-rate { font-weight: 700; color: var(--text-primary); }
+  .item-result-secondary { color: var(--text-muted); }
+  .best-badge {
+    display: inline-block; font-size: 10.5px; font-weight: 700; color: var(--accent-dark);
+    background: rgba(27,175,122,.15); border-radius: 999px; padding: 2px 9px; margin-left: 4px;
+  }
+  .worse-badge {
+    display: inline-block; font-size: 10.5px; font-weight: 700; color: var(--warn);
+    background: rgba(201,126,0,.12); border-radius: 999px; padding: 2px 9px; margin-left: 4px;
+  }
+
+  /* -------- Result banner -------- */
+  .result-banner { text-align: center; background: linear-gradient(160deg, #ffffff, var(--surface-muted)); border-radius: 10px; padding: 16px; box-shadow: var(--shadow-sm); }
+  .result-banner-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+  .result-banner-value { font-size: 20px; font-weight: 800; color: var(--accent-dark); margin-top: 4px; word-break: break-word; }
+  .result-banner-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  .nav-link { display: block; text-align: center; margin-top: 8px; text-decoration: none; color: var(--primary); font-size: 13.5px; }
+
+  @media (max-width: 480px) {
+    body { padding: 10px 6px 24px; }
+    .card { padding: 14px; }
+    h1 { font-size: 20px; }
+    .item-row-fields .item-unit, .item-row-fields .item-unit-static { flex-basis: 56px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    button { transition: none !important; transform: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>🛒 Unit Price &amp; Best Value Grocery Calculator</h1>
+    <p class="subtitle">Compare different pack sizes and prices side by side to instantly spot the cheapest deal per unit.</p>
+
+    <div class="card">
+      <h2>⚖️ Comparison Settings</h2>
+      <div class="field-row">
+        <div class="field narrow">
+          <label for="modeSelect">Compare By</label>
+          <select id="modeSelect">
+            <option value="weight">Weight (g / kg)</option>
+            <option value="volume">Volume (ml / L)</option>
+            <option value="count">Count (pieces)</option>
+          </select>
+        </div>
+        <div class="field narrow">
+          <label for="currencySelect">Currency</label>
+          <select id="currencySelect">
+            <option value="₹">₹ INR</option>
+            <option value="$">$ USD</option>
+            <option value="€">€ EUR</option>
+            <option value="£">£ GBP</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📦 Items to Compare <span class="count-badge" id="itemCountBadge"></span></h2>
+      <div class="items-list" id="itemsList"></div>
+      <p class="empty-note" id="itemsEmptyNote" style="display:none;">Add an item to start comparing.</p>
+      <div class="actions-row">
+        <button class="btn-add" id="addItemBtn" type="button">➕ Add Item</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🏆 Best Value</h2>
+      <div id="resultBanner"></div>
+    </div>
+
+    <a href="tools.html" class="nav-link">← Back to Tools</a>
+    <div class="view-counter" style="text-align: center; margin-top: 10px;">
+      <img src="https://hits.sh/rkr2025.github.io/ksebcalculator/grocery-value-calculator.svg?style=flat-square&label=Views" alt="No. of views" loading="lazy">
+    </div>
+  </div>
+
+  <script>
+    // ------------------------------ Helpers -----------------------------
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    const WEIGHT_UNITS = [{ value: 'g', label: 'g' }, { value: 'kg', label: 'kg' }];
+    const VOLUME_UNITS = [{ value: 'ml', label: 'ml' }, { value: 'L', label: 'L' }];
+    const MODE_DEFAULT_UNIT = { weight: 'g', volume: 'ml', count: null };
+
+    // ------------------------------ State -----------------------------
+    let items = [];
+    let nextItemId = 1;
+
+    function seedDefaultItems() {
+      nextItemId = 1;
+      items = [
+        { id: nextItemId++, name: 'Small Pack', qty: '500', unit: 'g', price: '95' },
+        { id: nextItemId++, name: 'Large Pack', qty: '1', unit: 'kg', price: '180' },
+      ];
+    }
+
+    const modeSelect = document.getElementById('modeSelect');
+    const currencySelect = document.getElementById('currencySelect');
+    const itemsList = document.getElementById('itemsList');
+    const itemsEmptyNote = document.getElementById('itemsEmptyNote');
+    const itemCountBadge = document.getElementById('itemCountBadge');
+    const resultBanner = document.getElementById('resultBanner');
+
+    // ------------------------------ Rendering (structure) -----------------------------
+    function itemUnitFieldHtml(mode, selectedUnit) {
+      if (mode === 'count') return '<span class="item-unit-static">pcs</span>';
+      const units = mode === 'weight' ? WEIGHT_UNITS : VOLUME_UNITS;
+      return `<select class="item-unit">${units.map((u) => `<option value="${u.value}"${u.value === selectedUnit ? ' selected' : ''}>${u.label}</option>`).join('')}</select>`;
+    }
+
+    function renderItemRows() {
+      const mode = modeSelect.value;
+      itemCountBadge.textContent = items.length ? `${items.length} item${items.length === 1 ? '' : 's'}` : '';
+      itemsEmptyNote.style.display = items.length ? 'none' : 'block';
+      itemsList.innerHTML = items.map((it, idx) => `
+        <div class="item-row" data-item-id="${it.id}">
+          <div class="item-row-top">
+            <input type="text" class="item-name" placeholder="Item ${idx + 1} (e.g. Store Brand)" value="${escapeHtml(it.name)}">
+            <button type="button" class="icon-btn" data-action="remove-item" data-item-id="${it.id}" title="Remove">🗑️</button>
+          </div>
+          <div class="item-row-fields">
+            <input type="number" class="item-qty" placeholder="Qty" min="0" step="any" value="${escapeHtml(String(it.qty))}">
+            ${itemUnitFieldHtml(mode, it.unit)}
+            <input type="number" class="item-price" placeholder="Price" min="0" step="any" value="${escapeHtml(String(it.price))}">
+          </div>
+          <div class="item-result" id="item-result-${it.id}"></div>
+        </div>`).join('');
+    }
+
+    // ------------------------------ Computation -----------------------------
+    function computeResults() {
+      const mode = modeSelect.value;
+      const computed = items.map((it) => {
+        const qty = parseFloat(it.qty);
+        const price = parseFloat(it.price);
+        const valid = qty > 0 && price > 0;
+        let baseQty = null, pricePerBase = null, baseUnitLabel = null, secondaryValue = null, secondaryLabel = null;
+        if (valid) {
+          if (mode === 'weight') {
+            baseQty = it.unit === 'kg' ? qty * 1000 : qty; // grams
+            pricePerBase = (price * 1000) / baseQty; // per kg
+            baseUnitLabel = 'kg';
+            secondaryValue = (price * 100) / baseQty; // per 100g
+            secondaryLabel = '100g';
+          } else if (mode === 'volume') {
+            baseQty = it.unit === 'L' ? qty * 1000 : qty; // ml
+            pricePerBase = (price * 1000) / baseQty; // per L
+            baseUnitLabel = 'L';
+            secondaryValue = (price * 100) / baseQty; // per 100ml
+            secondaryLabel = '100ml';
+          } else {
+            baseQty = qty; // pieces
+            pricePerBase = price / qty;
+            baseUnitLabel = 'pc';
+          }
+        }
+        return { ...it, qty, price, valid, baseQty, pricePerBase, baseUnitLabel, secondaryValue, secondaryLabel };
+      });
+      const validItems = computed.filter((c) => c.valid);
+      const bestPricePerBase = validItems.length ? Math.min(...validItems.map((c) => c.pricePerBase)) : null;
+      return { computed, validItems, bestPricePerBase, mode };
+    }
+
+    function isBestValue(c, bestPricePerBase) {
+      if (!c.valid || bestPricePerBase === null) return false;
+      return Math.abs(c.pricePerBase - bestPricePerBase) <= bestPricePerBase * 0.0005;
+    }
+
+    function buildResultLineHtml(c, bestPricePerBase, mode, currency, comparisonCount) {
+      if (!c.valid) return '<span class="item-result-hint">Enter quantity and price</span>';
+      const rateText = `<span class="item-result-rate">${currency}${c.pricePerBase.toFixed(2)} / ${c.baseUnitLabel}</span>`;
+      const secondaryText = c.secondaryLabel
+        ? ` <span class="item-result-secondary">(${currency}${c.secondaryValue.toFixed(2)} / ${c.secondaryLabel})</span>` : '';
+      if (comparisonCount < 2) return `${rateText}${secondaryText}`;
+      if (isBestValue(c, bestPricePerBase)) return `${rateText}${secondaryText}<span class="best-badge">🏆 Best Value</span>`;
+
+      const pctMore = ((c.pricePerBase - bestPricePerBase) / bestPricePerBase) * 100;
+      const baseUnitQty = mode === 'count' ? c.baseQty : c.baseQty / 1000;
+      const extraCost = c.price - (baseUnitQty * bestPricePerBase);
+      return `${rateText}${secondaryText}<span class="worse-badge">+${pctMore.toFixed(0)}% vs best (${currency}${extraCost.toFixed(2)} more for same qty)</span>`;
+    }
+
+    function renderResultBanner(validItems, bestPricePerBase, mode, currency) {
+      if (validItems.length === 0) {
+        resultBanner.innerHTML = '<p class="empty-note">Add at least one item with a quantity and price to see a comparison.</p>';
+        return;
+      }
+      if (validItems.length === 1) {
+        const c = validItems[0];
+        resultBanner.innerHTML = `
+          <div class="result-banner">
+            <div class="result-banner-label">Unit Price</div>
+            <div class="result-banner-value">${currency}${c.pricePerBase.toFixed(2)} / ${c.baseUnitLabel}</div>
+            <div class="result-banner-sub">Add another item to compare value</div>
+          </div>`;
+        return;
+      }
+      const bestItems = validItems.filter((c) => isBestValue(c, bestPricePerBase));
+      const worstPricePerBase = Math.max(...validItems.map((c) => c.pricePerBase));
+      const maxPct = bestPricePerBase > 0 ? ((worstPricePerBase - bestPricePerBase) / bestPricePerBase) * 100 : 0;
+      const bestNames = bestItems.map((c) => escapeHtml(c.name.trim() || `Item ${items.findIndex((it) => it.id === c.id) + 1}`)).join(' &amp; ');
+      resultBanner.innerHTML = `
+        <div class="result-banner">
+          <div class="result-banner-label">🏆 Best Value</div>
+          <div class="result-banner-value">${bestNames}</div>
+          <div class="result-banner-sub">${currency}${bestPricePerBase.toFixed(2)} / ${bestItems[0].baseUnitLabel}${maxPct > 0.5 ? ` -- up to ${maxPct.toFixed(0)}% cheaper than the priciest option` : ''}</div>
+        </div>`;
+    }
+
+    function syncItemsFromDom() {
+      itemsList.querySelectorAll('.item-row').forEach((row) => {
+        const id = Number(row.dataset.itemId);
+        const item = items.find((it) => it.id === id);
+        if (!item) return;
+        item.name = row.querySelector('.item-name').value;
+        item.qty = row.querySelector('.item-qty').value;
+        item.price = row.querySelector('.item-price').value;
+        const unitSelect = row.querySelector('.item-unit');
+        if (unitSelect) item.unit = unitSelect.value;
+      });
+    }
+
+    function updateResults() {
+      syncItemsFromDom();
+      const currency = currencySelect.value;
+      const { computed, validItems, bestPricePerBase, mode } = computeResults();
+      computed.forEach((c) => {
+        const resultEl = document.getElementById(`item-result-${c.id}`);
+        if (resultEl) resultEl.innerHTML = buildResultLineHtml(c, bestPricePerBase, mode, currency, validItems.length);
+        const rowEl = itemsList.querySelector(`.item-row[data-item-id="${c.id}"]`);
+        if (rowEl) rowEl.classList.toggle('best-value', validItems.length >= 2 && isBestValue(c, bestPricePerBase));
+      });
+      renderResultBanner(validItems, bestPricePerBase, mode, currency);
+    }
+
+    // ------------------------------ Events -----------------------------
+    itemsList.addEventListener('input', updateResults);
+    itemsList.addEventListener('change', (e) => {
+      if (e.target.classList.contains('item-unit')) updateResults();
+    });
+    itemsList.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-action="remove-item"]');
+      if (!btn) return;
+      syncItemsFromDom();
+      items = items.filter((it) => it.id !== Number(btn.dataset.itemId));
+      renderItemRows();
+      updateResults();
+    });
+
+    document.getElementById('addItemBtn').addEventListener('click', () => {
+      syncItemsFromDom();
+      items.push({ id: nextItemId++, name: '', qty: '', unit: MODE_DEFAULT_UNIT[modeSelect.value], price: '' });
+      renderItemRows();
+      updateResults();
+      const rows = itemsList.querySelectorAll('.item-name');
+      if (rows.length) rows[rows.length - 1].focus();
+    });
+
+    modeSelect.addEventListener('change', () => {
+      syncItemsFromDom();
+      const mode = modeSelect.value;
+      items.forEach((it) => { it.unit = MODE_DEFAULT_UNIT[mode]; });
+      renderItemRows();
+      updateResults();
+    });
+
+    currencySelect.addEventListener('change', updateResults);
+
+    // --------------------------------- Init ---------------------------------
+    seedDefaultItems();
+    renderItemRows();
+    updateResults();
+  </script>
+</body>
+</html>
