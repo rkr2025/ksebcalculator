@@ -4,6 +4,17 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>⏳ Event Countdown &amp; Milestone Tracker</title>
+<script>
+  // Applied before first paint (not in the main script at the bottom of the
+  // page) so there's no flash of the light theme while the rest of the page
+  // loads. Dark is the default the very first time someone visits -- once
+  // they pick a theme via the toggle, that choice is what's remembered.
+  (function () {
+    var saved = localStorage.getItem('countdownTheme');
+    var dark = saved ? saved === 'dark' : true;
+    if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+  })();
+</script>
 <style>
   :root {
     --primary: #2a78d6;
@@ -24,6 +35,24 @@
     --shadow-sm: 0 1px 2px rgba(23,32,58,.06), 0 6px 14px -4px rgba(23,32,58,.12);
     --shadow-lift: 0 6px 12px rgba(23,32,58,.08), 0 22px 44px -10px rgba(23,32,58,.22), 0 36px 70px -24px rgba(23,32,58,.22);
   }
+  :root[data-theme="dark"] {
+    --primary: #5b9ee8;
+    --primary-dark: #86b9ee;
+    --primary-light: rgba(91,158,232,.18);
+    --accent: #33d497;
+    --accent-dark: #16a874;
+    --danger: #f2726f;
+    --warn: #e0a030;
+    --surface: #1a2130;
+    --surface-muted: #232b3d;
+    --border: #313b52;
+    --text-primary: #eef1f8;
+    --text-secondary: #c3cadb;
+    --text-muted: #8792a8;
+    --shadow: 0 2px 4px rgba(0,0,0,.5), 0 12px 28px -6px rgba(0,0,0,.5), 0 28px 56px -20px rgba(0,0,0,.55);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.5), 0 6px 14px -4px rgba(0,0,0,.45);
+    --shadow-lift: 0 6px 12px rgba(0,0,0,.55), 0 22px 44px -10px rgba(0,0,0,.6), 0 36px 70px -24px rgba(0,0,0,.6);
+  }
   * { box-sizing: border-box; }
   body {
     margin: 0;
@@ -38,6 +67,16 @@
     background-attachment: fixed;
     color: var(--text-primary);
     perspective: 1400px;
+    transition: background-color .2s ease, color .2s ease;
+  }
+  :root[data-theme="dark"] body {
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(91,158,232,.10), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(51,212,151,.08), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(242,114,111,.08), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(224,160,48,.08), transparent 55%),
+      linear-gradient(160deg, #0f1420, #0b0f18 60%);
+    background-attachment: fixed;
   }
   .container { max-width: 900px; margin: 0 auto; }
   h1 {
@@ -56,6 +95,11 @@
     box-shadow: var(--shadow);
     padding: 18px;
     margin-bottom: 16px;
+    transition: background-color .2s ease, border-color .2s ease;
+  }
+  :root[data-theme="dark"] .card {
+    background: linear-gradient(180deg, rgba(26,33,48,.94), rgba(26,33,48,.82));
+    border-color: rgba(255,255,255,.08);
   }
   .card h2 { font-size: 15px; margin: 0 0 14px; color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .card h2 .count-badge { font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: none; }
@@ -88,7 +132,7 @@
   }
   .btn-add:hover { box-shadow: 0 4px 8px rgba(27,175,122,.3), 0 16px 30px -6px rgba(27,175,122,.55); }
   .btn-outline {
-    background: linear-gradient(180deg, #ffffff, var(--surface-muted));
+    background: linear-gradient(180deg, var(--surface), var(--surface-muted));
     color: var(--text-secondary);
     border: 1px solid var(--border);
     box-shadow: var(--shadow-sm);
@@ -116,7 +160,33 @@
     border-color: var(--primary);
     box-shadow: 0 0 0 3px var(--primary-light), inset 0 1px 3px rgba(23,32,58,.05);
   }
+  input[type="datetime-local"] { color-scheme: light; }
+  :root[data-theme="dark"] input[type="datetime-local"] { color-scheme: dark; }
   label { font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .02em; display: block; margin-bottom: 4px; }
+
+  /* -------- Theme toggle -------- */
+  .theme-toggle { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 16px; font-size: 13px; }
+  .switch { position: relative; display: inline-block; width: 36px; height: 21px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch-slider {
+    position: absolute; inset: 0;
+    background: var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.15);
+    transition: background .15s ease;
+  }
+  .switch-slider::before {
+    content: "";
+    position: absolute;
+    height: 15px; width: 15px; left: 3px; top: 3px;
+    background: linear-gradient(180deg, #ffffff, #eef1f7);
+    border-radius: 50%;
+    transition: transform .15s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  }
+  .switch input:checked + .switch-slider { background: linear-gradient(180deg, var(--primary), var(--primary-dark)); }
+  .switch input:checked + .switch-slider::before { transform: translateX(15px); }
 
   .field-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
   .field { flex: 1 1 200px; min-width: 0; }
@@ -150,7 +220,11 @@
     box-shadow: var(--shadow);
     padding: 18px;
     text-align: center;
-    transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s cubic-bezier(.22,1,.36,1);
+    transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s cubic-bezier(.22,1,.36,1), background-color .2s ease, border-color .2s ease;
+  }
+  :root[data-theme="dark"] .event-card {
+    background: linear-gradient(180deg, rgba(26,33,48,.94), rgba(26,33,48,.82));
+    border-color: rgba(255,255,255,.08);
   }
   @media (hover: hover) {
     .event-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lift); }
@@ -169,7 +243,7 @@
 
   .toast {
     position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
-    background: linear-gradient(180deg, #26314f, var(--text-primary)); color: #fff; padding: 10px 18px; border-radius: 999px;
+    background: linear-gradient(180deg, #26314f, #17203a); color: #fff; padding: 10px 18px; border-radius: 999px;
     font-size: 13.5px; font-weight: 600; box-shadow: var(--shadow-lift);
     opacity: 0; pointer-events: none; transition: opacity .25s ease; z-index: 50;
   }
@@ -193,7 +267,7 @@
   @media print {
     body { background: none; perspective: none; }
     h1 { background: none; -webkit-background-clip: initial; background-clip: initial; color: var(--text-primary); filter: none; }
-    .nav-link, .actions-row, .toast, .view-counter, #importBanner,
+    .nav-link, .actions-row, .toast, .view-counter, #importBanner, .theme-toggle,
     .card:has(.icon-picker), .event-card-actions {
       display: none !important;
     }
@@ -205,6 +279,15 @@
   <div class="container">
     <h1>⏳ Event Countdown &amp; Milestone Tracker</h1>
     <p class="subtitle">Track birthdays, holidays, deadlines, and milestones with a live countdown.</p>
+
+    <div class="theme-toggle">
+      <span>☀️</span>
+      <label class="switch">
+        <input type="checkbox" id="themeToggle">
+        <span class="switch-slider"></span>
+      </label>
+      <span>🌙</span>
+    </div>
 
     <!-- Shared-link import -->
     <div class="card" id="importBanner" style="display: none; border: 2px solid var(--accent);">
@@ -624,6 +707,23 @@
       saveData();
       renderEvents();
       showToast('Cleared.');
+    });
+
+    // -------------------------------- Theme --------------------------------
+    // The actual data-theme attribute is already set by the tiny inline
+    // script in <head> (before first paint, to avoid a flash of the light
+    // theme) -- this just syncs the toggle's visual state to match, and
+    // wires up switching it afterward.
+    const THEME_KEY = 'countdownTheme';
+    document.getElementById('themeToggle').checked = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.getElementById('themeToggle').addEventListener('change', function () {
+      if (this.checked) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem(THEME_KEY, 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem(THEME_KEY, 'light');
+      }
     });
 
     // --------------------------------- Init ---------------------------------
