@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🧭 Eisenhower Matrix -- Priority Planner</title>
+<style>
+  :root {
+    --primary: #2a78d6;
+    --primary-dark: #1f5fac;
+    --primary-light: #eaf2fc;
+    --accent: #1baf7a;
+    --accent-dark: #148f60;
+    --danger: #e34948;
+    --warn: #c97e00;
+    --surface: #ffffff;
+    --surface-muted: #f6f8fb;
+    --border: #e3e7ef;
+    --text-primary: #17203a;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --radius: 14px;
+    --shadow: 0 2px 4px rgba(23,32,58,.06), 0 12px 28px -6px rgba(23,32,58,.14), 0 28px 56px -20px rgba(23,32,58,.16);
+    --shadow-sm: 0 1px 2px rgba(23,32,58,.06), 0 6px 14px -4px rgba(23,32,58,.12);
+    --shadow-lift: 0 6px 12px rgba(23,32,58,.08), 0 22px 44px -10px rgba(23,32,58,.22), 0 36px 70px -24px rgba(23,32,58,.22);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px 10px 32px;
+    font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(42,120,214,.16), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(27,175,122,.14), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(227,73,72,.10), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(201,126,0,.10), transparent 55%),
+      linear-gradient(160deg, #eef1f7, #e4ebf7 60%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+  }
+  .container { max-width: 1080px; margin: 0 auto; }
+  h1 {
+    text-align: center; font-size: 24px; font-weight: 700; margin: 6px 0 4px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 2px 3px rgba(23,32,58,.15));
+  }
+  .subtitle { text-align: center; color: var(--text-muted); font-size: 13px; margin: 0 0 12px; }
+  .card {
+    background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.82));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.6);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .card h2 { font-size: 14.5px; margin: 0 0 12px; color: var(--text-secondary); }
+
+  details.help-card { margin-bottom: 16px; }
+  details.help-card summary {
+    cursor: pointer; font-size: 13.5px; font-weight: 700; color: var(--primary-dark);
+    background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.82));
+    border: 1px solid rgba(255,255,255,.6); border-radius: var(--radius); box-shadow: var(--shadow-sm);
+    padding: 12px 16px; list-style: none;
+  }
+  details.help-card summary::-webkit-details-marker { display: none; }
+  details.help-card[open] summary { border-radius: var(--radius) var(--radius) 0 0; box-shadow: none; }
+  .help-body {
+    background: var(--surface); border: 1px solid var(--border); border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius); padding: 14px 16px; font-size: 13px; color: var(--text-secondary);
+  }
+  .help-body p { margin: 0 0 8px; }
+  .help-body ul { margin: 0 0 8px; padding-left: 20px; }
+  .help-body li { margin-bottom: 4px; }
+  .help-body strong { color: var(--text-primary); }
+
+  button {
+    position: relative;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: filter .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0) 55%);
+    pointer-events: none;
+  }
+  button:hover { filter: brightness(0.97); transform: translateY(-1px); }
+  button:active { transform: translateY(1px); filter: brightness(0.93); }
+  .btn-add {
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color: #fff;
+    box-shadow: 0 2px 3px rgba(27,175,122,.25), 0 10px 22px -4px rgba(27,175,122,.5);
+  }
+  .btn-add:hover { box-shadow: 0 4px 8px rgba(27,175,122,.3), 0 16px 30px -6px rgba(27,175,122,.55); }
+  .btn-outline {
+    background: linear-gradient(180deg, #ffffff, var(--surface-muted));
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-outline:hover { box-shadow: var(--shadow-lift); }
+  .btn-small { padding: 6px 10px; font-size: 12.5px; white-space: nowrap; }
+  .icon-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 13.5px; padding: 3px 6px; box-shadow: none; }
+  .icon-btn:hover { color: var(--primary); filter: none; transform: none; }
+  .icon-btn.danger:hover { color: var(--danger); }
+
+  input {
+    font-family: inherit;
+    font-size: 13.5px;
+    padding: 9px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: inset 0 1px 3px rgba(23,32,58,.05);
+    transition: border-color .15s ease, box-shadow .15s ease;
+    width: 100%;
+  }
+  input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light), inset 0 1px 3px rgba(23,32,58,.05);
+  }
+  label { font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .02em; display: block; margin-bottom: 4px; }
+
+  .field-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+  .field { flex: 1 1 160px; min-width: 0; }
+
+  .switch-field { display: flex; align-items: center; gap: 8px; }
+  .switch { position: relative; display: inline-block; width: 36px; height: 21px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch-slider {
+    position: absolute; inset: 0; background: var(--border); border-radius: 999px; cursor: pointer;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.15); transition: background .15s ease;
+  }
+  .switch-slider::before {
+    content: ""; position: absolute; height: 15px; width: 15px; left: 3px; top: 3px;
+    background: linear-gradient(180deg, #ffffff, #eef1f7); border-radius: 50%;
+    transition: transform .15s ease; box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  }
+  .switch input:checked + .switch-slider { background: linear-gradient(180deg, var(--danger), #c93f3e); }
+  .switch input:checked + .switch-slider::before { transform: translateX(15px); }
+  .switch-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .switch-value { font-size: 11px; font-weight: 700; color: var(--text-muted); }
+
+  .quick-add-preview { font-size: 12.5px; color: var(--text-muted); margin-top: 10px; }
+  .quick-add-preview strong { color: var(--text-primary); }
+
+  .card-form-actions { display: flex; justify-content: flex-end; gap: 8px; }
+  .actions-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .empty-note { color: var(--text-muted); font-style: italic; font-size: 12px; padding: 6px 4px; text-align: center; }
+
+  /* -------- Matrix -------- */
+  .matrix-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .quadrant {
+    --q-color: var(--primary);
+    background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.82));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.6);
+    border-top: 4px solid var(--q-color);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    display: flex; flex-direction: column;
+  }
+  .quadrant.do-first { --q-color: var(--danger); }
+  .quadrant.schedule { --q-color: var(--primary); }
+  .quadrant.delegate { --q-color: var(--warn); }
+  .quadrant.delete { --q-color: var(--text-muted); }
+
+  .quadrant-header { padding: 12px 14px 6px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .quadrant-title { font-size: 15.5px; font-weight: 800; color: var(--q-color); display: flex; align-items: center; gap: 6px; }
+  .quadrant-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .quadrant-count {
+    font-size: 10.5px; font-weight: 700; color: var(--text-muted); background: var(--surface-muted);
+    border-radius: 999px; padding: 3px 9px; white-space: nowrap; flex: none;
+  }
+  .quadrant-count.over-limit { background: rgba(227,73,72,.15); color: var(--danger); }
+
+  .quadrant-body {
+    flex: 1 1 auto; min-height: 70px; padding: 6px 10px 6px 12px;
+    display: flex; flex-direction: column; gap: 8px; border-radius: 8px; transition: background-color .15s ease;
+  }
+  .quadrant-body.drag-over { background: var(--primary-light); }
+
+  .add-task-btn-row, .add-task-form { padding: 4px 10px 12px 12px; }
+  .add-task-btn {
+    width: 100%; background: none; border: 1.5px dashed var(--border); color: var(--text-muted);
+    box-shadow: none; font-size: 12.5px; padding: 8px; border-radius: 8px;
+  }
+  .add-task-btn:hover { border-color: var(--q-color, var(--primary)); color: var(--q-color, var(--primary)); filter: none; transform: none; }
+
+  .task-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; box-shadow: var(--shadow-sm); cursor: grab;
+  }
+  .task-card:active { cursor: grabbing; }
+  .task-card.dragging { opacity: .4; }
+  .task-card-title { font-size: 13px; font-weight: 600; color: var(--text-primary); word-break: break-word; }
+  .task-card-due { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
+  .task-card-due.overdue { color: var(--danger); font-weight: 700; }
+  .task-card-due.due-today { color: var(--warn); font-weight: 700; }
+  .task-card-actions { display: flex; justify-content: flex-end; gap: 0; margin-top: 4px; }
+
+  .move-menu {
+    position: absolute; display: none;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: var(--shadow-lift); z-index: 60; overflow: hidden; min-width: 170px;
+  }
+  .move-menu.show { display: block; }
+  .move-menu-item {
+    display: block; width: 100%; text-align: left; background: none; border: none; border-radius: 0;
+    box-shadow: none; padding: 9px 12px; font-size: 12.5px; font-weight: 600; color: var(--text-primary);
+  }
+  .move-menu-item:not(:last-child) { border-bottom: 1px solid var(--border); }
+  .move-menu-item:hover { background: var(--primary-light); filter: none; transform: none; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+    background: linear-gradient(180deg, #26314f, #17203a); color: #fff; padding: 10px 18px; border-radius: 999px;
+    font-size: 13.5px; font-weight: 600; box-shadow: var(--shadow-lift);
+    opacity: 0; pointer-events: none; transition: opacity .25s ease; z-index: 70;
+  }
+  .toast.show { opacity: 1; }
+  .toast.error { background: var(--danger); }
+
+  .nav-link { display: block; text-align: center; margin-top: 8px; text-decoration: none; color: var(--primary); font-size: 13.5px; }
+
+  @media (max-width: 720px) {
+    .matrix-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 480px) {
+    body { padding: 10px 6px 24px; }
+    .card { padding: 14px; }
+    h1 { font-size: 20px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    button { transition: none !important; transform: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧭 Eisenhower Matrix</h1>
+    <p class="subtitle">Sort tasks by urgency and importance to decide what to do now, schedule, delegate, or delete.</p>
+
+    <details class="help-card">
+      <summary>❓ How This Works</summary>
+      <div class="help-body">
+        <p><strong>Urgent</strong> means a task demands your immediate attention -- there are clear consequences for delaying it. <strong>Important</strong> means it moves you toward your long-term goals, even if it doesn't feel pressing today.</p>
+        <ul>
+          <li><strong>🔥 Do First</strong> (urgent &amp; important): handle these right away.</li>
+          <li><strong>📅 Schedule</strong> (important, not urgent): give these a future date and keep them on track.</li>
+          <li><strong>🤝 Delegate</strong> (urgent, not important): hand these off if you can.</li>
+          <li><strong>🗑️ Delete</strong> (neither): drop these, or write down why you won't do them.</li>
+        </ul>
+        <p>Try to keep each quadrant to around <strong>10 tasks</strong> so it stays useful at a glance, and review it regularly -- tasks drift between quadrants as deadlines get closer. Watch out for the <strong>"mere-urgency effect"</strong>: it's easy to let loud, urgent-but-unimportant tasks crowd out the quiet, important work.</p>
+      </div>
+    </details>
+
+    <!-- Quick add -->
+    <div class="card">
+      <h2>➕ Quick Add a Task</h2>
+      <div class="field-row">
+        <div class="field" style="flex: 2 1 220px;">
+          <label for="quickTitleInput">Task Title</label>
+          <input type="text" id="quickTitleInput" placeholder="e.g. Finish the client presentation">
+        </div>
+        <div class="field" style="flex: 1 1 150px;">
+          <label for="quickDueInput">Due Date (optional)</label>
+          <input type="date" id="quickDueInput">
+        </div>
+      </div>
+      <div class="field-row" style="margin-top: 12px;">
+        <div class="switch-field">
+          <label class="switch"><input type="checkbox" id="quickUrgentToggle"><span class="switch-slider"></span></label>
+          <span class="switch-label">Urgent?</span>
+        </div>
+        <div class="switch-field">
+          <label class="switch"><input type="checkbox" id="quickImportantToggle"><span class="switch-slider"></span></label>
+          <span class="switch-label">Important?</span>
+        </div>
+      </div>
+      <p class="quick-add-preview">Will go to: <strong id="quickPreview">🗑️ Delete</strong></p>
+      <div class="card-form-actions" style="margin-top: 10px;">
+        <button class="btn-add" id="quickAddBtn" type="button">➕ Add Task</button>
+      </div>
+    </div>
+
+    <div class="matrix-grid" id="matrixGrid"></div>
+
+    <div class="card">
+      <div class="actions-row">
+        <button class="btn-outline" id="backupBtn" type="button">💾 Backup</button>
+        <button class="btn-outline" id="restoreBtn" type="button">📂 Restore</button>
+        <input type="file" id="restoreFileInput" accept=".json" style="display:none;">
+        <button class="btn-outline" id="clearAllBtn" type="button">🗑️ Clear All</button>
+      </div>
+    </div>
+
+    <a href="tools.html" class="nav-link">← Back to Tools</a>
+    <div class="view-counter" style="text-align: center; margin-top: 10px;">
+      <img src="https://hits.sh/rkr2025.github.io/ksebcalculator/eisenhower-matrix.svg?style=flat-square&label=Views" alt="No. of views" loading="lazy">
+    </div>
+  </div>
+
+  <div class="move-menu" id="moveMenu"></div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ------------------------------ Shared helpers -----------------------------
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+    function dateKey(d) {
+      const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+    // Plain "YYYY-MM-DD" values parse as UTC midnight in `new Date()`, which
+    // can silently shift a day depending on the viewer's timezone -- this
+    // always builds the date from local-time components instead.
+    function parseDateOnly(value) {
+      const [y, m, d] = value.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+    const toast = document.getElementById('toast');
+    function showToast(message, isError) {
+      toast.textContent = message;
+      toast.className = 'toast show' + (isError ? ' error' : '');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => { toast.className = 'toast'; }, 2600);
+    }
+
+    // ------------------------------ Quadrant definitions -------------------------
+    // Fixed by the framework itself (unlike a freeform kanban board) -- a
+    // task's quadrant is always derived from its urgent/important flags,
+    // never stored redundantly, so the two can never drift out of sync.
+    const QUADRANTS = [
+      { id: 'do-first', title: 'Do First', subtitle: 'Urgent & Important', icon: '🔥', urgent: true, important: true },
+      { id: 'schedule', title: 'Schedule', subtitle: 'Important, Not Urgent', icon: '📅', urgent: false, important: true },
+      { id: 'delegate', title: 'Delegate', subtitle: 'Urgent, Not Important', icon: '🤝', urgent: true, important: false },
+      { id: 'delete', title: 'Delete', subtitle: 'Neither Urgent nor Important', icon: '🗑️', urgent: false, important: false },
+    ];
+    function quadrantById(id) { return QUADRANTS.find((q) => q.id === id); }
+    function quadrantFor(urgent, important) { return QUADRANTS.find((q) => q.urgent === urgent && q.important === important); }
+
+    // ------------------------------ State & storage -----------------------------
+    const STORAGE_KEY = 'eisenhowerBoard';
+    const TASK_LIMIT = 10;
+    let board = {};   // { [quadrantId]: [{id, title, dueDate}, ...] }
+    let nextTaskId = 1;
+
+    let addingTaskQuadrantId = null;
+    let editingTaskId = null;
+
+    function seedDefaultBoard() {
+      nextTaskId = 1;
+      board = { 'do-first': [], schedule: [], delegate: [], delete: [] };
+      board['do-first'].push({ id: nextTaskId++, title: 'Welcome! Click "+ Add Task" in a quadrant, or use Quick Add above.', dueDate: '' });
+    }
+
+    function loadBoard() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (stored && typeof stored === 'object') {
+          const restored = {};
+          let maxId = 0;
+          QUADRANTS.forEach((q) => {
+            restored[q.id] = Array.isArray(stored[q.id]) ? stored[q.id].map((t) => {
+              const id = Number(t.id) || 0;
+              maxId = Math.max(maxId, id);
+              return { id, title: String(t.title || ''), dueDate: String(t.dueDate || '') };
+            }) : [];
+          });
+          board = restored;
+          nextTaskId = maxId + 1;
+          return;
+        }
+      } catch { /* fall through to default */ }
+      seedDefaultBoard();
+    }
+    function saveBoard() { localStorage.setItem(STORAGE_KEY, JSON.stringify(board)); }
+
+    // ------------------------------ Rendering -----------------------------------
+    const matrixGrid = document.getElementById('matrixGrid');
+
+    function renderMatrix() {
+      matrixGrid.innerHTML = QUADRANTS.map(renderQuadrant).join('');
+    }
+
+    function renderQuadrant(q) {
+      const tasks = board[q.id] || [];
+      const isAdding = addingTaskQuadrantId === q.id;
+      const overLimit = tasks.length > TASK_LIMIT;
+      return `
+        <div class="quadrant ${q.id}" data-quadrant-id="${q.id}">
+          <div class="quadrant-header">
+            <div>
+              <div class="quadrant-title">${q.icon} ${q.title}</div>
+              <div class="quadrant-subtitle">${q.subtitle}</div>
+            </div>
+            <span class="quadrant-count${overLimit ? ' over-limit' : ''}" title="${overLimit ? `Consider limiting each quadrant to about ${TASK_LIMIT} tasks` : ''}">${tasks.length}</span>
+          </div>
+          <div class="quadrant-body" data-quadrant-id="${q.id}">
+            ${tasks.map((t) => renderTaskCard(q, t)).join('')}
+          </div>
+          <div class="add-task-btn-row">
+            ${isAdding ? renderAddTaskForm(q.id) : `<button type="button" class="btn-outline add-task-btn" data-action="show-add-task" data-quadrant-id="${q.id}">➕ Add Task</button>`}
+          </div>
+        </div>`;
+    }
+
+    function dueDateBadge(dueDate) {
+      if (!dueDate) return '';
+      const due = parseDateOnly(dueDate);
+      const today = new Date();
+      const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const diffDays = Math.round((due - todayMidnight) / 86400000);
+      const label = due.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+      if (diffDays < 0) return `<div class="task-card-due overdue">⚠️ Overdue -- ${label}</div>`;
+      if (diffDays === 0) return `<div class="task-card-due due-today">📌 Due today</div>`;
+      return `<div class="task-card-due">📅 Due ${label}</div>`;
+    }
+
+    function renderTaskCard(q, t) {
+      if (editingTaskId === t.id) {
+        return `
+          <div class="task-card" data-task-id="${t.id}" data-quadrant-id="${q.id}">
+            <input type="text" class="task-edit-title" data-task-id="${t.id}" value="${escapeHtml(t.title)}" placeholder="Task title">
+            <input type="date" class="task-edit-due" data-task-id="${t.id}" value="${escapeHtml(t.dueDate || '')}" style="margin-top:6px;">
+            <div class="card-form-actions" style="margin-top:8px;">
+              <button type="button" class="btn-outline btn-small" data-action="cancel-edit-task">Cancel</button>
+              <button type="button" class="btn-add btn-small" data-action="save-edit-task" data-task-id="${t.id}">💾 Save</button>
+            </div>
+          </div>`;
+      }
+      return `
+        <div class="task-card" draggable="true" data-task-id="${t.id}" data-quadrant-id="${q.id}">
+          <div class="task-card-title">${escapeHtml(t.title)}</div>
+          ${dueDateBadge(t.dueDate)}
+          <div class="task-card-actions">
+            <button type="button" class="icon-btn" data-action="move-task" data-task-id="${t.id}" data-quadrant-id="${q.id}" title="Move to another quadrant">⇄</button>
+            <button type="button" class="icon-btn" data-action="edit-task" data-task-id="${t.id}" title="Edit">✎</button>
+            <button type="button" class="icon-btn danger" data-action="delete-task" data-task-id="${t.id}" data-quadrant-id="${q.id}" title="Delete">🗑️</button>
+          </div>
+        </div>`;
+    }
+
+    function renderAddTaskForm(quadrantId) {
+      return `
+        <div class="add-task-form">
+          <input type="text" class="add-task-title" placeholder="Task title" data-quadrant-id="${quadrantId}">
+          <input type="date" class="add-task-due" style="margin-top:6px;">
+          <div class="card-form-actions" style="margin-top:8px;">
+            <button type="button" class="btn-outline btn-small" data-action="cancel-add-task">Cancel</button>
+            <button type="button" class="btn-add btn-small" data-action="save-add-task" data-quadrant-id="${quadrantId}">➕ Add</button>
+          </div>
+        </div>`;
+    }
+
+    // ------------------------------ Task actions ----------------------------------
+    // Pushes the task and persists, but deliberately does NOT touch UI state
+    // (open forms, input clearing) or re-render -- callers have different
+    // follow-up needs (close the quadrant's inline form vs. clear the Quick
+    // Add fields) and must update that state *before* rendering themselves.
+    function addTaskToQuadrant(quadrantId, title, dueDate) {
+      const q = quadrantById(quadrantId);
+      if (!q) return false;
+      const trimmed = title.trim();
+      if (!trimmed) { showToast('Enter a task title.', true); return false; }
+      board[quadrantId].push({ id: nextTaskId++, title: trimmed, dueDate: dueDate || '' });
+      saveBoard();
+      return true;
+    }
+
+    function submitAddTask(quadrantId) {
+      const form = matrixGrid.querySelector(`.quadrant[data-quadrant-id="${quadrantId}"] .add-task-form`);
+      if (!form) return;
+      const title = form.querySelector('.add-task-title').value.trim();
+      const dueDate = form.querySelector('.add-task-due').value;
+      if (addTaskToQuadrant(quadrantId, title, dueDate)) {
+        addingTaskQuadrantId = null;
+        renderMatrix();
+      }
+    }
+
+    function deleteTask(quadrantId, taskId) {
+      const tasks = board[quadrantId];
+      if (!tasks) return;
+      board[quadrantId] = tasks.filter((t) => t.id !== taskId);
+      if (editingTaskId === taskId) editingTaskId = null;
+      saveBoard();
+      renderMatrix();
+    }
+
+    function submitEditTask(taskId) {
+      const cardEl = matrixGrid.querySelector(`.task-card[data-task-id="${taskId}"]`);
+      if (!cardEl) return;
+      let task = null;
+      QUADRANTS.forEach((q) => { const f = board[q.id].find((t) => t.id === taskId); if (f) task = f; });
+      if (!task) return;
+      const title = cardEl.querySelector('.task-edit-title').value.trim();
+      const dueDate = cardEl.querySelector('.task-edit-due').value;
+      if (!title) { showToast('Task title cannot be empty.', true); return; }
+      task.title = title;
+      task.dueDate = dueDate;
+      editingTaskId = null;
+      saveBoard();
+      renderMatrix();
+    }
+
+    // Shared by drag-and-drop and the "Move to..." menu (the touch-friendly
+    // fallback, since native HTML5 drag-and-drop is unreliable on mobile).
+    // Moving a task into a quadrant IS how you reclassify it -- there's no
+    // separate urgent/important editor once a task already exists.
+    function moveTask(fromQuadrantId, taskId, toQuadrantId, index) {
+      const fromTasks = board[fromQuadrantId];
+      const toQuad = quadrantById(toQuadrantId);
+      const toTasks = board[toQuadrantId];
+      if (!fromTasks || !toQuad || !toTasks) return;
+      const taskIdx = fromTasks.findIndex((t) => t.id === taskId);
+      if (taskIdx === -1) return;
+      const [task] = fromTasks.splice(taskIdx, 1);
+      let insertAt = index;
+      if (fromTasks === toTasks && taskIdx < insertAt) insertAt -= 1;
+      toTasks.splice(Math.max(0, Math.min(insertAt, toTasks.length)), 0, task);
+      saveBoard();
+      renderMatrix();
+    }
+
+    // ------------------------------ Move-to menu ----------------------------------
+    const moveMenu = document.getElementById('moveMenu');
+
+    function openMoveMenu(taskId, fromQuadrantId, btnEl) {
+      const rect = btnEl.getBoundingClientRect();
+      const others = QUADRANTS.filter((q) => q.id !== fromQuadrantId);
+      moveMenu.innerHTML = others.map((q) => `<button type="button" class="move-menu-item" data-target="${q.id}">${q.icon} ${escapeHtml(q.title)}</button>`).join('');
+      moveMenu.style.top = `${window.scrollY + rect.bottom + 4}px`;
+      moveMenu.style.left = `${window.scrollX + rect.left}px`;
+      moveMenu.dataset.taskId = String(taskId);
+      moveMenu.dataset.fromQuadrantId = fromQuadrantId;
+      moveMenu.classList.add('show');
+    }
+
+    moveMenu.addEventListener('click', (e) => {
+      const btn = e.target.closest('.move-menu-item[data-target]');
+      if (!btn) return;
+      moveTask(moveMenu.dataset.fromQuadrantId, Number(moveMenu.dataset.taskId), btn.dataset.target, Infinity);
+      moveMenu.classList.remove('show');
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.move-menu') && !e.target.closest('[data-action="move-task"]')) {
+        moveMenu.classList.remove('show');
+      }
+    });
+
+    // ------------------------------ Click / keydown delegation --------------------
+    matrixGrid.addEventListener('click', (e) => {
+      const actionEl = e.target.closest('[data-action]');
+      if (!actionEl) return;
+      const action = actionEl.dataset.action;
+      const quadrantId = actionEl.dataset.quadrantId;
+      const taskId = Number(actionEl.dataset.taskId);
+
+      if (action === 'show-add-task') {
+        addingTaskQuadrantId = quadrantId;
+        renderMatrix();
+        const el = matrixGrid.querySelector(`.quadrant[data-quadrant-id="${quadrantId}"] .add-task-title`);
+        if (el) el.focus();
+      } else if (action === 'cancel-add-task') {
+        addingTaskQuadrantId = null;
+        renderMatrix();
+      } else if (action === 'save-add-task') {
+        submitAddTask(quadrantId);
+      } else if (action === 'edit-task') {
+        editingTaskId = taskId;
+        renderMatrix();
+        const el = matrixGrid.querySelector(`.task-edit-title[data-task-id="${taskId}"]`);
+        if (el) { el.focus(); el.select(); }
+      } else if (action === 'cancel-edit-task') {
+        editingTaskId = null;
+        renderMatrix();
+      } else if (action === 'save-edit-task') {
+        submitEditTask(taskId);
+      } else if (action === 'delete-task') {
+        deleteTask(quadrantId, taskId);
+      } else if (action === 'move-task') {
+        openMoveMenu(taskId, quadrantId, actionEl);
+      }
+    });
+
+    matrixGrid.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        if (e.target.classList.contains('add-task-title') || e.target.classList.contains('add-task-due')) { e.preventDefault(); submitAddTask(e.target.closest('.quadrant').dataset.quadrantId); }
+        else if (e.target.classList.contains('task-edit-title') || e.target.classList.contains('task-edit-due')) { e.preventDefault(); submitEditTask(Number(e.target.dataset.taskId)); }
+      } else if (e.key === 'Escape') {
+        if (e.target.classList.contains('add-task-title') || e.target.classList.contains('add-task-due')) { addingTaskQuadrantId = null; renderMatrix(); }
+        else if (e.target.classList.contains('task-edit-title') || e.target.classList.contains('task-edit-due')) { editingTaskId = null; renderMatrix(); }
+      }
+    });
+
+    // ------------------------------ Drag & drop -----------------------------------
+    let draggingTaskId = null;
+    let draggingFromQuadrantId = null;
+
+    matrixGrid.addEventListener('dragstart', (e) => {
+      const card = e.target.closest('.task-card[draggable="true"]');
+      if (!card) return;
+      draggingTaskId = Number(card.dataset.taskId);
+      draggingFromQuadrantId = card.dataset.quadrantId;
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', String(draggingTaskId));
+    });
+
+    matrixGrid.addEventListener('dragend', (e) => {
+      const card = e.target.closest('.task-card');
+      if (card) card.classList.remove('dragging');
+      matrixGrid.querySelectorAll('.quadrant-body.drag-over').forEach((el) => el.classList.remove('drag-over'));
+      draggingTaskId = null;
+      draggingFromQuadrantId = null;
+    });
+
+    matrixGrid.addEventListener('dragover', (e) => {
+      const body = e.target.closest('.quadrant-body');
+      if (!body || draggingTaskId === null) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      body.classList.add('drag-over');
+    });
+
+    matrixGrid.addEventListener('dragleave', (e) => {
+      const body = e.target.closest('.quadrant-body');
+      if (body && !body.contains(e.relatedTarget)) body.classList.remove('drag-over');
+    });
+
+    matrixGrid.addEventListener('drop', (e) => {
+      const body = e.target.closest('.quadrant-body');
+      if (!body || draggingTaskId === null) return;
+      e.preventDefault();
+      body.classList.remove('drag-over');
+      const targetQuadrantId = body.dataset.quadrantId;
+      const insertIndex = computeInsertIndex(body, e.clientY);
+      moveTask(draggingFromQuadrantId, draggingTaskId, targetQuadrantId, insertIndex);
+    });
+
+    function computeInsertIndex(body, clientY) {
+      const cards = [...body.querySelectorAll('.task-card:not(.dragging)')];
+      for (let i = 0; i < cards.length; i++) {
+        const rect = cards[i].getBoundingClientRect();
+        if (clientY < rect.top + rect.height / 2) return i;
+      }
+      return cards.length;
+    }
+
+    // ------------------------------ Quick add ---------------------------------
+    const quickTitleInput = document.getElementById('quickTitleInput');
+    const quickDueInput = document.getElementById('quickDueInput');
+    const quickUrgentToggle = document.getElementById('quickUrgentToggle');
+    const quickImportantToggle = document.getElementById('quickImportantToggle');
+    const quickPreview = document.getElementById('quickPreview');
+
+    function updateQuickPreview() {
+      const q = quadrantFor(quickUrgentToggle.checked, quickImportantToggle.checked);
+      quickPreview.textContent = `${q.icon} ${q.title}`;
+    }
+    quickUrgentToggle.addEventListener('change', updateQuickPreview);
+    quickImportantToggle.addEventListener('change', updateQuickPreview);
+
+    document.getElementById('quickAddBtn').addEventListener('click', () => {
+      const q = quadrantFor(quickUrgentToggle.checked, quickImportantToggle.checked);
+      if (addTaskToQuadrant(q.id, quickTitleInput.value, quickDueInput.value)) {
+        quickTitleInput.value = '';
+        quickDueInput.value = '';
+        quickTitleInput.focus();
+        renderMatrix();
+      }
+    });
+    quickTitleInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('quickAddBtn').click();
+    });
+
+    // ----------------------------- Backup / restore / clear -----------------------------
+    document.getElementById('backupBtn').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(board, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `eisenhower-matrix-backup-${dateKey(new Date())}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Backed up.');
+    });
+
+    const restoreFileInput = document.getElementById('restoreFileInput');
+    document.getElementById('restoreBtn').addEventListener('click', () => restoreFileInput.click());
+    restoreFileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const restored = JSON.parse(e.target.result);
+          if (!restored || typeof restored !== 'object') throw new Error('Invalid backup file.');
+          const rebuilt = { 'do-first': [], schedule: [], delegate: [], delete: [] };
+          QUADRANTS.forEach((q) => {
+            if (Array.isArray(restored[q.id])) {
+              rebuilt[q.id] = restored[q.id].map((t) => ({ id: nextTaskId++, title: String(t.title || ''), dueDate: String(t.dueDate || '') })).filter((t) => t.title);
+            }
+          });
+          board = rebuilt;
+          addingTaskQuadrantId = null;
+          editingTaskId = null;
+          saveBoard();
+          renderMatrix();
+          showToast('Restored.');
+        } catch (err) {
+          console.error('Error parsing restore file:', err);
+          showToast('Error restoring: invalid JSON file.', true);
+        }
+      };
+      reader.onerror = () => showToast('Error reading file.', true);
+      reader.readAsText(file);
+      restoreFileInput.value = '';
+    });
+
+    document.getElementById('clearAllBtn').addEventListener('click', () => {
+      if (!confirm('Clear all tasks from every quadrant? This cannot be undone.')) return;
+      board = { 'do-first': [], schedule: [], delegate: [], delete: [] };
+      addingTaskQuadrantId = null;
+      editingTaskId = null;
+      saveBoard();
+      renderMatrix();
+      showToast('Cleared.');
+    });
+
+    // --------------------------------- Init ---------------------------------
+    loadBoard();
+    renderMatrix();
+    updateQuickPreview();
+  </script>
+</body>
+</html>
