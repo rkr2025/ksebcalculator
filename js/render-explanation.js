@@ -44,19 +44,32 @@ function billTypeItem(bill) {
     return null;
 }
 
+// Same T1 (Normal) / T2 (Peak) / T3 (Off-Peak) breakdown shown under these
+// same three rows in the Bill Summary table itself (see render-results.js's
+// todSubLabel()) -- blank for Normal billing, which only ever has a single
+// combined reading with no timezone split to show.
+function todBreakdown(bill, normalField, peakField, offPeakField) {
+    if (bill.billingType !== 'tod') return '';
+    return ` (T1: ${u(bill[normalField])} + T2: ${u(bill[peakField])} + T3: ${u(bill[offPeakField])})`;
+}
+
 function usageItems(bill) {
+    const solarBreakdown = todBreakdown(bill, 'solarNormal', 'solarPeak', 'solarOffPeak');
+    const importBreakdown = todBreakdown(bill, 'importNormal', 'importPeak', 'importOffPeak');
+    const exportBreakdown = todBreakdown(bill, 'exportNormal', 'exportPeak', 'exportOffPeak');
+
     return [
         {
-            en: `<strong>Solar Generation (${u(bill.solarGeneration)} units):</strong> the electricity your rooftop panels produced this month, as read directly off your solar generation meter.`,
-            ml: `<strong>Solar Generation (${u(bill.solarGeneration)} യൂണിറ്റ്):</strong> ഈ മാസം നിങ്ങളുടെ മേൽക്കൂരയിലെ സോളാർ പാനലുകൾ ഉത്പാദിപ്പിച്ച വൈദ്യുതി, സോളാർ ജനറേഷൻ മീറ്ററിൽ നിന്ന് നേരിട്ട് എടുത്തത് .`,
+            en: `<strong>Solar Generation (${u(bill.solarGeneration)} units${solarBreakdown}):</strong> the electricity your rooftop panels produced this month, as read directly off your solar generation meter.`,
+            ml: `<strong>Solar Generation (${u(bill.solarGeneration)} യൂണിറ്റ്${solarBreakdown}):</strong> ഈ മാസം നിങ്ങളുടെ മേൽക്കൂരയിലെ സോളാർ പാനലുകൾ ഉത്പാദിപ്പിച്ച വൈദ്യുതി, സോളാർ ജനറേഷൻ മീറ്ററിൽ നിന്ന് നേരിട്ട് എടുത്തത് .`,
         },
         {
-            en: `<strong>Import Total (${u(bill.importReading)} units):</strong> the electricity you drew from the KSEB grid — the part of your usage that your own solar power didn't cover.`,
-            ml: `<strong>Import Total (${u(bill.importReading)} യൂണിറ്റ്):</strong> KSEB ഗ്രിഡിൽ നിന്ന് നിങ്ങൾ എടുത്ത വൈദ്യുതി — നിങ്ങളുടെ സ്വന്തം സോളാർ കവർ ചെയ്യാതെ പോയ ഭാഗം.`,
+            en: `<strong>Import Total (${u(bill.importReading)} units${importBreakdown}):</strong> the electricity you drew from the KSEB grid — the part of your usage that your own solar power didn't cover.`,
+            ml: `<strong>Import Total (${u(bill.importReading)} യൂണിറ്റ്${importBreakdown}):</strong> KSEB ഗ്രിഡിൽ നിന്ന് നിങ്ങൾ എടുത്ത വൈദ്യുതി — നിങ്ങളുടെ സ്വന്തം സോളാർ കവർ ചെയ്യാതെ പോയ ഭാഗം.`,
         },
         {
-            en: `<strong>Export Total (${u(bill.exportReading)} units):</strong> solar power your panels generated but you didn't use immediately at home, so it was sent back out to the KSEB grid instead.`,
-            ml: `<strong>Export Total (${u(bill.exportReading)} യൂണിറ്റ്):</strong> നിങ്ങളുടെ പാനലുകൾ ഉത്പാദിപ്പിച്ചെങ്കിലും വീട്ടിൽ ഉടനടി ഉപയോഗിക്കാതെ, പകരം KSEB ഗ്രിഡിലേക്ക് തിരികെ അയച്ച സോളാർ വൈദ്യുതി.`,
+            en: `<strong>Export Total (${u(bill.exportReading)} units${exportBreakdown}):</strong> solar power your panels generated but you didn't use immediately at home, so it was sent back out to the KSEB grid instead.`,
+            ml: `<strong>Export Total (${u(bill.exportReading)} യൂണിറ്റ്${exportBreakdown}):</strong> നിങ്ങളുടെ പാനലുകൾ ഉത്പാദിപ്പിച്ചെങ്കിലും വീട്ടിൽ ഉടനടി ഉപയോഗിക്കാതെ, പകരം KSEB ഗ്രിഡിലേക്ക് തിരികെ അയച്ച സോളാർ വൈദ്യുതി.`,
         },
         {
             en: `<strong>Direct Usage from Solar = Solar Generation − Export = ${u(bill.solarGeneration)} − ${u(bill.exportReading)} = ${u(bill.generationUsage)} units:</strong> this is the share of your own solar power that you actually used directly, without it ever leaving for the grid.`,
