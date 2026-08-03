@@ -390,13 +390,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Bill Explanation / ToD Calculation Explained language toggles
-    // (English/Malayalam), same look as the FAQ one above -- delegated
-    // rather than bound directly, since both panels' HTML is replaced
-    // fresh on every "Calculate Bill" click (each recalculation's markup
-    // already defaults to Malayalam active, so no extra initial-state JS
-    // is needed here). Both panels share the same bill-explain-lang-*
-    // markup shape, so one listener factory covers both.
+    // Bill Explanation / ToD Calculation Explained / Wheeling Calculation
+    // Explained language toggles (English/Malayalam), same look as the FAQ
+    // one above -- delegated rather than bound directly, since all three
+    // panels' HTML is replaced fresh on every "Calculate Bill" click (each
+    // recalculation's markup already defaults to Malayalam active, so no
+    // extra initial-state JS is needed here). All three panels share the
+    // same bill-explain-lang-* markup shape, so one listener factory
+    // covers them all.
     function wireBillLangToggle(containerId) {
         const container = document.getElementById(containerId);
         container.addEventListener('click', (e) => {
@@ -409,5 +410,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     wireBillLangToggle('billExplanation');
     wireBillLangToggle('result2');
+    wireBillLangToggle('wheelingBreakdown');
 
 });

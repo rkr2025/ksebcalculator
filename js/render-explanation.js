@@ -5,6 +5,8 @@
 // Pure string builder from a `bill` object, same contract as the other
 // render-*.js modules.
 
+import { WHEELING_RATE_PER_UNIT } from './tariff-rates.js';
+
 function u(n) {
     return `${(n || 0).toFixed(2)}`;
 }
@@ -22,13 +24,17 @@ function pct(rate) {
 //   so buildExplainTable can highlight it in red -- reusing the site's
 //   existing .red-text convention from render-tables.js -- whenever that
 //   amount is greater than zero, making "what am I actually being charged
-//   for" visible at a glance.
+//   for" visible at a glance. `favorable: true` is the opposite case (a
+//   saving, not a cost) and highlights in green instead, reusing the same
+//   .green-text convention render-tables.js already uses for good news.
 function wideRow(en, ml) {
     return { wide: true, en, ml };
 }
-function dataRow({ label, detail, amountValue = null, isCharge = false, en, ml }) {
+function dataRow({
+    label, detail, amountValue = null, isCharge = false, favorable = false, en, ml,
+}) {
     return {
-        label, detail, amountValue, isCharge, en, ml,
+        label, detail, amountValue, isCharge, favorable, en, ml,
     };
 }
 
@@ -37,8 +43,10 @@ function buildExplainTable(rows, lang) {
         if (row.wide) {
             return `<tr><td colspan="2" class="bill-explain-wide">${row[lang]}</td></tr>`;
         }
-        const highlighted = row.isCharge && row.amountValue > 0;
-        const detailHtml = highlighted ? `<span class="red-text">${row.detail}</span>` : row.detail;
+        const highlightClass = row.isCharge && row.amountValue > 0
+            ? 'red-text'
+            : (row.favorable && row.amountValue > 0 ? 'green-text' : null);
+        const detailHtml = highlightClass ? `<span class="${highlightClass}">${row.detail}</span>` : row.detail;
         return `
             <tr>
                 <td class="bill-explain-desc"><strong>${row.label}</strong><div class="bill-explain-desc-text">${row[lang]}</div></td>
@@ -419,6 +427,91 @@ function totalBillFromEnergyChargeItems(bill, energyCharge) {
     return items;
 }
 
+// Walks through wheeling-calculator.js's per-site algorithm: the bank
+// surplus is offered to each site IN ORDER, distribution loss is deducted
+// before it reaches a site, whatever's left over carries forward as the
+// next site's opening balance, and the site is billed before/after to work
+// out how much wheeling actually saved there. Narrated with the bill's own
+// wheelingResult numbers so a multi-site transfer is easy to follow.
+function wheelingNettingItems(wheelingResult) {
+    const rows = [
+        wideRow(
+            `<strong>What is Wheeling?</strong> Wheeling lets you transfer your banked solar surplus to other KSEB connections you own or manage, so it offsets <em>their</em> bills instead of just sitting as your own banked credit. KSEB deducts a distribution loss for transporting that power through their network, and charges a small per-unit fee for the service.`,
+            `<strong>എന്താണ് Wheeling?</strong> നിങ്ങളുടെ ബാങ്ക് ചെയ്ത സോളാർ മിച്ചം മറ്റ് KSEB കണക്ഷനുകളിലേക്ക് കൈമാറാൻ Wheeling അനുവദിക്കുന്നു — അത് നിങ്ങളുടെ സ്വന്തം ബാങ്ക് ബാലൻസായി കിടക്കുന്നതിന് പകരം <em>ആ കണക്ഷനുകളുടെ</em> ബില്ല് കുറയ്ക്കാൻ ഉപയോഗിക്കുന്നു. ആ വൈദ്യുതി ശൃംഖലയിലൂടെ എത്തിക്കുന്നതിന് KSEB ഒരു distribution loss കുറയ്ക്കുകയും, സേവനത്തിന് ഒരു ചെറിയ യൂണിറ്റ്-അടിസ്ഥാന ചാർജ് ഈടാക്കുകയും ചെയ്യുന്നു.`,
+        ),
+        wideRow(
+            `<strong>Order and Carryover:</strong> your bank surplus is offered to each site in the order you listed them. Whatever's left at a site after its own distribution loss carries forward as the opening balance for the next site — so the order matters.`,
+            `<strong>ക്രമവും കൈമാറ്റവും:</strong> നിങ്ങളുടെ ബാങ്ക് മിച്ചം നിങ്ങൾ ലിസ്റ്റ് ചെയ്ത ക്രമത്തിൽ തന്നെ ഓരോ സൈറ്റിനും നൽകുന്നു. ഒരു സൈറ്റിന്റെ സ്വന്തം distribution loss കഴിഞ്ഞ് ബാക്കിയാവുന്നത് അടുത്ത സൈറ്റിന്റെ ആരംഭ ബാലൻസായി കൈമാറും — അതിനാൽ ക്രമം പ്രധാനമാണ്.`,
+        ),
+    ];
+
+    wheelingResult.sites.forEach((site) => {
+        const transformerNote = site.sameTransformer ? 'same transformer' : 'a different transformer';
+        const transformerNoteMl = site.sameTransformer ? 'ഒരേ transformer' : 'വ്യത്യസ്ത transformer';
+        rows.push(
+            dataRow({
+                label: `${site.name} — Bank Available`,
+                detail: `${u(site.bankOpening)} units`,
+                en: `the balance offered to this site before any loss is deducted — either your own closing bank surplus (for the first site) or whatever the previous site left over.`,
+                ml: `നഷ്ടം കുറയ്ക്കുന്നതിന് മുൻപ് ഈ സൈറ്റിന് നൽകുന്ന ബാലൻസ് — ആദ്യ സൈറ്റിനെങ്കിൽ നിങ്ങളുടെ സ്വന്തം ബാങ്ക് മിച്ചം, അല്ലെങ്കിൽ മുൻ സൈറ്റിൽ നിന്ന് ബാക്കിയായത്.`,
+            }),
+            dataRow({
+                label: `${site.name} — After ${site.distLossPct}% Distribution Loss`,
+                detail: `${u(site.availableForWheeling)} units`,
+                en: `${u(site.bankOpening)} × (100% − ${site.distLossPct}%) = ${u(site.availableForWheeling)} units — this site is on ${transformerNote}, so KSEB deducts ${site.distLossPct}% for the transport before any of it can be wheeled.`,
+                ml: `${u(site.bankOpening)} × (100% − ${site.distLossPct}%) = ${u(site.availableForWheeling)} യൂണിറ്റ് — ഈ സൈറ്റ് ${transformerNoteMl} ആയതിനാൽ, wheel ചെയ്യുന്നതിന് മുൻപ് തന്നെ KSEB ${site.distLossPct}% transport-നായി കുറയ്ക്കുന്നു.`,
+            }),
+            dataRow({
+                label: `${site.name} — Units Wheeled`,
+                detail: `${u(site.wheelingUnitsAdjusted)} units`,
+                en: `the smaller of what's available (${u(site.availableForWheeling)} units) and what this site actually consumed (${u(site.totalSiteUnits)} units) — you can't wheel in more than the site needs.`,
+                ml: `ലഭ്യമായത് (${u(site.availableForWheeling)} യൂണിറ്റ്), ഈ സൈറ്റ് യഥാർത്ഥത്തിൽ ഉപയോഗിച്ചത് (${u(site.totalSiteUnits)} യൂണിറ്റ്) എന്നിവയിൽ ചെറുത് — സൈറ്റിന് ആവശ്യമുള്ളതിലും കൂടുതൽ wheel ചെയ്യാനാവില്ല.`,
+            }),
+            dataRow({
+                label: `${site.name} — Savings`,
+                detail: m(site.saving),
+                amountValue: site.saving,
+                favorable: true,
+                en: `billed before wheeling (${m(site.before.total)}) minus billed after wheeling (${m(site.after.total)}) — how much this site's own bill dropped because of the units wheeled to it.`,
+                ml: `wheeling-ന് മുൻപ് ബില്ല് ചെയ്തത് (${m(site.before.total)}) മൈനസ് wheeling-ന് ശേഷം ബില്ല് ചെയ്തത് (${m(site.after.total)}) — wheel ചെയ്ത യൂണിറ്റുകൾ കാരണം ഈ സൈറ്റിന്റെ സ്വന്തം ബില്ലിൽ ഉണ്ടായ കുറവ്.`,
+            }),
+        );
+    });
+
+    rows.push(
+        dataRow({
+            label: 'Total Units Wheeled',
+            detail: `${u(wheelingResult.totalAdjustedUnits)} units`,
+            en: `the sum of the units actually wheeled across all sites above.`,
+            ml: `മുകളിലെ എല്ലാ സൈറ്റുകളിലേക്കും യഥാർത്ഥത്തിൽ wheel ചെയ്ത യൂണിറ്റുകളുടെ ആകെത്തുക.`,
+        }),
+        dataRow({
+            label: 'Total Energy Lost in Transit',
+            detail: `${u(wheelingResult.totalEnergyLost)} units`,
+            en: `bank units that never reached any site and never came back to you either — consumed entirely by distribution loss along the way.`,
+            ml: `ഒരു സൈറ്റിലും എത്താതെയും തിരികെ നിങ്ങൾക്ക് ലഭിക്കാതെയും distribution loss ആയി പൂർണ്ണമായി നഷ്ടപ്പെട്ട ബാങ്ക് യൂണിറ്റുകൾ.`,
+        }),
+        dataRow({
+            label: 'Total Savings at Wheeled Sites',
+            detail: m(wheelingResult.totalSaving),
+            amountValue: wheelingResult.totalSaving,
+            favorable: true,
+            en: `adding up every site's individual savings above — the combined benefit of wheeling, before its own charge is deducted below.`,
+            ml: `മുകളിലെ ഓരോ സൈറ്റിന്റെയും savings കൂട്ടിച്ചേർത്തത് — Wheeling-ന്റെ ആകെ പ്രയോജനം, താഴെയുള്ള അതിന്റെ സ്വന്തം ചാർജ് കുറയ്ക്കുന്നതിന് മുൻപ്.`,
+        }),
+        dataRow({
+            label: 'Wheeling Charge',
+            detail: m(wheelingResult.wheelingCharge),
+            amountValue: wheelingResult.wheelingCharge,
+            isCharge: true,
+            en: `(${u(wheelingResult.totalAdjustedUnits)} units wheeled + ${u(wheelingResult.totalEnergyLost)} units lost) × ${m(WHEELING_RATE_PER_UNIT)}/unit — KSEB charges this fee on both the units that reached a site AND the units lost in transit, added to your own bill above.`,
+            ml: `(wheel ചെയ്ത ${u(wheelingResult.totalAdjustedUnits)} യൂണിറ്റ് + നഷ്ടപ്പെട്ട ${u(wheelingResult.totalEnergyLost)} യൂണിറ്റ്) × ${m(WHEELING_RATE_PER_UNIT)}/യൂണിറ്റ് — സൈറ്റിൽ എത്തിയ യൂണിറ്റുകൾക്കും transit-ൽ നഷ്ടപ്പെട്ട യൂണിറ്റുകൾക്കും KSEB ഈ ചാർജ് ഈടാക്കുന്നു, ഇത് നിങ്ങളുടെ സ്വന്തം ബില്ലിലേക്ക് കൂട്ടിച്ചേർക്കും.`,
+        }),
+    );
+
+    return rows;
+}
+
 // Shared by both panels below -- keeps the table look, the language toggle,
 // and the red-highlight-if-charged convention identical between them.
 const EXPLAIN_STYLE_BLOCK = `
@@ -469,6 +562,31 @@ export function buildTodCalculationExplanation(bill) {
         <div class="bill-chart">
             <h5><u>🗣️ ToD (T1/T2/T3) Calculation Explained</u></h5>
             <div class="bill-explain-lang-toggle" role="group" aria-label="ToD calculation explanation language">
+                <button type="button" class="bill-explain-lang-btn active" data-bill-lang="ml">മലയാളം</button>
+                <button type="button" class="bill-explain-lang-btn" data-bill-lang="en">English</button>
+            </div>
+            <div data-bill-lang-content="en" hidden>${englishTable}</div>
+            <div data-bill-lang-content="ml">${malayalamTable}</div>
+        </div>`;
+}
+
+// Only meaningful when a wheeling transfer actually happened this bill.
+// Reuses the same bill-explain-lang-* markup/classes as the other two
+// panels, styled by buildBillExplanation()'s shared <style> block -- which
+// always renders on the same page as this one, since both this panel and
+// renderWheelingResult() (the raw per-site table it sits alongside) are
+// gated on the same bill.wheelingResult.sites.length check.
+export function buildWheelingCalculationExplanation(bill) {
+    if (!bill || !bill.wheelingResult || !bill.wheelingResult.sites || bill.wheelingResult.sites.length === 0) return '';
+
+    const rows = wheelingNettingItems(bill.wheelingResult);
+    const englishTable = buildExplainTable(rows, 'en');
+    const malayalamTable = buildExplainTable(rows, 'ml');
+
+    return `
+        <div class="bill-chart">
+            <h5><u>🗣️ Wheeling Summary Calculation Explained</u></h5>
+            <div class="bill-explain-lang-toggle" role="group" aria-label="Wheeling calculation explanation language">
                 <button type="button" class="bill-explain-lang-btn active" data-bill-lang="ml">മലയാളം</button>
                 <button type="button" class="bill-explain-lang-btn" data-bill-lang="en">English</button>
             </div>
