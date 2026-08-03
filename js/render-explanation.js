@@ -159,6 +159,153 @@ function buildList(items) {
     return `<ol class="bill-explain-list">${items.map((item) => `<li>${item}</li>`).join('')}</ol>`;
 }
 
+// Walks through the T1/T2/T3 netting algorithm those dense adjustment
+// tables (js/render-tables.js) actually implement -- export+bank offsets
+// Normal import first, only 80% of any leftover carries into Peak (above
+// 20kW connections only -- see calculator.js's computeTodBelow20kWAbove250
+// comment on why that 80% cut doesn't apply below 20kW), then whatever's
+// left after Peak carries fully into Off-Peak.
+function todNettingItems(bill) {
+    const above20kW = bill.todBillingAbove20kW > 0;
+    const normalUnits = bill.Normal_NoOfUnitsFor_energy_calculation;
+    const peakUnits = above20kW ? bill.Peak_NoOfUnitsFor_energy_calculation : bill.Peak_NoOfUnitsFor_energy_calculation_Below20kW;
+    const offPeakUnits = above20kW ? bill.OffPeak_NoOfUnitsFor_energy_calculation : bill.OffPeak_NoOfUnitsFor_energy_calculation_Below20kW;
+    const totalUnits = above20kW ? bill.bankAdjustedUnits : bill.bankAdjustedUnits_Below20kW;
+    const energyCharge = above20kW ? bill.energyCharge : bill.energyCharge_Below20kW;
+
+    // Same per-zone rate/charge fields the Energy Calculation Details table
+    // (getEnergyCaluculationMessage in render-tables.js) is built from --
+    // narrated here in prose with the bill's own numbers plugged in, instead
+    // of read off a 4-column table, so the arithmetic is easy to follow.
+    const unitRate = above20kW ? bill.unitRate : bill.unitRate_Below20kW;
+    const normalRate = unitRate * 0.9;
+    const peakRate = unitRate * 1.25;
+    const normalCharge = bill.NormalConsumptionAdjusted_energy_charge;
+    const peakCharge = above20kW ? bill.PeakConsumptionAdjusted_energy_charge : bill.PeakConsumptionAdjusted_energy_charge_Below20kW;
+    const offPeakCharge = above20kW ? bill.OffPeakConsumptionAdjusted_energy_charge : bill.OffPeakConsumptionAdjusted_energy_charge_Below20kW;
+
+    const carryoverItem = above20kW ? {
+        en: `<strong>Only 80% carries forward into Peak:</strong> whatever's left over after offsetting Normal doesn't carry into Peak at full value — only 80% of it does. This is KSEB's rule for connections above 20kW, so your solar surplus stretches a little less far into covering Peak-hour usage.`,
+        ml: `<strong>Peak-ലേക്ക് 80% മാത്രം കൈമാറും:</strong> Normal-നെതിരെ തട്ടിക്കിഴിച്ചതിന് ശേഷം ബാക്കിയാവുന്നത് മുഴുവനും Peak-ലേക്ക് കൈമാറില്ല — അതിന്റെ 80% മാത്രമേ കൈമാറൂ. 20kW-ന് മുകളിലുള്ള കണക്ഷനുകൾക്കുള്ള KSEB-യുടെ നിയമമാണിത്, ഇത് നിങ്ങളുടെ സോളാർ മിച്ചം Peak-സമയ ഉപയോഗം കവർ ചെയ്യുന്നതിൽ അല്പം കുറവ് വരുത്തും.`,
+    } : {
+        en: `<strong>Full carryover into Peak (no 80% cut):</strong> for connections at or below 20kW, the entire Normal leftover carries into Peak at full value — unlike above-20kW connections, there's no 80% reduction here.`,
+        ml: `<strong>Peak-ലേക്ക് പൂർണ്ണമായി കൈമാറും (80% കുറവ് ഇല്ല):</strong> 20kW-യോ അതിൽ താഴെയോ ഉള്ള കണക്ഷനുകൾക്ക്, Normal-ൽ നിന്ന് ബാക്കിയാവുന്നത് മുഴുവനും Peak-ലേക്ക് പൂർണ്ണമായി കൈമാറും — 20kW-ന് മുകളിലുള്ളവയിൽ നിന്ന് വ്യത്യസ്തമായി ഇവിടെ 80% കുറവ് ഇല്ല.`,
+    };
+
+    return [
+        {
+            en: `<strong>Three Time Zones, Three Rates:</strong> ToD billing splits your usage into T1 – Normal (6am–6pm, billed at 90% of the base rate), T2 – Peak (6pm–10pm, billed at 125% — electricity costs the most to supply then), and T3 – Off-Peak (10pm–6am, billed at the standard 100% rate).`,
+            ml: `<strong>മൂന്ന് സമയമേഖലകൾ, മൂന്ന് നിരക്കുകൾ:</strong> ToD ബില്ലിംഗ് നിങ്ങളുടെ ഉപയോഗത്തെ T1 – Normal (രാവിലെ 6 മുതൽ വൈകിട്ട് 6 വരെ, അടിസ്ഥാന നിരക്കിന്റെ 90%), T2 – Peak (വൈകിട്ട് 6 മുതൽ രാത്രി 10 വരെ, 125% — ഈ സമയത്ത് വൈദ്യുതി വിതരണച്ചെലവ് ഏറ്റവും കൂടുതലായതിനാൽ), T3 – Off-Peak (രാത്രി 10 മുതൽ രാവിലെ 6 വരെ, സാധാരണ 100% നിരക്ക്) എന്നിങ്ങനെ മൂന്നായി തിരിക്കുന്നു.`,
+        },
+        {
+            en: `<strong>Your Export + Bank offsets Import — in a strict order:</strong> KSEB doesn't net your solar export and banked units against your total import all at once. It offsets T1 (Normal) import first; anything left over next offsets T2 (Peak) import; and whatever remains after that finally offsets T3 (Off-Peak) import.`,
+            ml: `<strong>Export + Bank, Import-നെ ഒരു നിശ്ചിത ക്രമത്തിൽ തട്ടിക്കിഴിക്കുന്നു:</strong> നിങ്ങളുടെ സോളാർ export ഉം ബാങ്ക് യൂണിറ്റുകളും മൊത്തം import-നെതിരെ ഒറ്റയടിക്ക് തട്ടിക്കിഴിക്കില്ല. ആദ്യം T1 (Normal) import-നെതിരെ തട്ടിക്കിഴിക്കും; ബാക്കിയുള്ളത് അടുത്തതായി T2 (Peak) import-നെതിരെയും; അതിന് ശേഷം ബാക്കിയുള്ളത് അവസാനം T3 (Off-Peak) import-നെതിരെയും തട്ടിക്കിഴിക്കും.`,
+        },
+        carryoverItem,
+        {
+            en: `<strong>Whatever's still unmet after netting is what gets billed:</strong> in each zone, if your import is more than your export/bank could offset, the shortfall is charged at that zone's own rate — 90% for Normal, 125% for Peak, 100% for Off-Peak — and the three zones' charges add up to your total Energy Charge.`,
+            ml: `<strong>തട്ടിക്കിഴിച്ചതിന് ശേഷം ബാക്കിയുള്ളതാണ് ബില്ല് ചെയ്യുന്നത്:</strong> ഓരോ മേഖലയിലും, export/bank കൊണ്ട് തട്ടിക്കിഴിക്കാൻ കഴിയാത്തത്ര import ഉണ്ടെങ്കിൽ, ആ കുറവ് ആ മേഖലയുടെ സ്വന്തം നിരക്കിൽ ചാർജ് ചെയ്യും — Normal-ന് 90%, Peak-ന് 125%, Off-Peak-ന് 100% — ഈ മൂന്ന് മേഖലകളിലെയും ചാർജുകൾ കൂട്ടിച്ചേർത്താണ് നിങ്ങളുടെ ആകെ Energy Charge ലഭിക്കുന്നത്.`,
+        },
+        {
+            en: `<strong>For this bill:</strong> T1 (Normal) billed ${u(normalUnits)} units, T2 (Peak) billed ${u(peakUnits)} units, and T3 (Off-Peak) billed ${u(offPeakUnits)} units — adding up to ${u(totalUnits)} billed units.`,
+            ml: `<strong>ഈ ബില്ലിൽ:</strong> T1 (Normal) ${u(normalUnits)} യൂണിറ്റും, T2 (Peak) ${u(peakUnits)} യൂണിറ്റും, T3 (Off-Peak) ${u(offPeakUnits)} യൂണിറ്റും ബില്ല് ചെയ്തു — ആകെ ${u(totalUnits)} യൂണിറ്റ്.`,
+        },
+        {
+            en: `<strong>Base Unit Rate (${m(unitRate)}/unit):</strong> KSEB starts from this single base rate for your ${u(totalUnits)} billed units, then adjusts it up or down per zone below.`,
+            ml: `<strong>Base Unit Rate (${m(unitRate)}/യൂണിറ്റ്):</strong> നിങ്ങളുടെ ${u(totalUnits)} ബില്ല് യൂണിറ്റുകൾക്ക് KSEB ഈ അടിസ്ഥാന നിരക്കിൽ നിന്ന് തുടങ്ങി, താഴെ ഓരോ മേഖലയ്ക്കും അത് കൂട്ടുകയോ കുറയ്ക്കുകയോ ചെയ്യുന്നു.`,
+        },
+        {
+            en: `<strong>T1 (Normal) Energy Charge = ${u(normalUnits)} units × ${m(normalRate)} (90% of ${m(unitRate)}) = ${m(normalCharge)}:</strong> your Normal-hour billed units, charged at 90% of the base rate.`,
+            ml: `<strong>T1 (Normal) Energy Charge = ${u(normalUnits)} യൂണിറ്റ് × ${m(normalRate)} (${m(unitRate)}-ന്റെ 90%) = ${m(normalCharge)}:</strong> നിങ്ങളുടെ Normal-സമയ ബില്ല് യൂണിറ്റുകൾ, അടിസ്ഥാന നിരക്കിന്റെ 90%-ത്തിൽ ചാർജ് ചെയ്തത്.`,
+        },
+        {
+            en: `<strong>T2 (Peak) Energy Charge = ${u(peakUnits)} units × ${m(peakRate)} (125% of ${m(unitRate)}) = ${m(peakCharge)}:</strong> Peak-hour units cost 25% more than the base rate, since electricity is priciest to supply during 6pm–10pm.`,
+            ml: `<strong>T2 (Peak) Energy Charge = ${u(peakUnits)} യൂണിറ്റ് × ${m(peakRate)} (${m(unitRate)}-ന്റെ 125%) = ${m(peakCharge)}:</strong> Peak-സമയ യൂണിറ്റുകൾക്ക് അടിസ്ഥാന നിരക്കിനെക്കാൾ 25% അധികം ചെലവ് വരും — വൈകിട്ട് 6 മുതൽ രാത്രി 10 വരെ വൈദ്യുതി എത്തിക്കാൻ ഏറ്റവും ചെലവ് കൂടുതലായതിനാൽ.`,
+        },
+        {
+            en: `<strong>T3 (Off-Peak) Energy Charge = ${u(offPeakUnits)} units × ${m(unitRate)} (100%, the standard rate) = ${m(offPeakCharge)}:</strong> Off-Peak units are billed at the plain base rate — no premium, no discount.`,
+            ml: `<strong>T3 (Off-Peak) Energy Charge = ${u(offPeakUnits)} യൂണിറ്റ് × ${m(unitRate)} (100%, സാധാരണ നിരക്ക്) = ${m(offPeakCharge)}:</strong> Off-Peak യൂണിറ്റുകൾ സാധാരണ അടിസ്ഥാന നിരക്കിൽ തന്നെ ചാർജ് ചെയ്യുന്നു — അധിക നിരക്കോ കിഴിവോ ഇല്ല.`,
+        },
+        {
+            en: `<strong>Total Energy Charge = ${m(normalCharge)} + ${m(peakCharge)} + ${m(offPeakCharge)} = ${m(energyCharge)}:</strong> adding up all three zones' charges gives your total Energy Charge for this bill — before Duty and Fuel Surcharge are added on top.`,
+            ml: `<strong>Total Energy Charge = ${m(normalCharge)} + ${m(peakCharge)} + ${m(offPeakCharge)} = ${m(energyCharge)}:</strong> ഈ മൂന്ന് മേഖലകളിലെയും ചാർജുകൾ കൂട്ടിച്ചേർത്താൽ ലഭിക്കുന്നതാണ് ഈ ബില്ലിന്റെ ആകെ Energy Charge — Duty, Fuel Surcharge എന്നിവ ഇനിയും കൂട്ടിച്ചേർക്കാനുണ്ട്.`,
+        },
+        ...totalBillFromEnergyChargeItems(bill, energyCharge),
+    ];
+}
+
+// Everything else that turns the Energy Charge above into the final Total
+// Bill Amount -- Fixed Charge and Meter Rent are flat, independent of ToD
+// zones; Duty and Fuel Surcharge scale off the SAME branch-aware
+// energyCharge/totalUnits already resolved by the caller (so they always
+// match, above 20kW or below).
+function totalBillFromEnergyChargeItems(bill, energyCharge) {
+    const wheelingCharge = bill.wheelingResult && bill.wheelingResult.wheelingCharge > 0 ? bill.wheelingResult.wheelingCharge : 0;
+    const phaseLabel = bill.phase === 'phase1' ? 'Phase 1' : 'Phase 3';
+
+    const parts = ['Fixed Charge', 'Meter Rent', 'Energy Charge', 'Duty', 'Fuel Surcharge'];
+    if (wheelingCharge > 0) parts.push('Wheeling Charge');
+    const partsList = parts.join(' + ');
+
+    const items = [
+        {
+            en: `<strong>Fixed Charge (${m(bill.fixedCharge)}) + Meter Rent (${m(bill.meterRent)}):</strong> on top of the Energy Charge, KSEB adds a flat monthly Fixed Charge (based on your total consumption and your connection's phase, ${phaseLabel}) and a small Meter Rent (only if KSEB owns the meter at your premises; ₹0 if you own it) — neither depends on the T1/T2/T3 split above.`,
+            ml: `<strong>Fixed Charge (${m(bill.fixedCharge)}) + Meter Rent (${m(bill.meterRent)}):</strong> Energy Charge-ന് പുറമെ, KSEB ഒരു നിശ്ചിത പ്രതിമാസ Fixed Charge (നിങ്ങളുടെ ആകെ ഉപയോഗവും കണക്ഷന്റെ Phase-ഉം, ${phaseLabel}, അടിസ്ഥാനമാക്കി) കൂടാതെ ചെറിയൊരു Meter Rent-ഉം (മീറ്റർ KSEB-യുടേതാണെങ്കിൽ മാത്രം; സ്വന്തം മീറ്ററാണെങ്കിൽ ₹0) കൂട്ടിച്ചേർക്കുന്നു — ഇവ രണ്ടും മുകളിലെ T1/T2/T3 വിഭജനത്തെ ആശ്രയിക്കുന്നില്ല.`,
+        },
+        {
+            en: `<strong>Duty (${pct(bill.dutyRate)} of Energy Charge = ${m(bill.duty)}):</strong> the Kerala Electricity Duty, a state tax calculated as a percentage of your Energy Charge (${m(energyCharge)}) — not your whole bill, just the energy portion.`,
+            ml: `<strong>Duty (Energy Charge-ന്റെ ${pct(bill.dutyRate)} = ${m(bill.duty)}):</strong> Kerala Electricity Duty ആണിത് — നിങ്ങളുടെ Energy Charge-ന്റെ (${m(energyCharge)}) ശതമാനമായി കണക്കാക്കുന്ന ഒരു സംസ്ഥാന നികുതി, മുഴുവൻ ബില്ലിന്റെയുമല്ല, എനർജി ഭാഗത്തിന്റെ മാത്രം.`,
+        },
+        {
+            en: `<strong>Monthly Fuel Surcharge (${u(bill.bankAdjustedUnits)} units × ${Math.round((bill.fuelSurchargePerUnit || 0) * 100)}ps = ${m(bill.monthlyFuelSurcharge)}):</strong> an extra per-unit charge to cover changing fuel costs for power generation, applied to the same units billed for energy above.`,
+            ml: `<strong>Monthly Fuel Surcharge (${u(bill.bankAdjustedUnits)} യൂണിറ്റ് × ${Math.round((bill.fuelSurchargePerUnit || 0) * 100)}ps = ${m(bill.monthlyFuelSurcharge)}):</strong> വൈദ്യുതി ഉത്പാദനത്തിന്റെ ഇന്ധനച്ചെലവിലെ വ്യതിയാനം നികത്താൻ KSEB അധികമായി ഈടാക്കുന്ന ഒരു യൂണിറ്റ്-അടിസ്ഥാന ചാർജ്, മുകളിൽ എനർജിക്ക് ബില്ല് ചെയ്ത അതേ യൂണിറ്റുകൾക്ക് തന്നെ ബാധകം.`,
+        },
+    ];
+
+    if (wheelingCharge > 0) {
+        const siteCount = bill.wheelingResult.sites.length;
+        items.push({
+            en: `<strong>Wheeling Charge (${m(wheelingCharge)}):</strong> you chose to transfer some of your banked solar units to ${siteCount} other connection${siteCount === 1 ? '' : 's'}, and KSEB charges a small per-unit fee for "wheeling" (transporting) that power through their network to reach them.`,
+            ml: `<strong>Wheeling Charge (${m(wheelingCharge)}):</strong> നിങ്ങളുടെ ബാങ്ക് ചെയ്ത സോളാർ യൂണിറ്റുകളിൽ ചിലത് മറ്റ് ${siteCount} കണക്ഷനുകളിലേക്ക് കൈമാറാൻ തിരഞ്ഞെടുത്തതിനാൽ, ആ വൈദ്യുതി KSEB-യുടെ ശൃംഖലയിലൂടെ "wheel" ചെയ്ത് എത്തിക്കുന്നതിന് ഒരു ചെറിയ യൂണിറ്റ്-അടിസ്ഥാന ചാർജ് ഈടാക്കുന്നു.`,
+        });
+    }
+
+    items.push({
+        en: `<strong>Total Bill Amount = ${partsList} = ${m(bill.totalBillAmount)}:</strong> everything above, added together, is your final bill for this period.`,
+        ml: `<strong>Total Bill Amount = ${partsList} = ${m(bill.totalBillAmount)}:</strong> മുകളിൽ പറഞ്ഞവയെല്ലാം കൂട്ടിച്ചേർത്താൽ ലഭിക്കുന്നതാണ് ഈ പിരീഡിലെ നിങ്ങളുടെ അവസാന ബില്ല്.`,
+    });
+
+    return items;
+}
+
+// Only meaningful for the real T1/T2/T3 split path (billingType 'tod' with
+// todType NOT 'normal' -- Telescopic-ToD has no separate timezone netting
+// to explain, same simple slabs as Normal billing). Reuses the exact same
+// bill-explain-lang-* classes/markup shape as buildBillExplanation() above
+// so it's styled by that panel's <style> block and picked up by the same
+// kind of event-delegated language toggle in main.js -- it deliberately
+// doesn't repeat that <style> block here, since buildBillExplanation()
+// always renders alongside this on any valid bill (both gate on
+// bill.totalBillAmount), so the shared classes are already styled once.
+export function buildTodCalculationExplanation(bill) {
+    if (!bill || bill.billingType !== 'tod' || bill.todType === 'normal') return '';
+
+    const items = todNettingItems(bill);
+    const englishList = buildList(items.map((item) => item.en));
+    const malayalamList = buildList(items.map((item) => item.ml));
+
+    return `
+        <div class="bill-chart">
+            <h5><u>🗣️ ToD (T1/T2/T3) Calculation Explained</u></h5>
+            <div class="bill-explain-lang-toggle" role="group" aria-label="ToD calculation explanation language">
+                <button type="button" class="bill-explain-lang-btn active" data-bill-lang="ml">മലയാളം</button>
+                <button type="button" class="bill-explain-lang-btn" data-bill-lang="en">English</button>
+            </div>
+            <div data-bill-lang-content="en" hidden>${englishList}</div>
+            <div data-bill-lang-content="ml">${malayalamList}</div>
+        </div>`;
+}
+
 export function buildBillExplanation(bill) {
     if (!bill || !bill.totalBillAmount) return '';
 

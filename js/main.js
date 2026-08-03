@@ -390,18 +390,24 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Bill Explanation language toggle (English/Malayalam), same look as
-    // the FAQ one above -- delegated rather than bound directly, since
-    // render-explanation.js's HTML is replaced fresh on every "Calculate
-    // Bill" click (each recalculation's markup already defaults to
-    // Malayalam active, so no extra initial-state JS is needed here).
-    document.getElementById('billExplanation').addEventListener('click', (e) => {
-        const btn = e.target.closest('.bill-explain-lang-btn');
-        if (!btn) return;
-        const container = e.currentTarget;
-        const lang = btn.dataset.billLang;
-        container.querySelectorAll('.bill-explain-lang-btn').forEach((b) => b.classList.toggle('active', b.dataset.billLang === lang));
-        container.querySelectorAll('[data-bill-lang-content]').forEach((el) => { el.hidden = el.dataset.billLangContent !== lang; });
-    });
+    // Bill Explanation / ToD Calculation Explained language toggles
+    // (English/Malayalam), same look as the FAQ one above -- delegated
+    // rather than bound directly, since both panels' HTML is replaced
+    // fresh on every "Calculate Bill" click (each recalculation's markup
+    // already defaults to Malayalam active, so no extra initial-state JS
+    // is needed here). Both panels share the same bill-explain-lang-*
+    // markup shape, so one listener factory covers both.
+    function wireBillLangToggle(containerId) {
+        const container = document.getElementById(containerId);
+        container.addEventListener('click', (e) => {
+            const btn = e.target.closest('.bill-explain-lang-btn');
+            if (!btn) return;
+            const lang = btn.dataset.billLang;
+            container.querySelectorAll('.bill-explain-lang-btn').forEach((b) => b.classList.toggle('active', b.dataset.billLang === lang));
+            container.querySelectorAll('[data-bill-lang-content]').forEach((el) => { el.hidden = el.dataset.billLangContent !== lang; });
+        });
+    }
+    wireBillLangToggle('billExplanation');
+    wireBillLangToggle('result2');
 
 });
