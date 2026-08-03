@@ -32,13 +32,13 @@ function billTypeItem(bill) {
     if (bill.billType === 'Telescopic-ToD') {
         return {
             en: `<strong>Bill Type — Telescopic-ToD:</strong> Your billed units (${units}) are 250 or fewer, KSEB applies the same simple slab-based pricing as Normal billing this time — no separate Peak/Off-Peak rates apply.`,
-            ml: `<strong>Bill Type — Telescopic-ToD:</strong> ബില്ലിംഗിന് എടുക്കുന്ന യൂണിറ്റുകൾ (${units}) 250-ൽ താഴെയും ആയതിനാൽ, ഇത്തവണ Normal ബില്ലിംഗിലേതു പോലുള്ള ലളിതമായ സ്ലാബ് നിരക്കാണ് KSEB ഉപയോഗിക്കുന്നത് — പ്രത്യേകം Peak/Off-Peak നിരക്കുകൾ ബാധകമല്ല.`,
+            ml: `<strong>Bill Type — Telescopic-ToD:</strong> ബില്ലിംഗിന് എടുക്കുന്ന യൂണിറ്റുകൾ (${units}) 250-ൽ താഴെ ആയതിനാൽ, Normal ബില്ലിംഗിലേതു പോലുള്ള ലളിതമായ സ്ലാബ് നിരക്കാണ് KSEB ഉപയോഗിക്കുന്നത് — പ്രത്യേകം Peak/Off-Peak നിരക്കുകൾ ബാധകമല്ല.`,
         };
     }
     if (bill.billType === 'Non-Telescopic-ToD') {
         return {
             en: `<strong>Bill Type — Non-Telescopic-ToD:</strong> your consumption is split by time of day. Normal hours (6am–6pm) are billed at 90% of the base rate, Peak hours (6pm–10pm) cost more at 125% (electricity is priciest to supply then), and Off-Peak hours (10pm–6am) are billed at the standard 100% rate.`,
-            ml: `<strong>Bill Type — Non-Telescopic-ToD:</strong> നിങ്ങളുടെ ഉപയോഗം സമയം അനുസരിച്ച് വിഭജിച്ചാണ് കണക്കാക്കുന്നത്. Normal സമയം (രാവിലെ 6 മുതൽ വൈകിട്ട് 6 വരെ) അടിസ്ഥാന നിരക്കിന്റെ 90%-ത്തിലും, Peak സമയം (വൈകിട്ട് 6 മുതൽ രാത്രി 10 വരെ) 125%-ത്തിലും (ഈ സമയത്ത് വൈദ്യുതി എത്തിക്കാൻ ചെലവ് കൂടുതലായതിനാൽ), Off-Peak സമയം (രാത്രി 10 മുതൽ രാവിലെ 6 വരെ) സാധാരണ 100% നിരക്കിലുമാണ് ചാർജ് ചെയ്യുന്നത്.`,
+            ml: `<strong>Bill Type — Non-Telescopic-ToD:</strong> നിങ്ങളുടെ ഉപയോഗം സമയം അനുസരിച്ച് വിഭജിച്ചാണ് കണക്കാക്കുന്നത്. Normal സമയം (രാവിലെ 6 മുതൽ വൈകിട്ട് 6 വരെ) അടിസ്ഥാന നിരക്കിന്റെ 90%-ത്തിലും, Peak സമയം (വൈകിട്ട് 6 മുതൽ രാത്രി 10 വരെ) 125%-ത്തിലും, Off-Peak സമയം (രാത്രി 10 മുതൽ രാവിലെ 6 വരെ) സാധാരണ 100% നിരക്കിലുമാണ് ചാർജ് ചെയ്യുന്നത്.`,
         };
     }
     return null;
@@ -65,11 +65,11 @@ function usageItems(bill) {
         },
         {
             en: `<strong>Import Total (${u(bill.importReading)} units${importBreakdown}):</strong> the electricity you drew from the KSEB grid — the part of your usage that your own solar power didn't cover.`,
-            ml: `<strong>Import Total (${u(bill.importReading)} യൂണിറ്റ്${importBreakdown}):</strong> KSEB ഗ്രിഡിൽ നിന്ന് നിങ്ങൾ നേരിട്ട് എടുത്ത് ഉപയോഗിച്ച വൈദ്യുതി — നിങ്ങളുടെ സ്വന്തം സോളാർ കവർ ചെയ്യാതെ പോയ ഭാഗം.`,
+            ml: `<strong>Import Total (${u(bill.importReading)} യൂണിറ്റ്${importBreakdown}):</strong> KSEB ഗ്രിഡിൽ നിന്ന് നിങ്ങൾ ഉപയോഗിച്ച വൈദ്യുതി — നിങ്ങളുടെ സ്വന്തം സോളാർ കവർ ചെയ്യാതെ പോയ ഭാഗം.`,
         },
         {
             en: `<strong>Export Total (${u(bill.exportReading)} units${exportBreakdown}):</strong> solar power your panels generated but you didn't use immediately at home, so it was sent back out to the KSEB grid instead.`,
-            ml: `<strong>Export Total (${u(bill.exportReading)} യൂണിറ്റ്${exportBreakdown}):</strong> നിങ്ങളുടെ പാനലുകൾ ഉത്പാദിപ്പിച്ചെങ്കിലും വീട്ടിൽ ഉടനടി ഉപയോഗിക്കാതെ, പകരം KSEB ഗ്രിഡിലേക്ക് തിരികെ അയച്ച സോളാർ വൈദ്യുതി.`,
+            ml: `<strong>Export Total (${u(bill.exportReading)} യൂണിറ്റ്${exportBreakdown}):</strong> നിങ്ങളുടെ പാനലുകൾ ഉത്പാദിപ്പിച്ചെങ്കിലും വീട്ടിൽ ഉപയോഗിക്കാതെ, പകരം KSEB ഗ്രിഡിലേക്ക് തിരികെ അയച്ച സോളാർ വൈദ്യുതി.`,
         },
         {
             en: `<strong>Direct Usage from Solar = Solar Generation − Export = ${u(bill.solarGeneration)} − ${u(bill.exportReading)} = ${u(bill.generationUsage)} units:</strong> this is the share of your own solar power that you actually used directly, without it ever leaving for the grid.`,
@@ -100,7 +100,7 @@ function energyChargeItems(bill) {
     if (bill.bankAdjustedUnits <= 0) {
         return [{
             en: `<strong>No Energy Charge this period:</strong> your Export + Banked units (${u(bill.exportPlusBank)}) fully covered your Import (${u(bill.importReading)}), so there were zero units left to bill for energy — no Energy Charge, Duty, or Fuel Surcharge apply. ${bill.accountBalance > 0 ? `The leftover ${u(bill.accountBalance)} units carry forward as your banked balance for next time.` : ''}`,
-            ml: `<strong>ഈ പിരീഡിൽ Energy Charge ഇല്ല:</strong> നിങ്ങളുടെ Export + Banked units (${u(bill.exportPlusBank)}) Import-നെ (${u(bill.importReading)}) പൂർണ്ണമായി കവർ ചെയ്തതിനാൽ, എനർജിക്ക് ബില്ല് ചെയ്യാൻ ഒരു യൂണിറ്റ് പോലും ബാക്കിയില്ല — Energy Charge, Duty, Fuel Surcharge എന്നിവയൊന്നും ബാധകമല്ല. ${bill.accountBalance > 0 ? `ബാക്കിയുള്ള ${u(bill.accountBalance)} യൂണിറ്റ് അടുത്ത തവണത്തേക്ക് ബാങ്ക് ബാലൻസായി തുടരും.` : ''}`,
+            ml: `<strong>ഈ പിരീഡിൽ Energy Charge ഇല്ല:</strong> നിങ്ങളുടെ Export + Banked units (${u(bill.exportPlusBank)}) Import-നെ (${u(bill.importReading)}) പൂർണ്ണമായി കവർ ചെയ്തതിനാൽ, ബില്ല് ചെയ്യാൻ ഒരു യൂണിറ്റ് പോലും ബാക്കിയില്ല — Energy Charge, Duty, Fuel Surcharge എന്നിവയൊന്നും ബാധകമല്ല. ${bill.accountBalance > 0 ? `ബാക്കിയുള്ള ${u(bill.accountBalance)} യൂണിറ്റ് അടുത്ത തവണത്തേക്ക് ബാങ്ക് ബാലൻസായി തുടരും.` : ''}`,
         }];
     }
 
