@@ -112,7 +112,7 @@ function energyChargeItems(bill) {
     if (bill.billType === 'Non-Telescopic' || bill.billType === 'Non-Telescopic-ToD') {
         items.push({
             en: `<strong>Unit Charge (${m(bill.unitRate)}/unit) and Energy Charge (${m(bill.energyCharge)}):</strong> since your units exceed 250, every one of your ${u(bill.bankAdjustedUnits)} billed units is charged at this single flat rate for your band${bill.billType === 'Non-Telescopic-ToD' ? ', then adjusted up or down depending on which time-of-day zone each unit falls in (see Bill Type above)' : ''}.`,
-            ml: `<strong>Unit Charge (${m(bill.unitRate)}/യൂണിറ്റ്), Energy Charge (${m(bill.energyCharge)}):</strong> യൂണിറ്റുകൾ 250-ൽ കൂടുതലായതിനാൽ, നിങ്ങളുടെ ${u(bill.bankAdjustedUnits)} ബില്ല് യൂണിറ്റുകളും ഈ ഒറ്റ നിരക്കിലാണ് ചാർജ് ചെയ്യുന്നത്${bill.billType === 'Non-Telescopic-ToD' ? ', ഓരോ യൂണിറ്റും ഏത് സമയ മേഖലയിലാണെന്നത് അനുസരിച്ച് (മുകളിൽ Bill Type കാണുക) പിന്നീട് കൂട്ടുകയോ കുറയ്ക്കുകയോ ചെയ്യും' : ''}.`,
+            ml: `<strong>Unit Charge (${m(bill.unitRate)}/യൂണിറ്റ്), Energy Charge (${m(bill.energyCharge)}):</strong> യൂണിറ്റുകൾ 250-ൽ കൂടുതലായതിനാൽ, നിങ്ങളുടെ ${u(bill.bankAdjustedUnits)} ബില്ല് യൂണിറ്റുകളും ഈ ഒറ്റ നിരക്കിലാണ് ചാർജ് ചെയ്യുന്നത്${bill.billType === 'Non-Telescopic-ToD' ? ', ഓരോ യൂണിറ്റും ഏത് സമയ മേഖലയിലാണെന്നത് അനുസരിച്ച് പിന്നീട് കൂട്ടുകയോ കുറയ്ക്കുകയോ ചെയ്യും മുകളിൽ details കൊടുത്തിട്ടുള്ളത് കാണുക ' : ''}.`,
         });
     } else {
         items.push({
