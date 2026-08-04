@@ -18,6 +18,8 @@ import {
     DIST_LOSS_SAME_TRANSFORMER,
     DIST_LOSS_DIFFERENT_TRANSFORMER,
     WHEELING_RATE_PER_UNIT,
+    LT7A_SLABS,
+    LT7B_SLABS,
 } from './tariff-rates.js';
 
 const resetReadingGroups = initReadingGroups();
@@ -46,6 +48,15 @@ function buildTelescopicSlabs() {
 }
 function buildNonTelescopicSlabs() {
     return NON_TELESCOPIC_SLABS.map((slab, i) => ({ maxUnits: slab.maxUnits, rate: num(`nonTelescopicRate${i + 1}`) }));
+}
+// LT7A/LT7B (commercial) rates for wheeled sites -- same boundary-fixed,
+// rate-editable pattern as the other slab builders above, read from the
+// Wheeling card's own Admin Option fields instead of Core Tariff Rates'.
+function buildLt7aSlabs() {
+    return LT7A_SLABS.map((slab, i) => ({ maxUnits: slab.maxUnits, rate: num(`lt7aRate${i + 1}`) }));
+}
+function buildLt7bSlabs() {
+    return LT7B_SLABS.map((slab, i) => ({ maxUnits: slab.maxUnits, rate: num(`lt7bRate${i + 1}`) }));
 }
 function buildFixedChargeSlabs() {
     return FIXED_CHARGE_SLABS.map((slab, i) => ({
@@ -204,6 +215,8 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
             // wheeled LT1 (domestic) site is billed on the same tariff table.
             telescopicSlabs: buildTelescopicSlabs(),
             nonTelescopicSlabs: buildNonTelescopicSlabs(),
+            lt7aSlabs: buildLt7aSlabs(),
+            lt7bSlabs: buildLt7bSlabs(),
         };
         const wheelingResult = computeWheelingResult(bill.accountBalance, wheelingUI.getSites(), wheelingOverrides);
         if (wheelingResult.sites.length > 0) {
@@ -294,12 +307,17 @@ wireRateGroup(
     [METER_RENT.phase1.kseb, METER_RENT.other.kseb],
 );
 
-wireRateGroup(
-    'wheelingLossEditToggle',
-    'resetWheelingRatesButton',
-    ['wheelSameTransformerLoss', 'wheelDiffTransformerLoss', 'wheelingRatePerUnitInput'],
-    [DIST_LOSS_SAME_TRANSFORMER, DIST_LOSS_DIFFERENT_TRANSFORMER, WHEELING_RATE_PER_UNIT],
-);
+const WHEELING_RATE_FIELD_IDS = [
+    'wheelSameTransformerLoss', 'wheelDiffTransformerLoss', 'wheelingRatePerUnitInput',
+    'lt7aRate1', 'lt7aRate2', 'lt7aRate3', 'lt7aRate4', 'lt7aRate5',
+    'lt7bRate1', 'lt7bRate2', 'lt7bRate3', 'lt7bRate4', 'lt7bRate5',
+];
+const WHEELING_RATE_DEFAULTS = [
+    DIST_LOSS_SAME_TRANSFORMER, DIST_LOSS_DIFFERENT_TRANSFORMER, WHEELING_RATE_PER_UNIT,
+    ...LT7A_SLABS.map((s) => s.rate),
+    ...LT7B_SLABS.map((s) => s.rate),
+];
+wireRateGroup('wheelingLossEditToggle', 'resetWheelingRatesButton', WHEELING_RATE_FIELD_IDS, WHEELING_RATE_DEFAULTS);
 
 
 // Trigger the change events on page load so the visible sections match
@@ -387,9 +405,7 @@ function resetCalculator() {
     TARIFF_RATE_FIELD_IDS.forEach((id) => { document.getElementById(id).disabled = true; });
     document.getElementById('meterRentPhase1Kseb').disabled = true;
     document.getElementById('meterRentPhase3Kseb').disabled = true;
-    document.getElementById('wheelSameTransformerLoss').disabled = true;
-    document.getElementById('wheelDiffTransformerLoss').disabled = true;
-    document.getElementById('wheelingRatePerUnitInput').disabled = true;
+    WHEELING_RATE_FIELD_IDS.forEach((id) => { document.getElementById(id).disabled = true; });
 
     updateBillingTypeSections(document.getElementById('billingType').value);
 }

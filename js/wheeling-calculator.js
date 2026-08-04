@@ -55,26 +55,26 @@ function pickFlatRate(units, slabs) {
 
 // LT7A/LT7B: units x single flat rate for the whole quantity, chosen by
 // which band the total falls in -- no telescoping, no ToD multipliers.
-function computeFlatCategoryCharge(units, category) {
-    const slabs = category === 'LT7A' ? LT7A_SLABS : LT7B_SLABS;
+function computeFlatCategoryCharge(units, category, rates) {
+    const slabs = category === 'LT7A' ? rates.lt7aSlabs : rates.lt7bSlabs;
     const rate = pickFlatRate(units, slabs);
     return { billType: category, unitRate: rate, energyCharge: units * rate };
 }
 
 // Bills `units` (and, for an LT1 ToD site, `split`) at whichever tariff the
-// site's category calls for. `energyRates` is only meaningful for LT1
-// (domestic) sites -- they're billed on the SAME telescopic/non-telescopic
-// table as the prosumer's own bill, so the prosumer's own Admin Option
-// overrides apply here too. LT7A/LT7B (commercial) always use their own
-// fixed tariff-rates.js tables -- out of scope for the Admin Option overrides.
-function billForCategory(site, units, split, energyRates) {
+// site's category calls for. LT1 (domestic) sites are billed on the SAME
+// telescopic/non-telescopic table as the prosumer's own bill, so the
+// prosumer's own Admin Option overrides apply here too. LT7A/LT7B
+// (commercial) have their own Admin Option overrides (`rates.lt7aSlabs`/
+// `rates.lt7bSlabs`), independent of LT1's rates.
+function billForCategory(site, units, split, rates) {
     if (site.category === 'LT7A' || site.category === 'LT7B') {
-        return computeFlatCategoryCharge(units, site.category);
+        return computeFlatCategoryCharge(units, site.category, rates);
     }
     if (site.todAvailable) {
-        return computeTodEnergyChargeForSplit(split, energyRates);
+        return computeTodEnergyChargeForSplit(split, rates);
     }
-    return computeEnergyChargeForUnits(units, energyRates);
+    return computeEnergyChargeForUnits(units, rates);
 }
 
 // Bills a site's consumption twice -- once for its full (pre-wheeling)
@@ -83,12 +83,12 @@ function billForCategory(site, units, split, energyRates) {
 // site. Fixed charge and meter rent are deliberately excluded: they depend
 // only on the site's own connection (phase/load), not on wheeling, so they
 // cancel out of the before/after comparison.
-function billSite(site, unitsAfterWheeling, splitAfterWheeling, energyRates) {
+function billSite(site, unitsAfterWheeling, splitAfterWheeling, rates) {
     const totalUnits = siteTotalUnits(site);
     const beforeSplit = { normalUnits: site.todNormal, peakUnits: site.todPeak, offPeakUnits: site.todOffPeak };
 
-    const before = billForCategory(site, totalUnits, beforeSplit, energyRates);
-    const after = billForCategory(site, unitsAfterWheeling, splitAfterWheeling, energyRates);
+    const before = billForCategory(site, totalUnits, beforeSplit, rates);
+    const after = billForCategory(site, unitsAfterWheeling, splitAfterWheeling, rates);
 
     const dutyBefore = before.energyCharge * DUTY_RATE;
     const surchargeBefore = totalUnits * FUEL_SURCHARGE_PER_UNIT;
@@ -113,11 +113,12 @@ function billSite(site, unitsAfterWheeling, splitAfterWheeling, energyRates) {
 //
 // `overrides` lets the Admin Option fields in index.html substitute the
 // current KSEB distribution-loss percentages (4.99% / 7.14%), the wheeling
-// rate per unit (₹0.64), and/or the telescopic/non-telescopic per-unit rates
-// (for LT1 wheeled sites, billed on the prosumer's own tariff table) with
-// new ones if KSEB revises them -- each falls back to its tariff-rates.js
-// constant when not provided/valid (e.g. the field is left at its default,
-// or main.js is called without overrides at all).
+// rate per unit (₹0.64), the telescopic/non-telescopic per-unit rates (for
+// LT1 wheeled sites, billed on the prosumer's own tariff table), and/or the
+// LT7A/LT7B flat commercial rates with new ones if KSEB revises them -- each
+// falls back to its tariff-rates.js constant when not provided/valid (e.g.
+// the field is left at its default, or main.js is called without overrides
+// at all).
 export function computeWheelingResult(availableBankUnits, sites, overrides = {}) {
     if (!sites || sites.length === 0) {
         return {
@@ -131,12 +132,14 @@ export function computeWheelingResult(availableBankUnits, sites, overrides = {})
         ? overrides.differentTransformerPct : DIST_LOSS_DIFFERENT_TRANSFORMER;
     const wheelingRatePerUnit = Number.isFinite(overrides.wheelingRatePerUnit)
         ? overrides.wheelingRatePerUnit : WHEELING_RATE_PER_UNIT;
-    // Each key resolved independently (not "override both or neither") --
+    // Each key resolved independently (not "override all or none") --
     // otherwise overriding only telescopicSlabs would leave nonTelescopicSlabs
     // undefined and crash computeNonTelescopicCharge's slab lookup.
-    const energyRates = {
+    const rates = {
         telescopicSlabs: overrides.telescopicSlabs || TELESCOPIC_SLABS,
         nonTelescopicSlabs: overrides.nonTelescopicSlabs || NON_TELESCOPIC_SLABS,
+        lt7aSlabs: overrides.lt7aSlabs || LT7A_SLABS,
+        lt7bSlabs: overrides.lt7bSlabs || LT7B_SLABS,
     };
 
     let newBank = Math.max(availableBankUnits || 0, 0);
@@ -167,7 +170,7 @@ export function computeWheelingResult(availableBankUnits, sites, overrides = {})
             })
             : null;
 
-        const billing = billSite(site, unitsAfterWheeling, splitAfterWheeling, energyRates);
+        const billing = billSite(site, unitsAfterWheeling, splitAfterWheeling, rates);
 
         results.push({
             siteIndex: index + 1,
