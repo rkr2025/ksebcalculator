@@ -442,11 +442,171 @@
                         </div>
                     </details>
 
-                    <!-- Meter Rent defaults to (and stays synced with) the
-                         rate for the selected Phase/Meter Owner combination
-                         from js/tariff-rates.js's METER_RENT table, but is
-                         editable here in case that rate changes in the
-                         future -- computeBill() uses whatever is entered. -->
+                    <!-- Core tariff rates: the per-unit numbers KSEB actually
+                         revises from time to time (Telescopic/Non-Telescopic
+                         energy rates, Fixed Charge amounts). Slab
+                         *boundaries* (which unit-band a slab covers) are NOT
+                         editable here -- only the ₹ figures inside each band,
+                         since KSEB rarely restructures the bands themselves
+                         and letting them be edited freely risks an
+                         inconsistent (unsorted/overlapping) slab table.
+                         computeBill() uses whatever's entered here instead of
+                         the js/tariff-rates.js constants; "Reset to Default
+                         Rates" restores those constants and re-locks the
+                         fields. -->
+                    <details id="tariffRatesContainer" style="margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border);">
+                        <summary class="sub-row-badge">💰 Core Tariff Rates</summary>
+                        <div class="reading-mode-toggle">
+                            <label class="switch">
+                                <input type="checkbox" id="tariffRatesEditToggle">
+                                <span class="switch-slider"></span>
+                            </label>
+                            <span>Edit these rates</span>
+                        </div>
+
+                        <p class="block-label">Telescopic Energy Rate (₹/unit)</p>
+                        <div class="field-grid" id="telescopicRateFields">
+                            <div class="field">
+                                <label for="telescopicRate1">0&ndash;50 units</label>
+                                <input type="number" id="telescopicRate1" value="3.35" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="telescopicRate2">50&ndash;100 units</label>
+                                <input type="number" id="telescopicRate2" value="4.25" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="telescopicRate3">100&ndash;150 units</label>
+                                <input type="number" id="telescopicRate3" value="5.35" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="telescopicRate4">150&ndash;200 units</label>
+                                <input type="number" id="telescopicRate4" value="7.20" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="telescopicRate5">200&ndash;250 units</label>
+                                <input type="number" id="telescopicRate5" value="8.50" min="0" step="0.01" disabled>
+                            </div>
+                        </div>
+
+                        <p class="block-label" style="margin-top: 14px;">Non-Telescopic Energy Rate (₹/unit)</p>
+                        <div class="field-grid" id="nonTelescopicRateFields">
+                            <div class="field">
+                                <label for="nonTelescopicRate1">Up to 300 units</label>
+                                <input type="number" id="nonTelescopicRate1" value="6.75" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="nonTelescopicRate2">301&ndash;350 units</label>
+                                <input type="number" id="nonTelescopicRate2" value="7.60" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="nonTelescopicRate3">351&ndash;400 units</label>
+                                <input type="number" id="nonTelescopicRate3" value="7.95" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="nonTelescopicRate4">401&ndash;500 units</label>
+                                <input type="number" id="nonTelescopicRate4" value="8.25" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="nonTelescopicRate5">Above 500 units</label>
+                                <input type="number" id="nonTelescopicRate5" value="9.20" min="0" step="0.01" disabled>
+                            </div>
+                        </div>
+
+                        <p class="block-label" style="margin-top: 14px;">Fixed Charge (₹/month)</p>
+                        <div class="field-grid field-grid--2" id="fixedChargeFields">
+                            <div class="field">
+                                <label for="fixedChargeSlab1Phase1">Up to 50 units (Phase 1)</label>
+                                <input type="number" id="fixedChargeSlab1Phase1" value="50" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fixedChargeSlab1Other">Up to 50 units (Phase 3)</label>
+                                <input type="number" id="fixedChargeSlab1Other" value="130" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fixedChargeSlab2Phase1">51&ndash;100 units (Phase 1)</label>
+                                <input type="number" id="fixedChargeSlab2Phase1" value="85" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fixedChargeSlab2Other">51&ndash;100 units (Phase 3)</label>
+                                <input type="number" id="fixedChargeSlab2Other" value="175" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fixedChargeSlab3Phase1">101&ndash;150 units (Phase 1)</label>
+                                <input type="number" id="fixedChargeSlab3Phase1" value="105" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fixedChargeSlab3Other">101&ndash;150 units (Phase 3)</label>
+                                <input type="number" id="fixedChargeSlab3Other" value="205" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fixedChargeSlab4Phase1">151&ndash;200 units (Phase 1)</label>
+                                <input type="number" id="fixedChargeSlab4Phase1" value="140" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fixedChargeSlab4Other">151&ndash;200 units (Phase 3)</label>
+                                <input type="number" id="fixedChargeSlab4Other" value="215" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fixedChargeSlab5Phase1">201&ndash;250 units (Phase 1)</label>
+                                <input type="number" id="fixedChargeSlab5Phase1" value="160" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fixedChargeSlab5Other">201&ndash;250 units (Phase 3)</label>
+                                <input type="number" id="fixedChargeSlab5Other" value="235" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fixedChargeSlab6Phase1">251&ndash;300 units (Phase 1)</label>
+                                <input type="number" id="fixedChargeSlab6Phase1" value="220" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fixedChargeSlab6Other">251&ndash;300 units (Phase 3)</label>
+                                <input type="number" id="fixedChargeSlab6Other" value="240" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fixedChargeSlab7Phase1">301&ndash;350 units (Phase 1)</label>
+                                <input type="number" id="fixedChargeSlab7Phase1" value="240" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fixedChargeSlab7Other">301&ndash;350 units (Phase 3)</label>
+                                <input type="number" id="fixedChargeSlab7Other" value="250" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fixedChargeSlab8Phase1">351&ndash;400 units (Phase 1)</label>
+                                <input type="number" id="fixedChargeSlab8Phase1" value="260" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fixedChargeSlab8Other">351&ndash;400 units (Phase 3)</label>
+                                <input type="number" id="fixedChargeSlab8Other" value="260" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fixedChargeSlab9Phase1">401&ndash;500 units (Phase 1)</label>
+                                <input type="number" id="fixedChargeSlab9Phase1" value="285" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fixedChargeSlab9Other">401&ndash;500 units (Phase 3)</label>
+                                <input type="number" id="fixedChargeSlab9Other" value="285" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fixedChargeSlab10Phase1">Above 500 units (Phase 1)</label>
+                                <input type="number" id="fixedChargeSlab10Phase1" value="310" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="fixedChargeSlab10Other">Above 500 units (Phase 3)</label>
+                                <input type="number" id="fixedChargeSlab10Other" value="310" min="0" step="0.01" disabled>
+                            </div>
+                        </div>
+
+                        <button type="button" class="rate-reset-btn" id="resetTariffRatesButton">↺ Reset to Default Rates</button>
+                    </details>
+
+                    <!-- Meter Rent defaults to the current KSEB rates (₹30
+                         Phase 1 / ₹35 Phase 3, KSEB-owned meters only --
+                         Consumer-owned meters are always ₹0, so there's
+                         nothing to edit in that case) from js/tariff-rates.js's
+                         METER_RENT table, but both are editable here in case
+                         those rates change in the future -- computeBill()
+                         looks up whichever cell matches the currently
+                         selected Phase/Meter Owner. -->
                     <details id="meterRentContainer" style="margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border);">
                         <summary class="sub-row-badge">🧾 Meter Rent</summary>
                         <div class="reading-mode-toggle">
@@ -454,12 +614,19 @@
                                 <input type="checkbox" id="meterRentEditToggle">
                                 <span class="switch-slider"></span>
                             </label>
-                            <span>Edit this rate</span>
+                            <span>Edit these rates</span>
                         </div>
-                        <div class="field">
-                            <label for="meterRentInput">Meter Rent (<span id="meterRentPhaseLabel">Phase 1</span>) (₹/month)</label>
-                            <input type="number" id="meterRentInput" name="meterRentInput" value="30" min="0" step="0.01" disabled>
+                        <div class="field-grid field-grid--2">
+                            <div class="field">
+                                <label for="meterRentPhase1Kseb">Phase 1 (₹/month)</label>
+                                <input type="number" id="meterRentPhase1Kseb" value="30" min="0" step="0.01" disabled>
+                            </div>
+                            <div class="field">
+                                <label for="meterRentPhase3Kseb">Phase 3 (₹/month)</label>
+                                <input type="number" id="meterRentPhase3Kseb" value="35" min="0" step="0.01" disabled>
+                            </div>
                         </div>
+                        <button type="button" class="rate-reset-btn" id="resetMeterRentButton">↺ Reset to Default Rates</button>
                     </details>
                 </details>
             </section>
@@ -847,15 +1014,16 @@
                 </div>
 
                 <div id="wheelingSitesWrapper" style="display: none; margin-top: 14px;">
-                    <!-- Distribution Loss %: defaults to the current KSEB
-                         rates (4.99% same transformer / 7.14% different
-                         transformer) from js/tariff-rates.js, but editable
-                         here in case KSEB revises those percentages in the
-                         future -- computeWheelingResult() uses whatever is
-                         entered instead of the hardcoded constants. -->
+                    <!-- Distribution Loss % and Wheeling Rate: default to the
+                         current KSEB rates (4.99% same transformer / 7.14%
+                         different transformer / ₹0.64 per unit) from
+                         js/tariff-rates.js, but editable here in case KSEB
+                         revises them in the future -- computeWheelingResult()
+                         uses whatever is entered instead of the hardcoded
+                         constants. -->
                     <details id="wheelingLossContainer" style="margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px dashed var(--border);">
-                        <summary class="sub-row-badge">🛠️ Admin Option: Distribution Loss %</summary>
-                        <p style="margin: 8px 0 12px; font-size: 12px; color: var(--text-muted);">⚠️ Change the below values only if KSEB revises the distribution loss percentages.</p>
+                        <summary class="sub-row-badge">🛠️ Admin Option: Distribution Loss % &amp; Wheeling Rate</summary>
+                        <p style="margin: 8px 0 12px; font-size: 12px; color: var(--text-muted);">⚠️ Change the below values only if KSEB revises them.</p>
                         <div class="reading-mode-toggle">
                             <label class="switch">
                                 <input type="checkbox" id="wheelingLossEditToggle">
@@ -872,7 +1040,12 @@
                                 <label for="wheelDiffTransformerLoss">Different Transformer Loss (%)</label>
                                 <input type="number" id="wheelDiffTransformerLoss" name="wheelDiffTransformerLoss" value="7.14" min="0" step="0.01" disabled>
                             </div>
+                            <div class="field">
+                                <label for="wheelingRatePerUnitInput">Wheeling Rate (₹/unit)</label>
+                                <input type="number" id="wheelingRatePerUnitInput" name="wheelingRatePerUnitInput" value="0.64" min="0" step="0.01" disabled>
+                            </div>
                         </div>
+                        <button type="button" class="rate-reset-btn" id="resetWheelingRatesButton">↺ Reset to Default Rates</button>
                     </details>
 
                     <div id="wheelingSitesContainer"></div>

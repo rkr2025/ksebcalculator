@@ -31,23 +31,38 @@ export const BILL_ERRORS = {
     EXPORT_EXCEEDS_GENERATION: 'Export units cannot be greater than Solar Generation units.',
 };
 
-function computeFixedCharge(unitsConsumed, phase) {
-    const slab = FIXED_CHARGE_SLABS.find((s) => unitsConsumed <= s.maxUnits);
+// The "core" tariff numbers exposed as user-editable Admin Options (Fixed
+// Charge slabs, Telescopic/Non-Telescopic per-unit rates, Meter Rent) --
+// bundled into one object and threaded through every function below instead
+// of reading the tariff-rates.js constants directly, so computeBill() can
+// substitute the user's own numbers when KSEB revises a rate. Every function
+// that takes a `rates` parameter defaults it to these, so existing callers
+// that don't know about overrides (e.g. render-insights.js's what-if
+// recomputation) keep working unchanged.
+const DEFAULT_RATES = {
+    fixedChargeSlabs: FIXED_CHARGE_SLABS,
+    telescopicSlabs: TELESCOPIC_SLABS,
+    nonTelescopicSlabs: NON_TELESCOPIC_SLABS,
+    meterRent: METER_RENT,
+};
+
+function computeFixedCharge(unitsConsumed, phase, fixedChargeSlabs) {
+    const slab = fixedChargeSlabs.find((s) => unitsConsumed <= s.maxUnits);
     return phase === 'phase1' ? slab.phase1 : slab.other;
 }
 
-function pickNonTelescopicRate(units) {
-    return NON_TELESCOPIC_SLABS.find((s) => units <= s.maxUnits).rate;
+function pickNonTelescopicRate(units, nonTelescopicSlabs) {
+    return nonTelescopicSlabs.find((s) => units <= s.maxUnits).rate;
 }
 
 // Bills `units` progressively across the telescopic bands (used whenever
 // billed units <= 250, for both normal billing and ToD-below-20kW billing).
-function computeTelescopicCharge(units) {
+function computeTelescopicCharge(units, telescopicSlabs) {
     let remaining = units;
     let energyCharge = 0;
     const breakdownRows = [];
 
-    for (const slab of TELESCOPIC_SLABS) {
+    for (const slab of telescopicSlabs) {
         if (remaining <= 0) break;
         const bandUnits = Math.min(slab.bandUnits, remaining);
         const amount = bandUnits * slab.rate;
@@ -62,15 +77,15 @@ function computeTelescopicCharge(units) {
 
 // Bills the whole `units` quantity at a single flat rate (used whenever
 // billed units > 250, for normal billing).
-function computeNonTelescopicCharge(units) {
-    const rate = pickNonTelescopicRate(units);
+function computeNonTelescopicCharge(units, nonTelescopicSlabs) {
+    const rate = pickNonTelescopicRate(units, nonTelescopicSlabs);
     return { energyCharge: units * rate, unitRate: rate };
 }
 
 // ToD billing, connected load above 20kW: nets export+bank against Normal
 // (T1) usage, carries PEAK_CARRYOVER_RATIO of any leftover into Peak (T2),
 // then whatever's left of that into Off-Peak (T3).
-function computeTodAbove20kW({ exportPlusBank, importNormal, importPeak, importOffPeak }) {
+function computeTodAbove20kW({ exportPlusBank, importNormal, importPeak, importOffPeak }, nonTelescopicSlabs) {
     let NormalConsumptionAdjusted = 0;
     let Normal_NoOfUnitsFor_energy_calculation = 0;
     if (exportPlusBank > importNormal) {
@@ -104,7 +119,7 @@ function computeTodAbove20kW({ exportPlusBank, importNormal, importPeak, importO
         + Peak_NoOfUnitsFor_energy_calculation
         + OffPeak_NoOfUnitsFor_energy_calculation;
 
-    const unitRate = pickNonTelescopicRate(bankAdjustedUnits);
+    const unitRate = pickNonTelescopicRate(bankAdjustedUnits, nonTelescopicSlabs);
 
     const NormalConsumptionAdjusted_energy_charge = Normal_NoOfUnitsFor_energy_calculation * unitRate * TOD_MULTIPLIERS.normal;
     const PeakConsumptionAdjusted_energy_charge = Peak_NoOfUnitsFor_energy_calculation * unitRate * TOD_MULTIPLIERS.peak;
@@ -133,7 +148,7 @@ function computeTodAbove20kW({ exportPlusBank, importNormal, importPeak, importO
 // T1/T2/T3 netting idea as the above-20kW case, but WITHOUT the 80%
 // peak-carryover scaling (this asymmetry is intentional per the original
 // tariff message text, not copy-paste drift).
-function computeTodBelow20kWAbove250({ exportPlusBank, importNormal, importPeak, importOffPeak }) {
+function computeTodBelow20kWAbove250({ exportPlusBank, importNormal, importPeak, importOffPeak }, nonTelescopicSlabs) {
     let NormalConsumptionAdjusted = 0;
     let Normal_NoOfUnitsFor_energy_calculation = 0;
     if (exportPlusBank > importNormal) {
@@ -163,7 +178,7 @@ function computeTodBelow20kWAbove250({ exportPlusBank, importNormal, importPeak,
         + Peak_NoOfUnitsFor_energy_calculation_Below20kW
         + OffPeak_NoOfUnitsFor_energy_calculation_Below20kW;
 
-    const unitRate_Below20kW = pickNonTelescopicRate(bankAdjustedUnits_Below20kW);
+    const unitRate_Below20kW = pickNonTelescopicRate(bankAdjustedUnits_Below20kW, nonTelescopicSlabs);
 
     const NormalConsumptionAdjusted_energy_charge = Normal_NoOfUnitsFor_energy_calculation * unitRate_Below20kW * TOD_MULTIPLIERS.normal;
     const PeakConsumptionAdjusted_energy_charge_Below20kW = Peak_NoOfUnitsFor_energy_calculation_Below20kW * unitRate_Below20kW * TOD_MULTIPLIERS.peak;
@@ -197,20 +212,22 @@ function computeTodBelow20kWAbove250({ exportPlusBank, importNormal, importPeak,
 
 // Same telescopic (<=250 units) vs non-telescopic (>250 units) dispatch as
 // applyTariffRules' 'normal' branch, factored out so it can be billed twice
-// (before/after wheeling) for a site that has no ToD meter.
-export function computeEnergyChargeForUnits(units) {
+// (before/after wheeling) for a site that has no ToD meter. `rates` lets
+// wheeling-calculator.js reuse the prosumer's own Admin Option overrides for
+// a wheeled LT1 (domestic) site, since it's billed on the same tariff table.
+export function computeEnergyChargeForUnits(units, rates = DEFAULT_RATES) {
     if (units <= 250) {
-        return { billType: 'Telescopic', ...computeTelescopicCharge(units) };
+        return { billType: 'Telescopic', ...computeTelescopicCharge(units, rates.telescopicSlabs) };
     }
-    return { billType: 'Non-Telescopic', ...computeNonTelescopicCharge(units) };
+    return { billType: 'Non-Telescopic', ...computeNonTelescopicCharge(units, rates.nonTelescopicSlabs) };
 }
 
 // Real T1/T2/T3 charge for an already-netted Normal/Peak/Off-Peak split,
 // factored out of computeTodAbove20kW/computeTodBelow20kWAbove250 (which
 // also do export-vs-import netting that doesn't apply to a wheeled site).
-export function computeTodEnergyChargeForSplit({ normalUnits, peakUnits, offPeakUnits }) {
+export function computeTodEnergyChargeForSplit({ normalUnits, peakUnits, offPeakUnits }, rates = DEFAULT_RATES) {
     const totalUnits = normalUnits + peakUnits + offPeakUnits;
-    const unitRate = pickNonTelescopicRate(totalUnits);
+    const unitRate = pickNonTelescopicRate(totalUnits, rates.nonTelescopicSlabs);
     const normalCharge = normalUnits * unitRate * TOD_MULTIPLIERS.normal;
     const peakCharge = peakUnits * unitRate * TOD_MULTIPLIERS.peak;
     const offPeakCharge = offPeakUnits * unitRate * TOD_MULTIPLIERS.offPeak;
@@ -244,6 +261,24 @@ export function netTodAgainstOffset({ offsetUnits, importNormal, importPeak, imp
     const offPeakUnits = importOffPeak - offPeakOffset;
 
     return { normalUnits, peakUnits, offPeakUnits };
+}
+
+// Guards computeBill()'s use of rawInputs.fixedChargeSlabs / telescopicSlabs
+// / nonTelescopicSlabs / meterRentTable -- only the listed keys are ever
+// user-edited (slab *boundaries* like maxUnits/bandUnits stay fixed, main.js
+// always copies those from the defaults), so only those are validated here.
+// Deliberately checks Number.isFinite rather than trusting shape alone,
+// since a malformed or partially-typed admin field must never silently
+// produce NaN/undefined charges -- falling back to the real default is
+// always safer than a broken calculation.
+function validSlabs(candidate, length, numericKeys) {
+    return Array.isArray(candidate) && candidate.length === length
+        && candidate.every((row) => row && numericKeys.every((k) => Number.isFinite(row[k])));
+}
+function validMeterRentTable(candidate) {
+    return candidate
+        && Number.isFinite(candidate.phase1?.kseb) && Number.isFinite(candidate.phase1?.other)
+        && Number.isFinite(candidate.other?.kseb) && Number.isFinite(candidate.other?.other);
 }
 
 function emptyTariffFields(bankAdjustedUnits) {
@@ -280,30 +315,30 @@ function emptyTariffFields(bankAdjustedUnits) {
 function applyTariffRules({
     billingType, unitsConsumed, bankAdjustedUnits, phase, todBillingAbove20kW,
     exportPlusBank, importNormal, importPeak, importOffPeak,
-}) {
-    const fixedCharge = computeFixedCharge(unitsConsumed, phase);
+}, rates) {
+    const fixedCharge = computeFixedCharge(unitsConsumed, phase, rates.fixedChargeSlabs);
     const fields = emptyTariffFields(bankAdjustedUnits);
 
     if (billingType === 'normal') {
         if (bankAdjustedUnits <= 250) {
             fields.billType = 'Telescopic';
-            Object.assign(fields, computeTelescopicCharge(bankAdjustedUnits));
+            Object.assign(fields, computeTelescopicCharge(bankAdjustedUnits, rates.telescopicSlabs));
         } else {
             fields.billType = 'Non-Telescopic';
-            Object.assign(fields, computeNonTelescopicCharge(bankAdjustedUnits));
+            Object.assign(fields, computeNonTelescopicCharge(bankAdjustedUnits, rates.nonTelescopicSlabs));
         }
         return { fixedCharge, ...fields };
     }
 
     // ToD billing
     if (todBillingAbove20kW > 0) {
-        Object.assign(fields, computeTodAbove20kW({ exportPlusBank, importNormal, importPeak, importOffPeak }));
+        Object.assign(fields, computeTodAbove20kW({ exportPlusBank, importNormal, importPeak, importOffPeak }, rates.nonTelescopicSlabs));
     } else if (bankAdjustedUnits <= 250) {
         fields.billType = 'Telescopic-ToD';
         fields.todType = 'normal';
-        Object.assign(fields, computeTelescopicCharge(bankAdjustedUnits));
+        Object.assign(fields, computeTelescopicCharge(bankAdjustedUnits, rates.telescopicSlabs));
     } else {
-        const below20kW = computeTodBelow20kWAbove250({ exportPlusBank, importNormal, importPeak, importOffPeak });
+        const below20kW = computeTodBelow20kWAbove250({ exportPlusBank, importNormal, importPeak, importOffPeak }, rates.nonTelescopicSlabs);
         Object.assign(fields, below20kW);
         fields.energyCharge = below20kW.energyCharge_Below20kW;
         fields.bankAdjustedUnits = below20kW.bankAdjustedUnits_Below20kW;
@@ -316,9 +351,12 @@ function applyTariffRules({
 // Exported so main.js can show/refresh the default Meter Rent value in the
 // Admin Options field whenever Phase/Meter Owner change (see also the
 // dutyRate/fuelSurchargePerUnit override pattern below, applied the same
-// way to Meter Rent via rawInputs.meterRentOverride).
-export function computeMeterRent(phase, meterOwner) {
-    const table = phase === 'phase1' ? METER_RENT.phase1 : METER_RENT.other;
+// way to Meter Rent via rawInputs.meterRentOverride). `meterRentTable` lets
+// the Admin Option's own KSEB-rent overrides (Consumer-owned is always ₹0,
+// not a revisable rate, so only the two "kseb" cells are ever user-editable)
+// feed back into this lookup.
+export function computeMeterRent(phase, meterOwner, meterRentTable = METER_RENT) {
+    const table = phase === 'phase1' ? meterRentTable.phase1 : meterRentTable.other;
     return meterOwner === 'kseb' ? table.kseb : table.other;
 }
 
@@ -381,10 +419,24 @@ export function computeBill(rawInputs) {
         accountBalance = exportPlusBank - importReading;
     }
 
+    // Admin Options (index.html) can override the core per-unit rates in
+    // case KSEB revises a tariff -- same "trust the field if it's there and
+    // valid, else fall back to the tariff-rates.js constant" pattern as
+    // dutyRatePercent/fuelSurchargePaise/meterRentOverride below, just for
+    // whole slab tables instead of single numbers.
+    const rates = {
+        fixedChargeSlabs: validSlabs(rawInputs.fixedChargeSlabs, DEFAULT_RATES.fixedChargeSlabs.length, ['phase1', 'other'])
+            ? rawInputs.fixedChargeSlabs : DEFAULT_RATES.fixedChargeSlabs,
+        telescopicSlabs: validSlabs(rawInputs.telescopicSlabs, DEFAULT_RATES.telescopicSlabs.length, ['rate'])
+            ? rawInputs.telescopicSlabs : DEFAULT_RATES.telescopicSlabs,
+        nonTelescopicSlabs: validSlabs(rawInputs.nonTelescopicSlabs, DEFAULT_RATES.nonTelescopicSlabs.length, ['rate'])
+            ? rawInputs.nonTelescopicSlabs : DEFAULT_RATES.nonTelescopicSlabs,
+    };
+
     const rules = applyTariffRules({
         billingType, unitsConsumed, bankAdjustedUnits, phase, todBillingAbove20kW,
         exportPlusBank, importNormal, importPeak, importOffPeak,
-    });
+    }, rates);
 
     // Duty and Fuel Surcharge are editable in the form (in case KSEB revises
     // these rates in the future) -- fall back to the tariff-rates.js
@@ -397,7 +449,8 @@ export function computeBill(rawInputs) {
     const fuelSurchargePerUnit = Number.isFinite(rawInputs.fuelSurchargePaise) ? rawInputs.fuelSurchargePaise / 100 : FUEL_SURCHARGE_PER_UNIT;
     // Meter Rent is likewise editable (Admin Options keeps it synced to the
     // Phase/Meter Owner selection by default, but the user can override it).
-    const meterRent = Number.isFinite(rawInputs.meterRentOverride) ? rawInputs.meterRentOverride : computeMeterRent(phase, meterOwner);
+    const meterRentTable = validMeterRentTable(rawInputs.meterRentTable) ? rawInputs.meterRentTable : DEFAULT_RATES.meterRent;
+    const meterRent = Number.isFinite(rawInputs.meterRentOverride) ? rawInputs.meterRentOverride : computeMeterRent(phase, meterOwner, meterRentTable);
     const duty = rules.energyCharge * dutyRate;
     const monthlyFuelSurcharge = rules.bankAdjustedUnits * fuelSurchargePerUnit;
     const totalBillAmount = Math.round(rules.fixedCharge + meterRent + rules.energyCharge + duty + monthlyFuelSurcharge);
@@ -432,6 +485,16 @@ export function computeBill(rawInputs) {
         fuelSurchargePerUnit,
         monthlyFuelSurcharge,
         totalBillAmount,
+        // The EFFECTIVE rates this bill was actually computed with (default
+        // tariff-rates.js constants, or the Admin Option overrides if any
+        // were provided) -- exposed so a caller re-running computeBill() for
+        // a "what-if" comparison (e.g. render-insights.js's solar-savings
+        // estimate) can forward the same rates instead of silently drifting
+        // back to the hardcoded defaults.
+        telescopicSlabs: rates.telescopicSlabs,
+        nonTelescopicSlabs: rates.nonTelescopicSlabs,
+        fixedChargeSlabs: rates.fixedChargeSlabs,
+        meterRentTable,
         ...rules,
     };
 }

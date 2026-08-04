@@ -11,7 +11,6 @@
 // validated palette used elsewhere (--primary/--solar/--import).
 
 import { computeBill } from './calculator.js';
-import { TELESCOPIC_SLABS, NON_TELESCOPIC_SLABS } from './tariff-rates.js';
 
 function money(n) {
     return `₹${n.toFixed(2)}`;
@@ -58,7 +57,7 @@ function effectiveRateInsight(bill) {
 // band's rate, so crossing into the next band is a soft nudge, not a cliff.
 function telescopicSlabInsight(bill) {
     let cumulative = 0;
-    for (const slab of TELESCOPIC_SLABS) {
+    for (const slab of bill.telescopicSlabs) {
         cumulative += slab.bandUnits;
         if (bill.bankAdjustedUnits <= cumulative) {
             const headroom = cumulative - bill.bankAdjustedUnits;
@@ -82,11 +81,11 @@ function telescopicSlabInsight(bill) {
 // Non-telescopic slabs are a cliff -- crossing the threshold re-rates ALL
 // billed units, not just the marginal ones, so it's worth a sharper warning.
 function nonTelescopicSlabInsight(bill) {
-    for (let i = 0; i < NON_TELESCOPIC_SLABS.length; i += 1) {
-        const slab = NON_TELESCOPIC_SLABS[i];
+    for (let i = 0; i < bill.nonTelescopicSlabs.length; i += 1) {
+        const slab = bill.nonTelescopicSlabs[i];
         if (bill.bankAdjustedUnits > slab.maxUnits) continue;
 
-        const nextSlab = NON_TELESCOPIC_SLABS[i + 1];
+        const nextSlab = bill.nonTelescopicSlabs[i + 1];
         if (!nextSlab) return null;
 
         const headroom = slab.maxUnits - bill.bankAdjustedUnits;
@@ -154,14 +153,19 @@ function solarImpactInsight(bill) {
         hasBankBalance: false,
         bankedUnits: 0,
         // Without these, computeBill() falls back to the hardcoded tariff
-        // defaults (10% duty, ₹0.00 fuel surcharge, default meter rent)
+        // defaults (10% duty, ₹0.00 fuel surcharge, default meter rent, and
+        // now also default telescopic/non-telescopic/fixed-charge slabs)
         // instead of whatever the real bill actually used -- silently wrong
-        // whenever Admin Options has these overridden (e.g. a non-zero fuel
-        // surcharge, which KSEB revises periodically and this app expects
-        // users to keep current).
+        // whenever Admin Options has any of these overridden (e.g. a
+        // non-zero fuel surcharge, or a KSEB-revised energy rate, which this
+        // app expects users to keep current).
         dutyRatePercent: bill.dutyRate * 100,
         fuelSurchargePaise: bill.fuelSurchargePerUnit * 100,
         meterRentOverride: bill.meterRent,
+        telescopicSlabs: bill.telescopicSlabs,
+        nonTelescopicSlabs: bill.nonTelescopicSlabs,
+        fixedChargeSlabs: bill.fixedChargeSlabs,
+        meterRentTable: bill.meterRentTable,
     };
 
     const whatIfInputs = bill.billingType === 'normal'

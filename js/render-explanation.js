@@ -5,8 +5,6 @@
 // Pure string builder from a `bill` object, same contract as the other
 // render-*.js modules.
 
-import { WHEELING_RATE_PER_UNIT } from './tariff-rates.js';
-
 function u(n) {
     return `${(n || 0).toFixed(2)}`;
 }
@@ -504,8 +502,8 @@ function wheelingNettingItems(wheelingResult) {
             detail: m(wheelingResult.wheelingCharge),
             amountValue: wheelingResult.wheelingCharge,
             isCharge: true,
-            en: `(${u(wheelingResult.totalAdjustedUnits)} units wheeled + ${u(wheelingResult.totalEnergyLost)} units lost) × ${m(WHEELING_RATE_PER_UNIT)}/unit — KSEB charges this fee on both the units that reached a site AND the units lost in transit, added to your own bill above.`,
-            ml: `(wheel ചെയ്ത ${u(wheelingResult.totalAdjustedUnits)} യൂണിറ്റ് + നഷ്ടപ്പെട്ട ${u(wheelingResult.totalEnergyLost)} യൂണിറ്റ്) × ${m(WHEELING_RATE_PER_UNIT)}/യൂണിറ്റ് — സൈറ്റിൽ എത്തിയ യൂണിറ്റുകൾക്കും transit-ൽ നഷ്ടപ്പെട്ട യൂണിറ്റുകൾക്കും KSEB ഈ ചാർജ് ഈടാക്കുന്നു, ഇത് നിങ്ങളുടെ സ്വന്തം ബില്ലിലേക്ക് കൂട്ടിച്ചേർക്കും.`,
+            en: `(${u(wheelingResult.totalAdjustedUnits)} units wheeled + ${u(wheelingResult.totalEnergyLost)} units lost) × ${m(wheelingResult.wheelingRatePerUnit)}/unit — KSEB charges this fee on both the units that reached a site AND the units lost in transit, added to your own bill above.`,
+            ml: `(wheel ചെയ്ത ${u(wheelingResult.totalAdjustedUnits)} യൂണിറ്റ് + നഷ്ടപ്പെട്ട ${u(wheelingResult.totalEnergyLost)} യൂണിറ്റ്) × ${m(wheelingResult.wheelingRatePerUnit)}/യൂണിറ്റ് — സൈറ്റിൽ എത്തിയ യൂണിറ്റുകൾക്കും transit-ൽ നഷ്ടപ്പെട്ട യൂണിറ്റുകൾക്കും KSEB ഈ ചാർജ് ഈടാക്കുന്നു, ഇത് നിങ്ങളുടെ സ്വന്തം ബില്ലിലേക്ക് കൂട്ടിച്ചേർക്കും.`,
         }),
     );
 

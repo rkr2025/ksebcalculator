@@ -2,8 +2,6 @@
 // Pure string builder from a wheeling-calculator.js result object, same
 // contract as the other render-*.js modules.
 
-import { WHEELING_RATE_PER_UNIT } from './tariff-rates.js';
-
 function money(n) {
     return `₹${n.toFixed(2)}`;
 }
@@ -64,7 +62,7 @@ export function renderWheelingResult(wheelingResult) {
                     <tr>
                         <td style="padding: 6px 0; font-weight: 700; color: var(--text-primary);">
                             Wheeling Charge
-                            <br><span style="font-weight: 500; font-size: 11.5px; color: var(--text-muted);">(${unit(wheelingResult.totalAdjustedUnits)} + ${unit(wheelingResult.totalEnergyLost)}) &times; ₹${WHEELING_RATE_PER_UNIT.toFixed(2)}/unit</span>
+                            <br><span style="font-weight: 500; font-size: 11.5px; color: var(--text-muted);">(${unit(wheelingResult.totalAdjustedUnits)} + ${unit(wheelingResult.totalEnergyLost)}) &times; ₹${wheelingResult.wheelingRatePerUnit.toFixed(2)}/unit</span>
                         </td>
                         <td style="padding: 6px 0; text-align: right; font-weight: 700; color: var(--text-primary);">${money(wheelingResult.wheelingCharge)}</td>
                     </tr>

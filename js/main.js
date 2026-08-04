@@ -2,7 +2,7 @@
 // (js/main.js). Besides reading-inputs.js (a self-contained DOM-only
 // widget), this is the only file that touches document/window.
 
-import { computeBill, BILL_ERRORS, computeMeterRent } from './calculator.js';
+import { computeBill, BILL_ERRORS } from './calculator.js';
 import { renderBillResults, APP_VERSION_LABEL } from './render-results.js';
 import { getRandomQuote } from './quotes.js';
 import { fetchOnlineQuote } from './quote-service.js';
@@ -10,6 +10,15 @@ import { initReadingGroups } from './reading-inputs.js';
 import { initWheelingUI } from './wheeling-ui.js';
 import { computeWheelingResult } from './wheeling-calculator.js';
 import { initCardInfoPanels } from './card-info.js';
+import {
+    TELESCOPIC_SLABS,
+    NON_TELESCOPIC_SLABS,
+    FIXED_CHARGE_SLABS,
+    METER_RENT,
+    DIST_LOSS_SAME_TRANSFORMER,
+    DIST_LOSS_DIFFERENT_TRANSFORMER,
+    WHEELING_RATE_PER_UNIT,
+} from './tariff-rates.js';
 
 const resetReadingGroups = initReadingGroups();
 const wheelingUI = initWheelingUI();
@@ -23,6 +32,35 @@ const PRINT_ONLY_PANEL_ID = 'printInputsSummary';
 
 function num(id) {
     return parseFloat(document.getElementById(id).value) || 0;
+}
+
+// Builds the Admin Option "Core Tariff Rates" overrides as full slab
+// objects -- band *boundaries* (bandUnits/maxUnits) are never user-edited,
+// only the ₹ rate inside each band, so these always pair the fixed
+// boundary with whatever the field currently holds (its default value when
+// locked, or the user's edited value when unlocked). Read unconditionally,
+// same as dutyRatePercent/fuelSurchargePaise below -- calculator.js falls
+// back to its own defaults if a field somehow holds something invalid.
+function buildTelescopicSlabs() {
+    return TELESCOPIC_SLABS.map((slab, i) => ({ bandUnits: slab.bandUnits, rate: num(`telescopicRate${i + 1}`) }));
+}
+function buildNonTelescopicSlabs() {
+    return NON_TELESCOPIC_SLABS.map((slab, i) => ({ maxUnits: slab.maxUnits, rate: num(`nonTelescopicRate${i + 1}`) }));
+}
+function buildFixedChargeSlabs() {
+    return FIXED_CHARGE_SLABS.map((slab, i) => ({
+        maxUnits: slab.maxUnits,
+        phase1: num(`fixedChargeSlab${i + 1}Phase1`),
+        other: num(`fixedChargeSlab${i + 1}Other`),
+    }));
+}
+// Consumer-owned meters are always ₹0 rent (not a revisable rate, so not
+// user-edited here) -- only the two KSEB-owned cells come from the form.
+function buildMeterRentTable() {
+    return {
+        phase1: { kseb: num('meterRentPhase1Kseb'), other: 0 },
+        other: { kseb: num('meterRentPhase3Kseb'), other: 0 },
+    };
 }
 
 function readFormInputs() {
@@ -39,7 +77,10 @@ function readFormInputs() {
         bankedUnits: hasBankBalance ? num('bankedUnitInput') : 0,
         dutyRatePercent: num('dutyRatePercent'),
         fuelSurchargePaise: num('fuelSurchargeInput'),
-        meterRentOverride: num('meterRentInput'),
+        telescopicSlabs: buildTelescopicSlabs(),
+        nonTelescopicSlabs: buildNonTelescopicSlabs(),
+        fixedChargeSlabs: buildFixedChargeSlabs(),
+        meterRentTable: buildMeterRentTable(),
     };
 
     if (billingType === 'normal') {
@@ -155,11 +196,16 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
     }
 
     if (wheelingUI.isEnabled()) {
-        const lossOverrides = {
+        const wheelingOverrides = {
             sameTransformerPct: num('wheelSameTransformerLoss'),
             differentTransformerPct: num('wheelDiffTransformerLoss'),
+            wheelingRatePerUnit: num('wheelingRatePerUnitInput'),
+            // Same Admin Option rates as the prosumer's own bill above -- a
+            // wheeled LT1 (domestic) site is billed on the same tariff table.
+            telescopicSlabs: buildTelescopicSlabs(),
+            nonTelescopicSlabs: buildNonTelescopicSlabs(),
         };
-        const wheelingResult = computeWheelingResult(bill.accountBalance, wheelingUI.getSites(), lossOverrides);
+        const wheelingResult = computeWheelingResult(bill.accountBalance, wheelingUI.getSites(), wheelingOverrides);
         if (wheelingResult.sites.length > 0) {
             bill.wheelingResult = wheelingResult;
             bill.totalBillAmount = Math.round((bill.totalBillAmount + wheelingResult.wheelingCharge) * 100) / 100;
@@ -209,35 +255,51 @@ document.getElementById('dutySurchargeEditToggle').addEventListener('change', fu
     document.getElementById('fuelSurchargeInput').disabled = !this.checked;
 });
 
-// Meter Rent starts greyed out too, kept in sync with Phase/Meter Owner
-// (the same table js/calculator.js's computeMeterRent() reads) until the
-// user unlocks editing it, at which point it stops auto-updating.
-function updateMeterRentDefault() {
-    const phase = document.getElementById('phase').value;
-    const meterOwner = document.getElementById('meterOwner').value;
-    // Meter Rent only applies when KSEB owns the meter -- METER_RENT's
-    // "other" (Consumer-owned) column is 0 for every phase, so there's
-    // nothing to show/edit in that case.
-    document.getElementById('meterRentContainer').style.display = meterOwner === 'kseb' ? '' : 'none';
-    document.getElementById('meterRentPhaseLabel').textContent = phase === 'phase1' ? 'Phase 1' : 'Phase 3';
-    if (document.getElementById('meterRentEditToggle').checked) return;
-    document.getElementById('meterRentInput').value = computeMeterRent(phase, meterOwner);
+// Shared by the three "Admin Option" rate groups below (Core Tariff Rates,
+// Meter Rent, Wheeling Distribution Loss % & Rate): each has an "Edit these
+// rates" toggle that unlocks a fixed list of fields, plus a "Reset to
+// Default Rates" button that restores the real tariff-rates.js values and
+// re-locks the group -- the explicit, discoverable way to "go back to the
+// calculator's built-in rates" the fields' own toggle-uncheck doesn't
+// reliably do (see dutySurchargeEditToggle above, which only greys the
+// fields back out without touching whatever value is already typed in).
+function wireRateGroup(toggleId, resetButtonId, fieldIds, defaults) {
+    const toggle = document.getElementById(toggleId);
+    toggle.addEventListener('change', function () {
+        fieldIds.forEach((id) => { document.getElementById(id).disabled = !this.checked; });
+    });
+    document.getElementById(resetButtonId).addEventListener('click', () => {
+        fieldIds.forEach((id, i) => { document.getElementById(id).value = defaults[i]; });
+        toggle.checked = false;
+        fieldIds.forEach((id) => { document.getElementById(id).disabled = true; });
+    });
 }
 
-document.getElementById('phase').addEventListener('change', updateMeterRentDefault);
-document.getElementById('meterOwner').addEventListener('change', updateMeterRentDefault);
-document.getElementById('meterRentEditToggle').addEventListener('change', function () {
-    document.getElementById('meterRentInput').disabled = !this.checked;
-    if (!this.checked) updateMeterRentDefault();
-});
-updateMeterRentDefault();
+const TARIFF_RATE_FIELD_IDS = [
+    'telescopicRate1', 'telescopicRate2', 'telescopicRate3', 'telescopicRate4', 'telescopicRate5',
+    'nonTelescopicRate1', 'nonTelescopicRate2', 'nonTelescopicRate3', 'nonTelescopicRate4', 'nonTelescopicRate5',
+    ...FIXED_CHARGE_SLABS.flatMap((slab, i) => [`fixedChargeSlab${i + 1}Phase1`, `fixedChargeSlab${i + 1}Other`]),
+];
+const TARIFF_RATE_DEFAULTS = [
+    ...TELESCOPIC_SLABS.map((s) => s.rate),
+    ...NON_TELESCOPIC_SLABS.map((s) => s.rate),
+    ...FIXED_CHARGE_SLABS.flatMap((s) => [s.phase1, s.other]),
+];
+wireRateGroup('tariffRatesEditToggle', 'resetTariffRatesButton', TARIFF_RATE_FIELD_IDS, TARIFF_RATE_DEFAULTS);
 
-// Wheeling's distribution-loss percentages (4.99% / 7.14%) start greyed out
-// at the current KSEB defaults too, same pattern as Duty/Fuel Surcharge above.
-document.getElementById('wheelingLossEditToggle').addEventListener('change', function () {
-    document.getElementById('wheelSameTransformerLoss').disabled = !this.checked;
-    document.getElementById('wheelDiffTransformerLoss').disabled = !this.checked;
-});
+wireRateGroup(
+    'meterRentEditToggle',
+    'resetMeterRentButton',
+    ['meterRentPhase1Kseb', 'meterRentPhase3Kseb'],
+    [METER_RENT.phase1.kseb, METER_RENT.other.kseb],
+);
+
+wireRateGroup(
+    'wheelingLossEditToggle',
+    'resetWheelingRatesButton',
+    ['wheelSameTransformerLoss', 'wheelDiffTransformerLoss', 'wheelingRatePerUnitInput'],
+    [DIST_LOSS_SAME_TRANSFORMER, DIST_LOSS_DIFFERENT_TRANSFORMER, WHEELING_RATE_PER_UNIT],
+);
 
 
 // Trigger the change events on page load so the visible sections match
@@ -313,17 +375,21 @@ function resetCalculator() {
     document.getElementById('adminOptionsContainer').open = false;
     document.getElementById('connectedLoadContainer').open = false;
     document.getElementById('dutySurchargeContainer').open = false;
+    document.getElementById('tariffRatesContainer').open = false;
     document.getElementById('meterRentContainer').open = false;
     document.getElementById('wheelingLossContainer').open = false;
-    // form.reset() restores the Edit-these-rates checkboxes to unchecked,
-    // but it doesn't touch the `disabled` property on the rate inputs --
-    // re-sync them so Reset also greys the fields back out.
+    // form.reset() restores the Edit-these-rates checkboxes to unchecked
+    // and each rate field's `value` to its HTML default, but it doesn't
+    // touch the `disabled` property on those inputs -- re-sync them so
+    // Reset also greys the fields back out.
     document.getElementById('dutyRatePercent').disabled = true;
     document.getElementById('fuelSurchargeInput').disabled = true;
-    document.getElementById('meterRentInput').disabled = true;
+    TARIFF_RATE_FIELD_IDS.forEach((id) => { document.getElementById(id).disabled = true; });
+    document.getElementById('meterRentPhase1Kseb').disabled = true;
+    document.getElementById('meterRentPhase3Kseb').disabled = true;
     document.getElementById('wheelSameTransformerLoss').disabled = true;
     document.getElementById('wheelDiffTransformerLoss').disabled = true;
-    updateMeterRentDefault();
+    document.getElementById('wheelingRatePerUnitInput').disabled = true;
 
     updateBillingTypeSections(document.getElementById('billingType').value);
 }

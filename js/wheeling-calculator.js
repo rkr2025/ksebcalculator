@@ -30,6 +30,8 @@ import {
     FUEL_SURCHARGE_PER_UNIT,
     LT7A_SLABS,
     LT7B_SLABS,
+    TELESCOPIC_SLABS,
+    NON_TELESCOPIC_SLABS,
 } from './tariff-rates.js';
 import {
     computeEnergyChargeForUnits,
@@ -60,15 +62,19 @@ function computeFlatCategoryCharge(units, category) {
 }
 
 // Bills `units` (and, for an LT1 ToD site, `split`) at whichever tariff the
-// site's category calls for.
-function billForCategory(site, units, split) {
+// site's category calls for. `energyRates` is only meaningful for LT1
+// (domestic) sites -- they're billed on the SAME telescopic/non-telescopic
+// table as the prosumer's own bill, so the prosumer's own Admin Option
+// overrides apply here too. LT7A/LT7B (commercial) always use their own
+// fixed tariff-rates.js tables -- out of scope for the Admin Option overrides.
+function billForCategory(site, units, split, energyRates) {
     if (site.category === 'LT7A' || site.category === 'LT7B') {
         return computeFlatCategoryCharge(units, site.category);
     }
     if (site.todAvailable) {
-        return computeTodEnergyChargeForSplit(split);
+        return computeTodEnergyChargeForSplit(split, energyRates);
     }
-    return computeEnergyChargeForUnits(units);
+    return computeEnergyChargeForUnits(units, energyRates);
 }
 
 // Bills a site's consumption twice -- once for its full (pre-wheeling)
@@ -77,12 +83,12 @@ function billForCategory(site, units, split) {
 // site. Fixed charge and meter rent are deliberately excluded: they depend
 // only on the site's own connection (phase/load), not on wheeling, so they
 // cancel out of the before/after comparison.
-function billSite(site, unitsAfterWheeling, splitAfterWheeling) {
+function billSite(site, unitsAfterWheeling, splitAfterWheeling, energyRates) {
     const totalUnits = siteTotalUnits(site);
     const beforeSplit = { normalUnits: site.todNormal, peakUnits: site.todPeak, offPeakUnits: site.todOffPeak };
 
-    const before = billForCategory(site, totalUnits, beforeSplit);
-    const after = billForCategory(site, unitsAfterWheeling, splitAfterWheeling);
+    const before = billForCategory(site, totalUnits, beforeSplit, energyRates);
+    const after = billForCategory(site, unitsAfterWheeling, splitAfterWheeling, energyRates);
 
     const dutyBefore = before.energyCharge * DUTY_RATE;
     const surchargeBefore = totalUnits * FUEL_SURCHARGE_PER_UNIT;
@@ -105,22 +111,33 @@ function billSite(site, unitsAfterWheeling, splitAfterWheeling) {
 // processed in order; each site's leftover post-loss balance becomes the
 // next site's opening balance.
 //
-// `lossOverrides` lets the Admin Option fields in index.html substitute the
-// current KSEB distribution-loss percentages (4.99% / 7.14%) with new ones
-// if KSEB revises them -- either percentage falls back to its tariff-rates.js
-// constant when not a finite number (e.g. the field is left at its default,
+// `overrides` lets the Admin Option fields in index.html substitute the
+// current KSEB distribution-loss percentages (4.99% / 7.14%), the wheeling
+// rate per unit (₹0.64), and/or the telescopic/non-telescopic per-unit rates
+// (for LT1 wheeled sites, billed on the prosumer's own tariff table) with
+// new ones if KSEB revises them -- each falls back to its tariff-rates.js
+// constant when not provided/valid (e.g. the field is left at its default,
 // or main.js is called without overrides at all).
-export function computeWheelingResult(availableBankUnits, sites, lossOverrides = {}) {
+export function computeWheelingResult(availableBankUnits, sites, overrides = {}) {
     if (!sites || sites.length === 0) {
         return {
             sites: [], totalAdjustedUnits: 0, totalEnergyLost: 0, totalSaving: 0, wheelingCharge: 0, finalBankBalance: Math.max(availableBankUnits || 0, 0),
         };
     }
 
-    const sameTransformerPct = Number.isFinite(lossOverrides.sameTransformerPct)
-        ? lossOverrides.sameTransformerPct : DIST_LOSS_SAME_TRANSFORMER;
-    const differentTransformerPct = Number.isFinite(lossOverrides.differentTransformerPct)
-        ? lossOverrides.differentTransformerPct : DIST_LOSS_DIFFERENT_TRANSFORMER;
+    const sameTransformerPct = Number.isFinite(overrides.sameTransformerPct)
+        ? overrides.sameTransformerPct : DIST_LOSS_SAME_TRANSFORMER;
+    const differentTransformerPct = Number.isFinite(overrides.differentTransformerPct)
+        ? overrides.differentTransformerPct : DIST_LOSS_DIFFERENT_TRANSFORMER;
+    const wheelingRatePerUnit = Number.isFinite(overrides.wheelingRatePerUnit)
+        ? overrides.wheelingRatePerUnit : WHEELING_RATE_PER_UNIT;
+    // Each key resolved independently (not "override both or neither") --
+    // otherwise overriding only telescopicSlabs would leave nonTelescopicSlabs
+    // undefined and crash computeNonTelescopicCharge's slab lookup.
+    const energyRates = {
+        telescopicSlabs: overrides.telescopicSlabs || TELESCOPIC_SLABS,
+        nonTelescopicSlabs: overrides.nonTelescopicSlabs || NON_TELESCOPIC_SLABS,
+    };
 
     let newBank = Math.max(availableBankUnits || 0, 0);
     const results = [];
@@ -150,7 +167,7 @@ export function computeWheelingResult(availableBankUnits, sites, lossOverrides =
             })
             : null;
 
-        const billing = billSite(site, unitsAfterWheeling, splitAfterWheeling);
+        const billing = billSite(site, unitsAfterWheeling, splitAfterWheeling, energyRates);
 
         results.push({
             siteIndex: index + 1,
@@ -176,7 +193,7 @@ export function computeWheelingResult(availableBankUnits, sites, lossOverrides =
         newBank = bankAfterWheeling;
     });
 
-    const wheelingCharge = round2((totalAdjustedUnits + totalEnergyLost) * WHEELING_RATE_PER_UNIT);
+    const wheelingCharge = round2((totalAdjustedUnits + totalEnergyLost) * wheelingRatePerUnit);
 
     return {
         sites: results,
@@ -184,6 +201,7 @@ export function computeWheelingResult(availableBankUnits, sites, lossOverrides =
         totalEnergyLost: round2(totalEnergyLost),
         totalSaving: round2(totalSaving),
         wheelingCharge,
+        wheelingRatePerUnit,
         finalBankBalance: newBank,
     };
 }

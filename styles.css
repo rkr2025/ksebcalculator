@@ -956,6 +956,28 @@ select {
   transform: translateY(-1px);
 }
 
+/* Small "Reset to Default Rates" buttons inside the Admin Option rate
+   sections -- unlike .reset-button (the big Calculate/Reset row button),
+   these are compact and scoped to just one rate group. */
+.rate-reset-btn {
+  display: block;
+  margin-top: 12px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface-muted);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.rate-reset-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
 /* ---------------------------------- Buttons ----------------------------- */
 
 .calc-button-container {
