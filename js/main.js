@@ -9,9 +9,11 @@ import { fetchOnlineQuote } from './quote-service.js';
 import { initReadingGroups } from './reading-inputs.js';
 import { initWheelingUI } from './wheeling-ui.js';
 import { computeWheelingResult } from './wheeling-calculator.js';
+import { initCardInfoPanels } from './card-info.js';
 
 const resetReadingGroups = initReadingGroups();
 const wheelingUI = initWheelingUI();
+initCardInfoPanels();
 
 const RESULT_PANEL_IDS = ['billExplanation', 'billChart', 'billAnalysis', 'wheelingBreakdown', 'result', 'result1', 'result2', 'result3', 'result4', 'result6'];
 // Print-only -- populated/cleared alongside the panels above, but never

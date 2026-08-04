@@ -327,6 +327,29 @@
                 <div class="card-header">
                     <span class="card-icon">📊</span>
                     <h2 class="card-title">Billing Setup</h2>
+                    <button type="button" class="card-info-btn" aria-expanded="false" aria-label="How to use this section" data-info-target="billingCardInfo">ℹ️</button>
+                </div>
+                <div class="card-info-panel" id="billingCardInfo" hidden>
+                    <div class="card-info-lang-toggle" role="group" aria-label="Instructions language">
+                        <button type="button" class="card-info-lang-btn active" data-lang="ml">മലയാളം</button>
+                        <button type="button" class="card-info-lang-btn" data-lang="en">English</button>
+                    </div>
+                    <div data-info-lang="en" hidden>
+                        <ul>
+                            <li><strong>Phase:</strong> choose Phase 1 (single-phase) or Phase 3 (three-phase) -- check your KSEB bill if you're unsure.</li>
+                            <li><strong>Meter Owner:</strong> KSEB if they own the meter (Meter Rent applies), or Consumer if you own it (no Meter Rent).</li>
+                            <li><strong>Billing Type:</strong> Normal for a single combined reading, or ToD (Time-of-Day) for separate Normal/Peak/Off-Peak readings -- match whatever your actual meter uses.</li>
+                            <li><strong>Banked Units?:</strong> choose Yes if you have surplus units carried forward from a previous bill, then enter that amount.</li>
+                        </ul>
+                    </div>
+                    <div data-info-lang="ml">
+                        <ul>
+                            <li><strong>Phase:</strong> Phase 1 (single-phase) അല്ലെങ്കിൽ Phase 3 (three-phase) തിരഞ്ഞെടുക്കുക -- ഉറപ്പില്ലെങ്കിൽ നിങ്ങളുടെ KSEB ബില്ല് നോക്കുക.</li>
+                            <li><strong>Meter Owner:</strong> മീറ്റർ KSEB-യുടേതാണെങ്കിൽ KSEB (Meter Rent ബാധകം), സ്വന്തമാണെങ്കിൽ Consumer (Meter Rent ഇല്ല).</li>
+                            <li><strong>Billing Type:</strong> ഒറ്റ റീഡിംഗ് ആണെങ്കിൽ Normal, പ്രത്യേകം Normal/Peak/Off-Peak റീഡിംഗുകൾ ആണെങ്കിൽ ToD (Time-of-Day) -- നിങ്ങളുടെ യഥാർത്ഥ മീറ്ററുമായി പൊരുത്തപ്പെടുന്നത് തിരഞ്ഞെടുക്കുക.</li>
+                            <li><strong>Banked Units?:</strong> മുൻ ബില്ലിൽ നിന്ന് ബാക്കിയുള്ള മിച്ച യൂണിറ്റുകൾ ഉണ്ടെങ്കിൽ Yes തിരഞ്ഞെടുത്ത് ആ അളവ് നൽകുക.</li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="billing-fields-row">
                     <div class="field-grid field-grid--2">
@@ -446,6 +469,30 @@
                 <div class="card-header">
                     <span class="card-icon">☀️</span>
                     <h2 class="card-title">Solar Generation</h2>
+                    <button type="button" class="card-info-btn" aria-expanded="false" aria-label="How to use this section" data-info-target="solarCardInfo">ℹ️</button>
+                </div>
+                <div class="card-info-panel" id="solarCardInfo" hidden>
+                    <div class="card-info-lang-toggle" role="group" aria-label="Instructions language">
+                        <button type="button" class="card-info-lang-btn active" data-lang="ml">മലയാളം</button>
+                        <button type="button" class="card-info-lang-btn" data-lang="en">English</button>
+                    </div>
+                    <div data-info-lang="en" hidden>
+                        <ul>
+                            <li>Enter the units your solar panels generated this billing period.</li>
+                            <li>Two ways to enter it: type the total directly, or turn on "Calculate from Previous &amp; Present meter readings" and enter your meter's two readings -- the app subtracts them for you.</li>
+                            <li>If your meter shows Present before Previous, use "Enter Present Reading first" to swap the field order.</li>
+                            <li>For ToD billing, enter Normal/Peak/Off-Peak generation separately, matching your solar meter's own time-of-day split.</li>
+                            <li>On your bill, KWH/NL/I refers to Normal (6 am-6 pm), KWH/OP/I refers to Off-Peak (10 pm - 6 am), and KWH/PK/I refers to Peak (6 pm - 10 pm).</li>
+                        </ul>
+                    </div>
+                    <div data-info-lang="ml">
+                        <ul>
+                            <li>ഈ ബില്ലിംഗ് പിരീഡിൽ നിങ്ങളുടെ സോളാർ പാനലുകൾ ഉത്പാദിപ്പിച്ച യൂണിറ്റുകൾ നൽകുക.</li>
+                            <li>രണ്ട് വിധത്തിൽ നൽകാം: നേരിട്ട് ആകെ Energy Consumption ടൈപ്പ് ചെയ്യുക, അല്ലെങ്കിൽ "Calculate from Previous &amp; Present meter readings" ഓണാക്കി മീറ്ററിലെ രണ്ട് റീഡിംഗുകളും നൽകുക -- ആപ്പ് അവ കുറച്ച് കണക്കാക്കും.</li>
+                            <li>ToD ബില്ലിംഗിന്: നിങ്ങളുടെ സോളാർ മീറ്ററിന്റെ സ്വന്തം സമയ വിഭജനവുമായി പൊരുത്തപ്പെടുത്തി Normal/Peak/Off-Peak ഉത്പാദനം പ്രത്യേകം നൽകുക.</li>
+                            <li>നിങ്ങളുടെ ബില്ലിൽ കാണിച്ചിരിക്കുന്ന KWH/NL/I എന്നത് Normal (6am-6pm) ആകുന്നു. KWH/OP/I എന്നത് Off-Peak (10pm-6am) ആകുന്നു. KWH/PK/I എന്നത് Peak (6pm-10pm) ആകുന്നു.</li>
+                        </ul>
+                    </div>
                 </div>
 
                 <!-- Normal Billing Solar Reading Inputs -->
@@ -554,6 +601,30 @@
                 <div class="card-header">
                     <span class="card-icon">⚡</span>
                     <h2 class="card-title">KSEB Net Meter Consumption</h2>
+                    <button type="button" class="card-info-btn" aria-expanded="false" aria-label="How to use this section" data-info-target="meterCardInfo">ℹ️</button>
+                </div>
+                <div class="card-info-panel" id="meterCardInfo" hidden>
+                    <div class="card-info-lang-toggle" role="group" aria-label="Instructions language">
+                        <button type="button" class="card-info-lang-btn active" data-lang="ml">മലയാളം</button>
+                        <button type="button" class="card-info-lang-btn" data-lang="en">English</button>
+                    </div>
+                    <div data-info-lang="en" hidden>
+                        <ul>
+                            <li><strong>Import Total:</strong> units you drew from the KSEB grid this period.</li>
+                            <li><strong>Export Total:</strong> units your solar sent back to the grid this period.</li>
+                            <li>Same two entry methods as Solar Generation -- a direct total, or Previous/Present meter readings.</li>
+                            <li>For ToD billing, enter Import and Export separately for Normal/Peak/Off-Peak. Turning on reading-mode for Import also turns it on for Export automatically, since they share one net meter.</li>
+                            <li>On your bill, KWH/NL/I refers to Normal (6 am-6 pm), KWH/OP/I refers to Off-Peak (10 pm - 6 am), and KWH/PK/I refers to Peak (6 pm - 10 pm).</li>
+                        </ul>
+                    </div>
+                    <div data-info-lang="ml">
+                        <ul>
+                            <li><strong>Import Total:</strong> ഈ പിരീഡിൽ KSEB ഗ്രിഡിൽ നിന്ന് നിങ്ങൾ എടുത്ത യൂണിറ്റുകൾ.</li>
+                            <li><strong>Export Total:</strong> ഈ പിരീഡിൽ നിങ്ങളുടെ സോളാർ ഗ്രിഡിലേക്ക് തിരികെ അയച്ച യൂണിറ്റുകൾ.</li>
+                            <li>Solar Generation-ലേത് പോലെ തന്നെ രണ്ട് വിധത്തിൽ നൽകാം -- നേരിട്ട് Energy consumption, അല്ലെങ്കിൽ Previous/Present റീഡിംഗുകൾ.</li>
+                            <li>നിങ്ങളുടെ ബില്ലിൽ കാണിച്ചിരിക്കുന്ന KWH/NL/I എന്നത് Normal (6am-6pm) ആകുന്നു. KWH/OP/I എന്നത് Off-Peak (10pm-6am) ആകുന്നു. KWH/PK/I എന്നത് Peak (6pm-10pm) ആകുന്നു.</li>
+                        </ul>
+                    </div>
                 </div>
 
                 <!-- Normal Billing KSEB Net Reading Inputs -->
@@ -737,10 +808,33 @@
                 <summary class="card-header">
                     <span class="card-icon">🔗</span>
                     <h2 class="card-title">Wheel Banked Units to Other Sites</h2>
+                    <button type="button" class="card-info-btn" aria-expanded="false" aria-label="How to use this section" data-info-target="wheelingCardInfo">ℹ️</button>
                 </summary>
                 <p class="card-subtitle" style="margin-left: 0;">
                     Transfer your surplus banked export units to another KSEB connection to offset its bill. A distribution loss and a wheeling charge apply.
                 </p>
+                <div class="card-info-panel" id="wheelingCardInfo" hidden>
+                    <div class="card-info-lang-toggle" role="group" aria-label="Instructions language">
+                        <button type="button" class="card-info-lang-btn active" data-lang="ml">മലയാളം</button>
+                        <button type="button" class="card-info-lang-btn" data-lang="en">English</button>
+                    </div>
+                    <div data-info-lang="en" hidden>
+                        <ul>
+                            <li>Optional -- only needed if you want to transfer your surplus banked units to a different KSEB connection.</li>
+                            <li>Turn on "Enable Wheeling?" -- a site block appears automatically.</li>
+                            <li>For each site, enter its Connection Type, whether it's on the Same Transformer as your generation site (this decides the distribution loss %), and its Consumed Units for the period.</li>
+                            <li>Add more sites with "+ Add Wheeling Site" -- your bank is offered to sites in the order listed, so list your priority site first.</li>
+                        </ul>
+                    </div>
+                    <div data-info-lang="ml">
+                        <ul>
+                            <li>ഇത് ഓപ്ഷണൽ ആണ് -- നിങ്ങളുടെ മിച്ച ബാങ്ക് യൂണിറ്റുകൾ മറ്റൊരു KSEB കണക്ഷനിലേക്ക് കൈമാറണമെങ്കിൽ മാത്രം ആവശ്യം.</li>
+                            <li>"Enable Wheeling" ഓണാക്കുക</li>
+                            <li>ഓരോ സൈറ്റിനും അതിന്റെ Connection Type, നിങ്ങളുടെ ജനറേഷൻ സൈറ്റിന്റെ അതേ Transformer തന്നെയാണോ (distribution loss % ഇത് തീരുമാനിക്കും), ആ പിരീഡിലെ Consumed Units എന്നിവ നൽകുക.</li>
+                            <li>"+ Add Wheeling Site" ഉപയോഗിച്ച് കൂടുതൽ സൈറ്റുകൾ ചേർക്കുക -- നിങ്ങളുടെ ബാങ്ക് ലിസ്റ്റ് ചെയ്ത ക്രമത്തിൽ തന്നെ സൈറ്റുകൾക്ക് നൽകും, അതിനാൽ മുൻഗണനയുള്ള സൈറ്റ് ആദ്യം ലിസ്റ്റ് ചെയ്യുക.</li>
+                        </ul>
+                    </div>
+                </div>
 
                 <div class="field-grid field-grid--2">
                     <div class="field">
