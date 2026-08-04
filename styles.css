@@ -759,37 +759,29 @@ select {
   background: linear-gradient(180deg, #ffffff, var(--bank-light));
 }
 
-/* Connected Load is an expandable <details>, same interaction as the FAQ
-   and Wheeling cards -- its badge doubles as the <summary> toggle. */
-#adminOptionsContainer > summary.sub-row-badge,
-#connectedLoadContainer > summary.sub-row-badge,
-#dutySurchargeContainer > summary.sub-row-badge,
-#meterRentContainer > summary.sub-row-badge {
+/* Any expandable <details> whose badge doubles as the <summary> toggle
+   (Admin Options, Connected Load, Duty/Fuel Surcharge, Meter Rent, Core
+   Tariff Rates and its nested rate-group/phase sub-sections, Wheeling's
+   Admin Option, etc.) -- generic on the tag pair rather than listing every
+   container ID, so new nested groups pick up the same arrow styling for
+   free. */
+details > summary.sub-row-badge {
   cursor: pointer;
   list-style: none;
 }
 
-#adminOptionsContainer > summary.sub-row-badge::-webkit-details-marker,
-#connectedLoadContainer > summary.sub-row-badge::-webkit-details-marker,
-#dutySurchargeContainer > summary.sub-row-badge::-webkit-details-marker,
-#meterRentContainer > summary.sub-row-badge::-webkit-details-marker {
+details > summary.sub-row-badge::-webkit-details-marker {
   display: none;
 }
 
-#adminOptionsContainer > summary.sub-row-badge::after,
-#connectedLoadContainer > summary.sub-row-badge::after,
-#dutySurchargeContainer > summary.sub-row-badge::after,
-#meterRentContainer > summary.sub-row-badge::after {
+details > summary.sub-row-badge::after {
   content: '▸';
   display: inline-block;
   margin-left: 2px;
   transition: transform 0.15s ease;
 }
 
-#adminOptionsContainer[open] > summary.sub-row-badge::after,
-#connectedLoadContainer[open] > summary.sub-row-badge::after,
-#dutySurchargeContainer[open] > summary.sub-row-badge::after,
-#meterRentContainer[open] > summary.sub-row-badge::after {
+details[open] > summary.sub-row-badge::after {
   transform: rotate(90deg);
 }
 

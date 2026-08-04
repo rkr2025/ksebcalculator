@@ -456,6 +456,7 @@
                          fields. -->
                     <details id="tariffRatesContainer" style="margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border);">
                         <summary class="sub-row-badge">💰 Core Tariff Rates</summary>
+                        <p style="margin: 8px 0 12px; font-size: 12px; color: var(--text-muted);">⚠️ Do not change these values unless the KSEB tariff itself changes.</p>
                         <div class="reading-mode-toggle">
                             <label class="switch">
                                 <input type="checkbox" id="tariffRatesEditToggle">
@@ -464,137 +465,153 @@
                             <span>Edit these rates</span>
                         </div>
 
-                        <p class="block-label">Telescopic Energy Rate (₹/unit)</p>
-                        <div class="field-grid" id="telescopicRateFields">
-                            <div class="field">
-                                <label for="telescopicRate1">0&ndash;50 units</label>
-                                <input type="number" id="telescopicRate1" value="3.35" min="0" step="0.01" disabled>
+                        <details style="margin-top: 12px;">
+                            <summary class="sub-row-badge">Telescopic Energy Rate (₹/unit)</summary>
+                            <div class="field-grid" id="telescopicRateFields">
+                                <div class="field">
+                                    <label for="telescopicRate1">0&ndash;50 units</label>
+                                    <input type="number" id="telescopicRate1" value="3.35" min="0" step="0.01" disabled>
+                                </div>
+                                <div class="field">
+                                    <label for="telescopicRate2">50&ndash;100 units</label>
+                                    <input type="number" id="telescopicRate2" value="4.25" min="0" step="0.01" disabled>
+                                </div>
+                                <div class="field">
+                                    <label for="telescopicRate3">100&ndash;150 units</label>
+                                    <input type="number" id="telescopicRate3" value="5.35" min="0" step="0.01" disabled>
+                                </div>
+                                <div class="field">
+                                    <label for="telescopicRate4">150&ndash;200 units</label>
+                                    <input type="number" id="telescopicRate4" value="7.20" min="0" step="0.01" disabled>
+                                </div>
+                                <div class="field">
+                                    <label for="telescopicRate5">200&ndash;250 units</label>
+                                    <input type="number" id="telescopicRate5" value="8.50" min="0" step="0.01" disabled>
+                                </div>
                             </div>
-                            <div class="field">
-                                <label for="telescopicRate2">50&ndash;100 units</label>
-                                <input type="number" id="telescopicRate2" value="4.25" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="telescopicRate3">100&ndash;150 units</label>
-                                <input type="number" id="telescopicRate3" value="5.35" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="telescopicRate4">150&ndash;200 units</label>
-                                <input type="number" id="telescopicRate4" value="7.20" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="telescopicRate5">200&ndash;250 units</label>
-                                <input type="number" id="telescopicRate5" value="8.50" min="0" step="0.01" disabled>
-                            </div>
-                        </div>
+                        </details>
 
-                        <p class="block-label" style="margin-top: 14px;">Non-Telescopic Energy Rate (₹/unit)</p>
-                        <div class="field-grid" id="nonTelescopicRateFields">
-                            <div class="field">
-                                <label for="nonTelescopicRate1">Up to 300 units</label>
-                                <input type="number" id="nonTelescopicRate1" value="6.75" min="0" step="0.01" disabled>
+                        <details style="margin-top: 10px;">
+                            <summary class="sub-row-badge">Non-Telescopic Energy Rate (₹/unit)</summary>
+                            <div class="field-grid" id="nonTelescopicRateFields">
+                                <div class="field">
+                                    <label for="nonTelescopicRate1">Up to 300 units</label>
+                                    <input type="number" id="nonTelescopicRate1" value="6.75" min="0" step="0.01" disabled>
+                                </div>
+                                <div class="field">
+                                    <label for="nonTelescopicRate2">301&ndash;350 units</label>
+                                    <input type="number" id="nonTelescopicRate2" value="7.60" min="0" step="0.01" disabled>
+                                </div>
+                                <div class="field">
+                                    <label for="nonTelescopicRate3">351&ndash;400 units</label>
+                                    <input type="number" id="nonTelescopicRate3" value="7.95" min="0" step="0.01" disabled>
+                                </div>
+                                <div class="field">
+                                    <label for="nonTelescopicRate4">401&ndash;500 units</label>
+                                    <input type="number" id="nonTelescopicRate4" value="8.25" min="0" step="0.01" disabled>
+                                </div>
+                                <div class="field">
+                                    <label for="nonTelescopicRate5">Above 500 units</label>
+                                    <input type="number" id="nonTelescopicRate5" value="9.20" min="0" step="0.01" disabled>
+                                </div>
                             </div>
-                            <div class="field">
-                                <label for="nonTelescopicRate2">301&ndash;350 units</label>
-                                <input type="number" id="nonTelescopicRate2" value="7.60" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="nonTelescopicRate3">351&ndash;400 units</label>
-                                <input type="number" id="nonTelescopicRate3" value="7.95" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="nonTelescopicRate4">401&ndash;500 units</label>
-                                <input type="number" id="nonTelescopicRate4" value="8.25" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="nonTelescopicRate5">Above 500 units</label>
-                                <input type="number" id="nonTelescopicRate5" value="9.20" min="0" step="0.01" disabled>
-                            </div>
-                        </div>
+                        </details>
 
-                        <p class="block-label" style="margin-top: 14px;">Fixed Charge (₹/month)</p>
-                        <div class="field-grid field-grid--2" id="fixedChargeFields">
-                            <div class="field">
-                                <label for="fixedChargeSlab1Phase1">Up to 50 units (Phase 1)</label>
-                                <input type="number" id="fixedChargeSlab1Phase1" value="50" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="fixedChargeSlab1Other">Up to 50 units (Phase 3)</label>
-                                <input type="number" id="fixedChargeSlab1Other" value="130" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="fixedChargeSlab2Phase1">51&ndash;100 units (Phase 1)</label>
-                                <input type="number" id="fixedChargeSlab2Phase1" value="85" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="fixedChargeSlab2Other">51&ndash;100 units (Phase 3)</label>
-                                <input type="number" id="fixedChargeSlab2Other" value="175" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="fixedChargeSlab3Phase1">101&ndash;150 units (Phase 1)</label>
-                                <input type="number" id="fixedChargeSlab3Phase1" value="105" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="fixedChargeSlab3Other">101&ndash;150 units (Phase 3)</label>
-                                <input type="number" id="fixedChargeSlab3Other" value="205" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="fixedChargeSlab4Phase1">151&ndash;200 units (Phase 1)</label>
-                                <input type="number" id="fixedChargeSlab4Phase1" value="140" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="fixedChargeSlab4Other">151&ndash;200 units (Phase 3)</label>
-                                <input type="number" id="fixedChargeSlab4Other" value="215" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="fixedChargeSlab5Phase1">201&ndash;250 units (Phase 1)</label>
-                                <input type="number" id="fixedChargeSlab5Phase1" value="160" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="fixedChargeSlab5Other">201&ndash;250 units (Phase 3)</label>
-                                <input type="number" id="fixedChargeSlab5Other" value="235" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="fixedChargeSlab6Phase1">251&ndash;300 units (Phase 1)</label>
-                                <input type="number" id="fixedChargeSlab6Phase1" value="220" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="fixedChargeSlab6Other">251&ndash;300 units (Phase 3)</label>
-                                <input type="number" id="fixedChargeSlab6Other" value="240" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="fixedChargeSlab7Phase1">301&ndash;350 units (Phase 1)</label>
-                                <input type="number" id="fixedChargeSlab7Phase1" value="240" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="fixedChargeSlab7Other">301&ndash;350 units (Phase 3)</label>
-                                <input type="number" id="fixedChargeSlab7Other" value="250" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="fixedChargeSlab8Phase1">351&ndash;400 units (Phase 1)</label>
-                                <input type="number" id="fixedChargeSlab8Phase1" value="260" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="fixedChargeSlab8Other">351&ndash;400 units (Phase 3)</label>
-                                <input type="number" id="fixedChargeSlab8Other" value="260" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="fixedChargeSlab9Phase1">401&ndash;500 units (Phase 1)</label>
-                                <input type="number" id="fixedChargeSlab9Phase1" value="285" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="fixedChargeSlab9Other">401&ndash;500 units (Phase 3)</label>
-                                <input type="number" id="fixedChargeSlab9Other" value="285" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="fixedChargeSlab10Phase1">Above 500 units (Phase 1)</label>
-                                <input type="number" id="fixedChargeSlab10Phase1" value="310" min="0" step="0.01" disabled>
-                            </div>
-                            <div class="field">
-                                <label for="fixedChargeSlab10Other">Above 500 units (Phase 3)</label>
-                                <input type="number" id="fixedChargeSlab10Other" value="310" min="0" step="0.01" disabled>
-                            </div>
-                        </div>
+                        <details style="margin-top: 10px;">
+                            <summary class="sub-row-badge">Fixed Charge (₹/month)</summary>
+
+                            <details style="margin-top: 8px;">
+                                <summary class="sub-row-badge">Phase 1</summary>
+                                <div class="field-grid" id="fixedChargePhase1Fields">
+                                    <div class="field">
+                                        <label for="fixedChargeSlab1Phase1">Up to 50 units</label>
+                                        <input type="number" id="fixedChargeSlab1Phase1" value="50" min="0" step="0.01" disabled>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fixedChargeSlab2Phase1">51&ndash;100 units</label>
+                                        <input type="number" id="fixedChargeSlab2Phase1" value="85" min="0" step="0.01" disabled>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fixedChargeSlab3Phase1">101&ndash;150 units</label>
+                                        <input type="number" id="fixedChargeSlab3Phase1" value="105" min="0" step="0.01" disabled>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fixedChargeSlab4Phase1">151&ndash;200 units</label>
+                                        <input type="number" id="fixedChargeSlab4Phase1" value="140" min="0" step="0.01" disabled>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fixedChargeSlab5Phase1">201&ndash;250 units</label>
+                                        <input type="number" id="fixedChargeSlab5Phase1" value="160" min="0" step="0.01" disabled>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fixedChargeSlab6Phase1">251&ndash;300 units</label>
+                                        <input type="number" id="fixedChargeSlab6Phase1" value="220" min="0" step="0.01" disabled>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fixedChargeSlab7Phase1">301&ndash;350 units</label>
+                                        <input type="number" id="fixedChargeSlab7Phase1" value="240" min="0" step="0.01" disabled>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fixedChargeSlab8Phase1">351&ndash;400 units</label>
+                                        <input type="number" id="fixedChargeSlab8Phase1" value="260" min="0" step="0.01" disabled>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fixedChargeSlab9Phase1">401&ndash;500 units</label>
+                                        <input type="number" id="fixedChargeSlab9Phase1" value="285" min="0" step="0.01" disabled>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fixedChargeSlab10Phase1">Above 500 units</label>
+                                        <input type="number" id="fixedChargeSlab10Phase1" value="310" min="0" step="0.01" disabled>
+                                    </div>
+                                </div>
+                            </details>
+
+                            <details style="margin-top: 8px;">
+                                <summary class="sub-row-badge">Phase 3</summary>
+                                <div class="field-grid" id="fixedChargePhase3Fields">
+                                    <div class="field">
+                                        <label for="fixedChargeSlab1Other">Up to 50 units</label>
+                                        <input type="number" id="fixedChargeSlab1Other" value="130" min="0" step="0.01" disabled>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fixedChargeSlab2Other">51&ndash;100 units</label>
+                                        <input type="number" id="fixedChargeSlab2Other" value="175" min="0" step="0.01" disabled>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fixedChargeSlab3Other">101&ndash;150 units</label>
+                                        <input type="number" id="fixedChargeSlab3Other" value="205" min="0" step="0.01" disabled>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fixedChargeSlab4Other">151&ndash;200 units</label>
+                                        <input type="number" id="fixedChargeSlab4Other" value="215" min="0" step="0.01" disabled>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fixedChargeSlab5Other">201&ndash;250 units</label>
+                                        <input type="number" id="fixedChargeSlab5Other" value="235" min="0" step="0.01" disabled>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fixedChargeSlab6Other">251&ndash;300 units</label>
+                                        <input type="number" id="fixedChargeSlab6Other" value="240" min="0" step="0.01" disabled>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fixedChargeSlab7Other">301&ndash;350 units</label>
+                                        <input type="number" id="fixedChargeSlab7Other" value="250" min="0" step="0.01" disabled>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fixedChargeSlab8Other">351&ndash;400 units</label>
+                                        <input type="number" id="fixedChargeSlab8Other" value="260" min="0" step="0.01" disabled>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fixedChargeSlab9Other">401&ndash;500 units</label>
+                                        <input type="number" id="fixedChargeSlab9Other" value="285" min="0" step="0.01" disabled>
+                                    </div>
+                                    <div class="field">
+                                        <label for="fixedChargeSlab10Other">Above 500 units</label>
+                                        <input type="number" id="fixedChargeSlab10Other" value="310" min="0" step="0.01" disabled>
+                                    </div>
+                                </div>
+                            </details>
+                        </details>
 
                         <button type="button" class="rate-reset-btn" id="resetTariffRatesButton">↺ Reset to Default Rates</button>
                     </details>
