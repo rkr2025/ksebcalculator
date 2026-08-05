@@ -1300,6 +1300,18 @@
           t2: entry.t2 - prev.t2,
           t3: entry.t3 - prev.t3
         };
+        // Cumulative usage from the Initial Reading through THIS entry --
+        // used for "Today's Total Bill" below (see that field's own
+        // comment). Re-derived from the running absolute meter readings
+        // (not summed daily deltas), and overwritten by each later entry on
+        // the same day, so it always reflects that day's LAST reading.
+        const cumulative = {
+          solar: entry.solar - initialReadings.solar,
+          export: entry.export - initialReadings.export,
+          t1: entry.t1 - initialReadings.t1,
+          t2: entry.t2 - initialReadings.t2,
+          t3: entry.t3 - initialReadings.t3,
+        };
         const dayKey = new Date(entry.timestamp).toDateString();
         const existing = dailyByDate.find(d => d.dayKey === dayKey);
         if (existing) {
@@ -1308,8 +1320,9 @@
           existing.t1 += daily.t1;
           existing.t2 += daily.t2;
           existing.t3 += daily.t3;
+          existing.cumulative = cumulative;
         } else {
-          dailyByDate.push({ dayKey, date: new Date(entry.timestamp).toLocaleDateString(), ...daily });
+          dailyByDate.push({ dayKey, date: new Date(entry.timestamp).toLocaleDateString(), ...daily, cumulative });
         }
         prev = entry;
       });
@@ -1350,23 +1363,34 @@
         if (!projectedBill.error) projectedMonthlyAmount = projectedBill.totalBillAmount;
       }
 
-      // First pass: each row's own "Today's Total Bill" -- that row's usage
-      // billed standalone, as if this one day's usage were the whole
-      // billing period. Computed before finalizing the projection below,
-      // since a low-usage day's Fixed Charge (paid in full for just that
-      // one day) can push this above the smoothed monthly projection.
+      // First pass: each row's own "Today's Total Bill" -- billed on
+      // CUMULATIVE usage from the Initial Reading through that day (i.e.
+      // "what would I be billed if the period ended today"), not just that
+      // day's own incremental delta. Since meter readings only go up and
+      // KSEB's slabs/rates never decrease as usage grows, this makes the
+      // column rise monotonically day over day, converging toward
+      // "Projected Monthly Bill" -- unlike billing each day's delta
+      // standalone (the previous approach), which swung up and down with
+      // that single day's usage and had no clear relationship to the
+      // monthly projection. Computed before finalizing the projection
+      // below, since a big cumulative total can still exceed a smoothed
+      // monthly projection once totalDays tracked runs past the projection
+      // target (see the floor below).
       const dailyRows = dailyByDate.map((daily) => {
         const directSolarUsage = daily.solar - daily.export;
         const dailyTotal = directSolarUsage + daily.t1 + daily.t2 + daily.t3;
-        const rowBill = computeBill(billInputsFromUsage(daily));
+        const rowBill = computeBill(billInputsFromUsage(daily.cumulative));
         return { daily, directSolarUsage, dailyTotal, rowBill };
       });
 
       // A month's projected bill can never realistically be less than what
-      // a single tracked day's usage would already cost billed standalone --
-      // if any row's "Today's Total Bill" exceeds the smoothed monthly
-      // projection, raise the projection to match that day's bill instead
-      // of showing a monthly total smaller than a single day already billed.
+      // you've already been billed cumulatively so far -- "Today's Total
+      // Bill" is now monotonically increasing (see above), so its max is
+      // effectively just the latest row's figure, but reduce()'d generically
+      // rather than assuming row order. If that exceeds the smoothed monthly
+      // projection (e.g. totalDays tracked has already run past the
+      // projection target), raise the projection to match it instead of
+      // showing a monthly total smaller than what's already been billed.
       const maxDailyBillAmount = dailyRows.reduce((max, { rowBill }) => (
         rowBill.error ? max : Math.max(max, rowBill.totalBillAmount)
       ), 0);
@@ -1799,15 +1823,15 @@
           html += billSummaryRows(projectedBill);
           html += `<p class="note">Projected by applying your current daily rate (based on ${totalDays} day(s), from Daily Energy usage above) to a ${projectionTargetDays}-day month. Actual usage may vary.</p>`;
           // Unlike "Projected Monthly Bill" in the Daily Usage Tracker
-          // above, this panel's Total is never raised to meet a single
-          // day's own standalone bill -- so once totalDays tracked runs
-          // past the projection target, the smoothed daily rate can dilute
-          // this Total below what a single tracked day already cost.
+          // above, this panel's Total is never raised to meet what you've
+          // already been billed cumulatively so far -- so once totalDays
+          // tracked runs past the projection target, the smoothed daily
+          // rate can dilute this Total below your actual cumulative bill.
           // Explain that instead of leaving it looking like a calculation
           // error.
           if (projectedBill.totalBillAmount < maxDailyBillAmount) {
             const monthName = new Date(initialReadingDateKey() + 'T00:00:00').toLocaleDateString(undefined, { month: 'long' });
-            html += `<p class="advice">⚠️ Note: this is a ${projectionTargetDays}-day projection (based on the number of days in ${monthName}), but you've already tracked ${totalDays} days -- more than ${projectionTargetDays} -- so this Total reflects only ${projectionTargetDays} days' worth of usage, not your full tracked total. See "Today's Total Bill" in the Daily Usage Tracker above for what a single day alone would cost billed standalone.</p>`;
+            html += `<p class="advice">⚠️ Note: this is a ${projectionTargetDays}-day projection (based on the number of days in ${monthName}), but you've already tracked ${totalDays} days -- more than ${projectionTargetDays} -- so this Total reflects only ${projectionTargetDays} days' worth of usage, not your full tracked total. See "Today's Total Bill" in the Daily Usage Tracker above for your actual cumulative bill so far.</p>`;
           }
           html += `</div>`;
         }
