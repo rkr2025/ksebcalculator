@@ -304,6 +304,57 @@
       border-color: var(--primary);
       box-shadow: 0 0 0 3px var(--primary-light);
     }
+    /* Current Solar Readings: each field gets its own label + icon (instead
+       of a bare placeholder-only input) plus a colored left accent bar
+       matching that field's category, so the five readings read at a
+       glance instead of blending into an unlabeled row of boxes. */
+    .reading-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+    .reading-field {
+      display: flex;
+      flex-direction: column;
+    }
+    .reading-field label {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      column-gap: 6px;
+      row-gap: 2px;
+      margin-bottom: 6px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+    .reading-field-icon {
+      font-size: 14px;
+      line-height: 1;
+    }
+    .reading-field-tag {
+      flex-basis: 100%;
+      font-size: 10.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    .reading-field input {
+      border-left-width: 4px;
+      border-left-style: solid;
+    }
+    .reading-field--date input { border-left-color: #8e6fce; }
+    .reading-field--solar input { border-left-color: #e8a33d; }
+    .reading-field--t1 input { border-left-color: var(--accent); }
+    .reading-field--t2 input { border-left-color: var(--danger); }
+    .reading-field--t3 input { border-left-color: #4a6fd4; }
+    .reading-field--export input { border-left-color: var(--primary); }
+    .reading-submit-btn {
+      grid-column: 1 / -1;
+      justify-self: center;
+      min-width: 170px;
+      margin-top: 2px;
+    }
     #estimatedBill {
       margin-top: 15px;
       text-align: left;
@@ -607,6 +658,19 @@
         grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
         gap: 8px;
       }
+      /* Current Solar Readings: a predictable 2-column grid instead of
+         auto-fit, since each field is now taller (icon + label + tag) and
+         auto-fit's wrapping got visually uneven at this width. */
+      .reading-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .reading-field label {
+        font-size: 11.5px;
+      }
+      .reading-field-tag {
+        font-size: 10px;
+      }
       /* Phase / Meter Owner / Connected Load / Banked Units? stay in one
          row of shrunk-down dropdowns instead of wrapping to several lines;
          the conditional Banked Units (kWh) input still gets its own
@@ -700,6 +764,12 @@
       form {
         grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
         gap: 6px;
+      }
+      .reading-form {
+        gap: 6px;
+      }
+      .reading-field-tag {
+        font-size: 9px;
       }
       #billingProfile {
         gap: 4px;
@@ -830,35 +900,61 @@
     </div>
     <div class="section-box print-initial-section">
       <h3 id="initialReadingHeading">🔑 June month Initial Reading</h3>
-      <div class="print-hide-section" style="margin: -4px 0 12px;">
-        <label for="initialReadingMonthSelect" style="font-size: 12.5px; color: var(--text-muted); display: block; margin-bottom: 4px;">View month</label>
-        <select id="initialReadingMonthSelect" style="padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; background: var(--surface); color: var(--text-primary); max-width: 260px; width: 100%;"></select>
-      </div>
       <p class="note" id="initialReadingNote">ഈ മാസത്തെ Initial റീഡിങ് ഇവിടെ enter ചെയ്യുക. കഴിഞ്ഞ മാസം ലഭിച്ച ബില്ലിലെ Current റീഡിങ് ആണ് ഈ മാസത്തെ Initial Reading ആയി എടുക്കേണ്ടത്.</p>
-      <form id="initialForm">
-        <div>
-          <label for="init_date" style="font-size: 13px; color: #555; display: block; margin-bottom: 3px;">Date of Initial Reading</label>
+      <form id="initialForm" class="reading-form">
+        <div class="reading-field reading-field--date">
+          <label for="init_date"><span class="reading-field-icon">📅</span><span class="reading-field-name">Date</span></label>
           <input type="date" id="init_date">
         </div>
-        <input type="number" id="init_solar" placeholder="Initial Solar Gen">
-        <input type="number" id="init_t1" placeholder="Initial T1">
-        <input type="number" id="init_t2" placeholder="Initial T2">
-        <input type="number" id="init_t3" placeholder="Initial T3">
-        <input type="number" id="init_export" placeholder="Initial Export">
-        <button type="submit" id="saveInitialBtn">💾 Save Initial</button>
+        <div class="reading-field reading-field--solar">
+          <label for="init_solar"><span class="reading-field-icon">☀️</span><span class="reading-field-name">Solar Gen</span></label>
+          <input type="number" id="init_solar" placeholder="0">
+        </div>
+        <div class="reading-field reading-field--t1">
+          <label for="init_t1"><span class="reading-field-icon">🏠</span><span class="reading-field-name">T1</span><span class="reading-field-tag">Normal · 6am–6pm</span></label>
+          <input type="number" id="init_t1" placeholder="0">
+        </div>
+        <div class="reading-field reading-field--t2">
+          <label for="init_t2"><span class="reading-field-icon">⚡</span><span class="reading-field-name">T2</span><span class="reading-field-tag">Peak · 6pm–10pm</span></label>
+          <input type="number" id="init_t2" placeholder="0">
+        </div>
+        <div class="reading-field reading-field--t3">
+          <label for="init_t3"><span class="reading-field-icon">🌙</span><span class="reading-field-name">T3</span><span class="reading-field-tag">Off-Peak · 10pm–6am</span></label>
+          <input type="number" id="init_t3" placeholder="0">
+        </div>
+        <div class="reading-field reading-field--export">
+          <label for="init_export"><span class="reading-field-icon">📤</span><span class="reading-field-name">Export</span></label>
+          <input type="number" id="init_export" placeholder="0">
+        </div>
+        <button type="submit" id="saveInitialBtn" class="reading-submit-btn">💾 Save Initial</button>
       </form>
       <div id="initialValuesDisplay"></div>
     </div>
     <div class="section-box print-hide-section">
       <h3 style="margin-top: 0;" id="currentReadingsHeading">➕ Current Solar Readings</h3>
       <p class="note">Enter your current reading from the meter.<br>നിങ്ങളുടെ ഇപ്പോൾ ഉള്ള സോളാർ മീറ്റർ റീഡിങ് ഇവിടെ Enter ചെയ്യുക.</p>
-      <form id="diaryForm">
-        <input type="number" id="solar" placeholder="Solar Gen" required>
-        <input type="number" id="t1" placeholder="T1" required>
-        <input type="number" id="t2" placeholder="T2" required>
-        <input type="number" id="t3" placeholder="T3" required>
-        <input type="number" id="export" placeholder="Export" required>
-        <button type="submit">➕ Add</button>
+      <form id="diaryForm" class="reading-form">
+        <div class="reading-field reading-field--solar">
+          <label for="solar"><span class="reading-field-icon">☀️</span><span class="reading-field-name">Solar Gen</span></label>
+          <input type="number" id="solar" placeholder="0" required>
+        </div>
+        <div class="reading-field reading-field--t1">
+          <label for="t1"><span class="reading-field-icon">🏠</span><span class="reading-field-name">T1</span><span class="reading-field-tag">Normal · 6am–6pm</span></label>
+          <input type="number" id="t1" placeholder="0" required>
+        </div>
+        <div class="reading-field reading-field--t2">
+          <label for="t2"><span class="reading-field-icon">⚡</span><span class="reading-field-name">T2</span><span class="reading-field-tag">Peak · 6pm–10pm</span></label>
+          <input type="number" id="t2" placeholder="0" required>
+        </div>
+        <div class="reading-field reading-field--t3">
+          <label for="t3"><span class="reading-field-icon">🌙</span><span class="reading-field-name">T3</span><span class="reading-field-tag">Off-Peak · 10pm–6am</span></label>
+          <input type="number" id="t3" placeholder="0" required>
+        </div>
+        <div class="reading-field reading-field--export">
+          <label for="export"><span class="reading-field-icon">📤</span><span class="reading-field-name">Export</span></label>
+          <input type="number" id="export" placeholder="0" required>
+        </div>
+        <button type="submit" class="reading-submit-btn">➕ Add Reading</button>
       </form>
     </div>
     <div class="section-box print-show-section" id="entriesLogSection">
@@ -944,12 +1040,11 @@
   <script type="module">
     import { computeBill, BILL_ERRORS } from './js/calculator.js';
 
-    // Set up the "View month" selector for Initial Reading once the rest of
-    // this script's DOMContentLoaded-independent setup below has run (it
-    // needs initialReadings/monthlyInitialReadings, defined further down).
+    // Render the Initial Reading heading once the rest of this script's
+    // DOMContentLoaded-independent setup below has run (it needs
+    // initialReadings, defined further down).
     document.addEventListener('DOMContentLoaded', () => {
-      populateInitialReadingMonthSelect();
-      renderInitialReadingForMonth(currentMonthKey());
+      renderInitialReadingForMonth();
       const currentMonthName = new Date().toLocaleString('en-US', { month: 'long' });
       document.getElementById('currentReadingsHeading').innerHTML = `➕ Current Solar Readings (<span style="color: var(--accent); font-weight: 800;">${currentMonthName}</span>)`;
     });
@@ -1014,79 +1109,13 @@
       localStorage.setItem("monthlyCurrentReadings", JSON.stringify(monthlyCurrentReadings));
     }
 
-    // Populates the "View month" dropdown with every month that has an
-    // archived Initial Reading, plus the current month (even if empty),
-    // newest first.
-    function populateInitialReadingMonthSelect() {
-      const select = document.getElementById('initialReadingMonthSelect');
-      const previousValue = select.value;
-      const keys = new Set(Object.keys(monthlyInitialReadings));
-      keys.add(currentMonthKey());
-      const sortedKeys = Array.from(keys).sort((a, b) => b.localeCompare(a));
-      select.innerHTML = sortedKeys.map((key) => `<option value="${key}">${monthLabelFor(key)}</option>`).join('');
-      select.value = sortedKeys.includes(previousValue) ? previousValue : currentMonthKey();
-    }
-
-    // Renders the Initial Reading section for whichever month is selected.
-    // The current month keeps the existing live/editable behavior (backed
-    // by `initialReadings`); any other month is a read-only look at its
-    // archived snapshot, or a "no data" message if nothing was ever saved
-    // for it.
-    function renderInitialReadingForMonth(monthKey) {
-      const monthLabel = monthLabelFor(monthKey);
+    // Renders the Initial Reading section for the current month, backed by
+    // the live/editable `initialReadings`.
+    function renderInitialReadingForMonth() {
+      const monthLabel = monthLabelFor(currentMonthKey());
       document.getElementById('initialReadingHeading').innerHTML = `🔑 <span style="color: var(--accent); font-weight: 800;">${monthLabel}</span> Initial Reading`;
-
-      if (monthKey === currentMonthKey()) {
-        displayInitialValues();
-        return;
-      }
-
-      const el = document.getElementById("initialValuesDisplay");
-      const noteEl = document.getElementById("initialReadingNote");
-      const formEl = document.getElementById("initialForm");
-      const saveBtn = document.getElementById("saveInitialBtn");
-      noteEl.style.display = 'none';
-      formEl.style.display = 'none';
-      saveBtn.classList.add('disabled');
-      saveBtn.setAttribute('disabled', 'disabled');
-
-      const archived = monthlyInitialReadings[monthKey];
-      if (!archived) {
-        el.innerHTML = `<em>No data available for ${monthLabel}.</em>`;
-        return;
-      }
-
-      el.innerHTML = `
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Solar</th>
-                <th>T1</th>
-                <th>T2</th>
-                <th>T3</th>
-                <th>Export</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>${archived.date ? new Date(archived.date + 'T00:00:00').toLocaleDateString() : '—'}</td>
-                <td>${archived.solar}</td>
-                <td>${archived.t1}</td>
-                <td>${archived.t2}</td>
-                <td>${archived.t3}</td>
-                <td>${archived.export}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      `;
+      displayInitialValues();
     }
-
-    document.getElementById('initialReadingMonthSelect').addEventListener('change', (e) => {
-      renderInitialReadingForMonth(e.target.value);
-    });
 
     // --- Billing Profile: phase/meterOwner/connectedLoad/bank, used only to
     // estimate the bill from tracked readings -- separate from the reading
@@ -1787,8 +1816,7 @@
       localStorage.removeItem("initialReadings");
       delete monthlyInitialReadings[deletedMonthKey];
       saveMonthlyArchives();
-      populateInitialReadingMonthSelect();
-      renderInitialReadingForMonth(currentMonthKey());
+      renderInitialReadingForMonth();
       renderEntries();
       document.getElementById("init_date").value = new Date().toISOString().slice(0, 10);
     }
@@ -1835,8 +1863,7 @@
         updateStorage();
         monthlyInitialReadings[monthKeyOf(dateVal)] = { ...initialReadings };
         saveMonthlyArchives();
-        populateInitialReadingMonthSelect();
-        renderInitialReadingForMonth(currentMonthKey());
+        renderInitialReadingForMonth();
         renderEntries();
         e.target.reset();
         document.getElementById("init_date").value = new Date().toISOString().slice(0, 10);
@@ -1967,8 +1994,7 @@
           if (data.monthlyInitialReadings) monthlyInitialReadings = data.monthlyInitialReadings;
           if (data.monthlyCurrentReadings) monthlyCurrentReadings = data.monthlyCurrentReadings;
           saveMonthlyArchives();
-          populateInitialReadingMonthSelect();
-          renderInitialReadingForMonth(currentMonthKey());
+          renderInitialReadingForMonth();
           renderEntries();
           alert('Readings restored successfully!');
         } catch (err) {
