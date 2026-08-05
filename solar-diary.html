@@ -200,6 +200,64 @@
       width: 100%;
       border-radius: 10px;
     }
+    /* "Show/Hide Columns" control for the Daily Usage Tracker table --
+       purely CSS-driven via nth-child, so it works automatically on rows
+       renderDailyUsageTracker() inserts later without needing per-row JS. */
+    .column-toggle-details {
+      margin-bottom: 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface-muted);
+      overflow: hidden;
+    }
+    .column-toggle-details summary {
+      padding: 8px 12px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      cursor: pointer;
+      list-style: none;
+    }
+    .column-toggle-details summary::-webkit-details-marker {
+      display: none;
+    }
+    .column-toggle-details summary::after {
+      content: '▸';
+      float: right;
+      transition: transform .15s ease;
+    }
+    .column-toggle-details[open] summary::after {
+      transform: rotate(90deg);
+    }
+    .column-toggle-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      padding: 2px 12px 12px;
+    }
+    .column-toggle-grid label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .column-toggle-grid input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+    #dailyUsageTable.hide-col-2 th:nth-child(2), #dailyUsageTable.hide-col-2 td:nth-child(2) { display: none; }
+    #dailyUsageTable.hide-col-3 th:nth-child(3), #dailyUsageTable.hide-col-3 td:nth-child(3) { display: none; }
+    #dailyUsageTable.hide-col-4 th:nth-child(4), #dailyUsageTable.hide-col-4 td:nth-child(4) { display: none; }
+    #dailyUsageTable.hide-col-5 th:nth-child(5), #dailyUsageTable.hide-col-5 td:nth-child(5) { display: none; }
+    #dailyUsageTable.hide-col-6 th:nth-child(6), #dailyUsageTable.hide-col-6 td:nth-child(6) { display: none; }
+    #dailyUsageTable.hide-col-7 th:nth-child(7), #dailyUsageTable.hide-col-7 td:nth-child(7) { display: none; }
+    #dailyUsageTable.hide-col-8 th:nth-child(8), #dailyUsageTable.hide-col-8 td:nth-child(8) { display: none; }
+    #dailyUsageTable.hide-col-9 th:nth-child(9), #dailyUsageTable.hide-col-9 td:nth-child(9) { display: none; }
     #initialValuesDisplay {
       font-size: 14px;
       margin-bottom: 10px;
@@ -1061,8 +1119,21 @@
     </div>
     <div class="section-box print-show-section" id="dailyUsageTrackerSection">
       <h3 style="margin-top: 0;">📅 Daily Usage Tracker</h3>
+      <details class="column-toggle-details print-hide-section">
+        <summary>🧮 Show/Hide Columns</summary>
+        <div class="column-toggle-grid">
+          <label><input type="checkbox" class="col-toggle" data-col="2" checked> Solar Generation</label>
+          <label><input type="checkbox" class="col-toggle" data-col="3" checked> Direct Solar Usage</label>
+          <label><input type="checkbox" class="col-toggle" data-col="4" checked> Normal (T1)</label>
+          <label><input type="checkbox" class="col-toggle" data-col="5" checked> Peak (T2)</label>
+          <label><input type="checkbox" class="col-toggle" data-col="6" checked> Off-Peak (T3)</label>
+          <label><input type="checkbox" class="col-toggle" data-col="7" checked> Total Usage</label>
+          <label><input type="checkbox" class="col-toggle" data-col="8" checked> Today's Total Bill</label>
+          <label><input type="checkbox" class="col-toggle" data-col="9" checked> Projected Monthly Bill</label>
+        </div>
+      </details>
       <div class="table-container">
-        <table>
+        <table id="dailyUsageTable">
           <thead>
             <tr>
               <th>Date</th>
@@ -1106,6 +1177,27 @@
     import { initCardInfoPanels } from './js/card-info.js';
 
     initCardInfoPanels();
+
+    // "Show/Hide Columns" for the Daily Usage Tracker table -- toggling a
+    // checkbox adds/removes a hide-col-N class on the <table> itself (see
+    // the nth-child CSS rules above), so it applies to every row
+    // renderDailyUsageTracker() inserts, both already-rendered and future
+    // ones, without this needing to touch row-rendering code at all.
+    // Hidden columns are remembered across visits.
+    const DAILY_USAGE_HIDDEN_COLS_KEY = 'dailyUsageTrackerHiddenCols';
+    const dailyUsageTable = document.getElementById('dailyUsageTable');
+    const colToggleCheckboxes = document.querySelectorAll('.col-toggle');
+    const hiddenCols = JSON.parse(localStorage.getItem(DAILY_USAGE_HIDDEN_COLS_KEY) || '[]');
+    colToggleCheckboxes.forEach((cb) => {
+      const isHidden = hiddenCols.includes(cb.dataset.col);
+      cb.checked = !isHidden;
+      dailyUsageTable.classList.toggle(`hide-col-${cb.dataset.col}`, isHidden);
+      cb.addEventListener('change', () => {
+        dailyUsageTable.classList.toggle(`hide-col-${cb.dataset.col}`, !cb.checked);
+        const nowHidden = Array.from(colToggleCheckboxes).filter((c) => !c.checked).map((c) => c.dataset.col);
+        localStorage.setItem(DAILY_USAGE_HIDDEN_COLS_KEY, JSON.stringify(nowHidden));
+      });
+    });
 
     // Render the Initial Reading heading once the rest of this script's
     // DOMContentLoaded-independent setup below has run (it needs
