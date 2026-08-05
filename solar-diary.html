@@ -158,6 +158,15 @@
       color: var(--danger);
       font-size: 15px;
     }
+    /* Small date caption under "Today's Total Bill" / "Projected Monthly
+       Bill" so it's clear which day (or, for the account-wide projection,
+       which latest tracked day) each figure was calculated from. */
+    .bill-date-note {
+      margin-top: 2px;
+      font-size: 10.5px;
+      font-weight: 400;
+      color: var(--text-muted);
+    }
     .highlight {
       background-color: var(--primary-light);
       font-weight: 700;
@@ -1365,6 +1374,12 @@
         projectedMonthlyAmount = maxDailyBillAmount;
       }
       const projectedMonthlyText = projectedMonthlyAmount !== null ? `₹${projectedMonthlyAmount.toFixed(2)}` : '—';
+      // Both bill columns get a small date caption so it's clear WHEN each
+      // figure was calculated: "Today's Total Bill" is that row's own date,
+      // while "Projected Monthly Bill" is a single account-wide figure, so
+      // it's captioned with the latest tracked entry's date instead (the
+      // most recent data point it was actually computed from).
+      const lastEntryDateLabel = new Date(lastEntry.timestamp).toLocaleDateString();
 
       const projectedMonthlyBillStat = document.getElementById('projectedMonthlyBillStat');
       const projectedMonthlyBillValue = document.getElementById('projectedMonthlyBillValue');
@@ -1376,14 +1391,14 @@
       }
 
       dailyRows.forEach(({ daily, directSolarUsage, dailyTotal, rowBill }, i) => {
-        const overallBillText = rowBill.error ? '—' : `₹${rowBill.totalBillAmount.toFixed(2)}`;
+        const overallBillText = rowBill.error ? '—' : `₹${rowBill.totalBillAmount.toFixed(2)}<div class="bill-date-note">${daily.date}</div>`;
 
         // "Projected Monthly Bill" is the same single figure for every row
         // (it's an account-wide projection, not a per-row one), so show it
         // just once -- spanning the full column -- instead of repeating an
         // identical value on every line.
         const projectedCell = i === 0
-          ? `<td rowspan="${dailyRows.length}" class="projected-monthly-cell">${projectedMonthlyText}</td>`
+          ? `<td rowspan="${dailyRows.length}" class="projected-monthly-cell">${projectedMonthlyText}${projectedMonthlyText !== '—' ? `<div class="bill-date-note">as of ${lastEntryDateLabel}</div>` : ''}</td>`
           : '';
 
         body.innerHTML += `<tr>
