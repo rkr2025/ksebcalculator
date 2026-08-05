@@ -15,6 +15,18 @@ function u(n) {
 function m(n) {
     return `<strong>₹${(n || 0).toFixed(2)}</strong>`;
 }
+// Same as m(), but red -- reserved for a figure that is itself one of the
+// charges actually added into the user's Total Bill Amount (Fixed Charge,
+// Meter Rent, Energy Charge, Duty, Fuel Surcharge, Wheeling Charge, or a
+// ToD zone's Energy Charge), reused here when that same figure is restated
+// in ANOTHER row's narrative (e.g. Duty's description repeating the Energy
+// Charge it's a percentage of). Matches the existing .red-text convention
+// buildExplainTable() already applies to a charge row's own Amount column
+// -- a rate (₹/unit) or a reference total for a wheeled site's own bill is
+// NOT itself a charge to the user, so those keep using plain m().
+function mc(n) {
+    return `<strong class="red-text">₹${(n || 0).toFixed(2)}</strong>`;
+}
 function pct(rate) {
     return `<strong>${+((rate || 0) * 100).toFixed(2)}%</strong>`;
 }
@@ -355,8 +367,8 @@ function todNettingItems(bill) {
             detail: m(energyCharge),
             amountValue: energyCharge,
             isCharge: true,
-            en: `${m(normalCharge)} + ${m(peakCharge)} + ${m(offPeakCharge)} — adding up all three zones' charges, before Duty and Fuel Surcharge are added on top.`,
-            ml: `${m(normalCharge)} + ${m(peakCharge)} + ${m(offPeakCharge)} — ഈ മൂന്ന് മേഖലകളിലെയും ചാർജുകൾ കൂട്ടിച്ചേർത്തത്, Duty, Fuel Surcharge എന്നിവ ഇനിയും കൂട്ടിച്ചേർക്കാനുണ്ട്.`,
+            en: `${mc(normalCharge)} + ${mc(peakCharge)} + ${mc(offPeakCharge)} — adding up all three zones' charges, before Duty and Fuel Surcharge are added on top.`,
+            ml: `${mc(normalCharge)} + ${mc(peakCharge)} + ${mc(offPeakCharge)} — ഈ മൂന്ന് മേഖലകളിലെയും ചാർജുകൾ കൂട്ടിച്ചേർത്തത്, Duty, Fuel Surcharge എന്നിവ ഇനിയും കൂട്ടിച്ചേർക്കാനുണ്ട്.`,
         }),
         ...totalBillFromEnergyChargeItems(bill, energyCharge),
     ];
@@ -397,8 +409,8 @@ function totalBillFromEnergyChargeItems(bill, energyCharge) {
             detail: m(bill.duty),
             amountValue: bill.duty,
             isCharge: true,
-            en: `${pct(bill.dutyRate)} of Energy Charge (${m(energyCharge)}) — the Kerala Electricity Duty, a state tax on just the energy portion of your bill.`,
-            ml: `Energy Charge-ന്റെ (${m(energyCharge)}) ${pct(bill.dutyRate)} — Kerala Electricity Duty, ബില്ലിന്റെ എനർജി ഭാഗത്തിന് മാത്രമുള്ള ഒരു സംസ്ഥാന നികുതി.`,
+            en: `${pct(bill.dutyRate)} of Energy Charge (${mc(energyCharge)}) — the Kerala Electricity Duty, a state tax on just the energy portion of your bill.`,
+            ml: `Energy Charge-ന്റെ (${mc(energyCharge)}) ${pct(bill.dutyRate)} — Kerala Electricity Duty, ബില്ലിന്റെ എനർജി ഭാഗത്തിന് മാത്രമുള്ള ഒരു സംസ്ഥാന നികുതി.`,
         }),
         dataRow({
             label: 'Monthly Fuel Surcharge',
