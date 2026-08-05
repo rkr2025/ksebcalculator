@@ -1122,11 +1122,11 @@
       <details class="column-toggle-details print-hide-section">
         <summary>🧮 Show/Hide Columns</summary>
         <div class="column-toggle-grid">
-          <label><input type="checkbox" class="col-toggle" data-col="2" checked> Solar Generation</label>
-          <label><input type="checkbox" class="col-toggle" data-col="3" checked> Direct Solar Usage</label>
-          <label><input type="checkbox" class="col-toggle" data-col="4" checked> Normal (T1)</label>
-          <label><input type="checkbox" class="col-toggle" data-col="5" checked> Peak (T2)</label>
-          <label><input type="checkbox" class="col-toggle" data-col="6" checked> Off-Peak (T3)</label>
+          <label><input type="checkbox" class="col-toggle" data-col="2"> Solar Generation</label>
+          <label><input type="checkbox" class="col-toggle" data-col="3"> Direct Solar Usage</label>
+          <label><input type="checkbox" class="col-toggle" data-col="4"> Normal (T1)</label>
+          <label><input type="checkbox" class="col-toggle" data-col="5"> Peak (T2)</label>
+          <label><input type="checkbox" class="col-toggle" data-col="6"> Off-Peak (T3)</label>
           <label><input type="checkbox" class="col-toggle" data-col="7" checked> Total Usage</label>
           <label><input type="checkbox" class="col-toggle" data-col="8" checked> Today's Total Bill</label>
           <label><input type="checkbox" class="col-toggle" data-col="9" checked> Projected Monthly Bill</label>
@@ -1185,9 +1185,15 @@
     // ones, without this needing to touch row-rendering code at all.
     // Hidden columns are remembered across visits.
     const DAILY_USAGE_HIDDEN_COLS_KEY = 'dailyUsageTrackerHiddenCols';
+    // First-time default (before the user has ever touched the checkboxes):
+    // only Total Usage / Today's Total Bill / Projected Monthly Bill show,
+    // since those are the figures most people actually check day to day --
+    // the rest can be switched on from the checkboxes above when needed.
+    const DEFAULT_HIDDEN_COLS = ['2', '3', '4', '5', '6'];
     const dailyUsageTable = document.getElementById('dailyUsageTable');
     const colToggleCheckboxes = document.querySelectorAll('.col-toggle');
-    const hiddenCols = JSON.parse(localStorage.getItem(DAILY_USAGE_HIDDEN_COLS_KEY) || '[]');
+    const savedHiddenCols = localStorage.getItem(DAILY_USAGE_HIDDEN_COLS_KEY);
+    const hiddenCols = savedHiddenCols !== null ? JSON.parse(savedHiddenCols) : DEFAULT_HIDDEN_COLS;
     colToggleCheckboxes.forEach((cb) => {
       const isHidden = hiddenCols.includes(cb.dataset.col);
       cb.checked = !isHidden;
