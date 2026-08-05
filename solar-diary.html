@@ -1290,9 +1290,16 @@
       body.innerHTML = "";
       if (!initialReadings || entries.length === 0) return 0;
 
+      const msPerDay = 1000 * 60 * 60 * 24;
       const dailyByDate = [];
       let prev = initialReadings;
+      // The Initial Reading's own entered date (not its save timestamp,
+      // which is just whenever the "Save Initial" button happened to be
+      // clicked) -- the correct starting point for the first row's
+      // days-since-previous gap below.
+      let prevDate = new Date(initialReadingDateKey() + 'T00:00:00');
       entries.forEach((entry) => {
+        const entryDate = new Date(entry.timestamp);
         const daily = {
           solar: entry.solar - prev.solar,
           export: entry.export - prev.export,
@@ -1322,9 +1329,16 @@
           existing.t3 += daily.t3;
           existing.cumulative = cumulative;
         } else {
-          dailyByDate.push({ dayKey, date: new Date(entry.timestamp).toLocaleDateString(), ...daily, cumulative });
+          // How many calendar days this row's "Total Usage" actually spans
+          // -- if the user skipped logging for a few days, that total is
+          // really several days' worth of usage lumped onto one row, not
+          // just this one day's, so it needs its own per-day average (see
+          // where daysSincePrevious is used below) to read correctly.
+          const daysSincePrevious = Math.max(1, Math.round((entryDate - prevDate) / msPerDay));
+          dailyByDate.push({ dayKey, date: new Date(entry.timestamp).toLocaleDateString(), ...daily, cumulative, daysSincePrevious });
         }
         prev = entry;
+        prevDate = entryDate;
       });
 
       const lastEntry = entries[entries.length - 1];
@@ -1433,6 +1447,14 @@
           ? `<td rowspan="${dailyRows.length}" class="projected-monthly-cell">${projectedMonthlyText}${projectedMonthlyText !== '—' && projectedEndDateLabel ? `<div class="bill-date-note">by ${projectedEndDateLabel}</div>` : ''}</td>`
           : '';
 
+        // If this entry wasn't logged the very next day after the previous
+        // one, "Total Usage" is really several days' worth lumped together
+        // -- show the per-day average alongside it (not in place of it) so
+        // it still reads as a meaningful daily figure.
+        const avgNote = daily.daysSincePrevious > 1
+          ? `<div class="bill-date-note">≈ ${(dailyTotal / daily.daysSincePrevious).toFixed(1)} units/day over ${daily.daysSincePrevious} days</div>`
+          : '';
+
         body.innerHTML += `<tr>
           <td>${daily.date}</td>
           <td>${Math.round(daily.solar)}</td>
@@ -1440,7 +1462,7 @@
           <td>${Math.round(daily.t1)}</td>
           <td>${Math.round(daily.t2)}</td>
           <td>${Math.round(daily.t3)}</td>
-          <td><strong>${Math.round(dailyTotal)}</strong></td>
+          <td><strong>${Math.round(dailyTotal)}</strong>${avgNote}</td>
           <td>${overallBillText}</td>
           ${projectedCell}
         </tr>`;
