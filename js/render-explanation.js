@@ -5,14 +5,21 @@
 // Pure string builder from a `bill` object, same contract as the other
 // render-*.js modules.
 
+// Bolded so the reader's own bill figures stand out from the surrounding
+// narrative prose -- unlike generic rule numbers written directly into a
+// sentence (slab thresholds like "250", ToD percentages like "90%"), every
+// number that flows through these three helpers is specific to THIS bill.
 function u(n) {
-    return `${(n || 0).toFixed(2)}`;
+    return `<strong>${(n || 0).toFixed(2)}</strong>`;
 }
 function m(n) {
-    return `₹${(n || 0).toFixed(2)}`;
+    return `<strong>₹${(n || 0).toFixed(2)}</strong>`;
 }
 function pct(rate) {
-    return `${+((rate || 0) * 100).toFixed(2)}%`;
+    return `<strong>${+((rate || 0) * 100).toFixed(2)}%</strong>`;
+}
+function ps(rate) {
+    return `<strong>${Math.round((rate || 0) * 100)}ps</strong>`;
 }
 
 // Two row shapes feed buildExplainTable() below:
@@ -211,8 +218,8 @@ function energyChargeItems(bill) {
         detail: m(bill.monthlyFuelSurcharge),
         amountValue: bill.monthlyFuelSurcharge,
         isCharge: true,
-        en: `${u(bill.bankAdjustedUnits)} units × ${Math.round((bill.fuelSurchargePerUnit || 0) * 100)}ps — an extra per-unit charge KSEB adds on top to cover changing fuel costs for power generation.`,
-        ml: `${u(bill.bankAdjustedUnits)} യൂണിറ്റ് × ${Math.round((bill.fuelSurchargePerUnit || 0) * 100)}ps — വൈദ്യുതി ഉത്പാദനത്തിന്റെ ഇന്ധനച്ചെലവിലെ വ്യതിയാനം നികത്താൻ KSEB അധികമായി ഈടാക്കുന്ന ഒരു യൂണിറ്റ്-അടിസ്ഥാന ചാർജ്.`,
+        en: `${u(bill.bankAdjustedUnits)} units × ${ps(bill.fuelSurchargePerUnit)} — an extra per-unit charge KSEB adds on top to cover changing fuel costs for power generation.`,
+        ml: `${u(bill.bankAdjustedUnits)} യൂണിറ്റ് × ${ps(bill.fuelSurchargePerUnit)} — വൈദ്യുതി ഉത്പാദനത്തിന്റെ ഇന്ധനച്ചെലവിലെ വ്യതിയാനം നികത്താൻ KSEB അധികമായി ഈടാക്കുന്ന ഒരു യൂണിറ്റ്-അടിസ്ഥാന ചാർജ്.`,
     }));
 
     return items;
@@ -226,8 +233,8 @@ function wheelingItem(bill) {
         detail: m(bill.wheelingResult.wheelingCharge),
         amountValue: bill.wheelingResult.wheelingCharge,
         isCharge: true,
-        en: `you chose to transfer some of your banked solar units to ${siteCount} other connection${siteCount === 1 ? '' : 's'}, and KSEB charges a small per-unit fee for "wheeling" (transporting) that power through their network to reach them.`,
-        ml: `നിങ്ങളുടെ ബാങ്ക് ചെയ്ത സോളാർ യൂണിറ്റുകളിൽ ചിലത് മറ്റ് ${siteCount} കണക്ഷനുകളിലേക്ക് കൈമാറാൻ തിരഞ്ഞെടുത്തതിനാൽ, ആ വൈദ്യുതി KSEB-യുടെ ശൃംഖലയിലൂടെ "wheel" ചെയ്ത് എത്തിക്കുന്നതിന് ഒരു ചെറിയ യൂണിറ്റ്-അടിസ്ഥാന ചാർജ് ഈടാക്കുന്നു.`,
+        en: `you chose to transfer some of your banked solar units to <strong>${siteCount}</strong> other connection${siteCount === 1 ? '' : 's'}, and KSEB charges a small per-unit fee for "wheeling" (transporting) that power through their network to reach them.`,
+        ml: `നിങ്ങളുടെ ബാങ്ക് ചെയ്ത സോളാർ യൂണിറ്റുകളിൽ ചിലത് മറ്റ് <strong>${siteCount}</strong> കണക്ഷനുകളിലേക്ക് കൈമാറാൻ തിരഞ്ഞെടുത്തതിനാൽ, ആ വൈദ്യുതി KSEB-യുടെ ശൃംഖലയിലൂടെ "wheel" ചെയ്ത് എത്തിക്കുന്നതിന് ഒരു ചെറിയ യൂണിറ്റ്-അടിസ്ഥാന ചാർജ് ഈടാക്കുന്നു.`,
     });
 }
 
@@ -398,8 +405,8 @@ function totalBillFromEnergyChargeItems(bill, energyCharge) {
             detail: m(bill.monthlyFuelSurcharge),
             amountValue: bill.monthlyFuelSurcharge,
             isCharge: true,
-            en: `${u(bill.bankAdjustedUnits)} units × ${Math.round((bill.fuelSurchargePerUnit || 0) * 100)}ps — an extra per-unit charge to cover changing fuel costs, applied to the same units billed for energy above.`,
-            ml: `${u(bill.bankAdjustedUnits)} യൂണിറ്റ് × ${Math.round((bill.fuelSurchargePerUnit || 0) * 100)}ps — ഇന്ധനച്ചെലവിലെ വ്യതിയാനം നികത്താൻ അധികമായി ഈടാക്കുന്ന ഒരു യൂണിറ്റ്-അടിസ്ഥാന ചാർജ്.`,
+            en: `${u(bill.bankAdjustedUnits)} units × ${ps(bill.fuelSurchargePerUnit)} — an extra per-unit charge to cover changing fuel costs, applied to the same units billed for energy above.`,
+            ml: `${u(bill.bankAdjustedUnits)} യൂണിറ്റ് × ${ps(bill.fuelSurchargePerUnit)} — ഇന്ധനച്ചെലവിലെ വ്യതിയാനം നികത്താൻ അധികമായി ഈടാക്കുന്ന ഒരു യൂണിറ്റ്-അടിസ്ഥാന ചാർജ്.`,
         }),
     ];
 
@@ -410,8 +417,8 @@ function totalBillFromEnergyChargeItems(bill, energyCharge) {
             detail: m(wheelingCharge),
             amountValue: wheelingCharge,
             isCharge: true,
-            en: `transferring banked solar units to ${siteCount} other connection${siteCount === 1 ? '' : 's'} — KSEB's per-unit fee for "wheeling" that power through their network.`,
-            ml: `ബാങ്ക് ചെയ്ത സോളാർ യൂണിറ്റുകൾ മറ്റ് ${siteCount} കണക്ഷനുകളിലേക്ക് കൈമാറുന്നതിന് — ആ വൈദ്യുതി KSEB ശൃംഖലയിലൂടെ "wheel" ചെയ്യുന്നതിനുള്ള യൂണിറ്റ്-അടിസ്ഥാന ചാർജ്.`,
+            en: `transferring banked solar units to <strong>${siteCount}</strong> other connection${siteCount === 1 ? '' : 's'} — KSEB's per-unit fee for "wheeling" that power through their network.`,
+            ml: `ബാങ്ക് ചെയ്ത സോളാർ യൂണിറ്റുകൾ മറ്റ് <strong>${siteCount}</strong> കണക്ഷനുകളിലേക്ക് കൈമാറുന്നതിന് — ആ വൈദ്യുതി KSEB ശൃംഖലയിലൂടെ "wheel" ചെയ്യുന്നതിനുള്ള യൂണിറ്റ്-അടിസ്ഥാന ചാർജ്.`,
         }));
     }
 
@@ -458,8 +465,8 @@ function wheelingNettingItems(wheelingResult) {
             dataRow({
                 label: `${site.name} — After ${site.distLossPct}% Distribution Loss`,
                 detail: `${u(site.availableForWheeling)} units`,
-                en: `${u(site.bankOpening)} × (100% − ${site.distLossPct}%) = ${u(site.availableForWheeling)} units — this site is on ${transformerNote}, so KSEB deducts ${site.distLossPct}% for the transport before any of it can be wheeled.`,
-                ml: `${u(site.bankOpening)} × (100% − ${site.distLossPct}%) = ${u(site.availableForWheeling)} യൂണിറ്റ് — ഈ സൈറ്റ് ${transformerNoteMl} ആയതിനാൽ, wheel ചെയ്യുന്നതിന് മുൻപ് തന്നെ KSEB ${site.distLossPct}% transport-നായി കുറയ്ക്കുന്നു.`,
+                en: `${u(site.bankOpening)} × (100% − <strong>${site.distLossPct}%</strong>) = ${u(site.availableForWheeling)} units — this site is on ${transformerNote}, so KSEB deducts <strong>${site.distLossPct}%</strong> for the transport before any of it can be wheeled.`,
+                ml: `${u(site.bankOpening)} × (100% − <strong>${site.distLossPct}%</strong>) = ${u(site.availableForWheeling)} യൂണിറ്റ് — ഈ സൈറ്റ് ${transformerNoteMl} ആയതിനാൽ, wheel ചെയ്യുന്നതിന് മുൻപ് തന്നെ KSEB <strong>${site.distLossPct}%</strong> transport-നായി കുറയ്ക്കുന്നു.`,
             }),
             dataRow({
                 label: `${site.name} — Units Wheeled`,
