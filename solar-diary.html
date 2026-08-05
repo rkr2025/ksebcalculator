@@ -520,57 +520,87 @@
       transform: translateY(-1px);
       box-shadow: var(--shadow-lift);
     }
-    /* Instructions styles */
-    details {
-      margin: 10px 0;
+    /* "How to use this section" info button + bilingual panel, shown on
+       Billing Profile / Initial Reading / Current Solar Readings. Mirrors
+       the .card-info-btn/.card-info-panel convention already used in
+       index.html (wired by the same js/card-info.js), copied here since
+       this file has no shared stylesheet to pull it from. */
+    .section-box-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .section-box-header h3 {
+      margin: 0;
+      text-align: left;
+    }
+    .card-info-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      font-size: 13px;
+      background: var(--surface);
+      color: var(--text-muted);
       border: 1.5px solid var(--border);
-      border-radius: 10px;
-      background: linear-gradient(180deg, var(--surface-muted), #eef1f7);
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
-      transition: box-shadow .2s ease;
-    }
-    details:hover {
-      box-shadow: var(--shadow-lift);
-    }
-    summary {
-      padding: 12px 14px;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--primary-dark);
       cursor: pointer;
-      outline: none;
+      margin-left: auto;
+      flex: none;
+      padding: 0;
+      transition: background .15s ease, color .15s ease;
     }
-    .instructions {
-      padding: 4px 14px 14px;
-      font-size: 14px;
-      line-height: 1.6;
+    .card-info-btn:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+    .card-info-btn[aria-expanded="true"] {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .card-info-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin: -4px 0 14px;
+      font-size: 12.5px;
       color: var(--text-secondary);
+      line-height: 1.6;
     }
-    .instructions ul {
-      margin: 5px 0;
-      padding-left: 20px;
-    }
-    .instructions-lang-toggle {
+    .card-info-lang-toggle {
       display: flex;
       gap: 8px;
       margin-bottom: 10px;
     }
-    .instructions-lang-toggle .lang-btn {
+    .card-info-lang-btn {
       font: inherit;
-      font-size: 12.5px;
+      font-size: 11px;
       font-weight: 600;
-      padding: 4px 12px;
+      padding: 3px 10px;
       border: 1px solid var(--border);
       border-radius: 14px;
       background: var(--surface-muted);
       color: var(--text-secondary);
       cursor: pointer;
     }
-    .instructions-lang-toggle .lang-btn.active {
-      background: var(--primary, #3a7bfd);
-      border-color: var(--primary, #3a7bfd);
+    .card-info-lang-btn.active {
+      background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+      border-color: var(--primary);
       color: #fff;
+    }
+    .card-info-panel ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+    .card-info-panel li {
+      margin-bottom: 6px;
+    }
+    .card-info-panel li:last-child {
+      margin-bottom: 0;
     }
     hr {
       border: none;
@@ -750,12 +780,6 @@
         flex: 1 1 100%;
         max-width: 100%;
       }
-      summary {
-        font-size: 13px;
-      }
-      .instructions {
-        font-size: 13px;
-      }
     }
     /* Responsive styles for small mobile (360px) */
     @media (max-width: 360px) {
@@ -816,63 +840,42 @@
       .file-input-label {
         font-size: 12px;
       }
-      summary {
-        font-size: 12.5px;
-      }
-      .instructions {
-        font-size: 12.5px;
-      }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <details>
-      <summary>📖 How to Use Solar Diary</summary>
-      <div class="instructions">
-        <div class="instructions-lang-toggle" role="group" aria-label="Instructions language">
-          <button type="button" class="lang-btn active" data-lang="en">English</button>
-          <button type="button" class="lang-btn" data-lang="ml">മലയാളം</button>
-        </div>
-        <div class="instructions-content" data-lang-content="en">
-          <p>Welcome to Solar Diary! Follow these steps to track your solar energy and electricity usage:</p>
-          <ul>
-            <li><strong>Set Billing Profile</strong>: Choose your Phase, Meter Owner, Connected Load, and any Banked Units once at the top — this is used to estimate your bill.</li>
-            <li><strong>Set Initial Readings</strong>: Enter your starting values for Solar, T1, T2, T3, and Export from your last bill in the "Initial Reading" section. At least one value must be non-zero. Click 💾 Save Initial.</li>
-            <li><strong>Add Current Readings</strong>: Input current readings in the "Current Solar Readings" section and click ➕ Add. Add entries daily or weekly.</li>
-            <li><strong>View Insights & Analysis</strong>: After initial readings, see usage warnings (red) or safe messages (green) and cost-saving tips below the "Entries Log".</li>
-            <li><strong>Estimated Bill</strong>: See your estimated bill so far and a projected month-end total, calculated with the same tariff rules as the main Bill Calculator. Click 📊 Bill Breakdown- Using Solar Calculator for the detailed T1/T2/T3 breakdown.</li>
-            <li><strong>Edit/Delete Entries</strong>: Use ✏️ to edit or 🗑️ to delete entries in the log table.</li>
-            <li><strong>Backup/Restore</strong>: Save data with 💾 Backup Readings or restore from a JSON file using 📂 Restore Readings.</li>
-            <li><strong>Print Report</strong>: Click 🖨️ Generate Printable Report to print the entries log.</li>
-            <li><strong>Mobile Tips</strong>: Swipe tables left/right and toggle these instructions on small screens.</li>
-          </ul>
-          <p><em>Tip</em>: Minimize T2 (6pm-10pm) usage to reduce costs due to its high rate (125%). Check your bill for accurate initial values.</p>
-        </div>
-        <div class="instructions-content" data-lang-content="ml" hidden>
-          <p>സോളാർ ഡയറിയിലേക്ക് സ്വാഗതം! നിങ്ങളുടെ സോളാർ ഊർജ്ജവും വൈദ്യുതി ഉപയോഗവും ട്രാക്ക് ചെയ്യാൻ ഈ ഘട്ടങ്ങൾ പിന്തുടരുക:</p>
-          <ul>
-            <li><strong>ബില്ലിംഗ് പ്രൊഫൈൽ സെറ്റ് ചെയ്യുക</strong>: മുകളിൽ ഒരു തവണ നിങ്ങളുടെ ഫേസ്, മീറ്റർ ഓണർ, കണക്റ്റഡ് ലോഡ്, ബാങ്ക്ഡ് യൂണിറ്റുകൾ (ഉണ്ടെങ്കിൽ) തിരഞ്ഞെടുക്കുക — ഇത് നിങ്ങളുടെ ബിൽ കണക്കാക്കാൻ ഉപയോഗിക്കുന്നു.</li>
-            <li><strong>പ്രാരംഭ റീഡിംഗുകൾ സെറ്റ് ചെയ്യുക</strong>: നിങ്ങളുടെ കഴിഞ്ഞ ബില്ലിൽ നിന്നുള്ള സോളാർ, T1, T2, T3, എക്സ്പോർട്ട് എന്നിവയുടെ ആരംഭ മൂല്യങ്ങൾ "Initial Reading" വിഭാഗത്തിൽ നൽകുക. കുറഞ്ഞത് ഒരു മൂല്യമെങ്കിലും പൂജ്യമല്ലാതെ ഉണ്ടായിരിക്കണം. 💾 Save Initial ക്ലിക്ക് ചെയ്യുക.</li>
-            <li><strong>നിലവിലെ റീഡിംഗുകൾ ചേർക്കുക</strong>: "Current Solar Readings" വിഭാഗത്തിൽ നിലവിലെ റീഡിംഗുകൾ നൽകി ➕ Add ക്ലിക്ക് ചെയ്യുക. ദിവസേനയോ ആഴ്ചതോറുമോ എൻട്രികൾ ചേർക്കുക.</li>
-            <li><strong>ഇൻസൈറ്റുകളും വിശകലനവും കാണുക</strong>: പ്രാരംഭ റീഡിംഗുകൾക്ക് ശേഷം, "Entries Log"-ന് താഴെ ഉപയോഗ മുന്നറിയിപ്പുകൾ (ചുവപ്പ്) അല്ലെങ്കിൽ സുരക്ഷിത സന്ദേശങ്ങൾ (പച്ച), ചെലവ് ലാഭിക്കാനുള്ള നിർദ്ദേശങ്ങൾ എന്നിവ കാണാം.</li>
-            <li><strong>കണക്കാക്കിയ ബിൽ</strong>: ഇതുവരെയുള്ള കണക്കാക്കിയ ബില്ലും, പ്രധാന ബിൽ കാൽക്കുലേറ്ററിലെ അതേ താരിഫ് നിയമങ്ങൾ ഉപയോഗിച്ച് കണക്കാക്കിയ മാസാവസാന പ്രൊജക്ഷനും കാണാം. വിശദമായ T1/T2/T3 ബ്രേക്ക്ഡൗണിനായി 📊 Bill Breakdown- Using Solar Calculator ക്ലിക്ക് ചെയ്യുക.</li>
-            <li><strong>എൻട്രികൾ എഡിറ്റ്/ഡിലീറ്റ് ചെയ്യുക</strong>: ലോഗ് ടേബിളിലെ എൻട്രികൾ എഡിറ്റ് ചെയ്യാൻ ✏️ ഉം ഡിലീറ്റ് ചെയ്യാൻ 🗑️ ഉം ഉപയോഗിക്കുക.</li>
-            <li><strong>ബാക്കപ്പ്/റീസ്റ്റോർ</strong>: 💾 Backup Readings ഉപയോഗിച്ച് ഡാറ്റ സേവ് ചെയ്യുക അല്ലെങ്കിൽ 📂 Restore Readings ഉപയോഗിച്ച് ഒരു JSON ഫയലിൽ നിന്ന് പുനഃസ്ഥാപിക്കുക.</li>
-            <li><strong>റിപ്പോർട്ട് പ്രിന്റ് ചെയ്യുക</strong>: എൻട്രി ലോഗ് പ്രിന്റ് ചെയ്യാൻ 🖨️ Generate Printable Report ക്ലിക്ക് ചെയ്യുക.</li>
-            <li><strong>മൊബൈൽ ടിപ്സ്</strong>: ചെറിയ സ്ക്രീനുകളിൽ ടേബിളുകൾ ഇടത്തോട്ടും വലത്തോട്ടും സ്വൈപ്പ് ചെയ്യുകയും ഈ നിർദ്ദേശങ്ങൾ ടോഗിൾ ചെയ്യുകയും ചെയ്യാം.</li>
-          </ul>
-          <p><em>കുറിപ്പ്</em>: T2 (വൈകുന്നേരം 6 മുതൽ രാത്രി 10 വരെ) ഉപയോഗം കുറയ്ക്കുക, കാരണം അതിന്റെ നിരക്ക് ഉയർന്നതാണ് (125%). കൃത്യമായ പ്രാരംഭ മൂല്യങ്ങൾക്കായി നിങ്ങളുടെ ബിൽ പരിശോധിക്കുക.</p>
-        </div>
-        <div style="text-align: center; margin-top: 12px;">
-          <img src="https://hits.sh/rkr2025.github.io/ksebcalculator/solar-diary.svg?style=flat-square&label=Views" alt="No. of views" loading="lazy">
-        </div>
-      </div>
-    </details>
     <h2>📘 Solar Diary</h2>
     <p class="note">This diary records your daily solar and meter usage, and estimates your electricity bill both for today and projected for the full month.</p>
     <div class="section-box print-hide-section">
-      <h3>⚙️ Billing Profile</h3>
+      <div class="section-box-header">
+        <h3>⚙️ Billing Profile</h3>
+        <button type="button" class="card-info-btn" aria-expanded="false" aria-label="How to use this section" data-info-target="billingProfileInfo">ℹ️</button>
+      </div>
+      <div class="card-info-panel" id="billingProfileInfo" hidden>
+        <div class="card-info-lang-toggle" role="group" aria-label="Instructions language">
+          <button type="button" class="card-info-lang-btn active" data-lang="ml">മലയാളം</button>
+          <button type="button" class="card-info-lang-btn" data-lang="en">English</button>
+        </div>
+        <div data-info-lang="en" hidden>
+          <ul>
+            <li><strong>Phase:</strong> Phase 1 (single-phase) or Phase 3 (three-phase) -- check your KSEB bill if you're unsure.</li>
+            <li><strong>Meter Owner:</strong> KSEB if they own the meter (Meter Rent applies), or Consumer if you own it (no Meter Rent).</li>
+            <li><strong>Connected Load:</strong> Below 20kW or Above 20kW -- this changes how ToD (Time-of-Day) billing is calculated.</li>
+            <li><strong>Banked Units?:</strong> choose Yes if you have surplus units carried forward from a previous bill, then enter that amount.</li>
+            <li>Set this once -- it's used to estimate your bill everywhere else in this diary.</li>
+          </ul>
+        </div>
+        <div data-info-lang="ml">
+          <ul>
+            <li><strong>Phase:</strong> Phase 1 (single-phase) അല്ലെങ്കിൽ Phase 3 (three-phase) തിരഞ്ഞെടുക്കുക -- ഉറപ്പില്ലെങ്കിൽ നിങ്ങളുടെ KSEB ബില്ല് നോക്കുക.</li>
+            <li><strong>Meter Owner:</strong> മീറ്റർ KSEB-യുടേതാണെങ്കിൽ KSEB (Meter Rent ബാധകം), സ്വന്തമാണെങ്കിൽ Consumer (Meter Rent ഇല്ല).</li>
+            <li><strong>Connected Load:</strong> Below 20kW അല്ലെങ്കിൽ Above 20kW -- ഇത് ToD (Time-of-Day) ബില്ലിംഗ് കണക്കാക്കുന്ന രീതിയെ മാറ്റും.</li>
+            <li><strong>Banked Units?:</strong> മുൻ ബില്ലിൽ നിന്ന് ബാക്കിയുള്ള മിച്ച യൂണിറ്റുകൾ ഉണ്ടെങ്കിൽ Yes തിരഞ്ഞെടുത്ത് ആ അളവ് നൽകുക.</li>
+            <li>ഇത് ഒരു തവണ സെറ്റ് ചെയ്താൽ മതി -- ഈ ഡയറിയിലെ ബാക്കി എല്ലായിടത്തും ബിൽ കണക്കാക്കാൻ ഇത് ഉപയോഗിക്കും.</li>
+          </ul>
+        </div>
+      </div>
       <div id="billingProfile">
         <div>
           <label for="profile_phase">Phase</label>
@@ -909,7 +912,32 @@
       </div>
     </div>
     <div class="section-box print-initial-section">
-      <h3 id="initialReadingHeading">🔑 June month Initial Reading</h3>
+      <div class="section-box-header">
+        <h3 id="initialReadingHeading">🔑 June month Initial Reading</h3>
+        <button type="button" class="card-info-btn" aria-expanded="false" aria-label="How to use this section" data-info-target="initialReadingInfo">ℹ️</button>
+      </div>
+      <div class="card-info-panel" id="initialReadingInfo" hidden>
+        <div class="card-info-lang-toggle" role="group" aria-label="Instructions language">
+          <button type="button" class="card-info-lang-btn active" data-lang="ml">മലയാളം</button>
+          <button type="button" class="card-info-lang-btn" data-lang="en">English</button>
+        </div>
+        <div data-info-lang="en" hidden>
+          <ul>
+            <li>Enter your <strong>starting</strong> meter values (Solar, T1, T2, T3, Export) for this month -- these should be the "Current Reading" values from your <strong>last KSEB bill</strong>.</li>
+            <li>At least one value must be non-zero.</li>
+            <li>Click 💾 Save Initial to lock them in -- this becomes the baseline every reading you log this month is measured against.</li>
+            <li>Made a mistake? Delete it (🗑️ next to the saved reading) and enter it again.</li>
+          </ul>
+        </div>
+        <div data-info-lang="ml">
+          <ul>
+            <li>ഈ മാസത്തെ <strong>ആരംഭ</strong> മീറ്റർ മൂല്യങ്ങൾ (Solar, T1, T2, T3, Export) നൽകുക -- ഇത് നിങ്ങളുടെ <strong>കഴിഞ്ഞ KSEB ബില്ലിലെ</strong> "Current Reading" മൂല്യങ്ങൾ ആയിരിക്കണം.</li>
+            <li>കുറഞ്ഞത് ഒരു മൂല്യമെങ്കിലും പൂജ്യമല്ലാതെ ഉണ്ടായിരിക്കണം.</li>
+            <li>💾 Save Initial ക്ലിക്ക് ചെയ്യുക -- ഈ മാസം നിങ്ങൾ ചേർക്കുന്ന എല്ലാ റീഡിംഗുകളും ഇതിനെ അടിസ്ഥാനമാക്കിയാണ് അളക്കുന്നത്.</li>
+            <li>തെറ്റ് പറ്റിയോ? സേവ് ചെയ്ത റീഡിംഗിനരികിലുള്ള 🗑️ ഉപയോഗിച്ച് ഡിലീറ്റ് ചെയ്ത് വീണ്ടും നൽകുക.</li>
+          </ul>
+        </div>
+      </div>
       <p class="note" id="initialReadingNote">ഈ മാസത്തെ Initial റീഡിങ് ഇവിടെ enter ചെയ്യുക. കഴിഞ്ഞ മാസം ലഭിച്ച ബില്ലിലെ Current റീഡിങ് ആണ് ഈ മാസത്തെ Initial Reading ആയി എടുക്കേണ്ടത്.</p>
       <form id="initialForm" class="reading-form">
         <div class="reading-field reading-field--date">
@@ -941,27 +969,51 @@
       <div id="initialValuesDisplay"></div>
     </div>
     <div class="section-box print-hide-section">
-      <h3 style="margin-top: 0;" id="currentReadingsHeading">➕ Current Solar Readings</h3>
-      <p class="note">Enter your current reading from the meter.<br>നിങ്ങളുടെ ഇപ്പോൾ ഉള്ള സോളാർ മീറ്റർ റീഡിങ് ഇവിടെ Enter ചെയ്യുക.</p>
+      <div class="section-box-header">
+        <h3 id="currentReadingsHeading">➕ Current Solar Readings</h3>
+        <button type="button" class="card-info-btn" aria-expanded="false" aria-label="How to use this section" data-info-target="currentReadingsInfo">ℹ️</button>
+      </div>
+      <div class="card-info-panel" id="currentReadingsInfo" hidden>
+        <div class="card-info-lang-toggle" role="group" aria-label="Instructions language">
+          <button type="button" class="card-info-lang-btn active" data-lang="ml">മലയാളം</button>
+          <button type="button" class="card-info-lang-btn" data-lang="en">English</button>
+        </div>
+        <div data-info-lang="en" hidden>
+          <ul>
+            <li>Enter your <strong>current</strong> meter readings (Solar, T1, T2, T3, Export) any time you check your meter -- daily or weekly both work.</li>
+            <li>Click ➕ Add Reading to log it -- it's added to the Entries Log below, and your bill estimate updates automatically.</li>
+            <li>Usage warnings/safe messages and a projected month-end bill appear further down the page once you've logged at least one reading.</li>
+            <li><em>Tip:</em> minimize T2 (Peak, 6pm–10pm) usage where possible -- it's billed at a 125% premium over the base rate.</li>
+          </ul>
+        </div>
+        <div data-info-lang="ml">
+          <ul>
+            <li>മീറ്റർ പരിശോധിക്കുമ്പോഴെല്ലാം <strong>നിലവിലെ</strong> റീഡിംഗുകൾ (Solar, T1, T2, T3, Export) നൽകുക -- ദിവസേനയോ ആഴ്ചതോറുമോ ചെയ്യാം.</li>
+            <li>➕ Add Reading ക്ലിക്ക് ചെയ്ത് ലോഗ് ചെയ്യുക -- ഇത് താഴെയുള്ള Entries Log-ൽ ചേർക്കും, നിങ്ങളുടെ ബിൽ എസ്റ്റിമേറ്റ് സ്വയമേവ അപ്ഡേറ്റ് ആകും.</li>
+            <li>ഒരു റീഡിംഗെങ്കിലും ലോഗ് ചെയ്തതിന് ശേഷം, ഉപയോഗ മുന്നറിയിപ്പുകൾ/സുരക്ഷിത സന്ദേശങ്ങൾ, മാസാവസാന പ്രൊജക്ഷൻ ബിൽ എന്നിവ താഴെ കാണാം.</li>
+            <li><em>കുറിപ്പ്:</em> കഴിയുന്നത്ര T2 (Peak, വൈകിട്ട് 6 – രാത്രി 10) ഉപയോഗം കുറയ്ക്കുക -- ഇതിന് അടിസ്ഥാന നിരക്കിനെക്കാൾ 125% അധികം ചാർജ് ആണ്.</li>
+          </ul>
+        </div>
+      </div>
       <form id="diaryForm" class="reading-form">
         <div class="reading-field reading-field--solar">
-          <label for="solar"><span class="reading-field-icon">☀️</span><span class="reading-field-name">Solar Gen</span><span class="reading-field-tag">Total units on your solar meter<br>സോളാർ മീറ്ററിലെ ആകെ യൂണിറ്റ്</span></label>
+          <label for="solar"><span class="reading-field-icon">☀️</span><span class="reading-field-name">Solar Gen</span></label>
           <input type="number" id="solar" placeholder="0" required>
         </div>
         <div class="reading-field reading-field--t1">
-          <label for="t1"><span class="reading-field-icon">🏠</span><span class="reading-field-name">T1</span><span class="reading-field-tag">Normal · 6am–6pm<br>Normal റീഡിംഗ് (രാവിലെ 6 – വൈകിട്ട് 6)</span></label>
+          <label for="t1"><span class="reading-field-icon">🏠</span><span class="reading-field-name">T1</span><span class="reading-field-tag">Normal · 6am–6pm</span></label>
           <input type="number" id="t1" placeholder="0" required>
         </div>
         <div class="reading-field reading-field--t2">
-          <label for="t2"><span class="reading-field-icon">⚡</span><span class="reading-field-name">T2</span><span class="reading-field-tag">Peak · 6pm–10pm<br>Peak റീഡിംഗ് (വൈകിട്ട് 6 – രാത്രി 10)</span></label>
+          <label for="t2"><span class="reading-field-icon">⚡</span><span class="reading-field-name">T2</span><span class="reading-field-tag">Peak · 6pm–10pm</span></label>
           <input type="number" id="t2" placeholder="0" required>
         </div>
         <div class="reading-field reading-field--t3">
-          <label for="t3"><span class="reading-field-icon">🌙</span><span class="reading-field-name">T3</span><span class="reading-field-tag">Off-Peak · 10pm–6am<br>Off-Peak റീഡിംഗ് (രാത്രി 10 – രാവിലെ 6)</span></label>
+          <label for="t3"><span class="reading-field-icon">🌙</span><span class="reading-field-name">T3</span><span class="reading-field-tag">Off-Peak · 10pm–6am</span></label>
           <input type="number" id="t3" placeholder="0" required>
         </div>
         <div class="reading-field reading-field--export">
-          <label for="export"><span class="reading-field-icon">📤</span><span class="reading-field-name">Export</span><span class="reading-field-tag">Units sent back to the grid<br>ഗ്രിഡിലേക്ക് തിരികെ അയച്ച യൂണിറ്റ്</span></label>
+          <label for="export"><span class="reading-field-icon">📤</span><span class="reading-field-name">Export</span></label>
           <input type="number" id="export" placeholder="0" required>
         </div>
         <button type="submit" class="reading-submit-btn">➕ Add Reading</button>
@@ -1009,7 +1061,6 @@
     </div>
     <div class="section-box print-show-section" id="dailyUsageTrackerSection">
       <h3 style="margin-top: 0;">📅 Daily Usage Tracker</h3>
-      <p class="note">ഇവിടെ daily usage, ഇന്നത്തെ electricity ചാർജും ഒരു മാസത്തെ estimated electricity ചാർജും ലഭിക്കുന്നതാണ്.</p>
       <div class="table-container">
         <table>
           <thead>
@@ -1046,9 +1097,15 @@
       </div>
     </div>
     <a href="index.html" class="nav-link">← Back to Calculator</a>
+    <div style="text-align: center; margin-top: 14px;">
+      <img src="https://hits.sh/rkr2025.github.io/ksebcalculator/solar-diary.svg?style=flat-square&label=Views" alt="No. of views" loading="lazy">
+    </div>
   </div>
   <script type="module">
     import { computeBill, BILL_ERRORS } from './js/calculator.js';
+    import { initCardInfoPanels } from './js/card-info.js';
+
+    initCardInfoPanels();
 
     // Render the Initial Reading heading once the rest of this script's
     // DOMContentLoaded-independent setup below has run (it needs
@@ -1057,25 +1114,6 @@
       renderInitialReadingForMonth();
       const currentMonthName = new Date().toLocaleString('en-US', { month: 'long' });
       document.getElementById('currentReadingsHeading').innerHTML = `➕ Current Solar Readings (<span style="color: var(--accent); font-weight: 800;">${currentMonthName}</span>)`;
-    });
-
-    // Instructions language toggle (English/Malayalam), remembered across visits.
-    document.addEventListener('DOMContentLoaded', () => {
-      const langButtons = document.querySelectorAll('.instructions-lang-toggle .lang-btn');
-      const langContents = document.querySelectorAll('.instructions-content');
-      if (!langButtons.length) return;
-
-      function setInstructionsLang(lang) {
-        langButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.lang === lang));
-        langContents.forEach((el) => { el.hidden = el.dataset.langContent !== lang; });
-        localStorage.setItem('solarDiaryInstructionsLang', lang);
-      }
-
-      langButtons.forEach((btn) => {
-        btn.addEventListener('click', () => setInstructionsLang(btn.dataset.lang));
-      });
-
-      setInstructionsLang(localStorage.getItem('solarDiaryInstructionsLang') || 'en');
     });
 
     let initialReadings = JSON.parse(localStorage.getItem("initialReadings")) || null;
