@@ -915,7 +915,6 @@
               <th>Peak (T2)</th>
               <th>Off-Peak (T3)</th>
               <th>Total Usage</th>
-              <th>Today's Energy Bill</th>
               <th id="overallBillColumnHeader">Today's Total Bill</th>
               <th>Projected Monthly Bill</th>
             </tr>
@@ -1227,10 +1226,30 @@
       subEl.textContent = `${new Date(dateKey + 'T00:00:00').toLocaleDateString()} → ${lastEntryDate.toLocaleDateString()}`;
     }
 
+    // Shared by renderDailyUsageTracker() (Projected Monthly Bill) and
+    // renderEstimatedBill() (Projected Month-End) below -- both project the
+    // account-wide average daily rate (cumulative usage / days tracked) out
+    // to this many days, and must use the exact same number or their totals
+    // silently drift apart. A single shared getter, rather than two
+    // separate per-function constants, so that can't happen.
+    //
+    // Projects to the real length of the month being tracked (the Initial
+    // Reading's month) -- 30 or 31 days -- EXCEPT February, which is
+    // deliberately projected as a 30-day month rather than its real 28/29,
+    // per how this diary's users want the estimate rounded.
+    function getProjectionTargetDays() {
+      const dateKey = initialReadingDateKey();
+      if (!dateKey) return 31;
+      const d = new Date(dateKey + 'T00:00:00');
+      const month = d.getMonth(); // 0-indexed; 1 = February
+      if (month === 1) return 30;
+      return new Date(d.getFullYear(), month + 1, 0).getDate();
+    }
+
     function renderDailyUsageTracker() {
       const body = document.getElementById("dailyUsageBody");
       body.innerHTML = "";
-      if (!initialReadings || entries.length === 0) return;
+      if (!initialReadings || entries.length === 0) return 0;
 
       const dailyByDate = [];
       let prev = initialReadings;
@@ -1264,30 +1283,23 @@
         t3: lastEntry.t3 - initialReadings.t3,
         export: lastEntry.export - initialReadings.export
       };
-      const cumulativeBill = computeBill(billInputsFromUsage(cumulativeUsage));
-      // "Today's Bill" is that row's own Total Usage billed at the current
-      // energy-charge unit rate (from the cumulative bill so far) -- it
-      // excludes the flat Fixed Charge/Meter Rent (monthly fees, not a
-      // per-day cost) and varies row-to-row with that day's actual usage.
-      const currentUnitRate = !cumulativeBill.error ? (cumulativeBill.unitRate || 0) : 0;
-
       document.getElementById('overallBillColumnHeader').textContent = "Today's Total Bill";
 
-      const PROJECTION_DAYS = 30;
-
-      // "Projected Monthly Bill" must match the "Projected Month-End (at
-      // current daily rate)" section below exactly: the *average* daily
-      // rate across the whole tracked period (cumulative usage / totalDays)
-      // scaled to a 30-day month -- computed once here (flat across every
-      // row), not from any single row's own usage. A per-row projection
-      // (that day's usage x30, billed standalone) was tried, but tariff
-      // slabs are non-linear, so scaling one volatile day by 30 produced
-      // wildly different -- and less realistic -- totals than the
-      // smoothed account-wide average.
+      // "Projected Monthly Bill" starts from the same *average* daily rate
+      // as the "Projected Month-End (at current daily rate)" section below
+      // -- cumulative usage / totalDays, scaled to getProjectionTargetDays()
+      // -day month, computed once here (flat across every row), not from
+      // any single row's own usage. A per-row projection (that day's usage
+      // x scale, billed standalone) was tried, but tariff slabs are
+      // non-linear, so scaling one volatile day produced wildly different
+      // -- and less realistic -- totals than the smoothed account-wide
+      // average. This figure can still be raised above that smoothed value
+      // by the "Today's Total Bill" floor below, so the two sections only
+      // match exactly when no row needs that floor.
       const totalDays = getTotalDaysInput();
-      let projectedMonthlyText = '—';
+      let projectedMonthlyAmount = null;
       if (totalDays) {
-        const scale = PROJECTION_DAYS / totalDays;
+        const scale = getProjectionTargetDays() / totalDays;
         const projectedUsage = {
           solar: cumulativeUsage.solar * scale,
           t1: cumulativeUsage.t1 * scale,
@@ -1296,8 +1308,33 @@
           export: cumulativeUsage.export * scale,
         };
         const projectedBill = computeBill(billInputsFromUsage(projectedUsage));
-        if (!projectedBill.error) projectedMonthlyText = `₹${projectedBill.totalBillAmount.toFixed(2)}`;
+        if (!projectedBill.error) projectedMonthlyAmount = projectedBill.totalBillAmount;
       }
+
+      // First pass: each row's own "Today's Total Bill" -- that row's usage
+      // billed standalone, as if this one day's usage were the whole
+      // billing period. Computed before finalizing the projection below,
+      // since a low-usage day's Fixed Charge (paid in full for just that
+      // one day) can push this above the smoothed monthly projection.
+      const dailyRows = dailyByDate.map((daily) => {
+        const directSolarUsage = daily.solar - daily.export;
+        const dailyTotal = directSolarUsage + daily.t1 + daily.t2 + daily.t3;
+        const rowBill = computeBill(billInputsFromUsage(daily));
+        return { daily, directSolarUsage, dailyTotal, rowBill };
+      });
+
+      // A month's projected bill can never realistically be less than what
+      // a single tracked day's usage would already cost billed standalone --
+      // if any row's "Today's Total Bill" exceeds the smoothed monthly
+      // projection, raise the projection to match that day's bill instead
+      // of showing a monthly total smaller than a single day already billed.
+      const maxDailyBillAmount = dailyRows.reduce((max, { rowBill }) => (
+        rowBill.error ? max : Math.max(max, rowBill.totalBillAmount)
+      ), 0);
+      if (projectedMonthlyAmount !== null && maxDailyBillAmount > projectedMonthlyAmount) {
+        projectedMonthlyAmount = maxDailyBillAmount;
+      }
+      const projectedMonthlyText = projectedMonthlyAmount !== null ? `₹${projectedMonthlyAmount.toFixed(2)}` : '—';
 
       const projectedMonthlyBillStat = document.getElementById('projectedMonthlyBillStat');
       const projectedMonthlyBillValue = document.getElementById('projectedMonthlyBillValue');
@@ -1308,17 +1345,7 @@
         projectedMonthlyBillStat.style.display = 'none';
       }
 
-      dailyByDate.forEach((daily, i) => {
-        const directSolarUsage = daily.solar - daily.export;
-        const dailyTotal = directSolarUsage + daily.t1 + daily.t2 + daily.t3;
-        const estimatedBillText = cumulativeBill.error ? '—' : `₹${(dailyTotal * currentUnitRate).toFixed(2)}`;
-
-        // "Estimated Bill" for this row is that row's own usage billed
-        // standalone (as if this one day's usage were the whole billing
-        // period) -- it only ever describes this row, not the account's
-        // real cumulative bill (that's what the Estimated Total Bill
-        // section below is for).
-        const rowBill = computeBill(billInputsFromUsage(daily));
+      dailyRows.forEach(({ daily, directSolarUsage, dailyTotal, rowBill }, i) => {
         const overallBillText = rowBill.error ? '—' : `₹${rowBill.totalBillAmount.toFixed(2)}`;
 
         // "Projected Monthly Bill" is the same single figure for every row
@@ -1326,7 +1353,7 @@
         // just once -- spanning the full column -- instead of repeating an
         // identical value on every line.
         const projectedCell = i === 0
-          ? `<td rowspan="${dailyByDate.length}" class="projected-monthly-cell">${projectedMonthlyText}</td>`
+          ? `<td rowspan="${dailyRows.length}" class="projected-monthly-cell">${projectedMonthlyText}</td>`
           : '';
 
         body.innerHTML += `<tr>
@@ -1337,11 +1364,16 @@
           <td>${Math.round(daily.t2)}</td>
           <td>${Math.round(daily.t3)}</td>
           <td><strong>${Math.round(dailyTotal)}</strong></td>
-          <td>${estimatedBillText}</td>
           <td>${overallBillText}</td>
           ${projectedCell}
         </tr>`;
       });
+
+      // Handed to renderEstimatedBill() (see renderEntries() below) so the
+      // separate "Projected Month-End" panel can explain -- rather than
+      // silently apply the same floor to -- a Total that undershoots this
+      // same figure.
+      return maxDailyBillAmount;
     }
 
     // A single-series line is the right form for "usage over time" -- shows
@@ -1467,7 +1499,7 @@
         </tr>`;
       });
 
-      renderDailyUsageTracker();
+      const maxDailyBillAmount = renderDailyUsageTracker();
       renderEntriesLineChart();
 
       if (entries.length > 0 && initialReadings) {
@@ -1561,7 +1593,7 @@
 
         insightsEl.innerHTML = insightsHTML;
 
-        renderEstimatedBill(usage, getTotalDaysInput());
+        renderEstimatedBill(usage, getTotalDaysInput(), maxDailyBillAmount);
       } else {
         document.getElementById('estimatedBill').innerHTML = '';
         document.getElementById('viewFullBreakdownBtn').style.display = 'none';
@@ -1679,9 +1711,7 @@
         </table>`;
     }
 
-    const PROJECTION_TARGET_DAYS = 30;
-
-    function renderEstimatedBill(usage, totalDays) {
+    function renderEstimatedBill(usage, totalDays, maxDailyBillAmount = 0) {
       const el = document.getElementById('estimatedBill');
       const viewBtn = document.getElementById('viewFullBreakdownBtn');
       let html = `<hr style="margin-top: 20px;">`;
@@ -1706,9 +1736,11 @@
 
       // Project a month-end total using the same daily rate as "Daily
       // Energy usage" above (total usage / totalDays, the user-entered
-      // #totalDaysInput), scaled to a fixed 30-day month.
+      // #totalDaysInput), scaled to a fixed getProjectionTargetDays()-day
+      // month.
       if (totalDays) {
-        const scale = PROJECTION_TARGET_DAYS / totalDays;
+        const projectionTargetDays = getProjectionTargetDays();
+        const scale = projectionTargetDays / totalDays;
         const projectedUsage = {
           solar: usage.solar * scale,
           t1: usage.t1 * scale,
@@ -1720,7 +1752,19 @@
         if (!projectedBill.error) {
           html += `<div class="projected"><h4>📅 Projected Month-End (at current daily rate)</h4>`;
           html += billSummaryRows(projectedBill);
-          html += `<p class="note">Projected by applying your current daily rate (based on ${totalDays} day(s), from Daily Energy usage above) to a ${PROJECTION_TARGET_DAYS}-day month. Actual usage may vary.</p></div>`;
+          html += `<p class="note">Projected by applying your current daily rate (based on ${totalDays} day(s), from Daily Energy usage above) to a ${projectionTargetDays}-day month. Actual usage may vary.</p>`;
+          // Unlike "Projected Monthly Bill" in the Daily Usage Tracker
+          // above, this panel's Total is never raised to meet a single
+          // day's own standalone bill -- so once totalDays tracked runs
+          // past the projection target, the smoothed daily rate can dilute
+          // this Total below what a single tracked day already cost.
+          // Explain that instead of leaving it looking like a calculation
+          // error.
+          if (projectedBill.totalBillAmount < maxDailyBillAmount) {
+            const monthName = new Date(initialReadingDateKey() + 'T00:00:00').toLocaleDateString(undefined, { month: 'long' });
+            html += `<p class="advice">⚠️ Note: this is a ${projectionTargetDays}-day projection (based on the number of days in ${monthName}), but you've already tracked ${totalDays} days -- more than ${projectionTargetDays} -- so this Total reflects only ${projectionTargetDays} days' worth of usage, not your full tracked total. See "Today's Total Bill" in the Daily Usage Tracker above for what a single day alone would cost billed standalone.</p>`;
+          }
+          html += `</div>`;
         }
       } else {
         html += '<p class="note">Enter the total number of days above to unlock a projected month-end total.</p>';
