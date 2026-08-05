@@ -338,6 +338,7 @@
       font-size: 10.5px;
       font-weight: 500;
       color: var(--text-muted);
+      line-height: 1.4;
     }
     .reading-field input {
       border-left-width: 4px;
@@ -903,11 +904,11 @@
       <p class="note" id="initialReadingNote">ഈ മാസത്തെ Initial റീഡിങ് ഇവിടെ enter ചെയ്യുക. കഴിഞ്ഞ മാസം ലഭിച്ച ബില്ലിലെ Current റീഡിങ് ആണ് ഈ മാസത്തെ Initial Reading ആയി എടുക്കേണ്ടത്.</p>
       <form id="initialForm" class="reading-form">
         <div class="reading-field reading-field--date">
-          <label for="init_date"><span class="reading-field-icon">📅</span><span class="reading-field-name">Date</span></label>
+          <label for="init_date"><span class="reading-field-icon">📅</span><span class="reading-field-name">Date</span><span class="reading-field-tag">Date this reading was taken<br>ഈ റീഡിംഗ് എടുത്ത തീയതി</span></label>
           <input type="date" id="init_date">
         </div>
         <div class="reading-field reading-field--solar">
-          <label for="init_solar"><span class="reading-field-icon">☀️</span><span class="reading-field-name">Solar Gen</span></label>
+          <label for="init_solar"><span class="reading-field-icon">☀️</span><span class="reading-field-name">Solar Gen</span><span class="reading-field-tag">Total units on your solar meter<br>സോളാർ മീറ്ററിലെ റീഡിംഗ്</span></label>
           <input type="number" id="init_solar" placeholder="0">
         </div>
         <div class="reading-field reading-field--t1">
@@ -923,7 +924,7 @@
           <input type="number" id="init_t3" placeholder="0">
         </div>
         <div class="reading-field reading-field--export">
-          <label for="init_export"><span class="reading-field-icon">📤</span><span class="reading-field-name">Export</span></label>
+          <label for="init_export"><span class="reading-field-icon">📤</span><span class="reading-field-name">Export</span><span class="reading-field-tag">Units sent back to the grid<br>ഗ്രിഡിലേക്ക് തിരികെ അയച്ച യൂണിറ്റ്</span></label>
           <input type="number" id="init_export" placeholder="0">
         </div>
         <button type="submit" id="saveInitialBtn" class="reading-submit-btn">💾 Save Initial</button>
@@ -935,23 +936,23 @@
       <p class="note">Enter your current reading from the meter.<br>നിങ്ങളുടെ ഇപ്പോൾ ഉള്ള സോളാർ മീറ്റർ റീഡിങ് ഇവിടെ Enter ചെയ്യുക.</p>
       <form id="diaryForm" class="reading-form">
         <div class="reading-field reading-field--solar">
-          <label for="solar"><span class="reading-field-icon">☀️</span><span class="reading-field-name">Solar Gen</span></label>
+          <label for="solar"><span class="reading-field-icon">☀️</span><span class="reading-field-name">Solar Gen</span><span class="reading-field-tag">Total units on your solar meter<br>സോളാർ മീറ്ററിലെ ആകെ യൂണിറ്റ്</span></label>
           <input type="number" id="solar" placeholder="0" required>
         </div>
         <div class="reading-field reading-field--t1">
-          <label for="t1"><span class="reading-field-icon">🏠</span><span class="reading-field-name">T1</span><span class="reading-field-tag">Normal · 6am–6pm</span></label>
+          <label for="t1"><span class="reading-field-icon">🏠</span><span class="reading-field-name">T1</span><span class="reading-field-tag">Normal · 6am–6pm<br>Normal റീഡിംഗ് (രാവിലെ 6 – വൈകിട്ട് 6)</span></label>
           <input type="number" id="t1" placeholder="0" required>
         </div>
         <div class="reading-field reading-field--t2">
-          <label for="t2"><span class="reading-field-icon">⚡</span><span class="reading-field-name">T2</span><span class="reading-field-tag">Peak · 6pm–10pm</span></label>
+          <label for="t2"><span class="reading-field-icon">⚡</span><span class="reading-field-name">T2</span><span class="reading-field-tag">Peak · 6pm–10pm<br>Peak റീഡിംഗ് (വൈകിട്ട് 6 – രാത്രി 10)</span></label>
           <input type="number" id="t2" placeholder="0" required>
         </div>
         <div class="reading-field reading-field--t3">
-          <label for="t3"><span class="reading-field-icon">🌙</span><span class="reading-field-name">T3</span><span class="reading-field-tag">Off-Peak · 10pm–6am</span></label>
+          <label for="t3"><span class="reading-field-icon">🌙</span><span class="reading-field-name">T3</span><span class="reading-field-tag">Off-Peak · 10pm–6am<br>Off-Peak റീഡിംഗ് (രാത്രി 10 – രാവിലെ 6)</span></label>
           <input type="number" id="t3" placeholder="0" required>
         </div>
         <div class="reading-field reading-field--export">
-          <label for="export"><span class="reading-field-icon">📤</span><span class="reading-field-name">Export</span></label>
+          <label for="export"><span class="reading-field-icon">📤</span><span class="reading-field-name">Export</span><span class="reading-field-tag">Units sent back to the grid<br>ഗ്രിഡിലേക്ക് തിരികെ അയച്ച യൂണിറ്റ്</span></label>
           <input type="number" id="export" placeholder="0" required>
         </div>
         <button type="submit" class="reading-submit-btn">➕ Add Reading</button>
