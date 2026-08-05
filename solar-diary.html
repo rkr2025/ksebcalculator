@@ -1349,9 +1349,10 @@
       // by the "Today's Total Bill" floor below, so the two sections only
       // match exactly when no row needs that floor.
       const totalDays = getTotalDaysInput();
+      const projectionTargetDays = getProjectionTargetDays();
       let projectedMonthlyAmount = null;
       if (totalDays) {
-        const scale = getProjectionTargetDays() / totalDays;
+        const scale = projectionTargetDays / totalDays;
         const projectedUsage = {
           solar: cumulativeUsage.solar * scale,
           t1: cumulativeUsage.t1 * scale,
@@ -1399,11 +1400,18 @@
       }
       const projectedMonthlyText = projectedMonthlyAmount !== null ? `₹${projectedMonthlyAmount.toFixed(2)}` : '—';
       // Both bill columns get a small date caption so it's clear WHEN each
-      // figure was calculated: "Today's Total Bill" is that row's own date,
-      // while "Projected Monthly Bill" is a single account-wide figure, so
-      // it's captioned with the latest tracked entry's date instead (the
-      // most recent data point it was actually computed from).
-      const lastEntryDateLabel = new Date(lastEntry.timestamp).toLocaleDateString();
+      // figure applies: "Today's Total Bill" is that row's own date, while
+      // "Projected Monthly Bill" is captioned with the actual month-end
+      // date it's projecting TO -- the Initial Reading date plus
+      // projectionTargetDays (30 or 31, see getProjectionTargetDays()) --
+      // not the date the underlying data happens to be current as of.
+      const projectedEndDateLabel = (() => {
+        const dateKey = initialReadingDateKey();
+        if (!dateKey) return null;
+        const endDate = new Date(dateKey + 'T00:00:00');
+        endDate.setDate(endDate.getDate() + projectionTargetDays);
+        return endDate.toLocaleDateString();
+      })();
 
       const projectedMonthlyBillStat = document.getElementById('projectedMonthlyBillStat');
       const projectedMonthlyBillValue = document.getElementById('projectedMonthlyBillValue');
@@ -1422,7 +1430,7 @@
         // just once -- spanning the full column -- instead of repeating an
         // identical value on every line.
         const projectedCell = i === 0
-          ? `<td rowspan="${dailyRows.length}" class="projected-monthly-cell">${projectedMonthlyText}${projectedMonthlyText !== '—' ? `<div class="bill-date-note">as of ${lastEntryDateLabel}</div>` : ''}</td>`
+          ? `<td rowspan="${dailyRows.length}" class="projected-monthly-cell">${projectedMonthlyText}${projectedMonthlyText !== '—' && projectedEndDateLabel ? `<div class="bill-date-note">by ${projectedEndDateLabel}</div>` : ''}</td>`
           : '';
 
         body.innerHTML += `<tr>
