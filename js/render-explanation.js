@@ -53,10 +53,12 @@ function buildExplainTable(rows, lang) {
     }).join('');
 
     return `
-        <table class="bill-explain-table">
-            <thead><tr><th>Description</th><th>Amount</th></tr></thead>
-            <tbody>${bodyRows}</tbody>
-        </table>`;
+        <div class="bill-explain-table-wrap">
+            <table class="bill-explain-table">
+                <thead><tr><th>Description</th><th>Amount</th></tr></thead>
+                <tbody>${bodyRows}</tbody>
+            </table>
+        </div>`;
 }
 
 function billTypeItem(bill) {
@@ -526,16 +528,21 @@ const EXPLAIN_STYLE_BLOCK = `
             background: linear-gradient(180deg, var(--primary), var(--primary-dark));
             border-color: var(--primary); color: #fff; box-shadow: var(--shadow-sm);
         }
-        .bill-explain-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        /* Amount text like "400.00 units (T1: 300.00 + T2: 60.00 + T3:
+           40.00)" is too long to force onto one line on a narrow screen --
+           this wrapper is the fallback if the column ever still can't fit
+           its content, so the table scrolls instead of the whole page. */
+        .bill-explain-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .bill-explain-table { width: 100%; min-width: 280px; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
         .bill-explain-table th {
             text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
             color: var(--text-muted); padding: 6px 10px; border: 1px solid var(--border); background: var(--surface-muted);
         }
-        .bill-explain-table th:last-child { text-align: right; }
-        .bill-explain-table td { padding: 10px; border: 1px solid var(--border); vertical-align: top; }
+        .bill-explain-table th:last-child { text-align: right; width: 38%; }
+        .bill-explain-table td { padding: 10px; border: 1px solid var(--border); vertical-align: top; overflow-wrap: break-word; }
         .bill-explain-desc strong { color: var(--text-primary); }
         .bill-explain-desc-text { font-size: 12px; font-weight: 400; color: var(--text-secondary); margin-top: 3px; line-height: 1.5; }
-        .bill-explain-amount { text-align: right; font-weight: 700; color: var(--text-primary); white-space: nowrap; }
+        .bill-explain-amount { text-align: right; font-weight: 700; color: var(--text-primary); }
         .bill-explain-wide { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
         .bill-explain-wide strong { color: var(--text-primary); }
     </style>`;
