@@ -12,6 +12,7 @@ import {
     getExportOffPeakAdjustmentMessage,
     getExportOffPeakAdjustmentMessageBelow20kW,
     getEnergyCaluculationMessage,
+    renderExpandableSection,
 } from './render-tables.js';
 import { renderBillBreakdownChart, renderTodComparisonChart } from './render-chart.js';
 import { renderBillAnalysis } from './render-insights.js';
@@ -24,7 +25,7 @@ import { buildPrintInputsSummary } from './render-print-summary.js';
 // results' ENDING_NOTE_HTML below and in a persistent page-footer (rendered
 // by main.js at load time, independent of whether a bill has been
 // calculated yet).
-export const APP_VERSION_LABEL = 'Version 3.0.115: Last updated: 06-August-2026';
+export const APP_VERSION_LABEL = 'Version 3.0.122: Last updated: 06-August-2026';
 
 const ENDING_NOTE_HTML = `
     <div style="background: var(--surface-muted); padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); margin: 20px auto; max-width: 90%; font-family: 'Georgia', serif; border-left: 4px solid #2ecc71;">
@@ -238,41 +239,30 @@ function buildTodSplitResult(bill) {
     const {
         solarGeneration, importReading, exportReading, myBankDepositAtKseb,
         importNormal, importPeak, importOffPeak, exportNormal, exportPeak, exportOffPeak,
-        generationUsage, totalBillAmount,
+        generationUsage,
         todBillingAbove20kW,
     } = bill;
 
     const result = '';
 
-    const totalBillAmountBlock = `Total Bill Amount ഏകദേശം <strong class="red-text"> ₹${totalBillAmount.toFixed(2)} </strong>
-                                                            <br><i>(Security Deposit interest, Tariff changes, Advance അനുസരിച്ച് മാറ്റം വരാം)</i>`;
-
-    let result2;
-    let result3;
-
-    if (todBillingAbove20kW > 0) {
-        result2 = getHeaderMessage(bill)
+    // Everything below lives inside one outer expand/collapse box (see
+    // renderExpandableSection) -- the header table and the plain-language
+    // explanation are its direct content, while T1/T2/T3/Energy Calculation
+    // keep their own nested boxes so each can still be collapsed on its own.
+    const innerHtml = todBillingAbove20kW > 0
+        ? getHeaderMessage(bill)
             + buildTodCalculationExplanation(bill)
-            + '<u><strong>T1 - Normal TimeZone (6am to 6pm) Calculations </strong></u>'
             + getExportNormalAdjustmentMessage(bill)
-            + '<u><strong>T2 - Peak TimeZone (6pm to 10pm) Calculations </strong></u>'
             + getExportPeakAdjustmentMessage(bill)
-            + '<u><strong>T3 - Off-Peak TimeZone (10pm to 6am) Calculations </strong></u>'
-            + getExportOffPeakAdjustmentMessage(bill);
-
-        result3 = getEnergyCaluculationMessage(bill) + totalBillAmountBlock;
-    } else {
-        result2 = getHeaderMessage(bill)
+            + getExportOffPeakAdjustmentMessage(bill)
+            + getEnergyCaluculationMessage(bill)
+        : getHeaderMessage(bill)
             + buildTodCalculationExplanation(bill)
-            + '<u><strong>T1 - Normal TimeZone (6am to 6pm) Calculations </strong></u>'
             + getExportNormalAdjustmentMessageBelow20kW({
                 ...bill,
                 NormalConsumptionAdjusted: bill.NormalConsumptionAdjusted_Below20kW,
-            });
-
-        result3 = '<b><u><strong>T2 - Peak TimeZone (6pm to 10pm) (Connected Load < 20kW)</strong></u></b>'
+            })
             + getExportPeakAdjustmentMessageBelow20kW(bill)
-            + '<b><u><strong>T3 - Off-Peak TimeZone (10pm to 6am) Calculations </strong></u></b>'
             + getExportOffPeakAdjustmentMessageBelow20kW(bill)
             + getEnergyCaluculationMessage({
                 ...bill,
@@ -283,9 +273,10 @@ function buildTodSplitResult(bill) {
                 PeakConsumptionAdjusted_energy_charge: bill.PeakConsumptionAdjusted_energy_charge_Below20kW,
                 OffPeakConsumptionAdjusted_energy_charge: bill.OffPeakConsumptionAdjusted_energy_charge_Below20kW,
                 energyCharge: bill.energyCharge_Below20kW,
-            })
-            + `<b>${totalBillAmountBlock}</b>`;
-    }
+            });
+
+    const result2 = renderExpandableSection('🗣️', 'ToD (T1/T2/T3) Calculation Explained', 'var(--bank)', innerHtml);
+    const result3 = '';
 
     return { result, result2, result3 };
 }

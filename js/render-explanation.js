@@ -575,6 +575,9 @@ const EXPLAIN_STYLE_BLOCK = `
 // doesn't repeat that <style> block here, since buildBillExplanation()
 // always renders alongside this on any valid bill (both gate on
 // bill.totalBillAmount), so the shared classes are already styled once.
+// Returns raw content only (no card/box wrapper) -- render-results.js
+// nests this inside the single outer "ToD Calculation Explained" box
+// alongside the header table and the T1/T2/T3/Energy cards.
 export function buildTodCalculationExplanation(bill) {
     if (!bill || bill.billingType !== 'tod' || bill.todType === 'normal') return '';
 
@@ -583,15 +586,12 @@ export function buildTodCalculationExplanation(bill) {
     const malayalamTable = buildExplainTable(rows, 'ml');
 
     return `
-        <div class="bill-chart">
-            <h5><u>🗣️ ToD (T1/T2/T3) Calculation Explained</u></h5>
-            <div class="bill-explain-lang-toggle" role="group" aria-label="ToD calculation explanation language">
-                <button type="button" class="bill-explain-lang-btn active" data-bill-lang="ml">മലയാളം</button>
-                <button type="button" class="bill-explain-lang-btn" data-bill-lang="en">English</button>
-            </div>
-            <div data-bill-lang-content="en" hidden>${englishTable}</div>
-            <div data-bill-lang-content="ml">${malayalamTable}</div>
-        </div>`;
+        <div class="bill-explain-lang-toggle" role="group" aria-label="ToD calculation explanation language">
+            <button type="button" class="bill-explain-lang-btn active" data-bill-lang="ml">മലയാളം</button>
+            <button type="button" class="bill-explain-lang-btn" data-bill-lang="en">English</button>
+        </div>
+        <div data-bill-lang-content="en" hidden>${englishTable}</div>
+        <div data-bill-lang-content="ml">${malayalamTable}</div>`;
 }
 
 // Only meaningful when a wheeling transfer actually happened this bill.

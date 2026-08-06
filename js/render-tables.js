@@ -4,45 +4,40 @@
 // (renderInfoTable) plus small row-data builders -- the rendered HTML is
 // unchanged, only the duplication is gone.
 
-const CELL = 'border: 1px solid var(--border); padding: 6px;';
-const CELL_RIGHT = `${CELL} text-align: right;`;
-
 const green = (html) => `<strong class="green-text">${html}</strong>`;
 const red = (html) => `<strong class="red-text">${html}</strong>`;
 const unit = (value) => `${value.toFixed(2)} Unit`;
 const money = (value) => `₹${value.toFixed(2)}`;
 
-// Shared 2-column (Description / Details) info table used by every
-// Normal/Peak/Off-Peak adjustment message and the header message's siblings.
-function renderInfoTable(title, rows) {
-    const rowsHtml = rows.map(({ label, value }) => `
-              <tr>
-                <td style="${CELL}">${label}</td>
-                <td style="${CELL_RIGHT}">${value}</td>
+// Shared 2-column (Description / Details) info card used by every
+// Normal/Peak/Off-Peak adjustment message. `icon`/`colorVar` tint the card
+// to match the timezone it belongs to (green=Normal, amber=Peak, blue=Off-Peak).
+// `sectionTitle` (the T1/T2/T3 line, formerly its own separate header box)
+// and `title` (the more specific "...Adjustment Details" line) render
+// together in one merged card header.
+function renderInfoTable(title, rows, { icon = 'ℹ️', colorVar = 'var(--primary)', sectionTitle = '' } = {}) {
+    const rowsHtml = rows.map(({ label, value }, index) => `
+              <tr class="tod-info-row${index % 2 === 1 ? ' tod-info-row--alt' : ''}">
+                <td class="tod-info-label">${label}</td>
+                <td class="tod-info-value">${value}</td>
               </tr>`).join('');
 
     return `
-        <hr>
-        <h5><u>${title}</u></h5>
-        <div style="overflow-x: auto; margin: 20px 0;">
-          <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px;">
-            <thead>
-              <tr style="background-color: var(--surface-muted);">
-                <th style="border: 1px solid var(--border); padding: 6px; text-align: left; width: 60%;">Description</th>
-                <th style="border: 1px solid var(--border); padding: 6px; text-align: right; width: 40%;">Details</th>
-              </tr>
-            </thead>
-            <tbody>${rowsHtml}
-            </tbody>
-          </table>
-        </div>
-        <style>
-          @media (max-width: 600px) {
-            table { font-size: 12px; }
-            th, td { padding: 4px; }
-          }
-        </style>
-        <hr>
+        <details class="tod-card" style="--tz-color: ${colorVar};">
+            <summary class="tod-card-header">
+                <span class="tod-card-header-icon">${icon}</span>
+                <div class="tod-card-header-text">
+                    ${sectionTitle ? `<span class="tod-card-header-title">${sectionTitle}</span>` : ''}
+                    <span class="tod-card-header-subtitle">${title}</span>
+                </div>
+            </summary>
+            <div class="tod-card-body">
+                <table class="tod-info-table">
+                    <tbody>${rowsHtml}
+                    </tbody>
+                </table>
+            </div>
+        </details>
       `;
 }
 
@@ -60,8 +55,7 @@ export function getHeaderMessage({ importNormal, importPeak, importOffPeak, expo
                     </tr>`).join('');
 
     return `
-        <hr>
-        <h5 style="text-align: center; color: var(--text-primary);"><u><strong>ToD Billing Based on T1, T2, T3 (w.e.f 01-02-2025)</strong></u></h5>
+        <h5 style="text-align: center; color: var(--text-primary); margin-top: 0;"><u><strong>ToD Billing Based on T1, T2, T3 (w.e.f 01-02-2025)</strong></u></h5>
         <div style="overflow-x: auto; margin: 20px 0;">
             <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                 <thead>
@@ -80,8 +74,26 @@ export function getHeaderMessage({ importNormal, importPeak, importOffPeak, expo
                 th, td { padding: 6px; }
             }
         </style>
-        <hr>
     `;
+}
+
+// Wraps arbitrary already-built HTML (other ToD cards included) in one more
+// .tod-card shell, used to give the whole ToD calculation section a single
+// outer expand/collapse toggle while the cards inside it keep their own.
+// Starts open -- the T1/T2/T3/Energy cards nested inside it default to
+// collapsed instead, so opening this doesn't dump the whole wall of detail
+// on the user at once.
+export function renderExpandableSection(icon, title, colorVar, innerHtml) {
+    return `
+        <details class="tod-card" open style="--tz-color: ${colorVar};">
+            <summary class="tod-card-header">
+                <span class="tod-card-header-icon">${icon}</span>
+                <span class="tod-card-header-title">${title}</span>
+            </summary>
+            <div class="tod-card-body tod-explain-body">
+                ${innerHtml}
+            </div>
+        </details>`;
 }
 
 export function getExportNormalAdjustmentMessage({
@@ -91,33 +103,39 @@ export function getExportNormalAdjustmentMessage({
 }) {
     const exportPlusBankRow = { label: 'Export + Bank', value: green(`${exportReading.toFixed(2)} + ${myBankDepositAtKseb.toFixed(2)} = ${exportPlusBank.toFixed(2)} Unit`) };
     const normalUsageRow = { label: 'പകൽ സമയ ഉപയോഗം (Normal Time Usage)', value: red(unit(importNormal)) };
+    const title = 'Normal TimeZone Adjustment Details';
+    const style = {
+        icon: '🌞',
+        colorVar: 'var(--export)',
+        sectionTitle: 'T1 - Normal TimeZone (6am to 6pm) Calculations',
+    };
 
     if (exportPlusBank > importNormal) {
-        return renderInfoTable('Normal TimeZone Adjustment Details', [
+        return renderInfoTable(title, [
             exportPlusBankRow,
             normalUsageRow,
             { label: 'Adjustment Status', value: green('Fully Adjusted 👍') },
             { label: 'Normal TimeZone Energy Consumption', value: green(`${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😌`) },
             { label: `Remaining Energy After Normal Adjustment<br>(${exportPlusBank.toFixed(2)} - ${importNormal.toFixed(2)})`, value: green(unit(NormalConsumptionAdjusted)) },
             { label: `Peak TimeZone Adjustment (80% of Remaining)<br>(${NormalConsumptionAdjusted.toFixed(2)} x 80%)`, value: green(unit(PeakConsumptionAdjusted_80_percent)) },
-        ]);
+        ], style);
     }
     if (exportPlusBank === importNormal) {
-        return renderInfoTable('Normal TimeZone Adjustment Details', [
+        return renderInfoTable(title, [
             exportPlusBankRow,
             normalUsageRow,
             { label: 'Adjustment Status', value: green('Fully Adjusted 👍') },
             { label: 'Normal TimeZone Energy Consumption', value: green(`${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😌`) },
             { label: 'Peak TimeZone Adjustment', value: 'No further adjustment possible' },
-        ]);
+        ], style);
     }
-    return renderInfoTable('Normal TimeZone Adjustment Details', [
+    return renderInfoTable(title, [
         exportPlusBankRow,
         normalUsageRow,
         { label: `Remaining Units to Charge<br>(${importNormal.toFixed(2)} - ${exportPlusBank.toFixed(2)})`, value: red(unit(Math.abs(exportPlusBank - importNormal))) },
         { label: 'Normal TimeZone Energy Consumption', value: red(`${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} Units ⚡`) },
         { label: `Charge Rate (90% of Normal Rate)<br>(₹${unitRate.toFixed(2)} x 0.9)`, value: money(unitRate * 0.9) },
-    ]);
+    ], style);
 }
 
 export function getExportNormalAdjustmentMessageBelow20kW({
@@ -128,6 +146,11 @@ export function getExportNormalAdjustmentMessageBelow20kW({
     const exportPlusBankRow = { label: 'Export + Bank', value: green(`${exportReading.toFixed(2)} + ${myBankDepositAtKseb.toFixed(2)} = ${exportPlusBank.toFixed(2)} Unit`) };
     const normalUsageRow = { label: 'പകൽ സമയ ഉപയോഗം (Normal Time Usage)', value: red(unit(importNormal)) };
     const title = 'Normal TimeZone Adjustment Details (Below 20kW)';
+    const style = {
+        icon: '🌞',
+        colorVar: 'var(--export)',
+        sectionTitle: 'T1 - Normal TimeZone (6am to 6pm) Calculations',
+    };
 
     if (exportPlusBank > importNormal) {
         return renderInfoTable(title, [
@@ -138,7 +161,7 @@ export function getExportNormalAdjustmentMessageBelow20kW({
             { label: `Remaining Energy After Normal Adjustment<br>(${exportPlusBank.toFixed(2)} - ${importNormal.toFixed(2)})`, value: green(unit(NormalConsumptionAdjusted)) },
             { label: `Peak TimeZone Energy Adjustment<br>(${exportPlusBank.toFixed(2)} - ${importNormal.toFixed(2)})`, value: green(unit(Math.abs(exportPlusBank - importNormal))) },
             { label: 'Effective Energy (Below 20kW)', value: green(unit(NormalConsumptionAdjusted_Below20kW)) },
-        ]);
+        ], style);
     }
     if (exportPlusBank === importNormal) {
         return renderInfoTable(title, [
@@ -147,7 +170,7 @@ export function getExportNormalAdjustmentMessageBelow20kW({
             { label: 'Adjustment Status', value: green('Fully Adjusted 👍') },
             { label: 'Normal TimeZone Energy Consumption', value: green(`${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😌`) },
             { label: 'Peak TimeZone Adjustment', value: 'No further adjustment possible' },
-        ]);
+        ], style);
     }
     return renderInfoTable(title, [
         exportPlusBankRow,
@@ -155,7 +178,7 @@ export function getExportNormalAdjustmentMessageBelow20kW({
         { label: `Remaining Units to Charge<br>(${importNormal.toFixed(2)} - ${exportPlusBank.toFixed(2)})`, value: red(unit(Math.abs(exportPlusBank - importNormal))) },
         { label: 'Normal TimeZone Energy Consumption', value: red(`${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)} Units ⚡`) },
         { label: `Charge Rate (90% of Normal Rate)<br>(₹${unitRate_Below20kW.toFixed(2)} x 0.9)`, value: money(unitRate_Below20kW * 0.9) },
-    ]);
+    ], style);
 }
 
 export function getExportPeakAdjustmentMessage({
@@ -165,6 +188,11 @@ export function getExportPeakAdjustmentMessage({
     const adjustedRow = { label: 'Peak Hours Adjusted Energy', value: green(unit(PeakConsumptionAdjusted_80_percent)) };
     const usageRow = { label: 'Peak TimeZone Usage (6pm to 10pm)', value: red(unit(importPeak)) };
     const title = 'Peak TimeZone Adjustment Details';
+    const style = {
+        icon: '⚡',
+        colorVar: 'var(--load)',
+        sectionTitle: 'T2 - Peak TimeZone (6pm to 10pm) Calculations',
+    };
 
     if (PeakConsumptionAdjusted_80_percent > importPeak) {
         return renderInfoTable(title, [
@@ -175,7 +203,7 @@ export function getExportPeakAdjustmentMessage({
             { label: `Left-over Energy<br>(${PeakConsumptionAdjusted_80_percent.toFixed(2)} - ${importPeak.toFixed(2)})`, value: green(unit(PeakConsumptionAdjusted_80_percent - importPeak)) },
             { label: `Effective Energy to Transfer<br>(${(PeakConsumptionAdjusted * 0.8).toFixed(2)} / 0.8)`, value: green(unit(PeakConsumptionAdjusted)) },
             { label: 'Off-Peak TimeZone Adjustment', value: green(unit(PeakConsumptionAdjusted)) },
-        ]);
+        ], style);
     }
     if (PeakConsumptionAdjusted_80_percent === importPeak) {
         return renderInfoTable(title, [
@@ -184,7 +212,7 @@ export function getExportPeakAdjustmentMessage({
             { label: 'Adjustment Status', value: green('Fully Adjusted 👍') },
             { label: 'Peak TimeZone Energy Consumption', value: green(`${Peak_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😌`) },
             { label: 'Further Adjustment', value: 'No further adjustment possible' },
-        ]);
+        ], style);
     }
     return renderInfoTable(title, [
         adjustedRow,
@@ -192,7 +220,7 @@ export function getExportPeakAdjustmentMessage({
         { label: `Remaining Units to Charge<br>(${importPeak.toFixed(2)} - ${PeakConsumptionAdjusted_80_percent.toFixed(2)})`, value: red(unit(Math.abs(importPeak - PeakConsumptionAdjusted_80_percent))) },
         { label: 'Peak TimeZone Energy Consumption', value: red(`${Peak_NoOfUnitsFor_energy_calculation.toFixed(2)} Units ⚡`) },
         { label: `Charge Rate (125% of Normal Rate)<br>(₹${unitRate.toFixed(2)} x 1.25)`, value: red(money(unitRate * 1.25)) },
-    ]);
+    ], style);
 }
 
 export function getExportPeakAdjustmentMessageBelow20kW({
@@ -203,6 +231,11 @@ export function getExportPeakAdjustmentMessageBelow20kW({
     const adjustedRow = { label: 'Peak Hours Adjusted Energy', value: green(unit(NormalConsumptionAdjusted_Below20kW)) };
     const usageRow = { label: 'Peak TimeZone Usage (6pm to 10pm)', value: red(unit(importPeak)) };
     const title = 'Peak TimeZone Adjustment Details (Below 20kW)';
+    const style = {
+        icon: '⚡',
+        colorVar: 'var(--load)',
+        sectionTitle: 'T2 - Peak TimeZone (6pm to 10pm) Calculations',
+    };
 
     if (NormalConsumptionAdjusted_Below20kW > importPeak) {
         return renderInfoTable(title, [
@@ -212,7 +245,7 @@ export function getExportPeakAdjustmentMessageBelow20kW({
             { label: 'Peak TimeZone Energy Consumption', value: green(`${Peak_NoOfUnitsFor_energy_calculation_Below20kW.toFixed(2)} Units 😌`) },
             { label: `Remaining Energy After Adjustment<br>(${NormalConsumptionAdjusted_Below20kW.toFixed(2)} - ${importPeak.toFixed(2)})`, value: green(unit(peakConsumptionAdjusted_Below20kW)) },
             { label: `Off-Peak TimeZone Energy Adjustment<br>(${NormalConsumptionAdjusted_Below20kW.toFixed(2)} - ${importPeak.toFixed(2)})`, value: green(unit(Math.abs(NormalConsumptionAdjusted_Below20kW - importPeak))) },
-        ]);
+        ], style);
     }
     if (NormalConsumptionAdjusted_Below20kW === importPeak) {
         return renderInfoTable(title, [
@@ -221,7 +254,7 @@ export function getExportPeakAdjustmentMessageBelow20kW({
             { label: 'Adjustment Status', value: green('Fully Adjusted 👍') },
             { label: 'Peak TimeZone Energy Consumption', value: green(`${Peak_NoOfUnitsFor_energy_calculation_Below20kW.toFixed(2)} Units 😌`) },
             { label: 'Further Adjustment', value: 'No further adjustment possible' },
-        ]);
+        ], style);
     }
     return renderInfoTable(title, [
         adjustedRow,
@@ -229,7 +262,7 @@ export function getExportPeakAdjustmentMessageBelow20kW({
         { label: `Remaining Units to Charge<br>(${importPeak.toFixed(2)} - ${NormalConsumptionAdjusted_Below20kW.toFixed(2)})`, value: red(unit(Math.abs(NormalConsumptionAdjusted_Below20kW - importPeak))) },
         { label: 'Peak TimeZone Energy Consumption', value: red(`${Peak_NoOfUnitsFor_energy_calculation_Below20kW.toFixed(2)} Units ⚡`) },
         { label: `Charge Rate (125% of Normal Rate)<br>(₹${unitRate_Below20kW.toFixed(2)} x 1.25)`, value: red(money(unitRate_Below20kW * 1.25)) },
-    ]);
+    ], style);
 }
 
 export function getExportOffPeakAdjustmentMessage({
@@ -239,6 +272,11 @@ export function getExportOffPeakAdjustmentMessage({
     const adjustedRow = { label: 'Peak Hours Adjusted Energy', value: green(unit(PeakConsumptionAdjusted)) };
     const usageRow = { label: 'Off-Peak TimeZone Usage (10pm to 6am)', value: red(unit(importOffPeak)) };
     const title = 'Off-Peak TimeZone Adjustment Details';
+    const style = {
+        icon: '🌙',
+        colorVar: 'var(--primary)',
+        sectionTitle: 'T3 - Off-Peak TimeZone (10pm to 6am) Calculations',
+    };
 
     if (PeakConsumptionAdjusted > importOffPeak) {
         return renderInfoTable(title, [
@@ -249,7 +287,7 @@ export function getExportOffPeakAdjustmentMessage({
             { label: `Remaining Energy After Adjustment<br>(${PeakConsumptionAdjusted.toFixed(2)} - ${importOffPeak.toFixed(2)})`, value: green(unit(OffPeakConsumptionAdjusted)) },
             { label: `Off-Peak TimeZone Energy Adjustment<br>(${PeakConsumptionAdjusted.toFixed(2)} - ${importOffPeak.toFixed(2)})`, value: green(unit(Math.abs(PeakConsumptionAdjusted - importOffPeak))) },
             { label: 'Final Bank Adjustment', value: green(unit(OffPeakConsumptionAdjusted)) },
-        ]);
+        ], style);
     }
     if (PeakConsumptionAdjusted === importOffPeak) {
         return renderInfoTable(title, [
@@ -258,7 +296,7 @@ export function getExportOffPeakAdjustmentMessage({
             { label: 'Adjustment Status', value: green('Fully Adjusted') },
             { label: 'Off-Peak TimeZone Energy Consumption', value: green(`${OffPeak_NoOfUnitsFor_energy_calculation.toFixed(2)} Units 😌`) },
             { label: 'Further Adjustment', value: 'No further adjustment possible' },
-        ]);
+        ], style);
     }
     return renderInfoTable(title, [
         { label: 'Off-Peak Adjusted Energy', value: green(unit(PeakConsumptionAdjusted)) },
@@ -266,7 +304,7 @@ export function getExportOffPeakAdjustmentMessage({
         { label: `Remaining Units to Charge<br>(${importOffPeak.toFixed(2)} - ${PeakConsumptionAdjusted.toFixed(2)})`, value: red(unit(Math.abs(PeakConsumptionAdjusted - importOffPeak))) },
         { label: 'Off-Peak TimeZone Energy Consumption', value: red(`${OffPeak_NoOfUnitsFor_energy_calculation.toFixed(2)} Units ⚡`) },
         { label: 'Charge Rate (Normal Rate)', value: red(money(unitRate)) },
-    ]);
+    ], style);
 }
 
 export function getExportOffPeakAdjustmentMessageBelow20kW({
@@ -276,6 +314,11 @@ export function getExportOffPeakAdjustmentMessageBelow20kW({
     const adjustedRow = { label: 'Peak Hours Adjusted Energy', value: green(unit(PeakConsumptionAdjusted_Below20kW)) };
     const usageRow = { label: 'Off-Peak TimeZone Usage (10pm to 6am)', value: red(unit(importOffPeak)) };
     const title = 'Off-Peak TimeZone Adjustment Details (Below 20kW)';
+    const style = {
+        icon: '🌙',
+        colorVar: 'var(--primary)',
+        sectionTitle: 'T3 - Off-Peak TimeZone (10pm to 6am) Calculations',
+    };
 
     if (PeakConsumptionAdjusted_Below20kW > importOffPeak) {
         return renderInfoTable(title, [
@@ -286,7 +329,7 @@ export function getExportOffPeakAdjustmentMessageBelow20kW({
             { label: `Remaining Energy After Adjustment<br>(${PeakConsumptionAdjusted_Below20kW.toFixed(2)} - ${importOffPeak.toFixed(2)})`, value: green(unit(OffPeakConsumptionAdjusted_Below20kW)) },
             { label: `Off-Peak TimeZone Energy Adjustment<br>(${PeakConsumptionAdjusted_Below20kW.toFixed(2)} - ${importOffPeak.toFixed(2)})`, value: green(unit(Math.abs(PeakConsumptionAdjusted_Below20kW - importOffPeak))) },
             { label: 'Final Bank Adjustment', value: green(unit(OffPeakConsumptionAdjusted_Below20kW)) },
-        ]);
+        ], style);
     }
     if (PeakConsumptionAdjusted_Below20kW === importOffPeak) {
         return renderInfoTable(title, [
@@ -295,7 +338,7 @@ export function getExportOffPeakAdjustmentMessageBelow20kW({
             { label: 'Adjustment Status', value: green('Fully Adjusted') },
             { label: 'Off-Peak TimeZone Energy Consumption', value: green(`${OffPeak_NoOfUnitsFor_energy_calculation_Below20kW.toFixed(2)} Units 😌`) },
             { label: 'Further Adjustment', value: 'No further adjustment possible' },
-        ]);
+        ], style);
     }
     return renderInfoTable(title, [
         { label: 'Off-Peak Adjusted Energy', value: green(unit(PeakConsumptionAdjusted_Below20kW)) },
@@ -303,7 +346,7 @@ export function getExportOffPeakAdjustmentMessageBelow20kW({
         { label: `Remaining Units to Charge<br>(${importOffPeak.toFixed(2)} - ${PeakConsumptionAdjusted_Below20kW.toFixed(2)})`, value: red(unit(Math.abs(PeakConsumptionAdjusted_Below20kW - importOffPeak))) },
         { label: 'Off-Peak TimeZone Energy Consumption', value: red(`${OffPeak_NoOfUnitsFor_energy_calculation_Below20kW.toFixed(2)} Units ⚡`) },
         { label: 'Charge Rate (Normal Rate)', value: red(money(unitRate_Below20kW)) },
-    ]);
+    ], style);
 }
 
 // Standalone 4-column (Description/Units/Rate/Charge) summary table -- used
@@ -315,58 +358,51 @@ export function getEnergyCaluculationMessage({
     PeakConsumptionAdjusted_energy_charge, OffPeakConsumptionAdjusted_energy_charge, energyCharge,
 }) {
     return `
-        <hr>
-        <h5><u>Energy Calculation Details</u></h5>
-        <div style="overflow-x: auto; margin: 20px 0;">
-            <table style="width: 100%; max-width: 600px; border-collapse: collapse; font-size: 14px;">
-                <thead>
-                    <tr style="background-color: var(--surface-muted);">
-                        <th style="border: 1px solid var(--border); padding: 6px; text-align: left; width: 40%;">Description</th>
-                        <th style="border: 1px solid var(--border); padding: 6px; text-align: right; width: 20%;">Units</th>
-                        <th style="border: 1px solid var(--border); padding: 6px; text-align: right; width: 20%;">Rate</th>
-                        <th style="border: 1px solid var(--border); padding: 6px; text-align: right; width: 20%;">Charge (₹)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td style="border: 1px solid var(--border); padding: 6px;">Normal TimeZone (90%)</td>
-                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)}</td>
-                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${(unitRate * 0.9).toFixed(2)}</td>
-                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${red(NormalConsumptionAdjusted_energy_charge.toFixed(2))}</td>
-                    </tr>
-                    <tr>
-                        <td style="border: 1px solid var(--border); padding: 6px;">Peak TimeZone (125%)</td>
-                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${Peak_NoOfUnitsFor_energy_calculation.toFixed(2)}</td>
-                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${(unitRate * 1.25).toFixed(2)}</td>
-                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${red(PeakConsumptionAdjusted_energy_charge.toFixed(2))}</td>
-                    </tr>
-                    <tr>
-                        <td style="border: 1px solid var(--border); padding: 6px;">Off-Peak TimeZone (100%)</td>
-                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${OffPeak_NoOfUnitsFor_energy_calculation.toFixed(2)}</td>
-                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${unitRate.toFixed(2)}</td>
-                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${red(OffPeakConsumptionAdjusted_energy_charge.toFixed(2))}</td>
-                    </tr>
-                    <tr style="background-color: var(--surface-muted);">
-                        <td style="border: 1px solid var(--border); padding: 6px;"><strong>Total Energy Consumption</strong></td>
-                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;"><strong>${bankAdjustedUnits.toFixed(2)}</strong></td>
-                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">-</td>
-                        <td style="border: 1px solid var(--border); padding: 6px; text-align: right;">${red(energyCharge.toFixed(2))}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <p style="font-size: 0.9em;">Base Unit Rate: ₹${unitRate.toFixed(2)} | Total Energy Charge = Normal (T1) + Peak (T2) + Off-Peak (T3)</p>
-        <style>
-            @media (max-width: 600px) {
-                table {
-                    font-size: 12px;
-                }
-                th, td {
-                    padding: 4px;
-                }
-            }
-        </style>
-        <hr>
+        <details class="tod-card tod-energy-card" style="--tz-color: var(--bank);">
+            <summary class="tod-card-header">
+                <span class="tod-card-header-icon">🧮</span>
+                <span class="tod-card-header-title">Energy Calculation Details</span>
+            </summary>
+            <div class="tod-card-body">
+                <table class="tod-energy-table">
+                    <thead>
+                        <tr>
+                            <th class="tod-energy-th-desc">Description</th>
+                            <th>Units</th>
+                            <th>Rate</th>
+                            <th>Charge (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="tod-energy-desc"><span class="tod-energy-desc-icon">🌞</span>Normal TimeZone (90%)</td>
+                            <td>${Normal_NoOfUnitsFor_energy_calculation.toFixed(2)}</td>
+                            <td>${(unitRate * 0.9).toFixed(2)}</td>
+                            <td>${red(NormalConsumptionAdjusted_energy_charge.toFixed(2))}</td>
+                        </tr>
+                        <tr>
+                            <td class="tod-energy-desc"><span class="tod-energy-desc-icon">⚡</span>Peak TimeZone (125%)</td>
+                            <td>${Peak_NoOfUnitsFor_energy_calculation.toFixed(2)}</td>
+                            <td>${(unitRate * 1.25).toFixed(2)}</td>
+                            <td>${red(PeakConsumptionAdjusted_energy_charge.toFixed(2))}</td>
+                        </tr>
+                        <tr>
+                            <td class="tod-energy-desc"><span class="tod-energy-desc-icon">🌙</span>Off-Peak TimeZone (100%)</td>
+                            <td>${OffPeak_NoOfUnitsFor_energy_calculation.toFixed(2)}</td>
+                            <td>${unitRate.toFixed(2)}</td>
+                            <td>${red(OffPeakConsumptionAdjusted_energy_charge.toFixed(2))}</td>
+                        </tr>
+                        <tr class="tod-energy-total-row">
+                            <td><strong>Total Energy Consumption</strong></td>
+                            <td><strong>${bankAdjustedUnits.toFixed(2)}</strong></td>
+                            <td>-</td>
+                            <td><strong>₹${energyCharge.toFixed(2)}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="tod-energy-footnote">Base Unit Rate: ₹${unitRate.toFixed(2)} &nbsp;|&nbsp; Total Energy Charge = Normal (T1) + Peak (T2) + Off-Peak (T3)</p>
+        </details>
     `;
 }
 
