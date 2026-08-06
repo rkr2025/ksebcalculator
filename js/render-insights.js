@@ -11,6 +11,7 @@
 // validated palette used elsewhere (--primary/--solar/--import).
 
 import { computeBill } from './calculator.js';
+import { TOD_MULTIPLIERS } from './tariff-rates.js';
 
 function money(n) {
     return `₹${n.toFixed(2)}`;
@@ -132,7 +133,8 @@ function todPeakInsight(bill) {
     }
 
     const peakPctOfEnergy = pct(peakCharge, bill.energyCharge);
-    const potentialSavings = peakUnits * unitRate * 0.25; // 125% -> 100% if shifted to Off-Peak
+    // 125% -> 100% if shifted to Off-Peak.
+    const potentialSavings = peakUnits * unitRate * (TOD_MULTIPLIERS.peak - TOD_MULTIPLIERS.offPeak);
     return {
         type: 'warning',
         icon: '⏰',

@@ -37,10 +37,34 @@ import {
     computeEnergyChargeForUnits,
     computeTodEnergyChargeForSplit,
     netTodAgainstOffset,
+    validSlabs,
 } from './calculator.js';
 
 function round2(n) {
     return Math.round(n * 100) / 100;
+}
+
+// Same 0-100% bound as calculator.js's own validPercent() (duplicated
+// locally rather than imported, matching this file's existing small-helper
+// duplication style) -- an out-of-range distribution-loss % override (e.g.
+// a stray "150" typo) would otherwise produce a negative loss factor and a
+// nonsensical (negative-cost) wheeling result instead of being rejected.
+function validPercent(value) {
+    return Number.isFinite(value) && value >= 0 && value <= 100;
+}
+
+// Site Name is free text (index.html's "Site Name (optional)" field) that
+// ends up interpolated straight into innerHTML by render-wheeling.js and
+// render-explanation.js -- escaped once here, at the point it enters the
+// result object, so every consumer downstream is safe by construction
+// instead of each render file having to remember to escape it itself.
+function escapeHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 function siteTotalUnits(site) {
@@ -90,12 +114,12 @@ function billSite(site, unitsAfterWheeling, splitAfterWheeling, rates) {
     const before = billForCategory(site, totalUnits, beforeSplit, rates);
     const after = billForCategory(site, unitsAfterWheeling, splitAfterWheeling, rates);
 
-    const dutyBefore = before.energyCharge * DUTY_RATE;
-    const surchargeBefore = totalUnits * FUEL_SURCHARGE_PER_UNIT;
+    const dutyBefore = before.energyCharge * rates.dutyRate;
+    const surchargeBefore = totalUnits * rates.fuelSurchargePerUnit;
     const totalBefore = before.energyCharge + dutyBefore + surchargeBefore;
 
-    const dutyAfter = after.energyCharge * DUTY_RATE;
-    const surchargeAfter = unitsAfterWheeling * FUEL_SURCHARGE_PER_UNIT;
+    const dutyAfter = after.energyCharge * rates.dutyRate;
+    const surchargeAfter = unitsAfterWheeling * rates.fuelSurchargePerUnit;
     const totalAfter = after.energyCharge + dutyAfter + surchargeAfter;
 
     return {
@@ -126,20 +150,41 @@ export function computeWheelingResult(availableBankUnits, sites, overrides = {})
         };
     }
 
-    const sameTransformerPct = Number.isFinite(overrides.sameTransformerPct)
+    const sameTransformerPct = validPercent(overrides.sameTransformerPct)
         ? overrides.sameTransformerPct : DIST_LOSS_SAME_TRANSFORMER;
-    const differentTransformerPct = Number.isFinite(overrides.differentTransformerPct)
+    const differentTransformerPct = validPercent(overrides.differentTransformerPct)
         ? overrides.differentTransformerPct : DIST_LOSS_DIFFERENT_TRANSFORMER;
-    const wheelingRatePerUnit = Number.isFinite(overrides.wheelingRatePerUnit)
+    const wheelingRatePerUnit = Number.isFinite(overrides.wheelingRatePerUnit) && overrides.wheelingRatePerUnit >= 0
         ? overrides.wheelingRatePerUnit : WHEELING_RATE_PER_UNIT;
+    // The prosumer's own bill's EFFECTIVE duty rate / fuel surcharge (bill.dutyRate
+    // is already a 0-1 fraction, bill.fuelSurchargePerUnit already in rupees --
+    // see calculator.js's computeBill()) -- reused here so a wheeled site's
+    // before/after comparison stays consistent with the prosumer's own bill
+    // instead of silently reverting to the tariff-rates.js defaults whenever
+    // Duty/Fuel Surcharge is overridden via Admin Options.
+    const dutyRate = Number.isFinite(overrides.dutyRate) && overrides.dutyRate >= 0 && overrides.dutyRate <= 1
+        ? overrides.dutyRate : DUTY_RATE;
+    const fuelSurchargePerUnit = Number.isFinite(overrides.fuelSurchargePerUnit) && overrides.fuelSurchargePerUnit >= 0
+        ? overrides.fuelSurchargePerUnit : FUEL_SURCHARGE_PER_UNIT;
     // Each key resolved independently (not "override all or none") --
     // otherwise overriding only telescopicSlabs would leave nonTelescopicSlabs
-    // undefined and crash computeNonTelescopicCharge's slab lookup.
+    // undefined and crash computeNonTelescopicCharge's slab lookup. Validated
+    // with the same validSlabs() shape/finite-number check computeBill() uses
+    // for its own slab overrides (not just a truthy check) -- a blank Admin
+    // Option field now surfaces as an `undefined` rate inside an otherwise
+    // truthy array (see main.js's numOrUndefined()), which a plain `||`
+    // fallback wouldn't catch and would silently propagate as NaN charges.
     const rates = {
-        telescopicSlabs: overrides.telescopicSlabs || TELESCOPIC_SLABS,
-        nonTelescopicSlabs: overrides.nonTelescopicSlabs || NON_TELESCOPIC_SLABS,
-        lt7aSlabs: overrides.lt7aSlabs || LT7A_SLABS,
-        lt7bSlabs: overrides.lt7bSlabs || LT7B_SLABS,
+        telescopicSlabs: validSlabs(overrides.telescopicSlabs, TELESCOPIC_SLABS.length, ['rate'])
+            ? overrides.telescopicSlabs : TELESCOPIC_SLABS,
+        nonTelescopicSlabs: validSlabs(overrides.nonTelescopicSlabs, NON_TELESCOPIC_SLABS.length, ['rate'])
+            ? overrides.nonTelescopicSlabs : NON_TELESCOPIC_SLABS,
+        lt7aSlabs: validSlabs(overrides.lt7aSlabs, LT7A_SLABS.length, ['rate'])
+            ? overrides.lt7aSlabs : LT7A_SLABS,
+        lt7bSlabs: validSlabs(overrides.lt7bSlabs, LT7B_SLABS.length, ['rate'])
+            ? overrides.lt7bSlabs : LT7B_SLABS,
+        dutyRate,
+        fuelSurchargePerUnit,
     };
 
     let newBank = Math.max(availableBankUnits || 0, 0);
@@ -174,7 +219,7 @@ export function computeWheelingResult(availableBankUnits, sites, overrides = {})
 
         results.push({
             siteIndex: index + 1,
-            name: site.name || `Site ${index + 1}`,
+            name: escapeHtml(site.name || `Site ${index + 1}`),
             category: site.category || 'LT1',
             sameTransformer: site.sameTransformer,
             distLossPct,

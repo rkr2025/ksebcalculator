@@ -164,7 +164,7 @@
                     <p>KSEB typically charges a late payment surcharge, and continued non-payment can lead to disconnection of supply after the notice period specified in the bill/Supply Code. Reconnection usually requires clearing dues (and sometimes a reconnection fee).</p>
                 </details>
             </div>
-            <div class="faq-list" data-faq-lang-content="ml">
+            <div class="faq-list" data-faq-lang-content="ml" lang="ml">
                 <details class="faq-item">
                     <summary>എന്താണ് സോളാർ ജനറേഷൻ (Solar Generation)?</summary>
                     <p>നിങ്ങളുടെ റൂഫ്ടോപ്പ് സോളാർ പ്ലാന്റ് ഉത്പാദിപ്പിച്ച ആകെ യൂണിറ്റുകൾ, സോളാർ ജനറേഷൻ മീറ്ററിൽ നിന്ന് നേരിട്ട് വായിക്കുന്നത്. ഇത് നേരിട്ടുള്ള ജനറേഷൻ കണക്കാണ് -- എക്സ്പോർട്ട് ചെയ്തതോ നേരിട്ട് ഉപയോഗിച്ചതോ ആയതിനെതിരെ ക്രമീകരിക്കുന്നതിന് മുമ്പുള്ളത്.</p>
@@ -327,7 +327,7 @@
                 <div class="card-header">
                     <span class="card-icon">📊</span>
                     <h2 class="card-title">Billing Setup</h2>
-                    <button type="button" class="card-info-btn" aria-expanded="false" aria-label="How to use this section" data-info-target="billingCardInfo">ℹ️</button>
+                    <button type="button" class="card-info-btn" aria-expanded="false" aria-label="How to use this section" data-info-target="billingCardInfo" aria-controls="billingCardInfo">ℹ️</button>
                 </div>
                 <div class="card-info-panel" id="billingCardInfo" hidden>
                     <div class="card-info-lang-toggle" role="group" aria-label="Instructions language">
@@ -344,7 +344,7 @@
                             <li> Note: If your connected load is above 20 kW, go to the Admin Option and select 'Above 20 kW'.</li>
                         </ul>
                     </div>
-                    <div data-info-lang="ml">
+                    <div data-info-lang="ml" lang="ml">
                         <ul>
                             <li><strong>Phase:</strong> Phase 1 (single-phase) അല്ലെങ്കിൽ Phase 3 (three-phase) തിരഞ്ഞെടുക്കുക -- ഉറപ്പില്ലെങ്കിൽ നിങ്ങളുടെ KSEB ബില്ല് നോക്കുക.</li>
                             <li><strong>Meter Owner:</strong> മീറ്റർ KSEB-യുടേതാണെങ്കിൽ KSEB (Meter Rent ബാധകം), സ്വന്തമാണെങ്കിൽ Consumer (Meter Rent ഇല്ല).</li>
@@ -395,7 +395,7 @@
                     <span class="sub-row-badge">💰 Banked Units</span>
                     <div class="field">
                         <label for="bankedUnitInput">Enter Banked Units (kWh)</label>
-                        <input type="number" id="bankedUnitInput" name="bankedUnitInput" value="0" min="0">
+                        <input type="number" id="bankedUnitInput" name="bankedUnitInput" value="0" min="0" step="0.01">
                     </div>
                 </div>
 
@@ -429,10 +429,10 @@
                         <summary class="sub-row-badge">⚙️ Duty &amp; Fuel Surcharge</summary>
                         <div class="reading-mode-toggle">
                             <label class="switch">
-                                <input type="checkbox" id="dutySurchargeEditToggle">
+                                <input type="checkbox" id="dutySurchargeEditToggle" aria-labelledby="dutySurchargeEditToggleLabel">
                                 <span class="switch-slider"></span>
                             </label>
-                            <span>Edit these rates</span>
+                            <span id="dutySurchargeEditToggleLabel">Edit these rates</span>
                         </div>
                         <div class="field-grid field-grid--2" id="dutySurchargeFields">
                             <div class="field">
@@ -444,6 +444,7 @@
                                 <input type="number" id="fuelSurchargeInput" name="fuelSurchargeInput" value="0" min="0" step="0.01" disabled>
                             </div>
                         </div>
+                        <button type="button" class="rate-reset-btn" id="resetDutySurchargeButton">↺ Reset to Default Rates</button>
                     </details>
 
                     <!-- Core tariff rates: the per-unit numbers KSEB actually
@@ -463,10 +464,10 @@
                         <p style="margin: 8px 0 12px; font-size: 12px; color: var(--text-muted);">⚠️ Do not change these values unless the KSEB tariff itself changes.</p>
                         <div class="reading-mode-toggle">
                             <label class="switch">
-                                <input type="checkbox" id="tariffRatesEditToggle">
+                                <input type="checkbox" id="tariffRatesEditToggle" aria-labelledby="tariffRatesEditToggleLabel">
                                 <span class="switch-slider"></span>
                             </label>
-                            <span>Edit these rates</span>
+                            <span id="tariffRatesEditToggleLabel">Edit these rates</span>
                         </div>
 
                         <details style="margin-top: 12px;">
@@ -632,10 +633,10 @@
                         <summary class="sub-row-badge">🧾 Meter Rent</summary>
                         <div class="reading-mode-toggle">
                             <label class="switch">
-                                <input type="checkbox" id="meterRentEditToggle">
+                                <input type="checkbox" id="meterRentEditToggle" aria-labelledby="meterRentEditToggleLabel">
                                 <span class="switch-slider"></span>
                             </label>
-                            <span>Edit these rates</span>
+                            <span id="meterRentEditToggleLabel">Edit these rates</span>
                         </div>
                         <div class="field-grid field-grid--2">
                             <div class="field">
@@ -657,7 +658,7 @@
                 <div class="card-header">
                     <span class="card-icon">☀️</span>
                     <h2 class="card-title">Solar Generation</h2>
-                    <button type="button" class="card-info-btn" aria-expanded="false" aria-label="How to use this section" data-info-target="solarCardInfo">ℹ️</button>
+                    <button type="button" class="card-info-btn" aria-expanded="false" aria-label="How to use this section" data-info-target="solarCardInfo" aria-controls="solarCardInfo">ℹ️</button>
                 </div>
                 <div class="card-info-panel" id="solarCardInfo" hidden>
                     <div class="card-info-lang-toggle" role="group" aria-label="Instructions language">
@@ -673,7 +674,7 @@
                             <li>On your bill, KWH/NL/I refers to Normal (6 am-6 pm), KWH/OP/I refers to Off-Peak (10 pm - 6 am), and KWH/PK/I refers to Peak (6 pm - 10 pm).</li>
                         </ul>
                     </div>
-                    <div data-info-lang="ml">
+                    <div data-info-lang="ml" lang="ml">
                         <ul>
                             <li>ഈ ബില്ലിംഗ് പിരീഡിൽ നിങ്ങളുടെ സോളാർ പാനലുകൾ ഉത്പാദിപ്പിച്ച യൂണിറ്റുകൾ നൽകുക.</li>
                             <li>രണ്ട് വിധത്തിൽ നൽകാം: നേരിട്ട് ആകെ Energy Consumption ടൈപ്പ് ചെയ്യുക, അല്ലെങ്കിൽ "Calculate from Previous &amp; Present meter readings" ഓണാക്കി മീറ്ററിലെ രണ്ട് റീഡിംഗുകളും നൽകുക -- ആപ്പ് അവ കുറച്ച് കണക്കാക്കും.</li>
@@ -687,23 +688,23 @@
                 <div id="normalBillingSection" style="display: none;">
                     <div class="reading-mode-toggle">
                         <label class="switch">
-                            <input type="checkbox" id="solarGenReadingModeToggle">
+                            <input type="checkbox" id="solarGenReadingModeToggle" aria-labelledby="solarGenReadingModeToggleLabel">
                             <span class="switch-slider"></span>
                         </label>
-                        <span>Calculate from Previous &amp; Present meter readings</span>
+                        <span id="solarGenReadingModeToggleLabel">Calculate from Previous &amp; Present meter readings</span>
                     </div>
                     <div class="reading-mode-toggle reading-order-toggle" id="solarGenReadingOrderRow" style="display: none;">
                         <label class="switch">
-                            <input type="checkbox" id="solarGenReadingOrderToggle" checked>
+                            <input type="checkbox" id="solarGenReadingOrderToggle" checked aria-labelledby="solarGenReadingOrderToggleLabel">
                             <span class="switch-slider"></span>
                         </label>
-                        <span>Enter Present Reading first</span>
+                        <span id="solarGenReadingOrderToggleLabel">Enter Present Reading first</span>
                     </div>
 
                     <div class="field-grid" id="solarGenDirectFields">
                         <div class="field">
                             <label for="solarGeneration">Solar Generation (kWh)</label>
-                            <input type="number" id="solarGeneration" name="solarGeneration" value="0" required>
+                            <input type="number" id="solarGeneration" name="solarGeneration" value="0" step="0.01" required>
                         </div>
                     </div>
 
@@ -711,8 +712,8 @@
                         <div class="field">
                             <label>Solar Generation (kWh)</label>
                             <div class="reading-pair">
-                                <input type="number" id="solarGeneration_initial" placeholder="Previous Reading" min="0">
-                                <input type="number" id="solarGeneration_final" placeholder="Present Reading" min="0">
+                                <input type="number" id="solarGeneration_initial" placeholder="Previous Reading" aria-label="Previous Reading" min="0" step="0.01">
+                                <input type="number" id="solarGeneration_final" placeholder="Present Reading" aria-label="Present Reading" min="0" step="0.01">
                             </div>
                             <div class="reading-computed" id="solarGeneration_computed">= 0.00 kWh</div>
                             <div class="reading-warn" id="solarGeneration_warn">Present Reading should be ≥ Previous Reading</div>
@@ -724,31 +725,31 @@
                 <div id="todBillingSection" style="display: block;">
                     <div class="reading-mode-toggle">
                         <label class="switch">
-                            <input type="checkbox" id="solarReadingModeToggle">
+                            <input type="checkbox" id="solarReadingModeToggle" aria-labelledby="solarReadingModeToggleLabel">
                             <span class="switch-slider"></span>
                         </label>
-                        <span>Calculate from Previous &amp; Present meter readings</span>
+                        <span id="solarReadingModeToggleLabel">Calculate from Previous &amp; Present meter readings</span>
                     </div>
                     <div class="reading-mode-toggle reading-order-toggle" id="solarReadingOrderRow" style="display: none;">
                         <label class="switch">
-                            <input type="checkbox" id="solarReadingOrderToggle" checked>
+                            <input type="checkbox" id="solarReadingOrderToggle" checked aria-labelledby="solarReadingOrderToggleLabel">
                             <span class="switch-slider"></span>
                         </label>
-                        <span>Enter Present Reading first</span>
+                        <span id="solarReadingOrderToggleLabel">Enter Present Reading first</span>
                     </div>
 
                     <div class="field-grid" id="solarDirectFields">
                         <div class="field">
                             <label for="solarNormal">Normal <span class="field-tag">6am–6pm</span></label>
-                            <input type="number" id="solarNormal" name="solarNormal" value="0" min="0">
+                            <input type="number" id="solarNormal" name="solarNormal" value="0" min="0" step="0.01">
                         </div>
                         <div class="field">
                             <label for="solarOffPeak">Off Peak <span class="field-tag">10pm–6am</span></label>
-                            <input type="number" id="solarOffPeak" name="solarOffPeak" value="0" min="0">
+                            <input type="number" id="solarOffPeak" name="solarOffPeak" value="0" min="0" step="0.01">
                         </div>
                         <div class="field">
                             <label for="solarPeak">Peak <span class="field-tag">6pm–10pm</span></label>
-                            <input type="number" id="solarPeak" name="solarPeak" value="0" min="0">
+                            <input type="number" id="solarPeak" name="solarPeak" value="0" min="0" step="0.01">
                         </div>
                     </div>
 
@@ -756,8 +757,8 @@
                         <div class="field">
                             <label>Normal <span class="field-tag">6am–6pm</span></label>
                             <div class="reading-pair">
-                                <input type="number" id="solarNormal_initial" placeholder="Previous Reading" min="0">
-                                <input type="number" id="solarNormal_final" placeholder="Present Reading" min="0">
+                                <input type="number" id="solarNormal_initial" placeholder="Previous Reading" aria-label="Previous Reading" min="0" step="0.01">
+                                <input type="number" id="solarNormal_final" placeholder="Present Reading" aria-label="Present Reading" min="0" step="0.01">
                             </div>
                             <div class="reading-computed" id="solarNormal_computed">= 0.00 kWh</div>
                             <div class="reading-warn" id="solarNormal_warn">Present Reading should be ≥ Previous Reading</div>
@@ -765,8 +766,8 @@
                         <div class="field">
                             <label>Off Peak <span class="field-tag">10pm–6am</span></label>
                             <div class="reading-pair">
-                                <input type="number" id="solarOffPeak_initial" placeholder="Previous Reading" min="0">
-                                <input type="number" id="solarOffPeak_final" placeholder="Present Reading" min="0">
+                                <input type="number" id="solarOffPeak_initial" placeholder="Previous Reading" aria-label="Previous Reading" min="0" step="0.01">
+                                <input type="number" id="solarOffPeak_final" placeholder="Present Reading" aria-label="Present Reading" min="0" step="0.01">
                             </div>
                             <div class="reading-computed" id="solarOffPeak_computed">= 0.00 kWh</div>
                             <div class="reading-warn" id="solarOffPeak_warn">Present Reading should be ≥ Previous Reading</div>
@@ -774,8 +775,8 @@
                         <div class="field">
                             <label>Peak <span class="field-tag">6pm–10pm</span></label>
                             <div class="reading-pair">
-                                <input type="number" id="solarPeak_initial" placeholder="Previous Reading" min="0">
-                                <input type="number" id="solarPeak_final" placeholder="Present Reading" min="0">
+                                <input type="number" id="solarPeak_initial" placeholder="Previous Reading" aria-label="Previous Reading" min="0" step="0.01">
+                                <input type="number" id="solarPeak_final" placeholder="Present Reading" aria-label="Present Reading" min="0" step="0.01">
                             </div>
                             <div class="reading-computed" id="solarPeak_computed">= 0.00 kWh</div>
                             <div class="reading-warn" id="solarPeak_warn">Present Reading should be ≥ Previous Reading</div>
@@ -789,7 +790,7 @@
                 <div class="card-header">
                     <span class="card-icon">⚡</span>
                     <h2 class="card-title">KSEB Net Meter Consumption</h2>
-                    <button type="button" class="card-info-btn" aria-expanded="false" aria-label="How to use this section" data-info-target="meterCardInfo">ℹ️</button>
+                    <button type="button" class="card-info-btn" aria-expanded="false" aria-label="How to use this section" data-info-target="meterCardInfo" aria-controls="meterCardInfo">ℹ️</button>
                 </div>
                 <div class="card-info-panel" id="meterCardInfo" hidden>
                     <div class="card-info-lang-toggle" role="group" aria-label="Instructions language">
@@ -805,7 +806,7 @@
                             <li>On your bill, KWH/NL/I refers to Normal (6 am-6 pm), KWH/OP/I refers to Off-Peak (10 pm - 6 am), and KWH/PK/I refers to Peak (6 pm - 10 pm).</li>
                         </ul>
                     </div>
-                    <div data-info-lang="ml">
+                    <div data-info-lang="ml" lang="ml">
                         <ul>
                             <li><strong>Import Total:</strong> ഈ പിരീഡിൽ KSEB ഗ്രിഡിൽ നിന്ന് നിങ്ങൾ എടുത്ത യൂണിറ്റുകൾ.</li>
                             <li><strong>Export Total:</strong> ഈ പിരീഡിൽ നിങ്ങളുടെ സോളാർ ഗ്രിഡിലേക്ക് തിരികെ അയച്ച യൂണിറ്റുകൾ.</li>
@@ -819,27 +820,27 @@
                 <div id="normalNetMeterReadingSection" style="display: none;">
                     <div class="reading-mode-toggle">
                         <label class="switch">
-                            <input type="checkbox" id="netMeterReadingModeToggle">
+                            <input type="checkbox" id="netMeterReadingModeToggle" aria-labelledby="netMeterReadingModeToggleLabel">
                             <span class="switch-slider"></span>
                         </label>
-                        <span>Calculate from Previous &amp; Present meter readings</span>
+                        <span id="netMeterReadingModeToggleLabel">Calculate from Previous &amp; Present meter readings</span>
                     </div>
                     <div class="reading-mode-toggle reading-order-toggle" id="netMeterReadingOrderRow" style="display: none;">
                         <label class="switch">
-                            <input type="checkbox" id="netMeterReadingOrderToggle" checked>
+                            <input type="checkbox" id="netMeterReadingOrderToggle" checked aria-labelledby="netMeterReadingOrderToggleLabel">
                             <span class="switch-slider"></span>
                         </label>
-                        <span>Enter Present Reading first</span>
+                        <span id="netMeterReadingOrderToggleLabel">Enter Present Reading first</span>
                     </div>
 
                     <div class="field-grid field-grid--2" id="netMeterDirectFields">
                         <div class="field field--import">
                             <label for="import">Import Total (kWh)</label>
-                            <input type="number" id="import" name="import" value="0" required>
+                            <input type="number" id="import" name="import" value="0" step="0.01" required>
                         </div>
                         <div class="field field--export">
                             <label for="export">Export Total (kWh)</label>
-                            <input type="number" id="export" name="export" value="0" required>
+                            <input type="number" id="export" name="export" value="0" step="0.01" required>
                         </div>
                     </div>
 
@@ -847,8 +848,8 @@
                         <div class="field field--import">
                             <label>Import Total (kWh)</label>
                             <div class="reading-pair">
-                                <input type="number" id="import_initial" placeholder="Previous Reading" min="0">
-                                <input type="number" id="import_final" placeholder="Present Reading" min="0">
+                                <input type="number" id="import_initial" placeholder="Previous Reading" aria-label="Previous Reading" min="0" step="0.01">
+                                <input type="number" id="import_final" placeholder="Present Reading" aria-label="Present Reading" min="0" step="0.01">
                             </div>
                             <div class="reading-computed" id="import_computed">= 0.00 kWh</div>
                             <div class="reading-warn" id="import_warn">Present Reading should be ≥ Previous Reading</div>
@@ -856,8 +857,8 @@
                         <div class="field field--export">
                             <label>Export Total (kWh)</label>
                             <div class="reading-pair">
-                                <input type="number" id="export_initial" placeholder="Previous Reading" min="0">
-                                <input type="number" id="export_final" placeholder="Present Reading" min="0">
+                                <input type="number" id="export_initial" placeholder="Previous Reading" aria-label="Previous Reading" min="0" step="0.01">
+                                <input type="number" id="export_final" placeholder="Present Reading" aria-label="Present Reading" min="0" step="0.01">
                             </div>
                             <div class="reading-computed" id="export_computed">= 0.00 kWh</div>
                             <div class="reading-warn" id="export_warn">Present Reading should be ≥ Previous Reading</div>
@@ -870,31 +871,31 @@
                     <p class="block-label">Import</p>
                     <div class="reading-mode-toggle">
                         <label class="switch">
-                            <input type="checkbox" id="importReadingModeToggle">
+                            <input type="checkbox" id="importReadingModeToggle" aria-labelledby="importReadingModeToggleLabel">
                             <span class="switch-slider"></span>
                         </label>
-                        <span>Calculate from Previous &amp; Present meter readings</span>
+                        <span id="importReadingModeToggleLabel">Calculate from Previous &amp; Present meter readings</span>
                     </div>
                     <div class="reading-mode-toggle reading-order-toggle" id="importReadingOrderRow" style="display: none;">
                         <label class="switch">
-                            <input type="checkbox" id="importReadingOrderToggle" checked>
+                            <input type="checkbox" id="importReadingOrderToggle" checked aria-labelledby="importReadingOrderToggleLabel">
                             <span class="switch-slider"></span>
                         </label>
-                        <span>Enter Present Reading first</span>
+                        <span id="importReadingOrderToggleLabel">Enter Present Reading first</span>
                     </div>
 
                     <div class="field-grid" id="importDirectFields">
                         <div class="field field--import">
                             <label for="importNormal">Normal <span class="field-tag">6am–6pm</span></label>
-                            <input type="number" id="importNormal" name="importNormal" value="0" min="0">
+                            <input type="number" id="importNormal" name="importNormal" value="0" min="0" step="0.01">
                         </div>
                         <div class="field field--import">
                             <label for="importOffPeak">Off Peak <span class="field-tag">10pm–6am</span></label>
-                            <input type="number" id="importOffPeak" name="importOffPeak" value="0" min="0">
+                            <input type="number" id="importOffPeak" name="importOffPeak" value="0" min="0" step="0.01">
                         </div>
                         <div class="field field--import">
                             <label for="importPeak">Peak <span class="field-tag">6pm–10pm</span></label>
-                            <input type="number" id="importPeak" name="importPeak" value="0" min="0">
+                            <input type="number" id="importPeak" name="importPeak" value="0" min="0" step="0.01">
                         </div>
                     </div>
 
@@ -902,8 +903,8 @@
                         <div class="field field--import">
                             <label>Normal <span class="field-tag">6am–6pm</span></label>
                             <div class="reading-pair">
-                                <input type="number" id="importNormal_initial" placeholder="Previous Reading" min="0">
-                                <input type="number" id="importNormal_final" placeholder="Present Reading" min="0">
+                                <input type="number" id="importNormal_initial" placeholder="Previous Reading" aria-label="Previous Reading" min="0" step="0.01">
+                                <input type="number" id="importNormal_final" placeholder="Present Reading" aria-label="Present Reading" min="0" step="0.01">
                             </div>
                             <div class="reading-computed" id="importNormal_computed">= 0.00 kWh</div>
                             <div class="reading-warn" id="importNormal_warn">Present Reading should be ≥ Previous Reading</div>
@@ -911,8 +912,8 @@
                         <div class="field field--import">
                             <label>Off Peak <span class="field-tag">10pm–6am</span></label>
                             <div class="reading-pair">
-                                <input type="number" id="importOffPeak_initial" placeholder="Previous Reading" min="0">
-                                <input type="number" id="importOffPeak_final" placeholder="Present Reading" min="0">
+                                <input type="number" id="importOffPeak_initial" placeholder="Previous Reading" aria-label="Previous Reading" min="0" step="0.01">
+                                <input type="number" id="importOffPeak_final" placeholder="Present Reading" aria-label="Present Reading" min="0" step="0.01">
                             </div>
                             <div class="reading-computed" id="importOffPeak_computed">= 0.00 kWh</div>
                             <div class="reading-warn" id="importOffPeak_warn">Present Reading should be ≥ Previous Reading</div>
@@ -920,8 +921,8 @@
                         <div class="field field--import">
                             <label>Peak <span class="field-tag">6pm–10pm</span></label>
                             <div class="reading-pair">
-                                <input type="number" id="importPeak_initial" placeholder="Previous Reading" min="0">
-                                <input type="number" id="importPeak_final" placeholder="Present Reading" min="0">
+                                <input type="number" id="importPeak_initial" placeholder="Previous Reading" aria-label="Previous Reading" min="0" step="0.01">
+                                <input type="number" id="importPeak_final" placeholder="Present Reading" aria-label="Present Reading" min="0" step="0.01">
                             </div>
                             <div class="reading-computed" id="importPeak_computed">= 0.00 kWh</div>
                             <div class="reading-warn" id="importPeak_warn">Present Reading should be ≥ Previous Reading</div>
@@ -931,31 +932,31 @@
                     <p class="block-label" style="margin-top: 16px;">Export</p>
                     <div class="reading-mode-toggle">
                         <label class="switch">
-                            <input type="checkbox" id="exportReadingModeToggle">
+                            <input type="checkbox" id="exportReadingModeToggle" aria-labelledby="exportReadingModeToggleLabel">
                             <span class="switch-slider"></span>
                         </label>
-                        <span>Calculate from Previous &amp; Present meter readings</span>
+                        <span id="exportReadingModeToggleLabel">Calculate from Previous &amp; Present meter readings</span>
                     </div>
                     <div class="reading-mode-toggle reading-order-toggle" id="exportReadingOrderRow" style="display: none;">
                         <label class="switch">
-                            <input type="checkbox" id="exportReadingOrderToggle" checked>
+                            <input type="checkbox" id="exportReadingOrderToggle" checked aria-labelledby="exportReadingOrderToggleLabel">
                             <span class="switch-slider"></span>
                         </label>
-                        <span>Enter Present Reading first</span>
+                        <span id="exportReadingOrderToggleLabel">Enter Present Reading first</span>
                     </div>
 
                     <div class="field-grid" id="exportDirectFields">
                         <div class="field field--export">
                             <label for="exportNormal">Normal <span class="field-tag">6am–6pm</span></label>
-                            <input type="number" id="exportNormal" name="exportNormal" value="0" min="0">
+                            <input type="number" id="exportNormal" name="exportNormal" value="0" min="0" step="0.01">
                         </div>
                         <div class="field field--export">
                             <label for="exportOffPeak">Off Peak <span class="field-tag">10pm–6am</span></label>
-                            <input type="number" id="exportOffPeak" name="exportOffPeak" value="0" min="0">
+                            <input type="number" id="exportOffPeak" name="exportOffPeak" value="0" min="0" step="0.01">
                         </div>
                         <div class="field field--export">
                             <label for="exportPeak">Peak <span class="field-tag">6pm–10pm</span></label>
-                            <input type="number" id="exportPeak" name="exportPeak" value="0" min="0">
+                            <input type="number" id="exportPeak" name="exportPeak" value="0" min="0" step="0.01">
                         </div>
                     </div>
 
@@ -963,8 +964,8 @@
                         <div class="field field--export">
                             <label>Normal <span class="field-tag">6am–6pm</span></label>
                             <div class="reading-pair">
-                                <input type="number" id="exportNormal_initial" placeholder="Previous Reading" min="0">
-                                <input type="number" id="exportNormal_final" placeholder="Present Reading" min="0">
+                                <input type="number" id="exportNormal_initial" placeholder="Previous Reading" aria-label="Previous Reading" min="0" step="0.01">
+                                <input type="number" id="exportNormal_final" placeholder="Present Reading" aria-label="Present Reading" min="0" step="0.01">
                             </div>
                             <div class="reading-computed" id="exportNormal_computed">= 0.00 kWh</div>
                             <div class="reading-warn" id="exportNormal_warn">Present Reading should be ≥ Previous Reading</div>
@@ -972,8 +973,8 @@
                         <div class="field field--export">
                             <label>Off Peak <span class="field-tag">10pm–6am</span></label>
                             <div class="reading-pair">
-                                <input type="number" id="exportOffPeak_initial" placeholder="Previous Reading" min="0">
-                                <input type="number" id="exportOffPeak_final" placeholder="Present Reading" min="0">
+                                <input type="number" id="exportOffPeak_initial" placeholder="Previous Reading" aria-label="Previous Reading" min="0" step="0.01">
+                                <input type="number" id="exportOffPeak_final" placeholder="Present Reading" aria-label="Present Reading" min="0" step="0.01">
                             </div>
                             <div class="reading-computed" id="exportOffPeak_computed">= 0.00 kWh</div>
                             <div class="reading-warn" id="exportOffPeak_warn">Present Reading should be ≥ Previous Reading</div>
@@ -981,8 +982,8 @@
                         <div class="field field--export">
                             <label>Peak <span class="field-tag">6pm–10pm</span></label>
                             <div class="reading-pair">
-                                <input type="number" id="exportPeak_initial" placeholder="Previous Reading" min="0">
-                                <input type="number" id="exportPeak_final" placeholder="Present Reading" min="0">
+                                <input type="number" id="exportPeak_initial" placeholder="Previous Reading" aria-label="Previous Reading" min="0" step="0.01">
+                                <input type="number" id="exportPeak_final" placeholder="Present Reading" aria-label="Present Reading" min="0" step="0.01">
                             </div>
                             <div class="reading-computed" id="exportPeak_computed">= 0.00 kWh</div>
                             <div class="reading-warn" id="exportPeak_warn">Present Reading should be ≥ Previous Reading</div>
@@ -996,7 +997,7 @@
                 <summary class="card-header">
                     <span class="card-icon">🔗</span>
                     <h2 class="card-title">Wheeling Option</h2>
-                    <button type="button" class="card-info-btn" aria-expanded="false" aria-label="How to use this section" data-info-target="wheelingCardInfo">ℹ️</button>
+                    <button type="button" class="card-info-btn" aria-expanded="false" aria-label="How to use this section" data-info-target="wheelingCardInfo" aria-controls="wheelingCardInfo">ℹ️</button>
                 </summary>
                 <p class="card-subtitle" style="margin-left: 0;">
                     Transfer your surplus banked export units to another KSEB connection to offset its bill. A distribution loss and a wheeling charge apply.
@@ -1015,7 +1016,7 @@
                             <li><strong>Admin Option: Distribution Loss % &amp; Wheeling Rate:</strong> It lets you edit the distribution loss percentages, the wheeling rate per unit, and the LT7A/LT7B commercial rates in case KSEB revises them, with a "Reset to Default" button.</li>
                         </ul>
                     </div>
-                    <div data-info-lang="ml">
+                    <div data-info-lang="ml" lang="ml">
                         <ul>
                             <li>ഇത് ഓപ്ഷണൽ ആണ് -- നിങ്ങളുടെ മിച്ച ബാങ്ക് യൂണിറ്റുകൾ മറ്റൊരു KSEB കണക്ഷനിലേക്ക് കൈമാറണമെങ്കിൽ മാത്രം ആവശ്യം.</li>
                             <li>"Enable Wheeling" ഓണാക്കുക</li>
@@ -1049,10 +1050,10 @@
                         <p style="margin: 8px 0 12px; font-size: 12px; color: var(--text-muted);">⚠️ Change the below values only if KSEB revises them.</p>
                         <div class="reading-mode-toggle">
                             <label class="switch">
-                                <input type="checkbox" id="wheelingLossEditToggle">
+                                <input type="checkbox" id="wheelingLossEditToggle" aria-labelledby="wheelingLossEditToggleLabel">
                                 <span class="switch-slider"></span>
                             </label>
-                            <span>Edit these values</span>
+                            <span id="wheelingLossEditToggleLabel">Edit these values</span>
                         </div>
                         <div class="field-grid field-grid--2" id="wheelingLossFields">
                             <div class="field">
@@ -1183,7 +1184,7 @@
          fragment and hide it again. -->
     <div id="tariffImageOverlay" class="tariff-overlay">
         <div class="tariff-overlay-content">
-            <a href="#" class="tariff-overlay-close" aria-label="Close">✕</a>
+            <a href="#tariffOverlayClosed" class="tariff-overlay-close" aria-label="Close">✕</a>
             <img src="tariff_new.png" alt="Current KSEB tariff chart">
         </div>
     </div>

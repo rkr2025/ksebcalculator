@@ -25,7 +25,7 @@ import { buildPrintInputsSummary } from './render-print-summary.js';
 // results' ENDING_NOTE_HTML below and in a persistent page-footer (rendered
 // by main.js at load time, independent of whether a bill has been
 // calculated yet).
-export const APP_VERSION_LABEL = 'Version 3.0.123: Last updated: 06-August-2026';
+export const APP_VERSION_LABEL = 'Version 3.0.124: Last updated: 06-August-2026';
 
 const ENDING_NOTE_HTML = `
     <div style="background: var(--surface-muted); padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); margin: 20px auto; max-width: 90%; font-family: 'Georgia', serif; border-left: 4px solid #2ecc71;">
@@ -128,7 +128,7 @@ function buildBillSummaryTable(bill) {
     const { billType, fixedCharge, meterRent, unitRate, duty, monthlyFuelSurcharge, totalBillAmount } = bill;
     const energyChargeToUse = bill.energyCharge || 0;
     const bankAdjustedUnitsToUse = bill.bankAdjustedUnits || 0;
-    const dutyPercentLabel = `${+((bill.dutyRate || 0) * 100).toFixed(2)}%`;
+    const dutyPercentLabel = `${((bill.dutyRate || 0) * 100).toFixed(2)}%`;
     const fuelSurchargePaiseLabel = `${Math.round((bill.fuelSurchargePerUnit || 0) * 100)}ps`;
     const phaseLabel = bill.phase === 'phase1' ? 'Phase1' : 'Phase3';
     const totalConsumptionUnitsLabel = (bill.unitsConsumed || 0).toFixed(2);
@@ -205,45 +205,24 @@ function buildBillSummaryTable(bill) {
 // (bill.todType === 'normal'): both use the flat telescopic/non-telescopic
 // slabs rather than a T1/T2/T3 split.
 function buildNormalBillingResult(bill) {
-    const {
-        solarGeneration, importReading, exportReading, myBankDepositAtKseb,
-        generationUsage, unitsConsumed, fixedCharge, phase,
-        exportPlusBank, bankAdjustedUnits, billType, breakdownRows, unitRate,
-        energyCharge, totalBillAmount,
-    } = bill;
+    const { importReading, exportPlusBank, totalBillAmount } = bill;
 
-    const result = '';
-
-    let result2;
-    let result3;
-
-    if (importReading > exportPlusBank) {
-        result2 = '';
-        result3 = '';
-    } else {
-        result2 = '';
-
-        result3 = `
+    // Fully offset by export/bank (no energy charge) gets a short Malayalam
+    // restatement of the total here; otherwise there's nothing this panel
+    // adds beyond what buildBillSummaryTable() already shows.
+    const result3 = importReading > exportPlusBank ? '' : `
                 <h5><u>Total Bill Amount</u></h5>
                 <p>ഏകദേശം <strong class="red-text">₹${(totalBillAmount || 0).toFixed(2)}</strong></p>
                 <p style="font-size: 0.9em; font-style: italic;">(Security Deposit interest, Tariff changes, Advance അനുസരിച്ച് മാറ്റം വരാം)</p>
             `;
-    }
 
-    return { result, result2, result3 };
+    return { result: '', result2: '', result3 };
 }
 
 // The real T1/T2/T3 ToD split path: connected load above 20kW (any billed
 // units), or below 20kW with billed units > 250.
 function buildTodSplitResult(bill) {
-    const {
-        solarGeneration, importReading, exportReading, myBankDepositAtKseb,
-        importNormal, importPeak, importOffPeak, exportNormal, exportPeak, exportOffPeak,
-        generationUsage,
-        todBillingAbove20kW,
-    } = bill;
-
-    const result = '';
+    const { todBillingAbove20kW } = bill;
 
     // Everything below lives inside one outer expand/collapse box (see
     // renderExpandableSection) -- the header table and the plain-language
@@ -276,9 +255,8 @@ function buildTodSplitResult(bill) {
             });
 
     const result2 = renderExpandableSection('🗣️', 'ToD (T1/T2/T3) Calculation Explained', 'var(--bank)', innerHtml);
-    const result3 = '';
 
-    return { result, result2, result3 };
+    return { result: '', result2, result3: '' };
 }
 
 export function renderBillResults(bill, readingPairs) {

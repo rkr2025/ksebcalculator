@@ -5,6 +5,8 @@
 // Pure string builder from a `bill` object, same contract as the other
 // render-*.js modules.
 
+import { TOD_MULTIPLIERS } from './tariff-rates.js';
+
 // Bolded so the reader's own bill figures stand out from the surrounding
 // narrative prose -- unlike generic rule numbers written directly into a
 // sentence (slab thresholds like "250", ToD percentages like "90%"), every
@@ -284,8 +286,8 @@ function todNettingItems(bill) {
     // narrated here in prose with the bill's own numbers plugged in, instead
     // of read off a 4-column table, so the arithmetic is easy to follow.
     const unitRate = above20kW ? bill.unitRate : bill.unitRate_Below20kW;
-    const normalRate = unitRate * 0.9;
-    const peakRate = unitRate * 1.25;
+    const normalRate = unitRate * TOD_MULTIPLIERS.normal;
+    const peakRate = unitRate * TOD_MULTIPLIERS.peak;
     const normalCharge = bill.NormalConsumptionAdjusted_energy_charge;
     const peakCharge = above20kW ? bill.PeakConsumptionAdjusted_energy_charge : bill.PeakConsumptionAdjusted_energy_charge_Below20kW;
     const offPeakCharge = above20kW ? bill.OffPeakConsumptionAdjusted_energy_charge : bill.OffPeakConsumptionAdjusted_energy_charge_Below20kW;
@@ -591,7 +593,7 @@ export function buildTodCalculationExplanation(bill) {
             <button type="button" class="bill-explain-lang-btn" data-bill-lang="en">English</button>
         </div>
         <div data-bill-lang-content="en" hidden>${englishTable}</div>
-        <div data-bill-lang-content="ml">${malayalamTable}</div>`;
+        <div data-bill-lang-content="ml" lang="ml">${malayalamTable}</div>`;
 }
 
 // Only meaningful when a wheeling transfer actually happened this bill.
@@ -601,7 +603,9 @@ export function buildTodCalculationExplanation(bill) {
 // renderWheelingResult() (the raw per-site table it sits alongside) are
 // gated on the same bill.wheelingResult.sites.length check.
 export function buildWheelingCalculationExplanation(bill) {
-    if (!bill || !bill.wheelingResult || !bill.wheelingResult.sites || bill.wheelingResult.sites.length === 0) return '';
+    // Same gate as renderWheelingResult() in render-wheeling.js -- units
+    // actually wheeled, not just sites configured (see the comment there).
+    if (!bill || !bill.wheelingResult || !bill.wheelingResult.sites || bill.wheelingResult.totalAdjustedUnits <= 0) return '';
 
     const rows = wheelingNettingItems(bill.wheelingResult);
     const englishTable = buildExplainTable(rows, 'en');
@@ -615,7 +619,7 @@ export function buildWheelingCalculationExplanation(bill) {
                 <button type="button" class="bill-explain-lang-btn" data-bill-lang="en">English</button>
             </div>
             <div data-bill-lang-content="en" hidden>${englishTable}</div>
-            <div data-bill-lang-content="ml">${malayalamTable}</div>
+            <div data-bill-lang-content="ml" lang="ml">${malayalamTable}</div>
         </div>`;
 }
 
@@ -648,7 +652,7 @@ export function buildBillExplanation(bill) {
                 <button type="button" class="bill-explain-lang-btn" data-bill-lang="en">English</button>
             </div>
             <div data-bill-lang-content="en" hidden>${englishTable}</div>
-            <div data-bill-lang-content="ml">${malayalamTable}</div>
+            <div data-bill-lang-content="ml" lang="ml">${malayalamTable}</div>
             ${EXPLAIN_STYLE_BLOCK}
         </div>`;
 }

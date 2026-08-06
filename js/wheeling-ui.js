@@ -26,7 +26,7 @@ function siteTemplate(n, sameLossLabel, diffLossLabel) {
         <div class="wheeling-site" data-site-index="${n}">
             <div class="wheeling-site-header">
                 <span class="sub-row-badge">🔌 Site ${n}</span>
-                <button type="button" class="wheeling-remove-btn" data-remove="${n}">Remove</button>
+                <button type="button" class="wheeling-remove-btn">Remove</button>
             </div>
             <div class="field-grid field-grid--2">
                 <div class="field">
@@ -61,30 +61,30 @@ function siteTemplate(n, sameLossLabel, diffLossLabel) {
             <div class="field-grid" id="wheelSiteDirect-${n}" style="margin-top: 10px;">
                 <div class="field">
                     <label for="wheelSiteUnits-${n}">Consumed Units (kWh)</label>
-                    <input type="number" id="wheelSiteUnits-${n}" value="0" min="0">
+                    <input type="number" id="wheelSiteUnits-${n}" value="0" min="0" step="0.01">
                 </div>
             </div>
             <div id="wheelSiteTodFields-${n}" style="display: none; margin-top: 10px;">
                 <div class="reading-mode-toggle">
                     <label class="switch">
-                        <input type="checkbox" id="wheelSiteTodModeToggle-${n}">
+                        <input type="checkbox" id="wheelSiteTodModeToggle-${n}" aria-labelledby="wheelSiteTodModeToggleLabel-${n}">
                         <span class="switch-slider"></span>
                     </label>
-                    <span>Calculate from Initial &amp; Final meter readings</span>
+                    <span id="wheelSiteTodModeToggleLabel-${n}">Calculate from Initial &amp; Final meter readings</span>
                 </div>
 
                 <div class="field-grid" id="wheelSiteTodDirect-${n}">
                     <div class="field">
                         <label>Normal <span class="field-tag">6am–6pm</span></label>
-                        <input type="number" id="wheelSiteNormal-${n}" value="0" min="0">
+                        <input type="number" id="wheelSiteNormal-${n}" value="0" min="0" step="0.01">
                     </div>
                     <div class="field">
                         <label>Off Peak <span class="field-tag">10pm–6am</span></label>
-                        <input type="number" id="wheelSiteOffPeak-${n}" value="0" min="0">
+                        <input type="number" id="wheelSiteOffPeak-${n}" value="0" min="0" step="0.01">
                     </div>
                     <div class="field">
                         <label>Peak <span class="field-tag">6pm–10pm</span></label>
-                        <input type="number" id="wheelSitePeak-${n}" value="0" min="0">
+                        <input type="number" id="wheelSitePeak-${n}" value="0" min="0" step="0.01">
                     </div>
                 </div>
 
@@ -92,8 +92,8 @@ function siteTemplate(n, sameLossLabel, diffLossLabel) {
                     <div class="field">
                         <label>Normal <span class="field-tag">6am–6pm</span></label>
                         <div class="reading-pair">
-                            <input type="number" id="wheelSiteNormal-${n}_initial" placeholder="Initial" min="0">
-                            <input type="number" id="wheelSiteNormal-${n}_final" placeholder="Final" min="0">
+                            <input type="number" id="wheelSiteNormal-${n}_initial" placeholder="Initial" aria-label="Initial reading" min="0" step="0.01">
+                            <input type="number" id="wheelSiteNormal-${n}_final" placeholder="Final" aria-label="Final reading" min="0" step="0.01">
                         </div>
                         <div class="reading-computed" id="wheelSiteNormal-${n}_computed">= 0.00 kWh</div>
                         <div class="reading-warn" id="wheelSiteNormal-${n}_warn">Final should be ≥ Initial</div>
@@ -101,8 +101,8 @@ function siteTemplate(n, sameLossLabel, diffLossLabel) {
                     <div class="field">
                         <label>Off Peak <span class="field-tag">10pm–6am</span></label>
                         <div class="reading-pair">
-                            <input type="number" id="wheelSiteOffPeak-${n}_initial" placeholder="Initial" min="0">
-                            <input type="number" id="wheelSiteOffPeak-${n}_final" placeholder="Final" min="0">
+                            <input type="number" id="wheelSiteOffPeak-${n}_initial" placeholder="Initial" aria-label="Initial reading" min="0" step="0.01">
+                            <input type="number" id="wheelSiteOffPeak-${n}_final" placeholder="Final" aria-label="Final reading" min="0" step="0.01">
                         </div>
                         <div class="reading-computed" id="wheelSiteOffPeak-${n}_computed">= 0.00 kWh</div>
                         <div class="reading-warn" id="wheelSiteOffPeak-${n}_warn">Final should be ≥ Initial</div>
@@ -110,8 +110,8 @@ function siteTemplate(n, sameLossLabel, diffLossLabel) {
                     <div class="field">
                         <label>Peak <span class="field-tag">6pm–10pm</span></label>
                         <div class="reading-pair">
-                            <input type="number" id="wheelSitePeak-${n}_initial" placeholder="Initial" min="0">
-                            <input type="number" id="wheelSitePeak-${n}_final" placeholder="Final" min="0">
+                            <input type="number" id="wheelSitePeak-${n}_initial" placeholder="Initial" aria-label="Initial reading" min="0" step="0.01">
+                            <input type="number" id="wheelSitePeak-${n}_final" placeholder="Final" aria-label="Final reading" min="0" step="0.01">
                         </div>
                         <div class="reading-computed" id="wheelSitePeak-${n}_computed">= 0.00 kWh</div>
                         <div class="reading-warn" id="wheelSitePeak-${n}_warn">Final should be ≥ Initial</div>
@@ -156,6 +156,15 @@ export function initWheelingUI() {
 
         siteEl.querySelector('.wheeling-remove-btn').addEventListener('click', () => {
             siteEl.remove();
+            // Removing the last site while "Enable Wheeling?" still reads
+            // Yes would otherwise silently stop wheeling from applying at
+            // all (isEnabled() checks container.children.length) with no
+            // visible sign why -- flip the select back to No so the UI
+            // stays honest about what will actually be computed.
+            if (container.children.length === 0) {
+                isWheelingSelect.value = 'No';
+                toggleWheelingVisibility();
+            }
         });
     }
 

@@ -20,6 +20,8 @@ import {
     WHEELING_RATE_PER_UNIT,
     LT7A_SLABS,
     LT7B_SLABS,
+    DUTY_RATE,
+    FUEL_SURCHARGE_PER_UNIT,
 } from './tariff-rates.js';
 
 const resetReadingGroups = initReadingGroups();
@@ -36,6 +38,22 @@ function num(id) {
     return parseFloat(document.getElementById(id).value) || 0;
 }
 
+// Same idea as num(), but for Admin Option RATE OVERRIDES specifically: a
+// blank field must fall back to the tariff-rates.js default (per the
+// documented "Anything malformed falls back silently to the real default"
+// contract), not silently become the number 0 -- 0 is itself a perfectly
+// finite, valid-looking rate, so computeBill()'s Number.isFinite() check
+// can't tell "left blank" apart from "user deliberately typed 0" once num()
+// has already collapsed both to the same value. Returning undefined here
+// lets that check correctly reject a blank field instead of honoring it as
+// a ₹0 override.
+function numOrUndefined(id) {
+    const raw = document.getElementById(id).value;
+    if (raw.trim() === '') return undefined;
+    const parsed = parseFloat(raw);
+    return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 // Builds the Admin Option "Core Tariff Rates" overrides as full slab
 // objects -- band *boundaries* (bandUnits/maxUnits) are never user-edited,
 // only the ₹ rate inside each band, so these always pair the fixed
@@ -44,33 +62,33 @@ function num(id) {
 // same as dutyRatePercent/fuelSurchargePaise below -- calculator.js falls
 // back to its own defaults if a field somehow holds something invalid.
 function buildTelescopicSlabs() {
-    return TELESCOPIC_SLABS.map((slab, i) => ({ bandUnits: slab.bandUnits, rate: num(`telescopicRate${i + 1}`) }));
+    return TELESCOPIC_SLABS.map((slab, i) => ({ bandUnits: slab.bandUnits, rate: numOrUndefined(`telescopicRate${i + 1}`) }));
 }
 function buildNonTelescopicSlabs() {
-    return NON_TELESCOPIC_SLABS.map((slab, i) => ({ maxUnits: slab.maxUnits, rate: num(`nonTelescopicRate${i + 1}`) }));
+    return NON_TELESCOPIC_SLABS.map((slab, i) => ({ maxUnits: slab.maxUnits, rate: numOrUndefined(`nonTelescopicRate${i + 1}`) }));
 }
 // LT7A/LT7B (commercial) rates for wheeled sites -- same boundary-fixed,
 // rate-editable pattern as the other slab builders above, read from the
 // Wheeling card's own Admin Option fields instead of Core Tariff Rates'.
 function buildLt7aSlabs() {
-    return LT7A_SLABS.map((slab, i) => ({ maxUnits: slab.maxUnits, rate: num(`lt7aRate${i + 1}`) }));
+    return LT7A_SLABS.map((slab, i) => ({ maxUnits: slab.maxUnits, rate: numOrUndefined(`lt7aRate${i + 1}`) }));
 }
 function buildLt7bSlabs() {
-    return LT7B_SLABS.map((slab, i) => ({ maxUnits: slab.maxUnits, rate: num(`lt7bRate${i + 1}`) }));
+    return LT7B_SLABS.map((slab, i) => ({ maxUnits: slab.maxUnits, rate: numOrUndefined(`lt7bRate${i + 1}`) }));
 }
 function buildFixedChargeSlabs() {
     return FIXED_CHARGE_SLABS.map((slab, i) => ({
         maxUnits: slab.maxUnits,
-        phase1: num(`fixedChargeSlab${i + 1}Phase1`),
-        other: num(`fixedChargeSlab${i + 1}Other`),
+        phase1: numOrUndefined(`fixedChargeSlab${i + 1}Phase1`),
+        other: numOrUndefined(`fixedChargeSlab${i + 1}Other`),
     }));
 }
 // Consumer-owned meters are always ₹0 rent (not a revisable rate, so not
 // user-edited here) -- only the two KSEB-owned cells come from the form.
 function buildMeterRentTable() {
     return {
-        phase1: { kseb: num('meterRentPhase1Kseb'), other: 0 },
-        other: { kseb: num('meterRentPhase3Kseb'), other: 0 },
+        phase1: { kseb: numOrUndefined('meterRentPhase1Kseb'), other: 0 },
+        other: { kseb: numOrUndefined('meterRentPhase3Kseb'), other: 0 },
     };
 }
 
@@ -86,8 +104,8 @@ function readFormInputs() {
         billingType,
         hasBankBalance,
         bankedUnits: hasBankBalance ? num('bankedUnitInput') : 0,
-        dutyRatePercent: num('dutyRatePercent'),
-        fuelSurchargePaise: num('fuelSurchargeInput'),
+        dutyRatePercent: numOrUndefined('dutyRatePercent'),
+        fuelSurchargePaise: numOrUndefined('fuelSurchargeInput'),
         telescopicSlabs: buildTelescopicSlabs(),
         nonTelescopicSlabs: buildNonTelescopicSlabs(),
         fixedChargeSlabs: buildFixedChargeSlabs(),
@@ -203,20 +221,33 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
     const bill = computeBill(readFormInputs());
     if (bill.error) {
         alert(BILL_ERRORS[bill.error]);
+        // Without this, a previously-calculated bill's panels (now cleared
+        // to empty by clearResultPanels() above, but still `display:block`
+        // from that earlier successful calculation) would stay visible as a
+        // wall of empty boxes instead of disappearing along with the error.
+        hideResultPanels();
         return;
     }
 
     if (wheelingUI.isEnabled()) {
         const wheelingOverrides = {
-            sameTransformerPct: num('wheelSameTransformerLoss'),
-            differentTransformerPct: num('wheelDiffTransformerLoss'),
-            wheelingRatePerUnit: num('wheelingRatePerUnitInput'),
+            sameTransformerPct: numOrUndefined('wheelSameTransformerLoss'),
+            differentTransformerPct: numOrUndefined('wheelDiffTransformerLoss'),
+            wheelingRatePerUnit: numOrUndefined('wheelingRatePerUnitInput'),
             // Same Admin Option rates as the prosumer's own bill above -- a
             // wheeled LT1 (domestic) site is billed on the same tariff table.
             telescopicSlabs: buildTelescopicSlabs(),
             nonTelescopicSlabs: buildNonTelescopicSlabs(),
             lt7aSlabs: buildLt7aSlabs(),
             lt7bSlabs: buildLt7bSlabs(),
+            // The bill's own EFFECTIVE duty rate / fuel surcharge (already
+            // resolved from either the Admin Option override or the
+            // tariff-rates.js default by computeBill() above) -- reused here
+            // so a wheeled site's before/after comparison matches the
+            // prosumer's own bill instead of silently reverting to the
+            // hardcoded defaults whenever Duty/Fuel Surcharge is overridden.
+            dutyRate: bill.dutyRate,
+            fuelSurchargePerUnit: bill.fuelSurchargePerUnit,
         };
         const wheelingResult = computeWheelingResult(bill.accountBalance, wheelingUI.getSites(), wheelingOverrides);
         if (wheelingResult.sites.length > 0) {
@@ -246,6 +277,12 @@ document.getElementById('billCalculator').addEventListener('submit', function (e
         if (onlineQuote) {
             quoteElement.textContent = onlineQuote;
         }
+    }).catch(() => {
+        // fetchOnlineQuote() already resolves to null on any failure rather
+        // than rejecting, so this should never fire -- kept as a defensive
+        // backstop against a future edit narrowing its internal try/catch,
+        // so a quote-fetch failure can never surface as an unhandled
+        // rejection or interrupt the Calculate Bill flow above.
     });
 
     showResultPanels();
@@ -259,23 +296,20 @@ document.getElementById('billingType').addEventListener('change', function () {
 
 document.getElementById('mybank').addEventListener('change', function () {
     document.getElementById('bankedUnitSection').style.display = this.value === 'Yes' ? 'block' : 'none';
+    // Same reasoning as the billingType change handler above -- a bill
+    // calculated before this toggle changed no longer reflects the current
+    // (now input-incomplete) form state, so don't leave it on screen.
+    hideResultPanels();
 });
 
-// Duty Rate / Fuel Surcharge start greyed out at the current KSEB defaults;
-// this toggle is the only way to unlock editing them.
-document.getElementById('dutySurchargeEditToggle').addEventListener('change', function () {
-    document.getElementById('dutyRatePercent').disabled = !this.checked;
-    document.getElementById('fuelSurchargeInput').disabled = !this.checked;
-});
-
-// Shared by the three "Admin Option" rate groups below (Core Tariff Rates,
-// Meter Rent, Wheeling Distribution Loss % & Rate): each has an "Edit these
-// rates" toggle that unlocks a fixed list of fields, plus a "Reset to
-// Default Rates" button that restores the real tariff-rates.js values and
-// re-locks the group -- the explicit, discoverable way to "go back to the
-// calculator's built-in rates" the fields' own toggle-uncheck doesn't
-// reliably do (see dutySurchargeEditToggle above, which only greys the
-// fields back out without touching whatever value is already typed in).
+// Shared by all four "Admin Option" rate groups below (Duty & Fuel
+// Surcharge, Core Tariff Rates, Meter Rent, Wheeling Distribution Loss % &
+// Rate): each has an "Edit these rates" toggle that unlocks a fixed list of
+// fields, plus a "Reset to Default Rates" button that restores the real
+// tariff-rates.js values and re-locks the group -- the explicit,
+// discoverable way to "go back to the calculator's built-in rates" the
+// fields' own toggle-uncheck alone doesn't provide (unchecking only greys
+// the fields back out, it doesn't touch whatever value is already typed in).
 function wireRateGroup(toggleId, resetButtonId, fieldIds, defaults) {
     const toggle = document.getElementById(toggleId);
     toggle.addEventListener('change', function () {
@@ -287,6 +321,10 @@ function wireRateGroup(toggleId, resetButtonId, fieldIds, defaults) {
         fieldIds.forEach((id) => { document.getElementById(id).disabled = true; });
     });
 }
+
+const DUTY_SURCHARGE_FIELD_IDS = ['dutyRatePercent', 'fuelSurchargeInput'];
+const DUTY_SURCHARGE_DEFAULTS = [DUTY_RATE * 100, FUEL_SURCHARGE_PER_UNIT * 100];
+wireRateGroup('dutySurchargeEditToggle', 'resetDutySurchargeButton', DUTY_SURCHARGE_FIELD_IDS, DUTY_SURCHARGE_DEFAULTS);
 
 const TARIFF_RATE_FIELD_IDS = [
     'telescopicRate1', 'telescopicRate2', 'telescopicRate3', 'telescopicRate4', 'telescopicRate5',
@@ -400,8 +438,7 @@ function resetCalculator() {
     // and each rate field's `value` to its HTML default, but it doesn't
     // touch the `disabled` property on those inputs -- re-sync them so
     // Reset also greys the fields back out.
-    document.getElementById('dutyRatePercent').disabled = true;
-    document.getElementById('fuelSurchargeInput').disabled = true;
+    DUTY_SURCHARGE_FIELD_IDS.forEach((id) => { document.getElementById(id).disabled = true; });
     TARIFF_RATE_FIELD_IDS.forEach((id) => { document.getElementById(id).disabled = true; });
     document.getElementById('meterRentPhase1Kseb').disabled = true;
     document.getElementById('meterRentPhase3Kseb').disabled = true;

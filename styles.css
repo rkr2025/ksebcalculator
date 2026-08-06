@@ -37,7 +37,10 @@
 
   --text-primary: #17203a;
   --text-secondary: #52514e;
-  --text-muted: #898781;
+  /* Darkened from the original #898781 to clear WCAG AA's 4.5:1 text
+     contrast minimum against --surface/--surface-muted (the original was
+     ~3.4-3.6:1) -- this token is used on small (10.5-13px) text throughout. */
+  --text-muted: #6b6a64;
 
   --radius-lg: 16px;
   --radius: 12px;
@@ -699,10 +702,6 @@ select {
   background-position: right 8px center;
   background-size: 16px;
   padding-right: 30px !important;
-}
-
-:root[data-theme="dark"] select {
-  background-image: url('data:image/svg+xml;utf8,<svg fill="%23b7c0d3" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
 }
 
 /* Import/export accent on individual field labels (ToD readings) */
@@ -1730,6 +1729,23 @@ td {
   .view-counter,
   .app-version-footer,
   .tariff-overlay {
+    display: none !important;
+  }
+
+  /* solar.md's documented print scope is only the Bill Summary, ToD tables
+     (#result2), and the entered-values recap (#printInputsSummary) -- the
+     narrative "Bill Explained" panel, charts, insight cards, and Wheeling
+     Summary are on-screen-only companions to those, not part of the printed
+     record. #result/#result3 are currently always empty, hidden here too
+     for consistency with that same documented scope. Needs !important since
+     main.js sets these panels' `display` inline (style="display:block")
+     once a bill is calculated. */
+  #billExplanation,
+  #billChart,
+  #billAnalysis,
+  #wheelingBreakdown,
+  #result,
+  #result3 {
     display: none !important;
   }
 

@@ -6,8 +6,12 @@ function money(n) {
     return `₹${n.toFixed(2)}`;
 }
 
+// "units" (not "kWh") to match the label used immediately below by this
+// panel's own bilingual calculation explanation (render-explanation.js's
+// wheelingNettingItems()) -- same underlying quantity, kept consistent
+// across the two panels a reader is comparing side by side.
 function unit(n) {
-    return `${n.toFixed(2)} kWh`;
+    return `${n.toFixed(2)} units`;
 }
 
 function row(label, value, valueStyle = '') {
@@ -43,7 +47,12 @@ function siteBlock(site) {
 }
 
 export function renderWheelingResult(wheelingResult) {
-    if (!wheelingResult || !wheelingResult.sites || wheelingResult.sites.length === 0) return '';
+    // Gate on units actually wheeled, not just on sites being configured --
+    // a site list with zero bank surplus to offer (e.g. no export/bank this
+    // period) would otherwise render a panel full of 0.00 rows for nothing
+    // wheeled at all (solar.md §7: only shown "if wheeling produced any
+    // adjusted units").
+    if (!wheelingResult || !wheelingResult.sites || wheelingResult.totalAdjustedUnits <= 0) return '';
 
     const sitesHtml = wheelingResult.sites.map(siteBlock).join('');
 

@@ -57,8 +57,12 @@ function pickNonTelescopicRate(units, nonTelescopicSlabs) {
 
 // Bills `units` progressively across the telescopic bands (used whenever
 // billed units <= 250, for both normal billing and ToD-below-20kW billing).
+// Every current caller already gates at <=250 before calling this, but it's
+// exported for reuse (js/wheeling-calculator.js's computeEnergyChargeForUnits),
+// so clamp defensively rather than silently underbilling the excess if a
+// future caller passes more than the telescopic table actually covers.
 function computeTelescopicCharge(units, telescopicSlabs) {
-    let remaining = units;
+    let remaining = Math.min(units, telescopicSlabs.reduce((sum, s) => sum + s.bandUnits, 0));
     let energyCharge = 0;
     const breakdownRows = [];
 
@@ -90,7 +94,7 @@ function computeTodAbove20kW({ exportPlusBank, importNormal, importPeak, importO
     let Normal_NoOfUnitsFor_energy_calculation = 0;
     if (exportPlusBank > importNormal) {
         NormalConsumptionAdjusted = exportPlusBank - importNormal;
-    } else if (exportPlusBank !== importNormal) {
+    } else {
         Normal_NoOfUnitsFor_energy_calculation = importNormal - exportPlusBank;
     }
 
@@ -99,7 +103,7 @@ function computeTodAbove20kW({ exportPlusBank, importNormal, importPeak, importO
     let Peak_NoOfUnitsFor_energy_calculation = 0;
     if (PeakConsumptionAdjusted_80_percent > importPeak) {
         PeakConsumptionAdjusted = PeakConsumptionAdjusted_80_percent - importPeak;
-    } else if (PeakConsumptionAdjusted_80_percent !== importPeak) {
+    } else {
         Peak_NoOfUnitsFor_energy_calculation = importPeak - PeakConsumptionAdjusted_80_percent;
     }
 
@@ -111,7 +115,7 @@ function computeTodAbove20kW({ exportPlusBank, importNormal, importPeak, importO
     let OffPeak_NoOfUnitsFor_energy_calculation = 0;
     if (PeakConsumptionAdjusted > importOffPeak) {
         OffPeakConsumptionAdjusted = PeakConsumptionAdjusted - importOffPeak;
-    } else if (PeakConsumptionAdjusted !== importOffPeak) {
+    } else {
         OffPeak_NoOfUnitsFor_energy_calculation = importOffPeak - PeakConsumptionAdjusted;
     }
 
@@ -153,7 +157,7 @@ function computeTodBelow20kWAbove250({ exportPlusBank, importNormal, importPeak,
     let Normal_NoOfUnitsFor_energy_calculation = 0;
     if (exportPlusBank > importNormal) {
         NormalConsumptionAdjusted = exportPlusBank - importNormal;
-    } else if (exportPlusBank !== importNormal) {
+    } else {
         Normal_NoOfUnitsFor_energy_calculation = importNormal - exportPlusBank;
     }
 
@@ -162,7 +166,7 @@ function computeTodBelow20kWAbove250({ exportPlusBank, importNormal, importPeak,
     let Peak_NoOfUnitsFor_energy_calculation_Below20kW = 0;
     if (NormalConsumptionAdjusted_Below20kW > importPeak) {
         PeakConsumptionAdjusted_Below20kW = NormalConsumptionAdjusted_Below20kW - importPeak;
-    } else if (NormalConsumptionAdjusted_Below20kW !== importPeak) {
+    } else {
         Peak_NoOfUnitsFor_energy_calculation_Below20kW = importPeak - NormalConsumptionAdjusted_Below20kW;
     }
 
@@ -170,7 +174,7 @@ function computeTodBelow20kWAbove250({ exportPlusBank, importNormal, importPeak,
     let OffPeak_NoOfUnitsFor_energy_calculation_Below20kW = 0;
     if (PeakConsumptionAdjusted_Below20kW > importOffPeak) {
         OffPeakConsumptionAdjusted_Below20kW = PeakConsumptionAdjusted_Below20kW - importOffPeak;
-    } else if (PeakConsumptionAdjusted_Below20kW !== importOffPeak) {
+    } else {
         OffPeak_NoOfUnitsFor_energy_calculation_Below20kW = importOffPeak - PeakConsumptionAdjusted_Below20kW;
     }
 
@@ -271,7 +275,7 @@ export function netTodAgainstOffset({ offsetUnits, importNormal, importPeak, imp
 // since a malformed or partially-typed admin field must never silently
 // produce NaN/undefined charges -- falling back to the real default is
 // always safer than a broken calculation.
-function validSlabs(candidate, length, numericKeys) {
+export function validSlabs(candidate, length, numericKeys) {
     return Array.isArray(candidate) && candidate.length === length
         && candidate.every((row) => row && numericKeys.every((k) => Number.isFinite(row[k])));
 }
@@ -279,6 +283,15 @@ function validMeterRentTable(candidate) {
     return candidate
         && Number.isFinite(candidate.phase1?.kseb) && Number.isFinite(candidate.phase1?.other)
         && Number.isFinite(candidate.other?.kseb) && Number.isFinite(candidate.other?.other);
+}
+
+// Duty Rate (and, in wheeling-calculator.js, the distribution-loss %
+// overrides) must land in a sane 0-100% range, not just be any finite
+// number -- an out-of-range typo (e.g. "150" instead of "15") would
+// otherwise silently produce a negative or nonsensical charge instead of
+// being rejected like any other malformed override.
+function validPercent(value) {
+    return Number.isFinite(value) && value >= 0 && value <= 100;
 }
 
 function emptyTariffFields(bankAdjustedUnits) {
@@ -348,13 +361,12 @@ function applyTariffRules({
     return { fixedCharge, ...fields };
 }
 
-// Exported so main.js can show/refresh the default Meter Rent value in the
-// Admin Options field whenever Phase/Meter Owner change (see also the
-// dutyRate/fuelSurchargePerUnit override pattern below, applied the same
-// way to Meter Rent via rawInputs.meterRentOverride). `meterRentTable` lets
-// the Admin Option's own KSEB-rent overrides (Consumer-owned is always ₹0,
-// not a revisable rate, so only the two "kseb" cells are ever user-editable)
-// feed back into this lookup.
+// Exported so render-insights.js's solar-savings "what-if" recomputation can
+// look up the default Meter Rent directly (via rawInputs.meterRentOverride,
+// resolved the same way as dutyRate/fuelSurchargePerUnit below).
+// `meterRentTable` lets the Admin Option's own KSEB-rent overrides
+// (Consumer-owned is always ₹0, not a revisable rate, so only the two "kseb"
+// cells are ever user-editable) feed back into this lookup.
 export function computeMeterRent(phase, meterOwner, meterRentTable = METER_RENT) {
     const table = phase === 'phase1' ? meterRentTable.phase1 : meterRentTable.other;
     return meterOwner === 'kseb' ? table.kseb : table.other;
@@ -442,11 +454,14 @@ export function computeBill(rawInputs) {
     // these rates in the future) -- fall back to the tariff-rates.js
     // constants for callers that don't pass them (e.g. render-insights.js's
     // "what-if" recomputation).
-    const dutyRate = Number.isFinite(rawInputs.dutyRatePercent) ? rawInputs.dutyRatePercent / 100 : DUTY_RATE;
+    const dutyRate = validPercent(rawInputs.dutyRatePercent) ? rawInputs.dutyRatePercent / 100 : DUTY_RATE;
     // The form collects Fuel Surcharge in paise/unit (how KSEB quotes it),
     // but every other charge here is in rupees -- convert once at the
-    // boundary so the rest of the math stays in rupees throughout.
-    const fuelSurchargePerUnit = Number.isFinite(rawInputs.fuelSurchargePaise) ? rawInputs.fuelSurchargePaise / 100 : FUEL_SURCHARGE_PER_UNIT;
+    // boundary so the rest of the math stays in rupees throughout. Not
+    // capped at 100 like a percentage (paise/unit isn't inherently bounded
+    // that way), just guarded against being negative.
+    const fuelSurchargePerUnit = Number.isFinite(rawInputs.fuelSurchargePaise) && rawInputs.fuelSurchargePaise >= 0
+        ? rawInputs.fuelSurchargePaise / 100 : FUEL_SURCHARGE_PER_UNIT;
     // Meter Rent is likewise editable (Admin Options keeps it synced to the
     // Phase/Meter Owner selection by default, but the user can override it).
     const meterRentTable = validMeterRentTable(rawInputs.meterRentTable) ? rawInputs.meterRentTable : DEFAULT_RATES.meterRent;

@@ -37,7 +37,7 @@ export async function fetchOnlineQuote() {
 
         const trimmedText = text.trim();
         const suffix = isUsableQuoteText(author) ? ` -- ${author.trim()}` : '';
-        return `Daily Thoughts: "${trimmedText}"${suffix}`;
+        return `Daily Thought: "${trimmedText}"${suffix}`;
     } catch {
         // Network failure, CORS block, timeout (AbortError), or malformed
         // JSON all land here -- treated the same as "no online quote".
