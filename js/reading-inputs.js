@@ -28,10 +28,16 @@ export function setupReadingGroup(toggleId, directContainerId, readingContainerI
 
     const orderToggle = orderToggleId ? document.getElementById(orderToggleId) : null;
     const orderRow = orderToggle ? orderToggle.closest('.reading-order-toggle') : null;
+    const orderLabel = orderRow ? orderRow.querySelector(':scope > span') : null;
 
     function applyOrder() {
         if (!orderToggle) return;
         readingContainer.classList.toggle('reading-order-swapped', orderToggle.checked);
+        if (orderLabel) {
+            orderLabel.innerHTML = orderToggle.checked
+                ? 'Enter <strong>Present</strong> Reading first'
+                : 'Enter <strong>Previous</strong> Reading first';
+        }
     }
     if (orderToggle) {
         orderToggle.addEventListener('change', applyOrder);
