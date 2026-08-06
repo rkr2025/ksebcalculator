@@ -26,7 +26,7 @@ const resetReadingGroups = initReadingGroups();
 const wheelingUI = initWheelingUI();
 initCardInfoPanels();
 
-const RESULT_PANEL_IDS = ['billExplanation', 'billChart', 'billAnalysis', 'wheelingBreakdown', 'result', 'result1', 'result2', 'result3', 'result4', 'result6'];
+const RESULT_PANEL_IDS = ['billExplanation', 'billChart', 'billAnalysis', 'wheelingBreakdown', 'result', 'result2', 'result3', 'result6'];
 // Print-only -- populated/cleared alongside the panels above, but never
 // shown on screen (styles.css forces display:none outside @media print),
 // so it's handled separately from RESULT_PANEL_IDS's show/hide-on-screen loop.

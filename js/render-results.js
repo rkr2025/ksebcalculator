@@ -24,7 +24,7 @@ import { buildPrintInputsSummary } from './render-print-summary.js';
 // results' ENDING_NOTE_HTML below and in a persistent page-footer (rendered
 // by main.js at load time, independent of whether a bill has been
 // calculated yet).
-export const APP_VERSION_LABEL = 'Version 3.0.114: Last updated: 05-August-2026';
+export const APP_VERSION_LABEL = 'Version 3.0.115: Last updated: 06-August-2026';
 
 const ENDING_NOTE_HTML = `
     <div style="background: var(--surface-muted); padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); margin: 20px auto; max-width: 90%; font-family: 'Georgia', serif; border-left: 4px solid #2ecc71;">
@@ -208,28 +208,17 @@ function buildNormalBillingResult(bill) {
         solarGeneration, importReading, exportReading, myBankDepositAtKseb,
         generationUsage, unitsConsumed, fixedCharge, phase,
         exportPlusBank, bankAdjustedUnits, billType, breakdownRows, unitRate,
-        energyCharge, totalBillAmount, accountBalance,
+        energyCharge, totalBillAmount,
     } = bill;
 
     const result = '';
 
-    const result1 = importReading > exportPlusBank
-        ? `<p>Energy Consumption for the month is <strong class="red-text">${Math.abs(importReading - exportPlusBank).toFixed(2)} Unit </strong>(${importReading}-${exportPlusBank}) - (Energy charge is calculated based on this consumption)</p>`
-        : 'Energy consumption for the month is zero as the consumption is adjusted from the export+bank';
-
     let result2;
     let result3;
-    let result4;
 
     if (importReading > exportPlusBank) {
         result2 = '';
         result3 = '';
-
-        result4 = `
-                <h5><u>Total Bill Amount</u></h5>
-                <p>ഏകദേശം <strong class="red-text">₹${(totalBillAmount || 0).toFixed(2)}</strong></p>
-                <p style="font-size: 0.9em; font-style: italic;">(GST, Security Deposit interest, Tariff changes, Advance calculation എന്നിവയിൽ മാറ്റങ്ങൾ വരാം)</p>
-            `;
     } else {
         result2 = '';
 
@@ -238,19 +227,9 @@ function buildNormalBillingResult(bill) {
                 <p>ഏകദേശം <strong class="red-text">₹${(totalBillAmount || 0).toFixed(2)}</strong></p>
                 <p style="font-size: 0.9em; font-style: italic;">(Security Deposit interest, Tariff changes, Advance അനുസരിച്ച് മാറ്റം വരാം)</p>
             `;
-
-        result4 = `
-                <h5><u>Bank Adjustment</u></h5>
-                ${(accountBalance || 0) > 0 ? `
-                    <p>Final Bank Closing = <strong class="green-text">${accountBalance || 0} Unit</strong></p>
-                    <p style="font-size: 0.9em;">(Export+Bank(${exportPlusBank || 0}) - Import(${importReading || 0}))</p>
-                ` : `
-                    <p>No Energy units to be added to bank 👎</p>
-                `}
-            `;
     }
 
-    return { result, result1, result2, result3, result4 };
+    return { result, result2, result3 };
 }
 
 // The real T1/T2/T3 ToD split path: connected load above 20kW (any billed
@@ -259,13 +238,11 @@ function buildTodSplitResult(bill) {
     const {
         solarGeneration, importReading, exportReading, myBankDepositAtKseb,
         importNormal, importPeak, importOffPeak, exportNormal, exportPeak, exportOffPeak,
-        generationUsage, unitsConsumed, fixedCharge, phase, totalBillAmount,
+        generationUsage, totalBillAmount,
         todBillingAbove20kW,
     } = bill;
 
     const result = '';
-
-    const result1 = `Fixed charge for ${unitsConsumed} Unit (${phase}) =   <strong class="red-text">₹${fixedCharge}</strong> (w.e.f 1/4/2025)`;
 
     const totalBillAmountBlock = `Total Bill Amount ഏകദേശം <strong class="red-text"> ₹${totalBillAmount.toFixed(2)} </strong>
                                                             <br><i>(Security Deposit interest, Tariff changes, Advance അനുസരിച്ച് മാറ്റം വരാം)</i>`;
@@ -310,7 +287,7 @@ function buildTodSplitResult(bill) {
             + `<b>${totalBillAmountBlock}</b>`;
     }
 
-    return { result, result1, result2, result3, result4: '' };
+    return { result, result2, result3 };
 }
 
 export function renderBillResults(bill, readingPairs) {
@@ -332,10 +309,8 @@ export function renderBillResults(bill, readingPairs) {
         billExplanation,
         printInputsSummary,
         result: panels.result,
-        result1: panels.result1,
         result2: panels.result2,
         result3: panels.result3,
-        result4: panels.result4,
         result6: ENDING_NOTE_HTML,
     };
 }
