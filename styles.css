@@ -222,6 +222,37 @@ h1 {
   filter: drop-shadow(0 2px 3px rgba(23, 32, 58, 0.15));
 }
 
+/* Page-load flourish: js/title-animation.js splits the h1 text into
+   .title-letter spans with randomized --sx/--sy/--sr start offsets, then
+   lets this keyframe animation fly each one into place. body.title-animating
+   is only set for the brief duration of that animation, to hide the
+   transient scrollbar the off-screen start positions can cause. */
+.title-letter {
+  display: inline-block;
+  opacity: 0;
+  transform: translate3d(var(--sx, 0), var(--sy, 0), 0) rotate(var(--sr, 0deg));
+  animation: title-letter-fly 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes title-letter-fly {
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title-letter {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+body.title-animating {
+  overflow-x: hidden;
+}
+
 .app-subtitle {
   text-align: center;
   font-size: 13px;
@@ -1768,6 +1799,16 @@ td {
     background-clip: initial;
     color: var(--text-primary);
     filter: none;
+  }
+
+  .title-letter {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    color: var(--text-primary) !important;
   }
 
   .card,
