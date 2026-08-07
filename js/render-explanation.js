@@ -35,6 +35,18 @@ function pct(rate) {
 function ps(rate) {
     return `<strong>${Math.round((rate || 0) * 100)}ps</strong>`;
 }
+// site.name is free text typed by the user (index.html's "Site Name
+// (optional)" field) and is used verbatim as a row label below, which
+// buildExplainTable() interpolates unescaped into innerHTML -- escape it
+// here so a name like `<img src=x onerror=...>` can't execute.
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 
 // Two row shapes feed buildExplainTable() below:
 // - wideRow: pure narrative, no figure to call out -- spans both columns.
@@ -467,29 +479,30 @@ function wheelingNettingItems(wheelingResult) {
     ];
 
     wheelingResult.sites.forEach((site) => {
+        const siteName = escapeHtml(site.name);
         const transformerNote = site.sameTransformer ? 'same transformer' : 'a different transformer';
         const transformerNoteMl = site.sameTransformer ? 'ഒരേ transformer' : 'വ്യത്യസ്ത transformer';
         rows.push(
             dataRow({
-                label: `${site.name} — Bank Available`,
+                label: `${siteName} — Bank Available`,
                 detail: `${u(site.bankOpening)} units`,
                 en: `the balance offered to this site before any loss is deducted — either your own closing bank surplus (for the first site) or whatever the previous site left over.`,
                 ml: `നഷ്ടം കുറയ്ക്കുന്നതിന് മുൻപ് ഈ സൈറ്റിന് നൽകുന്ന ബാലൻസ് — ആദ്യ സൈറ്റിനെങ്കിൽ നിങ്ങളുടെ സ്വന്തം ബാങ്ക് മിച്ചം, അല്ലെങ്കിൽ മുൻ സൈറ്റിൽ നിന്ന് ബാക്കിയായത്.`,
             }),
             dataRow({
-                label: `${site.name} — After ${site.distLossPct}% Distribution Loss`,
+                label: `${siteName} — After ${site.distLossPct}% Distribution Loss`,
                 detail: `${u(site.availableForWheeling)} units`,
                 en: `${u(site.bankOpening)} × (100% − <strong>${site.distLossPct}%</strong>) = ${u(site.availableForWheeling)} units — this site is on ${transformerNote}, so KSEB deducts <strong>${site.distLossPct}%</strong> for the transport before any of it can be wheeled.`,
                 ml: `${u(site.bankOpening)} × (100% − <strong>${site.distLossPct}%</strong>) = ${u(site.availableForWheeling)} യൂണിറ്റ് — ഈ സൈറ്റ് ${transformerNoteMl} ആയതിനാൽ, wheel ചെയ്യുന്നതിന് മുൻപ് തന്നെ KSEB <strong>${site.distLossPct}%</strong> transport-നായി കുറയ്ക്കുന്നു.`,
             }),
             dataRow({
-                label: `${site.name} — Units Wheeled`,
+                label: `${siteName} — Units Wheeled`,
                 detail: `${u(site.wheelingUnitsAdjusted)} units`,
                 en: `the smaller of what's available (${u(site.availableForWheeling)} units) and what this site actually consumed (${u(site.totalSiteUnits)} units) — you can't wheel in more than the site needs.`,
                 ml: `ലഭ്യമായത് (${u(site.availableForWheeling)} യൂണിറ്റ്), ഈ സൈറ്റ് യഥാർത്ഥത്തിൽ ഉപയോഗിച്ചത് (${u(site.totalSiteUnits)} യൂണിറ്റ്) എന്നിവയിൽ ചെറുത് — സൈറ്റിന് ആവശ്യമുള്ളതിലും കൂടുതൽ wheel ചെയ്യാനാവില്ല.`,
             }),
             dataRow({
-                label: `${site.name} — Savings`,
+                label: `${siteName} — Savings`,
                 detail: m(site.saving),
                 amountValue: site.saving,
                 favorable: true,
