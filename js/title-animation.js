@@ -1,4 +1,4 @@
-// One-time page-load flourish: the h1 title's letters fly in from random
+// One-time page-load flourish: the h1 title's words fly in from random
 // spots on the page and settle into place. Purely cosmetic -- runs once on
 // load, touches nothing outside the #mainTitle element, and is skipped
 // entirely under prefers-reduced-motion.
@@ -17,22 +17,22 @@
     h1.textContent = '';
 
     var wrapper = document.createElement('span');
-    wrapper.className = 'title-letters';
+    wrapper.className = 'title-words';
     wrapper.setAttribute('aria-hidden', 'true');
 
-    var chars = Array.from(text);
+    var words = text.split(' ');
     var maxDelayMs = 0;
-    var letterEls = [];
+    var wordEls = [];
 
-    chars.forEach(function (char, i) {
+    words.forEach(function (word, i) {
         var span = document.createElement('span');
-        span.className = 'title-letter';
-        span.textContent = char === ' ' ? ' ' : char;
+        span.className = 'title-word';
+        span.textContent = word;
 
         var sx = (Math.random() * 2 - 1) * 45; // vw
         var sy = (Math.random() * 2 - 1) * 40; // vh
-        var rot = (Math.random() * 2 - 1) * 150; // deg
-        var delayMs = i * 55;
+        var rot = (Math.random() * 2 - 1) * 35; // deg
+        var delayMs = i * 380;
         maxDelayMs = Math.max(maxDelayMs, delayMs);
 
         span.style.setProperty('--sx', sx.toFixed(2) + 'vw');
@@ -41,16 +41,20 @@
         span.style.animationDelay = delayMs + 'ms';
 
         wrapper.appendChild(span);
-        letterEls.push(span);
+        wordEls.push(span);
+
+        if (i < words.length - 1) {
+            wrapper.appendChild(document.createTextNode(' '));
+        }
     });
 
     h1.appendChild(wrapper);
 
     // h1's own gradient-text trick (background-clip:text + color:transparent)
     // only paints through direct text runs -- it does NOT show through
-    // descendant inline-block boxes like our letter spans, which would
+    // descendant inline-block boxes like our word spans, which would
     // otherwise render fully invisible (transparent text on nothing). So
-    // each letter gets its own slice of the same gradient instead, sized
+    // each word gets its own slice of the same gradient instead, sized
     // and positioned using offsetLeft/offsetWidth -- which, unlike
     // getBoundingClientRect, ignore the fly-in transform -- so the slices
     // line up into one continuous gradient across the whole title.
@@ -58,7 +62,7 @@
     var totalWidth = wrapper.offsetWidth || 1;
     var gradientImage = 'linear-gradient(135deg, var(--primary) 0%, var(--bank) 100%)';
 
-    letterEls.forEach(function (span) {
+    wordEls.forEach(function (span) {
         var offsetX = span.offsetLeft - wrapperLeft;
         span.style.backgroundImage = gradientImage;
         span.style.backgroundSize = totalWidth + 'px 100%';
@@ -68,7 +72,7 @@
         span.style.color = 'transparent';
     });
 
-    // Suppress the transient horizontal scrollbar the flying letters can
+    // Suppress the transient horizontal scrollbar the flying words can
     // cause while off-screen, without touching overflow behavior elsewhere.
     document.body.classList.add('title-animating');
     var animationDurationMs = 1400;
