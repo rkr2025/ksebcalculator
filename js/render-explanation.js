@@ -72,23 +72,26 @@ function dataRow({
 function buildExplainTable(rows, lang) {
     const bodyRows = rows.map((row) => {
         if (row.wide) {
-            return `<tr><td colspan="2" class="bill-explain-wide">${row[lang]}</td></tr>`;
+            return `<tr><td class="bill-explain-wide">${row[lang]}</td></tr>`;
         }
+        // Same highlight rule as before (red = a charge that actually added
+        // to the bill, green = a favorable/saving figure) -- now applied to
+        // the single value shown under the label, since the separate Amount
+        // column has been folded into this one column.
         const highlightClass = row.isCharge && row.amountValue > 0
             ? 'red-text'
             : (row.favorable && row.amountValue > 0 ? 'green-text' : null);
         const detailHtml = highlightClass ? `<span class="${highlightClass}">${row.detail}</span>` : row.detail;
         return `
             <tr>
-                <td class="bill-explain-desc"><strong>${row.label}</strong><div class="bill-explain-desc-text">${row[lang]}</div></td>
-                <td class="bill-explain-amount">${detailHtml}</td>
+                <td class="bill-explain-desc"><strong class="bill-explain-desc-label">${row.label}</strong><div class="bill-explain-desc-value">${detailHtml}</div><div class="bill-explain-desc-text">${row[lang]}</div></td>
             </tr>`;
     }).join('');
 
     return `
         <div class="bill-explain-table-wrap">
             <table class="bill-explain-table">
-                <thead><tr><th>Description</th><th>Amount</th></tr></thead>
+                <thead><tr><th>Description</th></tr></thead>
                 <tbody>${bodyRows}</tbody>
             </table>
         </div>`;
@@ -137,7 +140,16 @@ function usageItems(bill) {
     const importBreakdown = todBreakdown(bill, 'importNormal', 'importPeak', 'importOffPeak');
     const exportBreakdown = todBreakdown(bill, 'exportNormal', 'exportPeak', 'exportOffPeak');
 
+    // Explains what the "(T1: ... + T2: ... + T3: ...)" tags appended to
+    // Solar Generation/Import/Export below actually mean -- only relevant
+    // for ToD bills, since Normal billing never shows that breakdown.
+    const todNoteRow = bill.billingType === 'tod' ? [wideRow(
+        `<strong>What T1 / T2 / T3 mean:</strong> T1 = Normal (6am–6pm), T2 = Peak (6pm–10pm), T3 = Off-Peak (10pm–6am) — the three time-of-day zones your meter records separately. The figures below tag each line with its own T1/T2/T3 split.`,
+        `<strong>T1 / T2 / T3 എന്താണ്:</strong> T1 = Normal (രാവിലെ 6 മുതൽ വൈകിട്ട് 6 വരെ), T2 = Peak (വൈകിട്ട് 6 മുതൽ രാത്രി 10 വരെ), T3 = Off-Peak (രാത്രി 10 മുതൽ രാവിലെ 6 വരെ) — നിങ്ങളുടെ മീറ്റർ പ്രത്യേകം രേഖപ്പെടുത്തുന്ന മൂന്ന് സമയമേഖലകൾ. താഴെയുള്ള ഓരോ വരിക്കും അതിന്റേതായ T1/T2/T3 വിഭജനം കാണിച്ചിട്ടുണ്ട്.`,
+    )] : [];
+
     return [
+        ...todNoteRow,
         dataRow({
             label: 'Solar Generation',
             detail: `${u(bill.solarGeneration)} units${solarBreakdown}`,
@@ -193,6 +205,29 @@ function fixedChargeAndRentItems(bill) {
     ];
 }
 
+// Shared by energyChargeItems() (Non-Telescopic-ToD's inline zone summary)
+// and todNettingItems() (the fuller ToD Calculation Explained walkthrough)
+// -- both need the same above/below-20kW-aware per-zone units/rate/charge
+// fields, just narrated at different levels of detail.
+function getTodZoneBreakdown(bill) {
+    const above20kW = bill.todBillingAbove20kW > 0;
+    const normalUnits = bill.Normal_NoOfUnitsFor_energy_calculation;
+    const peakUnits = above20kW ? bill.Peak_NoOfUnitsFor_energy_calculation : bill.Peak_NoOfUnitsFor_energy_calculation_Below20kW;
+    const offPeakUnits = above20kW ? bill.OffPeak_NoOfUnitsFor_energy_calculation : bill.OffPeak_NoOfUnitsFor_energy_calculation_Below20kW;
+    const totalUnits = above20kW ? bill.bankAdjustedUnits : bill.bankAdjustedUnits_Below20kW;
+    const energyCharge = above20kW ? bill.energyCharge : bill.energyCharge_Below20kW;
+    const unitRate = above20kW ? bill.unitRate : bill.unitRate_Below20kW;
+    const normalRate = unitRate * TOD_MULTIPLIERS.normal;
+    const peakRate = unitRate * TOD_MULTIPLIERS.peak;
+    const normalCharge = bill.NormalConsumptionAdjusted_energy_charge;
+    const peakCharge = above20kW ? bill.PeakConsumptionAdjusted_energy_charge : bill.PeakConsumptionAdjusted_energy_charge_Below20kW;
+    const offPeakCharge = above20kW ? bill.OffPeakConsumptionAdjusted_energy_charge : bill.OffPeakConsumptionAdjusted_energy_charge_Below20kW;
+    return {
+        above20kW, normalUnits, peakUnits, offPeakUnits, totalUnits, energyCharge,
+        unitRate, normalRate, peakRate, normalCharge, peakCharge, offPeakCharge,
+    };
+}
+
 function energyChargeItems(bill) {
     if (bill.bankAdjustedUnits <= 0) {
         return [wideRow(
@@ -211,22 +246,46 @@ function energyChargeItems(bill) {
     ];
 
     if (bill.billType === 'Non-Telescopic' || bill.billType === 'Non-Telescopic-ToD') {
+        let zoneLinesEn = '';
+        let zoneLinesMl = '';
+        if (bill.billType === 'Non-Telescopic-ToD') {
+            // Spell out each zone's own units/multiplier/charge, one per
+            // line, instead of just pointing back at the Bill Type row --
+            // same values as the T1/T2/T3 Energy Charge rows below, just
+            // summarized together here.
+            const z = getTodZoneBreakdown(bill);
+            zoneLinesEn = `<br>Normal (T1, 6am–6pm): ${u(z.normalUnits)} units @ 90% = ${m(z.normalCharge)}`
+                + `<br>Peak (T2, 6pm–10pm): ${u(z.peakUnits)} units @ 125% = ${m(z.peakCharge)}`
+                + `<br>Off-Peak (T3, 10pm–6am): ${u(z.offPeakUnits)} units @ 100% = ${m(z.offPeakCharge)}`
+                + `<br>Total = ${mc(z.energyCharge)}`;
+            zoneLinesMl = `<br>Normal (T1, രാവിലെ 6–വൈകിട്ട് 6): ${u(z.normalUnits)} യൂണിറ്റ് @ 90% = ${m(z.normalCharge)}`
+                + `<br>Peak (T2, വൈകിട്ട് 6–രാത്രി 10): ${u(z.peakUnits)} യൂണിറ്റ് @ 125% = ${m(z.peakCharge)}`
+                + `<br>Off-Peak (T3, രാത്രി 10–രാവിലെ 6): ${u(z.offPeakUnits)} യൂണിറ്റ് @ 100% = ${m(z.offPeakCharge)}`
+                + `<br>ആകെ = ${mc(z.energyCharge)}`;
+        }
         items.push(dataRow({
             label: 'Energy Charge',
             detail: m(bill.energyCharge),
             amountValue: bill.energyCharge,
             isCharge: true,
-            en: `at ${m(bill.unitRate)}/unit, since your units exceed 250, every one of your ${u(bill.bankAdjustedUnits)} billed units is charged at this single flat rate for your band${bill.billType === 'Non-Telescopic-ToD' ? ', then adjusted up or down depending on which time-of-day zone each unit falls in (see Bill Type above)' : ''}.`,
-            ml: `${m(bill.unitRate)}/യൂണിറ്റ് നിരക്കിൽ, യൂണിറ്റുകൾ 250-ൽ കൂടുതലായതിനാൽ, നിങ്ങളുടെ ${u(bill.bankAdjustedUnits)} ബില്ല് യൂണിറ്റുകളും ഈ ഒറ്റ നിരക്കിലാണ് ചാർജ് ചെയ്യുന്നത്${bill.billType === 'Non-Telescopic-ToD' ? ', ഓരോ യൂണിറ്റും ഏത് സമയ മേഖലയിലാണെന്നത് അനുസരിച്ച് പിന്നീട് കൂട്ടുകയോ കുറയ്ക്കുകയോ ചെയ്യും (മുകളിൽ Bill Type കാണുക)' : ''}.`,
+            en: `at ${m(bill.unitRate)}/unit, since your units exceed 250, every one of your ${u(bill.bankAdjustedUnits)} billed units is charged at this single flat rate for your band${bill.billType === 'Non-Telescopic-ToD' ? ', then adjusted up or down depending on which time-of-day zone each unit falls in:' : '.'}${zoneLinesEn}`,
+            ml: `${m(bill.unitRate)}/യൂണിറ്റ് നിരക്കിൽ, യൂണിറ്റുകൾ 250-ൽ കൂടുതലായതിനാൽ, നിങ്ങളുടെ ${u(bill.bankAdjustedUnits)} ബില്ല് യൂണിറ്റുകളും ഈ ഒറ്റ നിരക്കിലാണ് ചാർജ് ചെയ്യുന്നത്${bill.billType === 'Non-Telescopic-ToD' ? ', ഓരോ യൂണിറ്റും ഏത് സമയ മേഖലയിലാണെന്നത് അനുസരിച്ച് പിന്നീട് കൂട്ടുകയോ കുറയ്ക്കുകയോ ചെയ്യും:' : '.'}${zoneLinesMl}`,
         }));
     } else {
+        // Spell out the actual per-slab arithmetic, one slab per line (e.g.
+        // "50.00 units × ₹3.35/unit = ₹167.50"), instead of pointing the
+        // reader at a separate table, so the calculation is legible in this
+        // row alone.
+        const rows = bill.breakdownRows || [];
+        const slabLinesEn = rows.map((r) => `${u(r.units)} units × ${m(r.rate)}/unit = ${m(r.amount)}`).join('<br>');
+        const slabLinesMl = rows.map((r) => `${u(r.units)} യൂണിറ്റ് × ${m(r.rate)}/യൂണിറ്റ് = ${m(r.amount)}`).join('<br>');
         items.push(dataRow({
             label: 'Energy Charge',
             detail: m(bill.energyCharge),
             amountValue: bill.energyCharge,
             isCharge: true,
-            en: `your ${u(bill.bankAdjustedUnits)} units are split across the telescopic price slabs (see the small rows above Energy Charge in the table) — each slab's units are charged at that slab's own rate, and the amounts add up to your total Energy Charge.`,
-            ml: `നിങ്ങളുടെ ${u(bill.bankAdjustedUnits)} യൂണിറ്റുകൾ telescopic സ്ലാബുകളായി തിരിച്ചിരിക്കുന്നു (Energy Charge-ന് മുകളിലുള്ള ചെറിയ വരികൾ കാണുക) — ഓരോ സ്ലാബിലെയും യൂണിറ്റുകൾ ആ സ്ലാബിന്റെ നിരക്കിൽ ചാർജ് ചെയ്ത് ആകെ Energy Charge ആയി കൂട്ടിച്ചേർക്കുന്നു.`,
+            en: `your ${u(bill.bankAdjustedUnits)} units are split across the telescopic price slabs, each billed at that slab's own rate:<br>${slabLinesEn}<br>Total = ${mc(bill.energyCharge)}.`,
+            ml: `നിങ്ങളുടെ ${u(bill.bankAdjustedUnits)} യൂണിറ്റുകൾ telescopic സ്ലാബുകളായി തിരിച്ച്, ഓരോ സ്ലാബും അതിന്റെ സ്വന്തം നിരക്കിൽ ചാർജ് ചെയ്യുന്നു:<br>${slabLinesMl}<br>ആകെ = ${mc(bill.energyCharge)}.`,
         }));
     }
 
@@ -286,23 +345,14 @@ function totalItem(bill) {
 // comment on why that 80% cut doesn't apply below 20kW), then whatever's
 // left after Peak carries fully into Off-Peak.
 function todNettingItems(bill) {
-    const above20kW = bill.todBillingAbove20kW > 0;
-    const normalUnits = bill.Normal_NoOfUnitsFor_energy_calculation;
-    const peakUnits = above20kW ? bill.Peak_NoOfUnitsFor_energy_calculation : bill.Peak_NoOfUnitsFor_energy_calculation_Below20kW;
-    const offPeakUnits = above20kW ? bill.OffPeak_NoOfUnitsFor_energy_calculation : bill.OffPeak_NoOfUnitsFor_energy_calculation_Below20kW;
-    const totalUnits = above20kW ? bill.bankAdjustedUnits : bill.bankAdjustedUnits_Below20kW;
-    const energyCharge = above20kW ? bill.energyCharge : bill.energyCharge_Below20kW;
-
     // Same per-zone rate/charge fields the Energy Calculation Details table
     // (getEnergyCaluculationMessage in render-tables.js) is built from --
     // narrated here in prose with the bill's own numbers plugged in, instead
     // of read off a 4-column table, so the arithmetic is easy to follow.
-    const unitRate = above20kW ? bill.unitRate : bill.unitRate_Below20kW;
-    const normalRate = unitRate * TOD_MULTIPLIERS.normal;
-    const peakRate = unitRate * TOD_MULTIPLIERS.peak;
-    const normalCharge = bill.NormalConsumptionAdjusted_energy_charge;
-    const peakCharge = above20kW ? bill.PeakConsumptionAdjusted_energy_charge : bill.PeakConsumptionAdjusted_energy_charge_Below20kW;
-    const offPeakCharge = above20kW ? bill.OffPeakConsumptionAdjusted_energy_charge : bill.OffPeakConsumptionAdjusted_energy_charge_Below20kW;
+    const {
+        above20kW, normalUnits, peakUnits, offPeakUnits, totalUnits, energyCharge,
+        unitRate, normalRate, peakRate, normalCharge, peakCharge, offPeakCharge,
+    } = getTodZoneBreakdown(bill);
 
     const carryoverRow = above20kW
         ? wideRow(
@@ -572,11 +622,18 @@ const EXPLAIN_STYLE_BLOCK = `
             text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
             color: var(--text-muted); padding: 6px 10px; border: 1px solid var(--border); background: var(--surface-muted);
         }
-        .bill-explain-table th:last-child { text-align: right; width: 38%; }
         .bill-explain-table td { padding: 10px; border: 1px solid var(--border); vertical-align: top; overflow-wrap: break-word; }
-        .bill-explain-desc strong { color: var(--text-primary); }
+        /* Scoped to the label specifically (not a bare "td strong" rule) --
+           the value below it has its own <strong> tags, sometimes nested in
+           a .red-text/.green-text span, and a bare descendant selector here
+           would win on specificity over that span's color and silently
+           override it back to text-primary. */
+        .bill-explain-desc-label { color: var(--text-primary); }
+        /* The row's value, shown once right under the label -- ahead of the
+           explanation sentence below it -- so a number is easy to match to
+           its own row without a separate Amount column to eye-jump to. */
+        .bill-explain-desc-value { font-size: 13.5px; font-weight: 600; margin: 3px 0 4px; color: var(--text-primary); }
         .bill-explain-desc-text { font-size: 12px; font-weight: 400; color: var(--text-secondary); margin-top: 3px; line-height: 1.5; }
-        .bill-explain-amount { text-align: right; font-weight: 700; color: var(--text-primary); }
         .bill-explain-wide { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
         .bill-explain-wide strong { color: var(--text-primary); }
     </style>`;
