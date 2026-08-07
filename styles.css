@@ -222,13 +222,39 @@ h1 {
   filter: drop-shadow(0 2px 3px rgba(23, 32, 58, 0.15));
 }
 
-/* Page-load flourish: js/title-animation.js splits the h1 text into
-   .title-word spans with randomized --sx/--sy/--sr start offsets, then
-   lets this keyframe animation fly each one into place. body.title-animating
-   is only set for the brief duration of that animation, to hide the
-   transient scrollbar the off-screen start positions can cause. */
+/* Once js/title-animation.js has replaced h1's direct text with nested
+   word spans, h1's own background-clip:text/gradient/drop-shadow above is
+   redundant and can still partially apply to the merged descendant text
+   using h1's own unsliced gradient position -- producing a faint,
+   misaligned "ghost" of the title layered behind the correctly
+   per-word-sliced gradient the spans render instead. Switch it off here. */
+h1.title-js-active {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  filter: none;
+}
+
+/* Page-load flourish: js/title-animation.js splits the h1 text into pairs of
+   nested spans per word -- an inner, never-transformed .title-word carrying
+   the gradient-clipped text, and an outer .title-word-fly carrying only the
+   transform/opacity animation (keeping the two apart avoids a browser
+   rendering quirk where animating transform + background-clip:text on the
+   same element re-rasterizes the text mask every frame). Per-word
+   --sx/--sy/--sr start offsets are clamped in JS to that word's actual safe
+   surrounding space before .title-word-fly--go is added to trigger the
+   keyframe animation. .title-animating on <html>/<body> is only set for the
+   brief duration of that animation, to suppress any transient scrollbar
+   from the (tightly clamped) start positions. */
 .title-word {
   display: inline-block;
+}
+
+.title-word-fly {
+  display: inline-block;
+}
+
+.title-word-fly--go {
   opacity: 0;
   transform: translate3d(var(--sx, 0), var(--sy, 0), 0) rotate(var(--sr, 0deg));
   animation: title-word-fly 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -242,15 +268,16 @@ h1 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .title-word {
+  .title-word-fly--go {
     animation: none;
     opacity: 1;
     transform: none;
   }
 }
 
+html.title-animating,
 body.title-animating {
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .app-subtitle {
@@ -1801,7 +1828,9 @@ td {
     filter: none;
   }
 
-  .title-word {
+  .title-word,
+  .title-word-fly,
+  .title-word-fly--go {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
