@@ -32,7 +32,7 @@
         var sx = (Math.random() * 2 - 1) * 45; // vw
         var sy = (Math.random() * 2 - 1) * 40; // vh
         var rot = (Math.random() * 2 - 1) * 150; // deg
-        var delayMs = i * 28;
+        var delayMs = i * 55;
         maxDelayMs = Math.max(maxDelayMs, delayMs);
 
         span.style.setProperty('--sx', sx.toFixed(2) + 'vw');
@@ -71,7 +71,7 @@
     // Suppress the transient horizontal scrollbar the flying letters can
     // cause while off-screen, without touching overflow behavior elsewhere.
     document.body.classList.add('title-animating');
-    var animationDurationMs = 700;
+    var animationDurationMs = 1400;
     window.setTimeout(function () {
         document.body.classList.remove('title-animating');
     }, maxDelayMs + animationDurationMs + 50);

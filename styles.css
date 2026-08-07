@@ -231,7 +231,7 @@ h1 {
   display: inline-block;
   opacity: 0;
   transform: translate3d(var(--sx, 0), var(--sy, 0), 0) rotate(var(--sr, 0deg));
-  animation: title-letter-fly 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: title-letter-fly 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes title-letter-fly {
