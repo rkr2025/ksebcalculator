@@ -1790,15 +1790,14 @@ td {
     display: none !important;
   }
 
-  /* solar.md's documented print scope is only the Bill Summary, ToD tables
-     (#result2), and the entered-values recap (#printInputsSummary) -- the
-     narrative "Bill Explained" panel, charts, insight cards, and Wheeling
-     Summary are on-screen-only companions to those, not part of the printed
-     record. #result/#result3 are currently always empty, hidden here too
-     for consistency with that same documented scope. Needs !important since
-     main.js sets these panels' `display` inline (style="display:block")
-     once a bill is calculated. */
-  #billExplanation,
+  /* solar.md's documented print scope is the Bill Summary, ToD tables
+     (#result2), the entered-values recap (#printInputsSummary), and the
+     "Bill Explained in Simple Words" narrative (#billExplanation) -- the
+     charts, insight cards, and Wheeling Summary are on-screen-only
+     companions, not part of the printed record. #result/#result3 are
+     currently always empty, hidden here too for consistency with that same
+     documented scope. Needs !important since main.js sets these panels'
+     `display` inline (style="display:block") once a bill is calculated. */
   #billChart,
   #billAnalysis,
   #wheelingBreakdown,

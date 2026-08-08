@@ -44,16 +44,6 @@ function costBreakdownInsight(bill) {
     };
 }
 
-function effectiveRateInsight(bill) {
-    if (bill.bankAdjustedUnits <= 0) return null;
-    const effectiveRate = bill.totalBillAmount / bill.bankAdjustedUnits;
-    return {
-        type: 'info',
-        icon: '📐',
-        html: `Including fixed charge, duty and surcharge, you're paying an average of <strong>${money(effectiveRate)} per unit</strong> across your ${bill.bankAdjustedUnits.toFixed(1)} billed units (base energy rate: ${money(bill.unitRate)}/unit).`,
-    };
-}
-
 // Telescopic bands are marginal -- only the units inside a band cost that
 // band's rate, so crossing into the next band is a soft nudge, not a cliff.
 function telescopicSlabInsight(bill) {
@@ -220,7 +210,6 @@ export function renderBillAnalysis(bill) {
 
     const insights = [
         costBreakdownInsight(bill),
-        effectiveRateInsight(bill),
         slabInsight(bill),
         todPeakInsight(bill),
         solarImpactInsight(bill),
