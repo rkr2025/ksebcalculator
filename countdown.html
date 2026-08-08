@@ -548,7 +548,11 @@
     function renderEvents() {
       eventCountBadge.textContent = events.length ? `${events.length} event${events.length === 1 ? '' : 's'}` : '';
       eventsEmptyNote.style.display = events.length ? 'none' : 'block';
-      eventsGrid.innerHTML = events.map(renderEventCard).join('');
+      // Soonest event first, furthest-away last -- sorted for display only
+      // (a copy, via slice), so `events` itself stays in add order and
+      // nothing that indexes it by id/position elsewhere is affected.
+      const sorted = events.slice().sort((a, b) => new Date(a.targetDateTime) - new Date(b.targetDateTime));
+      eventsGrid.innerHTML = sorted.map(renderEventCard).join('');
       tickCountdowns();
     }
 
