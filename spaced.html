@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🧠 Spaced Repetition Study Planner</title>
+<script>
+  (function () {
+    var saved = localStorage.getItem('spacedTheme');
+    var dark = saved ? saved === 'dark' : true;
+    if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+  })();
+</script>
+<style>
+  :root {
+    --primary: #2a78d6;
+    --primary-dark: #1f5fac;
+    --primary-light: #eaf2fc;
+    --accent: #1baf7a;
+    --accent-dark: #148f60;
+    --danger: #e34948;
+    --warn: #c97e00;
+    --surface: #ffffff;
+    --surface-muted: #f6f8fb;
+    --border: #e3e7ef;
+    --text-primary: #17203a;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --radius: 14px;
+    --shadow: 0 2px 4px rgba(23,32,58,.06), 0 12px 28px -6px rgba(23,32,58,.14), 0 28px 56px -20px rgba(23,32,58,.16);
+    --shadow-sm: 0 1px 2px rgba(23,32,58,.06), 0 6px 14px -4px rgba(23,32,58,.12);
+    --shadow-lift: 0 6px 12px rgba(23,32,58,.08), 0 22px 44px -10px rgba(23,32,58,.22), 0 36px 70px -24px rgba(23,32,58,.22);
+  }
+  :root[data-theme="dark"] {
+    --primary: #5b9ee8;
+    --primary-dark: #86b9ee;
+    --primary-light: rgba(91,158,232,.18);
+    --accent: #33d497;
+    --accent-dark: #16a874;
+    --danger: #f2726f;
+    --warn: #e0a030;
+    --surface: #1a2130;
+    --surface-muted: #232b3d;
+    --border: #313b52;
+    --text-primary: #eef1f8;
+    --text-secondary: #c3cadb;
+    --text-muted: #8792a8;
+    --shadow: 0 2px 4px rgba(0,0,0,.5), 0 12px 28px -6px rgba(0,0,0,.5), 0 28px 56px -20px rgba(0,0,0,.55);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.5), 0 6px 14px -4px rgba(0,0,0,.45);
+    --shadow-lift: 0 6px 12px rgba(0,0,0,.55), 0 22px 44px -10px rgba(0,0,0,.6), 0 36px 70px -24px rgba(0,0,0,.6);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px 10px 32px;
+    font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(42,120,214,.16), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(27,175,122,.14), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(227,73,72,.10), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(201,126,0,.10), transparent 55%),
+      linear-gradient(160deg, #eef1f7, #e4ebf7 60%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    transition: background-color .2s ease, color .2s ease;
+  }
+  :root[data-theme="dark"] body {
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(91,158,232,.10), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(51,212,151,.08), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(242,114,111,.08), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(224,160,48,.08), transparent 55%),
+      linear-gradient(160deg, #0f1420, #0b0f18 60%);
+    background-attachment: fixed;
+  }
+  .container { max-width: 980px; margin: 0 auto; }
+  h1 {
+    text-align: center; font-size: 24px; font-weight: 700; margin: 6px 0 4px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 2px 3px rgba(23,32,58,.15));
+  }
+  .subtitle { text-align: center; color: var(--text-muted); font-size: 13px; margin: 0 0 18px; }
+  .card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.82));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.6);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 16px;
+    transition: background-color .2s ease, border-color .2s ease;
+  }
+  :root[data-theme="dark"] .card {
+    background: linear-gradient(180deg, rgba(26,33,48,.94), rgba(26,33,48,.82));
+    border-color: rgba(255,255,255,.08);
+  }
+  .card h2 { font-size: 15px; margin: 0 0 14px; color: var(--text-secondary); }
+
+  button {
+    position: relative;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: filter .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0) 55%);
+    pointer-events: none;
+  }
+  button:hover { filter: brightness(0.97); transform: translateY(-1px); }
+  button:active { transform: translateY(1px); filter: brightness(0.93); }
+  .btn-add {
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color: #fff;
+    box-shadow: 0 2px 3px rgba(27,175,122,.25), 0 10px 22px -4px rgba(27,175,122,.5);
+  }
+  .btn-add:hover { box-shadow: 0 4px 8px rgba(27,175,122,.3), 0 16px 30px -6px rgba(27,175,122,.55); }
+  .btn-outline {
+    background: linear-gradient(180deg, var(--surface), var(--surface-muted));
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-outline:hover { box-shadow: var(--shadow-lift); }
+  .btn-danger {
+    background: linear-gradient(180deg, var(--danger), #c53433);
+    color: #fff;
+    box-shadow: 0 2px 3px rgba(227,73,72,.25), 0 8px 18px -4px rgba(227,73,72,.5);
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .btn-sm { padding: 6px 10px; font-size: 12px; }
+
+  input, select, textarea {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 9px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: inset 0 1px 3px rgba(23,32,58,.05);
+    transition: border-color .15s ease, box-shadow .15s ease;
+    width: 100%;
+  }
+  textarea { resize: vertical; min-height: 38px; }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light), inset 0 1px 3px rgba(23,32,58,.05);
+  }
+  input[type="date"] { color-scheme: light; }
+  :root[data-theme="dark"] input[type="date"] { color-scheme: dark; }
+  label { font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .02em; display: block; margin-bottom: 4px; }
+
+  .theme-toggle { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 16px; font-size: 13px; }
+  .switch { position: relative; display: inline-block; width: 36px; height: 21px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch-slider {
+    position: absolute; inset: 0;
+    background: var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.15);
+    transition: background .15s ease;
+  }
+  .switch-slider::before {
+    content: "";
+    position: absolute;
+    height: 15px; width: 15px; left: 3px; top: 3px;
+    background: linear-gradient(180deg, #ffffff, #eef1f7);
+    border-radius: 50%;
+    transition: transform .15s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  }
+  .switch input:checked + .switch-slider { background: linear-gradient(180deg, var(--primary), var(--primary-dark)); }
+  .switch input:checked + .switch-slider::before { transform: translateX(15px); }
+
+  .field-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .field { flex: 1 1 160px; min-width: 0; }
+  .field--checkbox { display: flex; align-items: center; gap: 8px; flex: 1 1 140px; }
+  .field--checkbox input { width: auto; }
+  .field--checkbox label { margin: 0; text-transform: none; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+
+  .actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+
+  .days-picker { display: flex; gap: 6px; flex-wrap: wrap; }
+  .day-chip { display: flex; align-items: center; gap: 5px; border: 1.5px solid var(--border); border-radius: 999px; padding: 6px 12px; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); }
+  .day-chip input { width: auto; margin: 0; }
+
+  .rows-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .row-item { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 10px; padding: 8px; }
+  .row-item .field { flex: 1 1 130px; margin-bottom: 0; }
+  .row-item .field label { display: none; }
+  .row-item .field--topics { flex: 2 1 220px; }
+  .row-item textarea { min-height: 38px; }
+
+  /* -------- Printable preview -------- */
+  #printArea {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px;
+    color: #17203a;
+    overflow-x: auto;
+  }
+  :root[data-theme="dark"] #printArea { background: #fff; }
+  .print-title { text-align: center; font-size: 22px; font-weight: 800; margin: 0 0 4px; color: #17203a; }
+  .print-subtitle { text-align: center; font-size: 12.5px; color: #6b7488; margin: 0 0 4px; }
+  .print-empty { text-align: center; color: #6b7488; font-size: 13px; padding: 20px 0; }
+
+  .plan-warning { text-align: center; font-size: 11.5px; color: #9a6b00; background: #fff4e0; border-radius: 8px; padding: 6px 10px; margin: 0 0 14px; }
+
+  .plan-legend { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 16px; }
+  .legend-chip { border-radius: 999px; padding: 4px 11px; font-size: 11px; font-weight: 700; }
+
+  .plan-table { width: 100%; border-collapse: collapse; margin-bottom: 22px; }
+  .plan-table td { border: 1px solid #dde2ee; padding: 7px 9px; vertical-align: top; font-size: 12px; }
+  .plan-table td.plan-date { width: 92px; white-space: nowrap; font-weight: 800; color: #17203a; }
+  .plan-table .plan-dow { font-size: 10px; font-weight: 600; color: #6b7488; }
+  .plan-table tr.is-rest td.plan-date { color: #9aa2b7; }
+
+  .plan-exam-flag { background: #fdeceb; color: #a3302f; font-weight: 800; font-size: 11.5px; border-radius: 6px; padding: 4px 8px; margin-bottom: 5px; display: inline-block; }
+
+  .plan-session { display: flex; align-items: flex-start; gap: 6px; border-radius: 7px; padding: 5px 8px; margin-bottom: 4px; }
+  .plan-session:last-child { margin-bottom: 0; }
+  .plan-session input.plan-check { width: auto; margin: 2px 0 0; box-shadow: none; }
+  .plan-session-text { font-size: 12px; line-height: 1.35; }
+  .plan-session-text em { font-style: normal; font-weight: 700; opacity: .8; }
+  .plan-session.is-done .plan-session-text { text-decoration: line-through; opacity: .55; }
+
+  .subject-table { width: 100%; border-collapse: collapse; }
+  .subject-table th, .subject-table td { border: 1px solid #c7cede; padding: 6px 8px; text-align: left; font-size: 11.5px; }
+  .subject-table th { background: #eaf2fc; font-size: 10px; text-transform: uppercase; color: #24304d; }
+  .subject-table td.subj-name { font-weight: 700; }
+
+  .plan-section-title { font-size: 13px; font-weight: 800; color: #17203a; margin: 18px 0 8px; }
+
+  .nav-link { display: block; text-align: center; margin-top: 8px; text-decoration: none; color: var(--primary); font-size: 13.5px; }
+
+  @media screen and (max-width: 480px) {
+    body { padding: 10px 6px 24px; }
+    .card, #printArea { padding: 14px; }
+    h1 { font-size: 20px; }
+    .row-item .field { flex: 1 1 100px; }
+  }
+
+  @media print {
+    html, body { background: #fff !important; padding: 0; }
+    .container { max-width: none; }
+    h1, .subtitle, .theme-toggle, .card, .nav-link, .print-hide { display: none !important; }
+    #printArea { box-shadow: none; border-radius: 0; padding: 6mm; overflow: visible; }
+    .plan-table tr, .plan-session { break-inside: avoid; }
+  }
+</style>
+<style id="pageStylePortrait">@page { size: A4 portrait; margin: 10mm; }</style>
+<style id="pageStyleLandscape" disabled>@page { size: A4 landscape; margin: 10mm; }</style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JFG7JRVYNV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-JFG7JRVYNV');
+</script>
+</head>
+<body>
+  <div class="container">
+    <h1>🧠 Spaced Repetition Study Planner</h1>
+    <p class="subtitle">Enter your exams and the syllabus for each. This rotates evenly through every subject — Physics, Chemistry, Maths, Physics, Chemistry, Maths, ... — telling you exactly what to study on each date, and automatically gives a subject extra turns as its exam gets close, ending with a dedicated final revision day right before it.</p>
+
+    <div class="theme-toggle">
+      <span>☀️</span>
+      <label class="switch">
+        <input type="checkbox" id="themeToggle">
+        <span class="switch-slider"></span>
+      </label>
+      <span>🌙</span>
+    </div>
+
+    <div class="card">
+      <h2>⚙️ Plan Setup</h2>
+      <div class="field-row">
+        <div class="field" style="flex: 2 1 220px;">
+          <label for="planTitleInput">Title</label>
+          <input type="text" id="planTitleInput" maxlength="80" value="Study Plan">
+        </div>
+        <div class="field">
+          <label for="startDateInput">Start Studying From</label>
+          <input type="date" id="startDateInput">
+        </div>
+        <div class="field">
+          <label for="capacityInput">Subjects per Day</label>
+          <input type="number" id="capacityInput" min="1" max="10" value="1">
+        </div>
+        <div class="field">
+          <label for="orientationInput">Print Orientation</label>
+          <select id="orientationInput">
+            <option value="portrait">Portrait</option>
+            <option value="landscape">Landscape</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field" style="flex: 1 1 100%;">
+          <label>Rest Days (no rotation scheduled — final revisions still happen)</label>
+          <div class="days-picker" id="restDaysPicker"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📚 Exams &amp; Syllabus</h2>
+      <div class="rows-list" id="examRows"></div>
+      <div class="actions-row">
+        <button class="btn-outline btn-sm" id="addExamRow" type="button">+ Add Exam</button>
+      </div>
+    </div>
+
+    <div class="actions-row" style="margin-bottom:16px;">
+      <button class="btn-add" id="printBtn" type="button">🖨️ Print</button>
+      <button class="btn-outline" id="resetBtn" type="button">↺ Reset Plan</button>
+    </div>
+
+    <div id="printArea"></div>
+
+    <div class="actions-row print-hide" style="justify-content: center; margin: 14px 0;">
+      <button class="btn-add" id="printBtn2" type="button">🖨️ Print on A4</button>
+    </div>
+
+    <a href="tools.html" class="nav-link">← Back to Tools</a>
+  </div>
+
+  <script>
+    // ------------------------------ Storage ------------------------------
+    const STORAGE_KEY = 'spacedRepetitionSettings';
+    const DOW_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const DOW_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+    const PALETTE = [
+      { bg: '#eaf2fc', text: '#1f5fac' },
+      { bg: '#e6f7ef', text: '#148f60' },
+      { bg: '#fdeceb', text: '#a3302f' },
+      { bg: '#fff4e0', text: '#9a6b00' },
+      { bg: '#f3e8fd', text: '#7a3fc9' },
+      { bg: '#e8f6fb', text: '#1a7fa0' },
+      { bg: '#fdeef6', text: '#c2317e' },
+      { bg: '#f0f4e8', text: '#5a7d1f' },
+    ];
+
+    function todayDateInputValue() { return formatDateInputValue(new Date()); }
+    function formatDateInputValue(d) {
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
+    function defaultSettings() {
+      return {
+        title: 'Study Plan',
+        startDate: todayDateInputValue(),
+        capacity: 1,
+        restDays: [],
+        orientation: 'portrait',
+        exams: [{ subject: '', examDate: '', topics: '' }],
+        completed: {}, // sessionKey -> true
+      };
+    }
+
+    function loadSettings() {
+      let stored = {};
+      try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { stored = {}; }
+      const s = Object.assign(defaultSettings(), stored);
+      if (!s.startDate) s.startDate = todayDateInputValue();
+      if (!s.exams || !s.exams.length) s.exams = [{ subject: '', examDate: '', topics: '' }];
+      if (!s.completed) s.completed = {};
+      return s;
+    }
+    function saveSettings() { localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); }
+
+    let settings = loadSettings();
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str == null ? '' : str;
+      return div.innerHTML;
+    }
+
+    // ------------------------------ Date helpers ------------------------------
+    function parseDateInput(value) {
+      const [y, m, d] = value.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+    function addDays(date, n) {
+      const d = new Date(date);
+      d.setDate(d.getDate() + n);
+      return d;
+    }
+    function formatShortDate(d) {
+      return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+    }
+
+    // ------------------------------ Scheduling engine ------------------------------
+    // Rotation-based plan: each day, one subject "has the floor" (or several,
+    // if Subjects per Day > 1), cycling through every subject round-robin --
+    // Physics, Chemistry, Maths, Physics, Chemistry, Maths, ... -- so revision
+    // is spread evenly across all of them. The one override is the day
+    // immediately before a subject's exam: that day is reserved *only* for
+    // that subject's final revision, which is what naturally bends the
+    // rotation in the subject's favor as its exam gets close (e.g. with exams
+    // 10 days out, day 9 goes back to that subject out of turn instead of
+    // continuing the plain A-B-C cycle).
+    function parseTopics(raw) {
+      if (!raw || !raw.trim()) return ['Full Portion'];
+      return raw.split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
+    }
+
+    function isRestDay(date, restDays) { return restDays.includes(date.getDay()); }
+    function addSession(dayMap, key, session) {
+      if (!dayMap.has(key)) dayMap.set(key, []);
+      dayMap.get(key).push(session);
+    }
+
+    // Builds the schedulable subject list (skips exams on/before Start Date),
+    // sorted by exam date ascending -- nearest exam first -- then by the
+    // original row order for ties. Each entry tracks its own topic cycle
+    // pointer (`topicPtr`): the first pass through a subject's chapters is
+    // 'Learn', every pass after that wraps around and is 'Revision', so a
+    // subject visited many times before its exam keeps getting useful work
+    // instead of repeating the same single chapter forever. `lastPicked`
+    // tracks the day-index it last got a turn, used to break ties fairly.
+    function buildSubjects(exams, startDate) {
+      const list = [];
+      exams.forEach((exam, idx) => {
+        if (!exam.subject || !exam.examDate) return;
+        if (parseDateInput(exam.examDate).getTime() <= startDate.getTime()) return;
+        list.push({ subject: exam.subject, examDate: exam.examDate, topics: parseTopics(exam.topics), topicPtr: 0, idx, lastPicked: -1 });
+      });
+      list.sort((a, b) => a.examDate.localeCompare(b.examDate) || a.idx - b.idx);
+      return list;
+    }
+
+    // How many not-yet-learned chapters a subject still has vs. how many
+    // scheduling days are left before its exam -- >1 means it can no longer
+    // possibly finish covering every chapter at one chapter/turn/day, so it
+    // needs to win every remaining turn (and possibly more than one per day,
+    // via a higher Subjects-per-Day setting) to have any chance of finishing.
+    function urgency(su, cursor) {
+      const unlearned = Math.max(0, su.topics.length - su.topicPtr);
+      if (unlearned === 0) return 0;
+      const daysLeft = Math.max(1, Math.round((parseDateInput(su.examDate).getTime() - cursor.getTime()) / 86400000));
+      return unlearned / daysLeft;
+    }
+
+    function generatePlan(s) {
+      const startDate = parseDateInput(s.startDate);
+      const restDays = s.restDays;
+      const capacity = s.capacity;
+      const dayMap = new Map();
+
+      const allNamed = s.exams.filter((e) => e.subject && e.examDate);
+      const skippedSubjects = Array.from(new Set(
+        allNamed.filter((e) => parseDateInput(e.examDate).getTime() <= startDate.getTime()).map((e) => e.subject)
+      ));
+      const subjects = buildSubjects(s.exams, startDate);
+      if (!subjects.length) return { dayMap, subjects, skippedSubjects, overloadedCount: 0, incompleteSubjects: [] };
+
+      const lastExamDate = subjects.reduce((max, su) => {
+        const d = parseDateInput(su.examDate);
+        return d.getTime() > max.getTime() ? d : max;
+      }, parseDateInput(subjects[0].examDate));
+
+      let overloadedCount = 0;
+      let dayIndex = 0;
+      let cursor = new Date(startDate);
+      let guardDays = 0;
+      while (cursor.getTime() < lastExamDate.getTime() && guardDays < 3660) {
+        guardDays++;
+        const key = formatDateInputValue(cursor);
+        const active = subjects.filter((su) => parseDateInput(su.examDate).getTime() > cursor.getTime());
+        if (active.length) {
+          const assignedToday = new Set();
+
+          // Mandatory final revision -- always honored even on a Rest Day,
+          // and even if it pushes today's session count past capacity
+          // (skipping it entirely the day before an exam isn't an option).
+          const finalToday = active.filter((su) => Math.round((parseDateInput(su.examDate).getTime() - cursor.getTime()) / 86400000) === 1);
+          finalToday.forEach((su) => {
+            addSession(dayMap, key, { subject: su.subject, topic: 'Full Revision', type: 'Final Revision', overflow: false });
+            assignedToday.add(su.subject);
+            su.lastPicked = dayIndex;
+          });
+          if (finalToday.length > capacity) overloadedCount += finalToday.length - capacity;
+
+          const remaining = capacity - finalToday.length;
+          if (!isRestDay(cursor, restDays) && remaining > 0) {
+            // Every remaining slot today goes to whichever eligible subject
+            // most urgently needs it -- a subject with many chapters and
+            // few days left before its exam will win every turn until all
+            // its chapters are covered at least once, guaranteeing full
+            // syllabus coverage whenever the timeline makes that possible.
+            // Once a subject has no unlearned chapters left, its urgency
+            // drops to 0 and ties are broken by least-recently-picked, which
+            // is what reproduces plain round-robin rotation once every
+            // subject has finished its first learning pass.
+            const candidates = active.filter((su) => !assignedToday.has(su.subject));
+            candidates.sort((a, b) => urgency(b, cursor) - urgency(a, cursor) || a.lastPicked - b.lastPicked || a.idx - b.idx);
+            candidates.slice(0, remaining).forEach((su) => {
+              const topicIdx = su.topicPtr % su.topics.length;
+              const type = su.topicPtr < su.topics.length ? 'Learn' : 'Revision';
+              addSession(dayMap, key, { subject: su.subject, topic: su.topics[topicIdx], type, overflow: false });
+              su.topicPtr++;
+              su.lastPicked = dayIndex;
+              assignedToday.add(su.subject);
+            });
+          }
+        }
+        cursor = addDays(cursor, 1);
+        dayIndex++;
+      }
+
+      // Even monopolizing every remaining day, a subject with more chapters
+      // than available days (at the configured Subjects-per-Day rate) can't
+      // finish covering its syllabus before the exam -- surface that
+      // honestly instead of silently shipping an incomplete plan.
+      const incompleteSubjects = subjects
+        .filter((su) => su.topicPtr < su.topics.length)
+        .map((su) => ({ subject: su.subject, remaining: su.topics.length - su.topicPtr }));
+
+      return { dayMap, subjects, skippedSubjects, overloadedCount, incompleteSubjects };
+    }
+
+    // ------------------------------ Rendering ------------------------------
+    function buildColorMap(exams) {
+      const map = {};
+      let idx = 0;
+      exams.forEach((e) => {
+        if (e.subject && e.examDate && !(e.subject in map)) {
+          map[e.subject] = PALETTE[idx % PALETTE.length];
+          idx++;
+        }
+      });
+      return map;
+    }
+
+    function sessionTypeOrder(type) {
+      if (type === 'Learn') return 0;
+      if (type === 'Revision') return 50;
+      return 100; // Final Revision
+    }
+
+    function renderDayRow(date, sessions, examSubjects, colorMap, s) {
+      const isRest = isRestDay(date, s.restDays);
+      const examHtml = examSubjects ? examSubjects.map((subj) => `<div class="plan-exam-flag">🎯 EXAM: ${escapeHtml(subj)}</div>`).join('') : '';
+      const dateKey = formatDateInputValue(date);
+      const sessionsHtml = sessions.slice().sort((a, b) => sessionTypeOrder(a.type) - sessionTypeOrder(b.type)).map((sess) => {
+        const c = colorMap[sess.subject] || { bg: '#eee', text: '#333' };
+        const key = `${dateKey}|${sess.subject}|${sess.topic}|${sess.type}`;
+        const done = !!s.completed[key];
+        return `<label class="plan-session${done ? ' is-done' : ''}" style="background:${c.bg};color:${c.text};">
+          <input type="checkbox" class="plan-check" data-key="${escapeHtml(key)}" ${done ? 'checked' : ''}>
+          <span class="plan-session-text"><strong>${escapeHtml(sess.subject)}</strong> — ${escapeHtml(sess.topic)} <em>(${escapeHtml(sess.type)})</em>${sess.overflow ? ' ⚠' : ''}</span>
+        </label>`;
+      }).join('');
+      return `<tr class="${isRest ? 'is-rest' : ''}"><td class="plan-date">${escapeHtml(formatShortDate(date))}<div class="plan-dow">${DOW_SHORT[date.getDay()]}</div></td><td>${examHtml}${sessionsHtml}</td></tr>`;
+    }
+
+    function render() {
+      const printArea = document.getElementById('printArea');
+      const namedExams = settings.exams.filter((e) => e.subject && e.examDate);
+      if (!namedExams.length) {
+        printArea.innerHTML = `<div class="print-title">${escapeHtml(settings.title)}</div><p class="print-empty">Add at least one exam with a subject and date above to generate a study plan.</p>`;
+        return;
+      }
+
+      const { dayMap, subjects, overloadedCount, skippedSubjects, incompleteSubjects } = generatePlan(settings);
+      const colorMap = buildColorMap(settings.exams);
+
+      if (!subjects.length) {
+        const skipMsg = skippedSubjects.length
+          ? `<p class="plan-warning">⚠ ${skippedSubjects.map(escapeHtml).join(', ')} — exam date must be after Start Date (${escapeHtml(formatShortDate(parseDateInput(settings.startDate)))}). Fix the date to generate a plan.</p>`
+          : '';
+        printArea.innerHTML = `<div class="print-title">${escapeHtml(settings.title)}</div>${skipMsg}<p class="print-empty">Add at least one exam with a subject and a date after Start Date to generate a study plan.</p>`;
+        return;
+      }
+
+      const startDate = parseDateInput(settings.startDate);
+      const examsByDate = {};
+      settings.exams.forEach((e) => {
+        if (e.subject && e.examDate && parseDateInput(e.examDate).getTime() > startDate.getTime()) {
+          (examsByDate[e.examDate] = examsByDate[e.examDate] || []).push(e.subject);
+        }
+      });
+
+      const allKeys = [...dayMap.keys(), ...Object.keys(examsByDate), settings.startDate].sort();
+      const first = parseDateInput(allKeys[0]);
+      const last = parseDateInput(allKeys[allKeys.length - 1]);
+
+      let rows = '';
+      // Per-subject stats (every date it's studied/revised, plus topics
+      // touched) collected while walking the calendar, for the reference
+      // table below -- cheaper than a second pass since we're already
+      // visiting every day in order.
+      const stats = {};
+      let cursor = new Date(first);
+      while (cursor.getTime() <= last.getTime()) {
+        const key = formatDateInputValue(cursor);
+        const sessions = dayMap.get(key) || [];
+        const examSubjects = examsByDate[key];
+        if (sessions.length || examSubjects) rows += renderDayRow(cursor, sessions, examSubjects, colorMap, settings);
+        sessions.forEach((sess) => {
+          const st = stats[sess.subject] || (stats[sess.subject] = { topics: new Set(), dates: [] });
+          st.topics.add(sess.topic);
+          st.dates.push({ date: cursor, type: sess.type });
+        });
+        cursor = addDays(cursor, 1);
+      }
+
+      const totalDays = Math.round((last.getTime() - first.getTime()) / 86400000) + 1;
+      const titleLine = settings.title ? `<div class="print-title">${escapeHtml(settings.title)}</div>` : '';
+      const subtitleLine = `<div class="print-subtitle">${escapeHtml(formatShortDate(first))} – ${escapeHtml(formatShortDate(last))} · ${totalDays} day${totalDays === 1 ? '' : 's'} · ${subjects.length} subject${subjects.length === 1 ? '' : 's'}</div>`;
+      const overloadWarning = overloadedCount ? `<div class="plan-warning">⚠ ${overloadedCount} extra session${overloadedCount === 1 ? '' : 's'} landed on a day already at your Subjects per Day limit — two or more exams share a "final revision" day. Consider raising Subjects per Day.</div>` : '';
+      const skipWarning = skippedSubjects.length ? `<div class="plan-warning">⚠ ${skippedSubjects.map(escapeHtml).join(', ')} — exam date is on/before Start Date, so ${skippedSubjects.length === 1 ? 'it was' : 'they were'} excluded from the plan below.</div>` : '';
+      const incompleteWarning = incompleteSubjects.length
+        ? `<div class="plan-warning">⚠ Not enough days to cover every chapter before the exam: ${incompleteSubjects.map((r) => `${escapeHtml(r.subject)} (${r.remaining} chapter${r.remaining === 1 ? '' : 's'} left unstudied)`).join(', ')}. Start earlier, raise Subjects per Day, or trim the chapter list.</div>`
+        : '';
+      const warningLine = overloadWarning + skipWarning + incompleteWarning;
+      const legend = `<div class="plan-legend">${Object.entries(colorMap).map(([subj, c]) => `<span class="legend-chip" style="background:${c.bg};color:${c.text};">${escapeHtml(subj)}</span>`).join('')}</div>`;
+
+      const TYPE_ABBR = { Learn: 'L', Revision: 'R', 'Final Revision': 'F' };
+      const subjectRows = subjects.map((su) => {
+        const st = stats[su.subject] || { topics: new Set(), dates: [] };
+        const d = parseDateInput(su.examDate);
+        const datesLabel = st.dates.length
+          ? st.dates.map((e) => `${formatShortDate(e.date)} (${TYPE_ABBR[e.type] || e.type})`).join(', ')
+          : '—';
+        return `<tr><td class="subj-name">${escapeHtml(su.subject)}</td><td>${escapeHtml(su.topics.join(', '))}</td><td>${st.dates.length}</td><td>${escapeHtml(datesLabel)}</td><td>${escapeHtml(formatShortDate(d))}</td></tr>`;
+      }).join('');
+      const subjectTable = `<div class="plan-section-title">📋 Per-Subject Summary (reference)</div><table class="subject-table"><thead><tr><th>Subject</th><th>Topics</th><th>Sessions</th><th>Study Dates (L = Learn, R = Revision, F = Final Revision)</th><th>Exam Date</th></tr></thead><tbody>${subjectRows}</tbody></table>`;
+
+      printArea.innerHTML = `${titleLine}${subtitleLine}${warningLine}${legend}<table class="plan-table"><tbody>${rows}</tbody></table>${subjectTable}`;
+    }
+
+    // ------------------------------ Form wiring ------------------------------
+    function renderRestDaysPicker() {
+      const picker = document.getElementById('restDaysPicker');
+      picker.innerHTML = DOW_FULL.map((name, d) => `
+        <label class="day-chip"><input type="checkbox" data-day="${d}" ${settings.restDays.includes(d) ? 'checked' : ''}> ${DOW_SHORT[d]}</label>
+      `).join('');
+    }
+
+    function renderExamRows() {
+      const container = document.getElementById('examRows');
+      container.innerHTML = settings.exams.map((ex, i) => `
+        <div class="row-item" data-idx="${i}">
+          <div class="field"><input type="text" class="exam-subject-input" placeholder="Subject" value="${escapeHtml(ex.subject)}"></div>
+          <div class="field"><input type="date" class="exam-date-input" value="${escapeHtml(ex.examDate)}"></div>
+          <div class="field field--topics"><textarea class="exam-topics-input" rows="1" placeholder="Topics (comma or newline separated) — leave blank for whole syllabus">${escapeHtml(ex.topics)}</textarea></div>
+          <button class="btn-danger" type="button" data-remove-exam="${i}">✕</button>
+        </div>`).join('');
+    }
+
+    function applySettingsToForm() {
+      document.getElementById('planTitleInput').value = settings.title;
+      document.getElementById('startDateInput').value = settings.startDate;
+      document.getElementById('capacityInput').value = settings.capacity;
+      document.getElementById('orientationInput').value = settings.orientation;
+      document.getElementById('pageStylePortrait').disabled = settings.orientation !== 'portrait';
+      document.getElementById('pageStyleLandscape').disabled = settings.orientation !== 'landscape';
+      renderRestDaysPicker();
+      renderExamRows();
+    }
+
+    function commitAndRender() {
+      settings.title = document.getElementById('planTitleInput').value.trim();
+      settings.startDate = document.getElementById('startDateInput').value || todayDateInputValue();
+      let cap = parseInt(document.getElementById('capacityInput').value, 10);
+      if (!Number.isFinite(cap) || cap < 1) cap = 1;
+      if (cap > 10) cap = 10;
+      settings.capacity = cap;
+      document.getElementById('capacityInput').value = cap;
+      saveSettings();
+      render();
+    }
+
+    ['planTitleInput', 'startDateInput', 'capacityInput'].forEach((id) => {
+      document.getElementById(id).addEventListener('input', commitAndRender);
+      document.getElementById(id).addEventListener('change', commitAndRender);
+    });
+
+    document.getElementById('restDaysPicker').addEventListener('change', () => {
+      settings.restDays = Array.from(document.querySelectorAll('#restDaysPicker input[type="checkbox"]:checked')).map((el) => parseInt(el.dataset.day, 10));
+      saveSettings();
+      render();
+    });
+
+    document.getElementById('orientationInput').addEventListener('change', (e) => {
+      settings.orientation = e.target.value === 'landscape' ? 'landscape' : 'portrait';
+      saveSettings();
+      document.getElementById('pageStylePortrait').disabled = settings.orientation !== 'portrait';
+      document.getElementById('pageStyleLandscape').disabled = settings.orientation !== 'landscape';
+    });
+
+    document.getElementById('addExamRow').addEventListener('click', () => {
+      settings.exams.push({ subject: '', examDate: '', topics: '' });
+      saveSettings();
+      renderExamRows();
+      render();
+    });
+    document.getElementById('examRows').addEventListener('input', (e) => {
+      const row = e.target.closest('.row-item');
+      if (!row) return;
+      const i = parseInt(row.dataset.idx, 10);
+      const ex = settings.exams[i];
+      if (e.target.classList.contains('exam-subject-input')) ex.subject = e.target.value;
+      if (e.target.classList.contains('exam-date-input')) ex.examDate = e.target.value;
+      if (e.target.classList.contains('exam-topics-input')) ex.topics = e.target.value;
+      saveSettings();
+      render();
+    });
+    document.getElementById('examRows').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-remove-exam]');
+      if (!btn) return;
+      const i = parseInt(btn.dataset.removeExam, 10);
+      settings.exams.splice(i, 1);
+      if (!settings.exams.length) settings.exams.push({ subject: '', examDate: '', topics: '' });
+      saveSettings();
+      renderExamRows();
+      render();
+    });
+
+    document.getElementById('printArea').addEventListener('change', (e) => {
+      if (!e.target.classList.contains('plan-check')) return;
+      const key = e.target.dataset.key;
+      if (e.target.checked) settings.completed[key] = true;
+      else delete settings.completed[key];
+      saveSettings();
+      e.target.closest('.plan-session').classList.toggle('is-done', e.target.checked);
+    });
+
+    document.getElementById('printBtn').addEventListener('click', () => window.print());
+    document.getElementById('printBtn2').addEventListener('click', () => window.print());
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      if (!confirm('Reset the study plan to defaults? This clears all exams, topics, and progress.')) return;
+      settings = defaultSettings();
+      saveSettings();
+      applySettingsToForm();
+      render();
+    });
+
+    // ------------------------------- Theme --------------------------------
+    const THEME_KEY = 'spacedTheme';
+    document.getElementById('themeToggle').checked = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.getElementById('themeToggle').addEventListener('change', function () {
+      if (this.checked) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem(THEME_KEY, 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem(THEME_KEY, 'light');
+      }
+    });
+
+    // --------------------------------- Init ---------------------------------
+    applySettingsToForm();
+    render();
+  </script>
+</body>
+</html>
