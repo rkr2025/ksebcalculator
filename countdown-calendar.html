@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🗓️ Printable Countdown Calendar Creator</title>
+<script>
+  // Applied before first paint (not in the main script at the bottom of the
+  // page) so there's no flash of the light theme while the rest of the page
+  // loads. Dark is the default the very first time someone visits -- once
+  // they pick a theme via the toggle, that choice is what's remembered.
+  (function () {
+    var saved = localStorage.getItem('countdownCalendarTheme');
+    var dark = saved ? saved === 'dark' : true;
+    if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+  })();
+</script>
+<style>
+  :root {
+    --primary: #2a78d6;
+    --primary-dark: #1f5fac;
+    --primary-light: #eaf2fc;
+    --accent: #1baf7a;
+    --accent-dark: #148f60;
+    --danger: #e34948;
+    --warn: #c97e00;
+    --surface: #ffffff;
+    --surface-muted: #f6f8fb;
+    --border: #e3e7ef;
+    --text-primary: #17203a;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --radius: 14px;
+    --shadow: 0 2px 4px rgba(23,32,58,.06), 0 12px 28px -6px rgba(23,32,58,.14), 0 28px 56px -20px rgba(23,32,58,.16);
+    --shadow-sm: 0 1px 2px rgba(23,32,58,.06), 0 6px 14px -4px rgba(23,32,58,.12);
+    --shadow-lift: 0 6px 12px rgba(23,32,58,.08), 0 22px 44px -10px rgba(23,32,58,.22), 0 36px 70px -24px rgba(23,32,58,.22);
+  }
+  :root[data-theme="dark"] {
+    --primary: #5b9ee8;
+    --primary-dark: #86b9ee;
+    --primary-light: rgba(91,158,232,.18);
+    --accent: #33d497;
+    --accent-dark: #16a874;
+    --danger: #f2726f;
+    --warn: #e0a030;
+    --surface: #1a2130;
+    --surface-muted: #232b3d;
+    --border: #313b52;
+    --text-primary: #eef1f8;
+    --text-secondary: #c3cadb;
+    --text-muted: #8792a8;
+    --shadow: 0 2px 4px rgba(0,0,0,.5), 0 12px 28px -6px rgba(0,0,0,.5), 0 28px 56px -20px rgba(0,0,0,.55);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.5), 0 6px 14px -4px rgba(0,0,0,.45);
+    --shadow-lift: 0 6px 12px rgba(0,0,0,.55), 0 22px 44px -10px rgba(0,0,0,.6), 0 36px 70px -24px rgba(0,0,0,.6);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px 10px 32px;
+    font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(42,120,214,.16), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(27,175,122,.14), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(227,73,72,.10), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(201,126,0,.10), transparent 55%),
+      linear-gradient(160deg, #eef1f7, #e4ebf7 60%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    transition: background-color .2s ease, color .2s ease;
+  }
+  :root[data-theme="dark"] body {
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(91,158,232,.10), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(51,212,151,.08), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(242,114,111,.08), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(224,160,48,.08), transparent 55%),
+      linear-gradient(160deg, #0f1420, #0b0f18 60%);
+    background-attachment: fixed;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+  h1 {
+    text-align: center; font-size: 24px; font-weight: 700; margin: 6px 0 4px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 2px 3px rgba(23,32,58,.15));
+  }
+  .subtitle { text-align: center; color: var(--text-muted); font-size: 13px; margin: 0 0 18px; }
+  .card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.82));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.6);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 16px;
+    transition: background-color .2s ease, border-color .2s ease;
+  }
+  :root[data-theme="dark"] .card {
+    background: linear-gradient(180deg, rgba(26,33,48,.94), rgba(26,33,48,.82));
+    border-color: rgba(255,255,255,.08);
+  }
+  .card h2 { font-size: 15px; margin: 0 0 14px; color: var(--text-secondary); }
+
+  button {
+    position: relative;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: filter .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0) 55%);
+    pointer-events: none;
+  }
+  button:hover { filter: brightness(0.97); transform: translateY(-1px); }
+  button:active { transform: translateY(1px); filter: brightness(0.93); }
+  .btn-add {
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color: #fff;
+    box-shadow: 0 2px 3px rgba(27,175,122,.25), 0 10px 22px -4px rgba(27,175,122,.5);
+  }
+  .btn-add:hover { box-shadow: 0 4px 8px rgba(27,175,122,.3), 0 16px 30px -6px rgba(27,175,122,.55); }
+  .btn-outline {
+    background: linear-gradient(180deg, var(--surface), var(--surface-muted));
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-outline:hover { box-shadow: var(--shadow-lift); }
+
+  input, select {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 9px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: inset 0 1px 3px rgba(23,32,58,.05);
+    transition: border-color .15s ease, box-shadow .15s ease;
+    width: 100%;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light), inset 0 1px 3px rgba(23,32,58,.05);
+  }
+  input[type="date"] { color-scheme: light; }
+  :root[data-theme="dark"] input[type="date"] { color-scheme: dark; }
+  label { font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .02em; display: block; margin-bottom: 4px; }
+
+  .theme-toggle { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 16px; font-size: 13px; }
+  .switch { position: relative; display: inline-block; width: 36px; height: 21px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch-slider {
+    position: absolute; inset: 0;
+    background: var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.15);
+    transition: background .15s ease;
+  }
+  .switch-slider::before {
+    content: "";
+    position: absolute;
+    height: 15px; width: 15px; left: 3px; top: 3px;
+    background: linear-gradient(180deg, #ffffff, #eef1f7);
+    border-radius: 50%;
+    transition: transform .15s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  }
+  .switch input:checked + .switch-slider { background: linear-gradient(180deg, var(--primary), var(--primary-dark)); }
+  .switch input:checked + .switch-slider::before { transform: translateX(15px); }
+
+  .field-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .field { flex: 1 1 160px; min-width: 0; }
+  .field--checkbox { display: flex; align-items: center; gap: 8px; flex: 1 1 160px; }
+  .field--checkbox input { width: auto; }
+  .field--checkbox label { margin: 0; text-transform: none; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+
+  .view-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+  .view-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 8px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    font-weight: 700;
+    font-size: 13.5px;
+    cursor: pointer;
+  }
+  .view-tab.active { background: linear-gradient(180deg, var(--primary), var(--primary-dark)); color: #fff; border-color: transparent; }
+
+  .actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+
+  .summary-line { font-size: 13px; color: var(--text-secondary); margin: 0 0 14px; text-align: center; }
+  .summary-line strong { color: var(--text-primary); }
+
+  /* -------- Printable preview -------- */
+  #printArea {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px;
+    color: #17203a;
+  }
+  :root[data-theme="dark"] #printArea { background: #fff; }
+  .print-title {
+    text-align: center;
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0 0 4px;
+    color: #17203a;
+  }
+  .print-subtitle {
+    text-align: center;
+    font-size: 12.5px;
+    color: #6b7488;
+    margin: 0 0 18px;
+  }
+
+  /* Numbered grid view */
+  .count-grid {
+    display: grid;
+    gap: 6px;
+  }
+  .count-box {
+    position: relative;
+    border: 1.5px solid #c7cede;
+    border-radius: 8px;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    font-weight: 800;
+    color: #24304d;
+    background: #f8f9fc;
+    break-inside: avoid;
+  }
+  .count-box.is-today { border-color: #1baf7a; border-width: 2.5px; background: #eafbf3; }
+  .count-box-week {
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-size: 7px;
+    font-weight: 700;
+    color: #9aa2b7;
+  }
+  .count-box-num { font-size: 15px; line-height: 1; }
+  .count-box-num.is-weekend { color: #d92d2d; }
+  .count-box-sub { font-size: 8px; font-weight: 600; color: #6b7488; margin-top: 3px; text-align: center; line-height: 1.2; }
+  .count-box-sub.is-weekend { color: #d92d2d; }
+
+  /* Calendar-months view */
+  .cal-month { margin-bottom: 26px; break-inside: avoid; }
+  .cal-month:last-child { margin-bottom: 0; }
+  .cal-month-title { font-size: 15.5px; font-weight: 800; color: #17203a; margin: 0 0 2px; text-align: center; }
+  .cal-month-range { font-size: 11px; color: #6b7488; text-align: center; margin: 0 0 10px; }
+  .cal-grid { display: grid; grid-template-columns: 34px repeat(7, 1fr); gap: 4px; }
+  .cal-dow { text-align: center; font-size: 10px; font-weight: 700; color: #6b7488; text-transform: uppercase; padding-bottom: 4px; }
+  .cal-dow.is-weekend { color: #d92d2d; }
+  .cal-dow.cal-week-header { color: #9aa2b7; }
+  .cal-week-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: #9aa2b7;
+  }
+  .cal-cell {
+    aspect-ratio: 1 / 1;
+    border-radius: 6px;
+    border: 1px solid #dde2ee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 11.5px;
+    color: #24304d;
+    background: #fff;
+  }
+  .cal-cell.is-blank { border: none; background: none; }
+  .cal-cell.in-range { background: #eaf2fc; border-color: #a9c8ee; font-weight: 700; }
+  .cal-cell.is-today { border-color: #1baf7a; border-width: 2px; }
+  .cal-cell-date { font-size: 11px; }
+  .cal-cell-date.is-weekend { color: #d92d2d; }
+  .cal-cell-day { font-size: 9px; font-weight: 800; color: var(--primary, #2a78d6); }
+
+  .nav-link { display: block; text-align: center; margin-top: 8px; text-decoration: none; color: var(--primary); font-size: 13.5px; }
+
+  @media (max-width: 480px) {
+    body { padding: 10px 6px 24px; }
+    .card, #printArea { padding: 14px; }
+    h1 { font-size: 20px; }
+  }
+
+  @media print {
+    /* !important beats the dark-theme :root[data-theme="dark"] body rule,
+       which otherwise has higher specificity than a plain `body` selector
+       here and would leave the printed page on a dark background. Only
+       the poster itself (#printArea) should print -- app chrome (title,
+       setup form, nav) is on-screen-only. */
+    html, body { background: #fff !important; padding: 0; }
+    .container { max-width: none; }
+    h1, .subtitle, .theme-toggle, .card, .nav-link, .view-counter, .summary-line, .print-hide { display: none !important; }
+    #printArea { box-shadow: none; border-radius: 0; padding: 6mm; }
+    .count-box, .cal-cell { break-inside: avoid; }
+    .cal-month { break-after: page; }
+    .cal-month:last-child { break-after: auto; }
+  }
+</style>
+<!-- Two mutually-exclusive @page rules -- JS enables/disables whichever
+     <style> matches the chosen print orientation, since @page can't be
+     scoped by a class selector the way normal rules can. -->
+<style id="pageStylePortrait">@page { size: A4 portrait; margin: 10mm; }</style>
+<style id="pageStyleLandscape" disabled>@page { size: A4 landscape; margin: 10mm; }</style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JFG7JRVYNV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-JFG7JRVYNV');
+</script>
+</head>
+<body>
+  <div class="container">
+    <h1>🗓️ Printable Countdown Calendar Creator</h1>
+    <p class="subtitle">Build a custom "100 Days To Go" style countdown -- pick a day count, a look, and print it on A4.</p>
+
+    <div class="theme-toggle">
+      <span>☀️</span>
+      <label class="switch">
+        <input type="checkbox" id="themeToggle">
+        <span class="switch-slider"></span>
+      </label>
+      <span>🌙</span>
+    </div>
+
+    <!-- Setup -->
+    <div class="card">
+      <h2>⚙️ Setup</h2>
+      <div class="field-row">
+        <div class="field" style="flex: 2 1 260px;">
+          <label for="titleInput">Title</label>
+          <input type="text" id="titleInput" maxlength="80" placeholder="e.g. 100 Days to Graduation">
+        </div>
+        <div class="field">
+          <label for="daysInput">Number of Days</label>
+          <input type="number" id="daysInput" min="1" max="3650" value="100">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="startDateInput">Start Date</label>
+          <input type="date" id="startDateInput">
+        </div>
+        <div class="field">
+          <label for="directionInput">Direction</label>
+          <select id="directionInput">
+            <option value="down">Countdown (100 → 1)</option>
+            <option value="up">Count Up (1 → 100)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="orientationInput">Print Orientation</label>
+          <select id="orientationInput">
+            <option value="portrait">Portrait</option>
+            <option value="landscape">Landscape</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="view-tabs">
+        <div class="view-tab active" data-view="grid" id="tabGrid">🔢 Numbered Grid</div>
+        <div class="view-tab" data-view="calendar" id="tabCalendar">📅 Calendar Months</div>
+      </div>
+
+      <div id="gridOptions">
+        <div class="field-row">
+          <div class="field">
+            <label for="colsInput">Boxes per Row</label>
+            <input type="number" id="colsInput" min="4" max="20" value="10">
+          </div>
+          <div class="field--checkbox">
+            <input type="checkbox" id="showDatesInput">
+            <label for="showDatesInput">Show weekday, date &amp; week number in each box</label>
+          </div>
+        </div>
+      </div>
+
+      <div id="calendarOptions" style="display: none;">
+        <div class="field-row">
+          <div class="field">
+            <label for="weekStartInput">Week Starts On</label>
+            <select id="weekStartInput">
+              <option value="0">Sunday</option>
+              <option value="1">Monday</option>
+              <option value="2">Tuesday</option>
+              <option value="3">Wednesday</option>
+              <option value="4">Thursday</option>
+              <option value="5">Friday</option>
+              <option value="6">Saturday</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-row">
+        <button class="btn-add" id="printBtn" type="button">🖨️ Print</button>
+        <button class="btn-outline" id="resetBtn" type="button">↺ Reset to Defaults</button>
+      </div>
+    </div>
+
+    <p class="summary-line" id="summaryLine"></p>
+
+    <!-- Printable preview -->
+    <div id="printArea"></div>
+
+    <div class="actions-row print-hide" style="justify-content: center; margin: 14px 0;">
+      <button class="btn-add" id="printBtn2" type="button">🖨️ Print on A4</button>
+    </div>
+
+    <a href="tools.html" class="nav-link">← Back to Tools</a>
+    <div class="view-counter" style="text-align: center; margin-top: 10px;">
+      <img src="https://hits.sh/rkr2025.github.io/ksebcalculator/countdown-calendar.svg?style=flat-square&label=Views" alt="No. of views" loading="lazy">
+    </div>
+  </div>
+
+  <script>
+    // ------------------------------ Settings persistence ------------------------------
+    const STORAGE_KEY = 'countdownCalendarSettings';
+    const DEFAULTS = {
+      title: '100 Days to Go',
+      days: 100,
+      startDate: null, // filled with today at init
+      direction: 'down',
+      orientation: 'portrait',
+      view: 'grid',
+      cols: 10,
+      showDates: true,
+      weekStart: 1, // Monday
+    };
+
+    function todayDateInputValue() {
+      const d = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
+    function loadSettings() {
+      let stored = {};
+      try {
+        stored = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+      } catch {
+        stored = {};
+      }
+      const settings = Object.assign({}, DEFAULTS, stored);
+      if (!settings.startDate) settings.startDate = todayDateInputValue();
+      return settings;
+    }
+
+    function saveSettings(settings) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    }
+
+    // ------------------------------ Date helpers ------------------------------
+    // Parsed/formatted as local-midnight Date objects throughout -- avoids
+    // the UTC/local shift that plain `new Date("YYYY-MM-DD")` (parsed as
+    // UTC midnight) would introduce when compared against `new Date()`.
+    function parseDateInput(value) {
+      const [y, m, d] = value.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+    function addDays(date, n) {
+      const d = new Date(date);
+      d.setDate(d.getDate() + n);
+      return d;
+    }
+    function isSameDate(a, b) {
+      return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
+    function formatShortDate(d) {
+      return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+    }
+    function isWeekend(d) {
+      const dow = d.getDay();
+      return dow === 0 || dow === 6;
+    }
+    // Standard ISO-8601 week number (Monday-first weeks; week 1 is the week
+    // containing the year's first Thursday) -- used as the "week number"
+    // label in both views, independent of whichever day the calendar grid
+    // itself is configured to start on.
+    function getISOWeek(date) {
+      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+      const dayNum = (d.getUTCDay() + 6) % 7;
+      d.setUTCDate(d.getUTCDate() - dayNum + 3);
+      const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
+      const firstDayNum = (firstThursday.getUTCDay() + 6) % 7;
+      firstThursday.setUTCDate(firstThursday.getUTCDate() - firstDayNum + 3);
+      return 1 + Math.round((d - firstThursday) / 604800000);
+    }
+    const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const DOW_LABELS_FROM_SUNDAY = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    // Reorders the week's day labels (and their weekend-ness) to start on
+    // `weekStart` (0=Sun..6=Sat), for both the header row and the leading
+    // blank-cell count of each month.
+    function dowLabelsFrom(weekStart) {
+      return DOW_LABELS_FROM_SUNDAY.slice(weekStart).concat(DOW_LABELS_FROM_SUNDAY.slice(0, weekStart));
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ------------------------------ Form elements ------------------------------
+    const titleInput = document.getElementById('titleInput');
+    const daysInput = document.getElementById('daysInput');
+    const startDateInput = document.getElementById('startDateInput');
+    const directionInput = document.getElementById('directionInput');
+    const orientationInput = document.getElementById('orientationInput');
+    const colsInput = document.getElementById('colsInput');
+    const showDatesInput = document.getElementById('showDatesInput');
+    const weekStartInput = document.getElementById('weekStartInput');
+    const tabGrid = document.getElementById('tabGrid');
+    const tabCalendar = document.getElementById('tabCalendar');
+    const gridOptions = document.getElementById('gridOptions');
+    const calendarOptions = document.getElementById('calendarOptions');
+    const printArea = document.getElementById('printArea');
+    const summaryLine = document.getElementById('summaryLine');
+    const pageStylePortrait = document.getElementById('pageStylePortrait');
+    const pageStyleLandscape = document.getElementById('pageStyleLandscape');
+
+    let settings = loadSettings();
+
+    function applySettingsToForm() {
+      titleInput.value = settings.title;
+      daysInput.value = settings.days;
+      startDateInput.value = settings.startDate;
+      directionInput.value = settings.direction;
+      orientationInput.value = settings.orientation;
+      colsInput.value = settings.cols;
+      showDatesInput.checked = settings.showDates;
+      weekStartInput.value = settings.weekStart;
+      tabGrid.classList.toggle('active', settings.view === 'grid');
+      tabCalendar.classList.toggle('active', settings.view === 'calendar');
+      gridOptions.style.display = settings.view === 'grid' ? '' : 'none';
+      calendarOptions.style.display = settings.view === 'calendar' ? '' : 'none';
+      pageStylePortrait.disabled = settings.orientation !== 'portrait';
+      pageStyleLandscape.disabled = settings.orientation !== 'landscape';
+    }
+
+    function readFormIntoSettings() {
+      settings.title = titleInput.value.trim() || DEFAULTS.title;
+      let days = parseInt(daysInput.value, 10);
+      if (!Number.isFinite(days) || days < 1) days = 1;
+      if (days > 3650) days = 3650;
+      settings.days = days;
+      settings.startDate = startDateInput.value || todayDateInputValue();
+      settings.direction = directionInput.value === 'up' ? 'up' : 'down';
+      settings.orientation = orientationInput.value === 'landscape' ? 'landscape' : 'portrait';
+      let cols = parseInt(colsInput.value, 10);
+      if (!Number.isFinite(cols) || cols < 4) cols = 4;
+      if (cols > 20) cols = 20;
+      settings.cols = cols;
+      settings.showDates = showDatesInput.checked;
+      let weekStart = parseInt(weekStartInput.value, 10);
+      if (!Number.isFinite(weekStart) || weekStart < 0 || weekStart > 6) weekStart = 1;
+      settings.weekStart = weekStart;
+    }
+
+    // ------------------------------ Rendering: numbered grid ------------------------------
+    function dayNumberFor(index, totalDays, direction) {
+      return direction === 'down' ? totalDays - index : index + 1;
+    }
+
+    const DOW_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+    function renderGrid(start, totalDays, direction, cols, showDates) {
+      const today = new Date();
+      let boxes = '';
+      for (let i = 0; i < totalDays; i++) {
+        const date = addDays(start, i);
+        const num = dayNumberFor(i, totalDays, direction);
+        const weekend = isWeekend(date);
+        const todayClass = isSameDate(date, today) ? ' is-today' : '';
+        const weekendClass = weekend ? ' is-weekend' : '';
+        const weekHtml = showDates ? `<div class="count-box-week">W${getISOWeek(date)}</div>` : '';
+        const subHtml = showDates
+          ? `<div class="count-box-sub${weekendClass}">${escapeHtml(DOW_SHORT[date.getDay()])} · ${escapeHtml(formatShortDate(date))}</div>`
+          : '';
+        boxes += `<div class="count-box${todayClass}">${weekHtml}<div class="count-box-num${weekendClass}">${num}</div>${subHtml}</div>`;
+      }
+      return `<div class="count-grid" style="grid-template-columns: repeat(${cols}, 1fr);">${boxes}</div>`;
+    }
+
+    // ------------------------------ Rendering: calendar months ------------------------------
+    // weekStart: 0=Sunday..6=Saturday, the first column of every week row.
+    // Each month is laid out as an 8-column grid (a leading week-number
+    // column + 7 day columns) -- the week number shown per row is the
+    // ISO-8601 week of that row's first real (non-blank) date.
+    function renderCalendarMonths(start, totalDays, direction, weekStart) {
+      const rangeEnd = addDays(start, totalDays - 1); // inclusive last day
+      const today = new Date();
+      let html = '';
+
+      let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+      const lastMonth = new Date(rangeEnd.getFullYear(), rangeEnd.getMonth(), 1);
+      const dowLabels = dowLabelsFrom(weekStart);
+
+      while (cursor <= lastMonth) {
+        const year = cursor.getFullYear();
+        const month = cursor.getMonth();
+        const firstOfMonth = new Date(year, month, 1);
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const leadBlanks = (firstOfMonth.getDay() - weekStart + 7) % 7;
+
+        const headerCells = '<div class="cal-dow cal-week-header">Wk</div>' + dowLabels.map((label, idx) => {
+          const colDow = (weekStart + idx) % 7;
+          const weekendClass = (colDow === 0 || colDow === 6) ? ' is-weekend' : '';
+          return `<div class="cal-dow${weekendClass}">${label}</div>`;
+        }).join('');
+
+        const dayCells = [];
+        for (let i = 0; i < leadBlanks; i++) dayCells.push({ blank: true });
+        for (let day = 1; day <= daysInMonth; day++) dayCells.push({ date: new Date(year, month, day), day });
+        while (dayCells.length % 7 !== 0) dayCells.push({ blank: true });
+
+        let bodyCells = '';
+        let minDayNum = null;
+        let maxDayNum = null;
+        for (let r = 0; r < dayCells.length / 7; r++) {
+          const rowCells = dayCells.slice(r * 7, (r + 1) * 7);
+          const firstDated = rowCells.find((c) => !c.blank);
+          bodyCells += `<div class="cal-week-num">${firstDated ? getISOWeek(firstDated.date) : ''}</div>`;
+
+          rowCells.forEach((c) => {
+            if (c.blank) { bodyCells += '<div class="cal-cell is-blank"></div>'; return; }
+            const date = c.date;
+            const inRange = date >= start && date <= rangeEnd;
+            const weekendClass = isWeekend(date) ? ' is-weekend' : '';
+            let dayNumHtml = '';
+            if (inRange) {
+              const index = Math.round((date - start) / 86400000);
+              const num = dayNumberFor(index, totalDays, direction);
+              if (minDayNum === null) minDayNum = num;
+              maxDayNum = num;
+              dayNumHtml = `<div class="cal-cell-day">${num}</div>`;
+            }
+            const classes = ['cal-cell'];
+            if (inRange) classes.push('in-range');
+            if (isSameDate(date, today)) classes.push('is-today');
+            bodyCells += `<div class="${classes.join(' ')}"><div class="cal-cell-date${weekendClass}">${c.day}</div>${dayNumHtml}</div>`;
+          });
+        }
+
+        let rangeLabel = '';
+        if (minDayNum !== null) {
+          const lo = Math.min(minDayNum, maxDayNum);
+          const hi = Math.max(minDayNum, maxDayNum);
+          rangeLabel = lo === hi ? `Day ${lo}` : `Days ${lo}–${hi}`;
+        }
+
+        html += `
+          <div class="cal-month">
+            <div class="cal-month-title">${MONTH_NAMES[month]} ${year}</div>
+            <div class="cal-month-range">${rangeLabel}</div>
+            <div class="cal-grid">${headerCells}${bodyCells}</div>
+          </div>`;
+
+        cursor = new Date(year, month + 1, 1);
+      }
+      return html;
+    }
+
+    // ------------------------------ Main render ------------------------------
+    function render() {
+      const start = parseDateInput(settings.startDate);
+      const end = addDays(start, settings.days - 1);
+
+      let body;
+      if (settings.view === 'grid') {
+        body = renderGrid(start, settings.days, settings.direction, settings.cols, settings.showDates);
+      } else {
+        body = renderCalendarMonths(start, settings.days, settings.direction, settings.weekStart);
+      }
+
+      printArea.innerHTML = `
+        <div class="print-title">${escapeHtml(settings.title)}</div>
+        <div class="print-subtitle">${escapeHtml(formatShortDate(start))} – ${escapeHtml(formatShortDate(end))} · ${settings.days} day${settings.days === 1 ? '' : 's'}</div>
+        ${body}`;
+
+      summaryLine.textContent = `${settings.days} day${settings.days === 1 ? '' : 's'}, from ${formatShortDate(start)} to ${formatShortDate(end)}.`;
+    }
+
+    function commitAndRender() {
+      readFormIntoSettings();
+      applySettingsToForm();
+      saveSettings(settings);
+      render();
+    }
+
+    // ------------------------------ Wiring ------------------------------
+    [titleInput, daysInput, startDateInput, directionInput, orientationInput, colsInput, weekStartInput].forEach((el) => {
+      el.addEventListener('input', commitAndRender);
+      el.addEventListener('change', commitAndRender);
+    });
+    showDatesInput.addEventListener('change', commitAndRender);
+
+    tabGrid.addEventListener('click', () => { settings.view = 'grid'; commitAndRender(); });
+    tabCalendar.addEventListener('click', () => { settings.view = 'calendar'; commitAndRender(); });
+
+    document.getElementById('printBtn').addEventListener('click', () => window.print());
+    document.getElementById('printBtn2').addEventListener('click', () => window.print());
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      if (!confirm('Reset all settings to defaults?')) return;
+      settings = Object.assign({}, DEFAULTS, { startDate: todayDateInputValue() });
+      applySettingsToForm();
+      saveSettings(settings);
+      render();
+    });
+
+    // ------------------------------- Theme --------------------------------
+    const THEME_KEY = 'countdownCalendarTheme';
+    document.getElementById('themeToggle').checked = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.getElementById('themeToggle').addEventListener('change', function () {
+      if (this.checked) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem(THEME_KEY, 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem(THEME_KEY, 'light');
+      }
+    });
+
+    // --------------------------------- Init ---------------------------------
+    applySettingsToForm();
+    render();
+  </script>
+</body>
+</html>
