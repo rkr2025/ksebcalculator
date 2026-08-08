@@ -221,17 +221,25 @@
   .habit-grid { border-collapse: collapse; width: 100%; }
   .habit-grid th, .habit-grid td { border: 1px solid var(--border); padding: 6px; text-align: center; vertical-align: middle; }
   .habit-grid thead th { background: var(--surface-muted); font-size: 10px; font-weight: 700; color: var(--text-secondary); white-space: nowrap; position: sticky; top: 0; z-index: 1; }
-  .habit-grid th.hg-habit-col { text-align: left; min-width: 220px; position: sticky; left: 0; z-index: 2; background: var(--surface-muted); }
-  .habit-grid td.hg-habit-cell { text-align: left; min-width: 220px; max-width: 260px; position: sticky; left: 0; background: var(--surface); z-index: 1; }
+  .habit-grid th.hg-habit-col { text-align: left; min-width: 130px; max-width: 160px; position: sticky; left: 0; z-index: 2; background: var(--surface-muted); }
+  .habit-grid td.hg-habit-cell { text-align: left; min-width: 130px; max-width: 160px; position: sticky; left: 0; background: var(--surface); z-index: 1; }
   :root[data-theme="dark"] .habit-grid td.hg-habit-cell { background: #1e2636; }
   .habit-grid th.hg-date-col.is-today { background: var(--primary-light); color: var(--primary-dark); }
   .habit-grid td.hg-cell { width: 42px; padding: 4px; }
   .habit-grid th.hg-progress-col, .habit-grid td.hg-progress-cell { min-width: 130px; font-size: 11px; color: var(--text-secondary); }
 
-  .hg-habit-name { font-weight: 800; font-size: 13.5px; display: flex; align-items: center; gap: 6px; }
-  .hg-habit-q { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .hg-habit-name { font-weight: 800; font-size: 13px; display: flex; align-items: center; gap: 6px; cursor: default; }
   .hg-habit-freq { font-size: 10px; color: var(--primary); font-weight: 700; margin-top: 3px; }
-  .hg-habit-actions { margin-left: auto; display: flex; gap: 3px; }
+
+  /* Edit/Delete are hidden by default to save space -- revealed on hover
+     for mouse/trackpad users, or via a long-press on touch devices (see the
+     pointerdown/pointerup handlers below), rather than always sitting next
+     to the habit name and eating into the narrow sticky column. */
+  .hg-habit-actions { margin-left: auto; display: none; gap: 3px; }
+  @media (hover: hover) {
+    .hg-habit-cell:hover .hg-habit-actions { display: flex; }
+  }
+  .hg-habit-cell.show-actions .hg-habit-actions { display: flex; }
   .hg-icon-btn { background: none; border: none; box-shadow: none; padding: 2px 4px; font-size: 12px; color: var(--text-muted); }
   .hg-icon-btn:hover { color: var(--primary); transform: none; filter: none; }
   .hg-icon-btn::after { display: none; }
@@ -243,7 +251,7 @@
   }
   .hg-toggle::after { display: none; }
   .hg-toggle.is-done { background: linear-gradient(180deg, var(--accent), var(--accent-dark)); border-color: transparent; color: #fff; }
-  .hg-toggle.is-missed-target { background: var(--surface-muted); border-color: var(--warn); color: var(--warn); }
+  .hg-toggle.is-missed-target { background: var(--surface-muted); border-color: var(--warn); color: var(--warn); border-width: 2px; }
   .hg-toggle:hover { filter: brightness(1.05); }
 
   .progress-pill { display: inline-block; border-radius: 999px; padding: 3px 9px; font-size: 10.5px; font-weight: 700; background: var(--surface-muted); color: var(--text-secondary); }
@@ -258,6 +266,19 @@
     body { padding: 10px 6px 24px; }
     .card { padding: 14px; }
     h1 { font-size: 20px; }
+
+    /* Free up width for the tick/cross columns: the habit column only
+       needs to fit the name (question is a title-attribute tooltip, not
+       shown inline) and the frequency badge shrinks; the date cells and
+       toggle buttons grow slightly since there's now room for them, making
+       the tick/cross marks easier to see and tap accurately. */
+    .habit-grid th.hg-habit-col, .habit-grid td.hg-habit-cell { min-width: 92px; max-width: 108px; padding: 5px; }
+    .hg-habit-name { font-size: 12px; }
+    .hg-habit-freq { font-size: 8.5px; }
+    .habit-grid td.hg-cell { width: 38px; padding: 3px; }
+    .hg-toggle { width: 36px; height: 36px; font-size: 16px; }
+    .habit-grid th.hg-date-col { font-size: 9px; padding: 4px 2px; }
+    .habit-grid th.hg-progress-col, .habit-grid td.hg-progress-cell { min-width: 90px; font-size: 9.5px; }
   }
 </style>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JFG7JRVYNV"></script>
@@ -646,15 +667,19 @@
           }
         });
         const progress = computeProgress(habit);
+        // Question/Notes are dropped from the visible cell (the sticky
+        // habit column only needs to fit the name + a frequency badge) --
+        // they're still reachable via this title tooltip on hover/long-press,
+        // and via each day cell's own title, and of course in the Edit form.
+        const nameTitle = habit.notes ? `${habit.question} — ${habit.notes}` : habit.question;
         body += `<tr>
           <td class="hg-habit-cell">
-            <div class="hg-habit-name">${escapeHtml(habit.name)}
+            <div class="hg-habit-name" title="${escapeHtml(nameTitle)}">${escapeHtml(habit.name)}${habit.notes ? ' 📝' : ''}
               <span class="hg-habit-actions">
                 <button class="hg-icon-btn" data-edit="${habit.id}" title="Edit">✎</button>
                 <button class="hg-icon-btn" data-del="${habit.id}" title="Delete">🗑</button>
               </span>
             </div>
-            <div class="hg-habit-q">${escapeHtml(habit.question)}${habit.notes ? ' · 📝' : ''}</div>
             <div class="hg-habit-freq">${escapeHtml(freqText)}${targetText}</div>
           </td>
           ${cells}
@@ -705,6 +730,31 @@
         saveData();
         renderGrid();
       }
+    });
+
+    // Long-press on a habit's name cell reveals its Edit/Delete icons (they
+    // stay hidden otherwise to keep the sticky habit column narrow on
+    // mobile). Pointer Events cover touch and mouse alike; a plain tap/click
+    // (released before the hold delay) falls through to whatever the click
+    // listener above does instead. Tapping/clicking anywhere else closes
+    // whichever cell currently has its actions open.
+    const gridWrapEl = document.getElementById('gridWrap');
+    let longPressTimer = null;
+    gridWrapEl.addEventListener('pointerdown', (e) => {
+      const cell = e.target.closest('.hg-habit-cell');
+      if (!cell) return;
+      longPressTimer = setTimeout(() => {
+        document.querySelectorAll('.hg-habit-cell.show-actions').forEach((el) => el.classList.remove('show-actions'));
+        cell.classList.add('show-actions');
+        longPressTimer = null;
+      }, 500);
+    });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach((evt) => {
+      gridWrapEl.addEventListener(evt, () => { if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; } });
+    });
+    document.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.hg-habit-cell')) return;
+      document.querySelectorAll('.hg-habit-cell.show-actions').forEach((el) => el.classList.remove('show-actions'));
     });
 
     // ------------------------------ Window navigation ------------------------------
