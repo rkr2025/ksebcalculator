@@ -280,6 +280,7 @@
     .habit-grid th.hg-date-col { font-size: 9px; padding: 4px 2px; }
     .habit-grid th.hg-progress-col, .habit-grid td.hg-progress-cell { min-width: 90px; font-size: 9.5px; }
   }
+
 </style>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JFG7JRVYNV"></script>
 <script>
@@ -383,6 +384,22 @@
           <label for="notifyToggle">Enable browser reminder notifications (this tab must stay open)</label>
         </div>
       </div>
+    </div>
+
+    <div class="card">
+      <h2>☁️ Backup &amp; Restore</h2>
+
+      <div class="field-row">
+        <div class="field" style="flex: 1 1 100%;">
+          <label>Quick Local Backup (no setup required)</label>
+          <div class="actions-row">
+            <button class="btn-outline btn-sm" id="exportFileBtn" type="button">⬇️ Export to File</button>
+            <button class="btn-outline btn-sm" id="importFileBtn" type="button">⬆️ Import from File</button>
+            <input type="file" id="importFileInput" accept="application/json" style="display:none;">
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <div class="grid-controls">
@@ -779,6 +796,40 @@
       data.dayOrder = e.target.value === 'asc' ? 'asc' : 'desc';
       saveData();
       renderGrid();
+    });
+
+    // ------------------------------ Backup & Restore: local file ------------------------------
+    document.getElementById('exportFileBtn').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `habit-tracker-backup-${formatDateInputValue(new Date())}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('importFileBtn').addEventListener('click', () => document.getElementById('importFileInput').click());
+    document.getElementById('importFileInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      e.target.value = ''; // allow re-importing the same filename later
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        let parsed;
+        try { parsed = JSON.parse(reader.result); } catch { parsed = null; }
+        if (!parsed || !Array.isArray(parsed.habits)) {
+          alert("That file doesn't look like a valid Habit Tracker backup.");
+          return;
+        }
+        if (!confirm('This will replace all your current habits and tracked history with the imported file. Continue?')) return;
+        data = Object.assign(defaultData(), parsed);
+        saveData();
+        resetForm();
+        renderGrid();
+        alert('Import complete.');
+      };
+      reader.readAsText(file);
     });
 
     // ------------------------------- Theme --------------------------------
