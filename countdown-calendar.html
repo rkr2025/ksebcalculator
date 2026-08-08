@@ -187,6 +187,7 @@
   .field--checkbox input { width: auto; }
   .field--checkbox label { margin: 0; text-transform: none; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
 
+  .view-tabs-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--text-muted); margin: 0 0 6px; }
   .view-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
   .view-tab {
     flex: 1 1 150px;
@@ -214,6 +215,13 @@
     box-shadow: var(--shadow);
     padding: 22px;
     color: #17203a;
+    /* Safety net for narrow screens: some layouts below (a wide Boxes-per-
+       Row grid, the fixed 4-column Full Year) can still be wider than a
+       phone screen even after the responsive tweaks further down -- this
+       lets the PREVIEW scroll sideways inside its own box instead of
+       blowing out the whole page's width. Print is unaffected (paginated,
+       not scrolled). */
+    overflow-x: auto;
   }
   :root[data-theme="dark"] #printArea { background: #fff; }
   .print-title {
@@ -277,7 +285,7 @@
   .cal-month { break-inside: avoid; }
   .cal-month-title { font-size: 12.5px; font-weight: 800; color: #17203a; margin: 0 0 1px; text-align: center; }
   .cal-month-range { font-size: 9px; color: #6b7488; text-align: center; margin: 0 0 5px; }
-  .cal-grid { display: grid; grid-template-columns: 20px repeat(7, 1fr); gap: 2px; }
+  .cal-grid { display: grid; grid-template-columns: 20px repeat(7, minmax(0, 1fr)); gap: 2px; }
   .cal-dow { text-align: center; font-size: 7px; font-weight: 700; color: #6b7488; text-transform: uppercase; padding-bottom: 2px; }
   .cal-dow.is-weekend { color: #d92d2d; }
   .cal-dow.cal-week-header { color: #9aa2b7; }
@@ -319,7 +327,7 @@
   .cal-months-wrap--solo { grid-template-columns: 1fr; max-width: 460px; margin: 0 auto; }
   .cal-months-wrap--solo .cal-month-title { font-size: 22px; margin-bottom: 4px; }
   .cal-months-wrap--solo .cal-month-range { font-size: 13px; margin-bottom: 10px; }
-  .cal-months-wrap--solo .cal-grid { grid-template-columns: 34px repeat(7, 1fr); gap: 6px; }
+  .cal-months-wrap--solo .cal-grid { grid-template-columns: 34px repeat(7, minmax(0, 1fr)); gap: 6px; }
   .cal-months-wrap--solo .cal-dow { font-size: 11px; padding-bottom: 4px; }
   .cal-months-wrap--solo .cal-week-num { font-size: 10px; }
   .cal-months-wrap--solo .cal-cell { font-size: 13px; border-radius: 6px; }
@@ -359,7 +367,7 @@
   .todo-box { width: 11px; height: 11px; border: 1.5px solid #9aa2b7; border-radius: 3px; flex: none; }
 
   /* Weekly planner: 7 day columns + a notes strip below. */
-  .weekly-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .weekly-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
   .weekly-day-col { border: 1px solid #dde2ee; border-radius: 6px; overflow: hidden; break-inside: avoid; }
   .weekly-day-head { text-align: center; padding: 5px 2px; background: #f6f8fb; border-bottom: 1px solid #dde2ee; }
   .weekly-day-head.is-weekend { color: #d92d2d; }
@@ -371,10 +379,19 @@
 
   .nav-link { display: block; text-align: center; margin-top: 8px; text-decoration: none; color: var(--primary); font-size: 13.5px; }
 
-  @media (max-width: 480px) {
+  @media screen and (max-width: 480px) {
     body { padding: 10px 6px 24px; }
     .card, #printArea { padding: 14px; }
     h1 { font-size: 20px; }
+    .view-tab { flex: 1 1 42%; font-size: 12px; padding: 9px 6px; }
+    /* Full Year's print layout is deliberately a fixed 4 columns so all 12
+       months fit one A4 sheet -- but that same fixed count is what forces
+       horizontal overflow on a phone-width screen. This override is
+       screen-only (@media print further down keeps the real print layout
+       at 4 columns); #printArea's overflow-x:auto is still there as a
+       fallback for anything narrower still. */
+    .cal-months-wrap--year { grid-template-columns: repeat(2, 1fr); }
+    .daily-grid { grid-template-columns: 1fr; }
   }
 
   @media print {
@@ -436,11 +453,16 @@
         </div>
       </div>
 
+      <div class="view-tabs-label">Calendars</div>
       <div class="view-tabs">
         <div class="view-tab active" data-view="grid" id="tabGrid">🔢 Numbered Grid</div>
         <div class="view-tab" data-view="calendar" id="tabCalendar">📅 Calendar Months</div>
         <div class="view-tab" data-view="fullyear" id="tabFullYear">🗓️ Full Year</div>
         <div class="view-tab" data-view="singlemonth" id="tabSingleMonth">📆 Single Month</div>
+      </div>
+
+      <div class="view-tabs-label">Planner</div>
+      <div class="view-tabs">
         <div class="view-tab" data-view="daily" id="tabDaily">📝 Daily Planner</div>
         <div class="view-tab" data-view="weekly" id="tabWeekly">📋 Weekly Planner</div>
       </div>
@@ -804,7 +826,7 @@
           : '';
         boxes += `<div class="count-box${todayClass}">${weekHtml}<div class="count-box-num${weekendClass}">${num}</div>${subHtml}</div>`;
       }
-      return `<div class="count-grid" style="grid-template-columns: repeat(${cols}, 1fr);">${boxes}</div>`;
+      return `<div class="count-grid" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr));">${boxes}</div>`;
     }
 
     // ------------------------------ Rendering: shared month-grid builder ------------------------------
