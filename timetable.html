@@ -250,7 +250,7 @@
   .exam-table tr.is-holiday td { background: #fdeceb; color: #a3302f; font-weight: 700; }
   .exam-table td.exam-date { font-weight: 800; white-space: nowrap; }
 
-  .exam-cal-wrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 260px)); gap: 12px 14px; justify-content: center; }
+  .exam-cal-wrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px 14px; justify-content: center; }
   .exam-month { break-inside: avoid; }
   .exam-month-title { font-size: 12.5px; font-weight: 800; color: #17203a; margin: 0 0 5px; text-align: center; }
   .exam-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
@@ -262,6 +262,39 @@
   .exam-cell-date { font-size: 8px; font-weight: 700; }
   .exam-cell-label { font-size: 6px; font-weight: 700; color: var(--primary, #2a78d6); text-align: center; line-height: 1.1; margin-top: 1px; }
   .exam-cell.is-holiday .exam-cell-label { color: #c0332f; }
+
+  /* Size variants for the calendar view -- scale cells up to use the
+     available page width when only a few months are being shown (column
+     count itself is set inline per render, based on month count). */
+  .exam-cal-wrap--big { max-width: 480px; margin: 0 auto; }
+  .exam-cal-wrap--big .exam-month-title { font-size: 20px; margin-bottom: 8px; }
+  .exam-cal-wrap--big .exam-dow { font-size: 12px; padding-bottom: 4px; }
+  .exam-cal-wrap--big .exam-cell { font-size: 14px; border-radius: 6px; }
+  .exam-cal-wrap--big .exam-cell-date { font-size: 14px; }
+  .exam-cal-wrap--big .exam-cell-label { font-size: 10px; }
+
+  .exam-cal-wrap--big2 { max-width: 760px; margin: 0 auto; }
+  .exam-cal-wrap--big2 .exam-month-title { font-size: 16px; margin-bottom: 6px; }
+  .exam-cal-wrap--big2 .exam-dow { font-size: 10px; padding-bottom: 3px; }
+  .exam-cal-wrap--big2 .exam-cell { font-size: 11px; border-radius: 5px; }
+  .exam-cal-wrap--big2 .exam-cell-date { font-size: 11px; }
+  .exam-cal-wrap--big2 .exam-cell-label { font-size: 8px; }
+
+  .exam-cal-wrap--medium .exam-month-title { font-size: 13.5px; }
+  .exam-cal-wrap--medium .exam-dow { font-size: 8.5px; }
+  .exam-cal-wrap--medium .exam-cell { font-size: 9.5px; }
+  .exam-cal-wrap--medium .exam-cell-date { font-size: 9.5px; }
+  .exam-cal-wrap--medium .exam-cell-label { font-size: 7px; }
+
+  /* 5+ months: same fixed-4-column packing as countdown-calendar.html's
+     Full Year view -- tighter gap/fonts so a long exam spread still fits
+     one A4 page even with several rows of month blocks. */
+  .exam-cal-wrap--compact { max-width: 760px; margin: 0 auto; gap: 8px 10px; }
+  .exam-cal-wrap--compact .exam-month-title { font-size: 11px; margin-bottom: 3px; }
+  .exam-cal-wrap--compact .exam-dow { font-size: 6.5px; }
+  .exam-cal-wrap--compact .exam-cell { font-size: 7px; }
+  .exam-cal-wrap--compact .exam-cell-date { font-size: 7px; }
+  .exam-cal-wrap--compact .exam-cell-label { font-size: 5.5px; }
 
   .nav-link { display: block; text-align: center; margin-top: 8px; text-decoration: none; color: var(--primary); font-size: 13.5px; }
 
@@ -683,14 +716,15 @@
 
       let tableRows = '';
       if (!merged.length) {
-        tableRows = '<tr><td colspan="4" style="text-align:center;color:#6b7488;">No exam dates added yet.</td></tr>';
+        tableRows = '<tr><td colspan="3" style="text-align:center;color:#6b7488;">No exam dates added yet.</td></tr>';
       } else {
         merged.forEach((row) => {
           const d = parseDateInput(row.date);
-          tableRows += `<tr class="${row.isHoliday ? 'is-holiday' : ''}"><td class="exam-date">${escapeHtml(formatShortDate(d))}</td><td>${escapeHtml(DOW_FULL[d.getDay()])}</td><td>${row.isHoliday ? 'HOLIDAY' : escapeHtml(row.subject)}</td><td>${escapeHtml(row.portion || '')}</td></tr>`;
+          const dateLabel = `${escapeHtml(formatShortDate(d))} (${escapeHtml(DOW_SHORT[d.getDay()])})`;
+          tableRows += `<tr class="${row.isHoliday ? 'is-holiday' : ''}"><td class="exam-date">${dateLabel}</td><td>${row.isHoliday ? 'HOLIDAY' : escapeHtml(row.subject)}</td><td>${escapeHtml(row.portion || '')}</td></tr>`;
         });
       }
-      const table = `<table class="exam-table"><thead><tr><th>Date</th><th>Day</th><th>Subject</th><th>Portion / Syllabus</th></tr></thead><tbody>${tableRows}</tbody></table>`;
+      const table = `<table class="exam-table"><thead><tr><th>Date</th><th>Subject</th><th>Portion / Syllabus</th></tr></thead><tbody>${tableRows}</tbody></table>`;
 
       // Calendar view: one mini month per calendar month spanned by the dates (split across months automatically).
       let calendarHtml = '';
@@ -702,11 +736,23 @@
         let cursor = new Date(first.getFullYear(), first.getMonth(), 1);
         const lastMonth = new Date(last.getFullYear(), last.getMonth(), 1);
         let months = '';
+        let monthCount = 0;
         while (cursor <= lastMonth) {
           months += buildExamMonthCalendar(cursor.getFullYear(), cursor.getMonth(), examsByDate, holidaysByDate);
           cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+          monthCount++;
         }
-        calendarHtml = `<div class="exam-cal-wrap">${months}</div>`;
+        // Scale the calendar up to use the available page width when there
+        // are few months (a single month at the old fixed 260px cap left a
+        // lot of the A4 sheet empty); fall back to a smaller, fixed 4-column
+        // layout past 4 months so a long exam spread still fits one page,
+        // same pattern as Full Year in countdown-calendar.html.
+        let sizeClass = 'exam-cal-wrap--compact';
+        if (monthCount === 1) sizeClass = 'exam-cal-wrap--big';
+        else if (monthCount === 2) sizeClass = 'exam-cal-wrap--big2';
+        else if (monthCount <= 4) sizeClass = 'exam-cal-wrap--medium';
+        const columns = Math.min(monthCount, 4);
+        calendarHtml = `<div class="exam-cal-wrap ${sizeClass}" style="grid-template-columns: repeat(${columns}, minmax(0, 1fr));">${months}</div>`;
       }
 
       return `${titleLine}${table}${calendarHtml}`;
