@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🗂️ TimeTable Generator</title>
+<script>
+  (function () {
+    var saved = localStorage.getItem('timetableTheme');
+    var dark = saved ? saved === 'dark' : true;
+    if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+  })();
+</script>
+<style>
+  :root {
+    --primary: #2a78d6;
+    --primary-dark: #1f5fac;
+    --primary-light: #eaf2fc;
+    --accent: #1baf7a;
+    --accent-dark: #148f60;
+    --danger: #e34948;
+    --warn: #c97e00;
+    --surface: #ffffff;
+    --surface-muted: #f6f8fb;
+    --border: #e3e7ef;
+    --text-primary: #17203a;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --radius: 14px;
+    --shadow: 0 2px 4px rgba(23,32,58,.06), 0 12px 28px -6px rgba(23,32,58,.14), 0 28px 56px -20px rgba(23,32,58,.16);
+    --shadow-sm: 0 1px 2px rgba(23,32,58,.06), 0 6px 14px -4px rgba(23,32,58,.12);
+    --shadow-lift: 0 6px 12px rgba(23,32,58,.08), 0 22px 44px -10px rgba(23,32,58,.22), 0 36px 70px -24px rgba(23,32,58,.22);
+  }
+  :root[data-theme="dark"] {
+    --primary: #5b9ee8;
+    --primary-dark: #86b9ee;
+    --primary-light: rgba(91,158,232,.18);
+    --accent: #33d497;
+    --accent-dark: #16a874;
+    --danger: #f2726f;
+    --warn: #e0a030;
+    --surface: #1a2130;
+    --surface-muted: #232b3d;
+    --border: #313b52;
+    --text-primary: #eef1f8;
+    --text-secondary: #c3cadb;
+    --text-muted: #8792a8;
+    --shadow: 0 2px 4px rgba(0,0,0,.5), 0 12px 28px -6px rgba(0,0,0,.5), 0 28px 56px -20px rgba(0,0,0,.55);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.5), 0 6px 14px -4px rgba(0,0,0,.45);
+    --shadow-lift: 0 6px 12px rgba(0,0,0,.55), 0 22px 44px -10px rgba(0,0,0,.6), 0 36px 70px -24px rgba(0,0,0,.6);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px 10px 32px;
+    font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(42,120,214,.16), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(27,175,122,.14), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(227,73,72,.10), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(201,126,0,.10), transparent 55%),
+      linear-gradient(160deg, #eef1f7, #e4ebf7 60%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    transition: background-color .2s ease, color .2s ease;
+  }
+  :root[data-theme="dark"] body {
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(91,158,232,.10), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(51,212,151,.08), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(242,114,111,.08), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(224,160,48,.08), transparent 55%),
+      linear-gradient(160deg, #0f1420, #0b0f18 60%);
+    background-attachment: fixed;
+  }
+  .container { max-width: 980px; margin: 0 auto; }
+  h1 {
+    text-align: center; font-size: 24px; font-weight: 700; margin: 6px 0 4px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 2px 3px rgba(23,32,58,.15));
+  }
+  .subtitle { text-align: center; color: var(--text-muted); font-size: 13px; margin: 0 0 18px; }
+  .card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.82));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.6);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 16px;
+    transition: background-color .2s ease, border-color .2s ease;
+  }
+  :root[data-theme="dark"] .card {
+    background: linear-gradient(180deg, rgba(26,33,48,.94), rgba(26,33,48,.82));
+    border-color: rgba(255,255,255,.08);
+  }
+  .card h2 { font-size: 15px; margin: 0 0 14px; color: var(--text-secondary); }
+
+  button {
+    position: relative;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: filter .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0) 55%);
+    pointer-events: none;
+  }
+  button:hover { filter: brightness(0.97); transform: translateY(-1px); }
+  button:active { transform: translateY(1px); filter: brightness(0.93); }
+  .btn-add {
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color: #fff;
+    box-shadow: 0 2px 3px rgba(27,175,122,.25), 0 10px 22px -4px rgba(27,175,122,.5);
+  }
+  .btn-add:hover { box-shadow: 0 4px 8px rgba(27,175,122,.3), 0 16px 30px -6px rgba(27,175,122,.55); }
+  .btn-outline {
+    background: linear-gradient(180deg, var(--surface), var(--surface-muted));
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-outline:hover { box-shadow: var(--shadow-lift); }
+  .btn-danger {
+    background: linear-gradient(180deg, var(--danger), #c53433);
+    color: #fff;
+    box-shadow: 0 2px 3px rgba(227,73,72,.25), 0 8px 18px -4px rgba(227,73,72,.5);
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .btn-sm { padding: 6px 10px; font-size: 12px; }
+
+  input, select {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 9px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: inset 0 1px 3px rgba(23,32,58,.05);
+    transition: border-color .15s ease, box-shadow .15s ease;
+    width: 100%;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light), inset 0 1px 3px rgba(23,32,58,.05);
+  }
+  input[type="date"], input[type="time"] { color-scheme: light; }
+  :root[data-theme="dark"] input[type="date"], :root[data-theme="dark"] input[type="time"] { color-scheme: dark; }
+  label { font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .02em; display: block; margin-bottom: 4px; }
+
+  .theme-toggle { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 16px; font-size: 13px; }
+  .switch { position: relative; display: inline-block; width: 36px; height: 21px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch-slider {
+    position: absolute; inset: 0;
+    background: var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.15);
+    transition: background .15s ease;
+  }
+  .switch-slider::before {
+    content: "";
+    position: absolute;
+    height: 15px; width: 15px; left: 3px; top: 3px;
+    background: linear-gradient(180deg, #ffffff, #eef1f7);
+    border-radius: 50%;
+    transition: transform .15s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  }
+  .switch input:checked + .switch-slider { background: linear-gradient(180deg, var(--primary), var(--primary-dark)); }
+  .switch input:checked + .switch-slider::before { transform: translateX(15px); }
+
+  .field-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .field { flex: 1 1 160px; min-width: 0; }
+  .field--checkbox { display: flex; align-items: center; gap: 8px; flex: 1 1 140px; }
+  .field--checkbox input { width: auto; }
+  .field--checkbox label { margin: 0; text-transform: none; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+
+  .mode-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .mode-tab {
+    flex: 1 1 160px;
+    text-align: center;
+    padding: 11px 8px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    font-weight: 700;
+    font-size: 13.5px;
+    cursor: pointer;
+  }
+  .mode-tab.active { background: linear-gradient(180deg, var(--primary), var(--primary-dark)); color: #fff; border-color: transparent; }
+
+  .actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+
+  .days-picker { display: flex; gap: 6px; flex-wrap: wrap; }
+  .day-chip { display: flex; align-items: center; gap: 5px; border: 1.5px solid var(--border); border-radius: 999px; padding: 6px 12px; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); }
+  .day-chip input { width: auto; margin: 0; }
+
+  .rows-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .row-item { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 10px; padding: 8px; }
+  .row-item .field { flex: 1 1 130px; margin-bottom: 0; }
+  .row-item .field label { display: none; }
+
+  /* -------- Printable preview -------- */
+  #printArea {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px;
+    color: #17203a;
+    overflow-x: auto;
+  }
+  :root[data-theme="dark"] #printArea { background: #fff; }
+  .print-title { text-align: center; font-size: 22px; font-weight: 800; margin: 0 0 4px; color: #17203a; }
+  .print-subtitle { text-align: center; font-size: 12.5px; color: #6b7488; margin: 0 0 16px; }
+
+  /* Period grid table (School / Study) */
+  .tt-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .tt-table th, .tt-table td { border: 1px solid #c7cede; padding: 4px; text-align: center; vertical-align: middle; }
+  .tt-table th { background: #eaf2fc; font-size: 11px; color: #24304d; font-weight: 800; }
+  .tt-table td.tt-time { font-size: 9.5px; color: #6b7488; font-weight: 700; width: 92px; white-space: nowrap; }
+  .tt-table td.tt-break { background: #fff4e0; font-weight: 800; color: #9a6b00; font-size: 11px; }
+  .tt-table th.tt-break-head { background: #fff4e0; color: #9a6b00; }
+  .tt-table input.tt-cell {
+    width: 100%; border: none; background: transparent; text-align: center; font-size: 12px;
+    color: #17203a; padding: 6px 2px; box-shadow: none; font-weight: 600;
+  }
+  .tt-table input.tt-cell:focus { box-shadow: none; outline: 1px solid var(--primary, #2a78d6); border-radius: 4px; }
+
+  /* Exam timetable list */
+  .exam-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  .exam-table th, .exam-table td { border: 1px solid #c7cede; padding: 6px 8px; text-align: left; font-size: 12px; }
+  .exam-table th { background: #eaf2fc; font-size: 10.5px; text-transform: uppercase; color: #24304d; }
+  .exam-table tr.is-holiday td { background: #fdeceb; color: #a3302f; font-weight: 700; }
+  .exam-table td.exam-date { font-weight: 800; white-space: nowrap; }
+
+  .exam-cal-wrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 260px)); gap: 12px 14px; justify-content: center; }
+  .exam-month { break-inside: avoid; }
+  .exam-month-title { font-size: 12.5px; font-weight: 800; color: #17203a; margin: 0 0 5px; text-align: center; }
+  .exam-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+  .exam-dow { text-align: center; font-size: 7px; font-weight: 700; color: #6b7488; text-transform: uppercase; padding-bottom: 2px; }
+  .exam-cell { aspect-ratio: 1/1; border-radius: 3px; border: 1px solid #dde2ee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; color: #24304d; background: #fff; overflow: hidden; padding: 1px; }
+  .exam-cell.is-blank { border: none; background: none; }
+  .exam-cell.is-exam { background: #eaf2fc; border-color: #a9c8ee; }
+  .exam-cell.is-holiday { background: #fdeceb; border-color: #f0a9a7; }
+  .exam-cell-date { font-size: 8px; font-weight: 700; }
+  .exam-cell-label { font-size: 6px; font-weight: 700; color: var(--primary, #2a78d6); text-align: center; line-height: 1.1; margin-top: 1px; }
+  .exam-cell.is-holiday .exam-cell-label { color: #c0332f; }
+
+  .nav-link { display: block; text-align: center; margin-top: 8px; text-decoration: none; color: var(--primary); font-size: 13.5px; }
+
+  @media screen and (max-width: 480px) {
+    body { padding: 10px 6px 24px; }
+    .card, #printArea { padding: 14px; }
+    h1 { font-size: 20px; }
+    .mode-tab { flex: 1 1 100%; }
+    .row-item .field { flex: 1 1 100px; }
+  }
+
+  @media print {
+    html, body { background: #fff !important; padding: 0; }
+    .container { max-width: none; }
+    h1, .subtitle, .theme-toggle, .card, .nav-link, .print-hide { display: none !important; }
+    #printArea { box-shadow: none; border-radius: 0; padding: 6mm; overflow: visible; }
+    .tt-table input.tt-cell { outline: none; }
+    .exam-month, .row-item { break-inside: avoid; }
+  }
+</style>
+<style id="pageStylePortrait">@page { size: A4 portrait; margin: 10mm; }</style>
+<style id="pageStyleLandscape" disabled>@page { size: A4 landscape; margin: 10mm; }</style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JFG7JRVYNV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-JFG7JRVYNV');
+</script>
+</head>
+<body>
+  <div class="container">
+    <h1>🗂️ TimeTable Generator</h1>
+    <p class="subtitle">Build a School, Examination, or Study timetable and print it on a single A4 sheet.</p>
+
+    <div class="theme-toggle">
+      <span>☀️</span>
+      <label class="switch">
+        <input type="checkbox" id="themeToggle">
+        <span class="switch-slider"></span>
+      </label>
+      <span>🌙</span>
+    </div>
+
+    <div class="card">
+      <h2>⚙️ Choose Timetable Type</h2>
+      <div class="mode-tabs">
+        <div class="mode-tab active" data-mode="school" id="tabSchool">🏫 School Timetable</div>
+        <div class="mode-tab" data-mode="exam" id="tabExam">📝 Examination Timetable</div>
+        <div class="mode-tab" data-mode="study" id="tabStudy">📚 Study Timetable</div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="orientationInput">Print Orientation</label>
+          <select id="orientationInput">
+            <option value="landscape">Landscape</option>
+            <option value="portrait">Portrait</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== School / Study period-grid setup ===================== -->
+    <div class="card" id="periodCard">
+      <h2 id="periodCardTitle">🏫 School Timetable Setup</h2>
+      <div class="field-row">
+        <div class="field" style="flex: 2 1 260px;">
+          <label for="periodTitleInput">Title</label>
+          <input type="text" id="periodTitleInput" maxlength="80">
+        </div>
+        <div class="field">
+          <label for="periodsPerDayInput">Periods per Day</label>
+          <input type="number" id="periodsPerDayInput" min="1" max="14" value="8">
+        </div>
+        <div class="field">
+          <label for="periodDurationInput">Period Duration (min)</label>
+          <input type="number" id="periodDurationInput" min="5" max="180" value="45">
+        </div>
+        <div class="field">
+          <label for="startTimeInput">Start Time</label>
+          <input type="time" id="startTimeInput" value="09:00">
+        </div>
+      </div>
+      <div class="field-row" id="schoolDetailsRow">
+        <div class="field" style="flex: 2 1 220px;">
+          <label for="schoolNameInput">School Name (optional)</label>
+          <input type="text" id="schoolNameInput" maxlength="100">
+        </div>
+        <div class="field">
+          <label for="schoolYearInput">Year (optional)</label>
+          <input type="text" id="schoolYearInput" maxlength="20" placeholder="e.g. 2026-27">
+        </div>
+        <div class="field">
+          <label for="schoolClassInput">Class (optional)</label>
+          <input type="text" id="schoolClassInput" maxlength="20">
+        </div>
+        <div class="field">
+          <label for="schoolDivisionInput">Division (optional)</label>
+          <input type="text" id="schoolDivisionInput" maxlength="20">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="breakAfterInput">Break After Period</label>
+          <select id="breakAfterInput"></select>
+        </div>
+        <div class="field">
+          <label for="breakDurationInput">Break Duration (min)</label>
+          <input type="number" id="breakDurationInput" min="0" max="120" value="20">
+        </div>
+        <div class="field">
+          <label for="break2AfterInput">Lunch After Period (optional)</label>
+          <select id="break2AfterInput"></select>
+        </div>
+        <div class="field">
+          <label for="break2DurationInput">Lunch Break Duration (min)</label>
+          <input type="number" id="break2DurationInput" min="0" max="120" value="30">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="break3AfterInput">3rd Break After Period (optional)</label>
+          <select id="break3AfterInput"></select>
+        </div>
+        <div class="field">
+          <label for="break3DurationInput">3rd Break Duration (min)</label>
+          <input type="number" id="break3DurationInput" min="0" max="120" value="15">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field" style="flex: 1 1 100%;">
+          <label>Days</label>
+          <div class="days-picker" id="daysPicker"></div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field--checkbox">
+          <input type="checkbox" id="flipGridInput">
+          <label for="flipGridInput">Swap layout — show Days across the top and Periods down the side</label>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin:0;">Click any cell in the preview below to type the subject for that period.</p>
+    </div>
+
+    <!-- ===================== Exam setup ===================== -->
+    <div class="card" id="examCard" style="display:none;">
+      <h2>📝 Examination Timetable Setup</h2>
+      <div class="field-row">
+        <div class="field" style="flex: 1 1 100%;">
+          <label for="examTitleInput">Title</label>
+          <input type="text" id="examTitleInput" maxlength="80" value="Examination Timetable">
+        </div>
+      </div>
+
+      <label style="margin-bottom:6px;">Exams</label>
+      <div class="rows-list" id="examRows"></div>
+      <div class="actions-row" style="margin-bottom:16px;">
+        <button class="btn-outline btn-sm" id="addExamRow" type="button">+ Add Exam</button>
+      </div>
+
+      <label style="margin-bottom:6px;">Holidays (optional)</label>
+      <div class="rows-list" id="holidayRows"></div>
+      <div class="actions-row">
+        <button class="btn-outline btn-sm" id="addHolidayRow" type="button">+ Add Holiday</button>
+      </div>
+    </div>
+
+    <div class="actions-row" style="margin-bottom:16px;">
+      <button class="btn-add" id="printBtn" type="button">🖨️ Print</button>
+      <button class="btn-outline" id="resetBtn" type="button">↺ Reset This Timetable</button>
+    </div>
+
+    <!-- Printable preview -->
+    <div id="printArea"></div>
+
+    <div class="actions-row print-hide" style="justify-content: center; margin: 14px 0;">
+      <button class="btn-add" id="printBtn2" type="button">🖨️ Print on A4</button>
+    </div>
+
+    <a href="tools.html" class="nav-link">← Back to Tools</a>
+  </div>
+
+  <script>
+    // ------------------------------ Storage ------------------------------
+    const STORAGE_KEY = 'timetableSettings';
+    const DOW_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const DOW_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+    function defaultPeriodConfig(kind) {
+      return {
+        title: kind === 'school' ? 'Class Timetable' : 'Study Timetable',
+        schoolName: '',
+        year: '',
+        className: '',
+        division: '',
+        periodsPerDay: kind === 'school' ? 8 : 6,
+        periodDuration: kind === 'school' ? 45 : 60,
+        startTime: kind === 'school' ? '09:00' : '16:00',
+        breakAfter: kind === 'school' ? 4 : 0,
+        breakDuration: kind === 'school' ? 20 : 15,
+        break2After: 0,
+        break2Duration: 30,
+        break3After: 0,
+        break3Duration: 15,
+        days: kind === 'school' ? [1,2,3,4,5,6] : [1,2,3,4,5,6,0],
+        flipGrid: false, // false = periods as rows / days as columns (default); true = swapped
+        grid: {}, // grid[day][periodIndex] = subject string
+      };
+    }
+
+    function defaultExamConfig() {
+      return {
+        title: 'Examination Timetable',
+        exams: [
+          { date: '', subject: '', portion: '' },
+        ],
+        holidays: [],
+      };
+    }
+
+    const DEFAULTS = {
+      mode: 'school',
+      orientation: 'landscape',
+      school: defaultPeriodConfig('school'),
+      study: defaultPeriodConfig('study'),
+      exam: defaultExamConfig(),
+    };
+
+    function loadSettings() {
+      let stored = {};
+      try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { stored = {}; }
+      const s = JSON.parse(JSON.stringify(DEFAULTS));
+      Object.assign(s, stored);
+      s.school = Object.assign(defaultPeriodConfig('school'), stored.school || {});
+      s.study = Object.assign(defaultPeriodConfig('study'), stored.study || {});
+      s.exam = Object.assign(defaultExamConfig(), stored.exam || {});
+      if (!s.exam.exams || !s.exam.exams.length) s.exam.exams = [{ date: '', subject: '', portion: '' }];
+      return s;
+    }
+    function saveSettings() { localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); }
+
+    let settings = loadSettings();
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str == null ? '' : str;
+      return div.innerHTML;
+    }
+
+    // ------------------------------ Time helpers ------------------------------
+    function parseHM(str) {
+      const [h, m] = (str || '00:00').split(':').map(Number);
+      return h * 60 + (m || 0);
+    }
+    function formatMinutes(total) {
+      let h = Math.floor(total / 60) % 24;
+      const m = total % 60;
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      let h12 = h % 12; if (h12 === 0) h12 = 12;
+      return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+    }
+
+    // Builds an ordered list of rows: periods interleaved with break rows,
+    // based on periodsPerDay / periodDuration / startTime / breakAfter(2/3).
+    function computeSchedule(cfg) {
+      const rows = [];
+      let cursor = parseHM(cfg.startTime);
+      for (let p = 1; p <= cfg.periodsPerDay; p++) {
+        const start = cursor;
+        const end = cursor + cfg.periodDuration;
+        rows.push({ type: 'period', index: p, start, end });
+        cursor = end;
+        if (cfg.breakAfter && p === cfg.breakAfter && cfg.breakDuration > 0) {
+          rows.push({ type: 'break', label: 'Break', start: cursor, end: cursor + cfg.breakDuration });
+          cursor += cfg.breakDuration;
+        }
+        if (cfg.break2After && p === cfg.break2After && cfg.break2Duration > 0) {
+          rows.push({ type: 'break', label: 'Lunch', start: cursor, end: cursor + cfg.break2Duration });
+          cursor += cfg.break2Duration;
+        }
+        if (cfg.break3After && p === cfg.break3After && cfg.break3Duration > 0) {
+          rows.push({ type: 'break', label: 'Break', start: cursor, end: cursor + cfg.break3Duration });
+          cursor += cfg.break3Duration;
+        }
+      }
+      return rows;
+    }
+
+    // ------------------------------ Period-grid rendering (School / Study) ------------------------------
+    function renderPeriodTable(kind) {
+      const cfg = settings[kind];
+      const rows = computeSchedule(cfg);
+      const days = cfg.days.slice().sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b));
+
+      let head, body;
+      if (cfg.flipGrid) {
+        // Days down the side, periods/breaks across the top -- same cell
+        // identity (data-day/data-period) as the default layout, just
+        // transposed, so onPeriodCellInput needs no changes either way.
+        head = '<th class="tt-time">Day</th>' + rows.map((row) => (
+          row.type === 'break'
+            ? `<th class="tt-break-head">${escapeHtml(row.label)}<br>${formatMinutes(row.start)}–${formatMinutes(row.end)}</th>`
+            : `<th>P${row.index}<br>${formatMinutes(row.start)}–${formatMinutes(row.end)}</th>`
+        )).join('');
+        body = days.map((d) => {
+          const cells = rows.map((row) => {
+            if (row.type === 'break') return `<td class="tt-break">${escapeHtml(row.label)}</td>`;
+            const val = (cfg.grid[d] && cfg.grid[d][row.index]) || '';
+            return `<td><input class="tt-cell" type="text" data-kind="${kind}" data-day="${d}" data-period="${row.index}" value="${escapeHtml(val)}" placeholder="Period ${row.index}"></td>`;
+          }).join('');
+          return `<tr><td class="tt-time">${DOW_SHORT[d]}</td>${cells}</tr>`;
+        }).join('');
+      } else {
+        head = '<th class="tt-time">Time</th>' + days.map((d) => `<th>${DOW_SHORT[d]}</th>`).join('');
+        body = '';
+        rows.forEach((row) => {
+          if (row.type === 'break') {
+            body += `<tr><td class="tt-time">${formatMinutes(row.start)}–${formatMinutes(row.end)}</td><td class="tt-break" colspan="${days.length}">${escapeHtml(row.label)}</td></tr>`;
+          } else {
+            const cells = days.map((d) => {
+              const val = (cfg.grid[d] && cfg.grid[d][row.index]) || '';
+              return `<td><input class="tt-cell" type="text" data-kind="${kind}" data-day="${d}" data-period="${row.index}" value="${escapeHtml(val)}" placeholder="Period ${row.index}"></td>`;
+            }).join('');
+            body += `<tr><td class="tt-time">P${row.index} · ${formatMinutes(row.start)}–${formatMinutes(row.end)}</td>${cells}</tr>`;
+          }
+        });
+      }
+
+      const titleLine = cfg.title ? `<div class="print-title">${escapeHtml(cfg.title)}</div>` : '';
+      const detailParts = [
+        cfg.schoolName,
+        cfg.year ? `Year: ${cfg.year}` : '',
+        cfg.className ? `Class: ${cfg.className}` : '',
+        cfg.division ? `Division: ${cfg.division}` : '',
+      ].filter(Boolean);
+      const subtitleLine = detailParts.length ? `<div class="print-subtitle">${detailParts.map(escapeHtml).join(' · ')}</div>` : '';
+      return `${titleLine}${subtitleLine}<table class="tt-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+    }
+
+    function onPeriodCellInput(e) {
+      const el = e.target;
+      if (!el.classList.contains('tt-cell')) return;
+      const kind = el.dataset.kind;
+      const day = el.dataset.day;
+      const period = el.dataset.period;
+      const cfg = settings[kind];
+      if (!cfg.grid[day]) cfg.grid[day] = {};
+      cfg.grid[day][period] = el.value;
+      saveSettings();
+    }
+
+    // ------------------------------ Exam timetable ------------------------------
+    function parseDateInput(value) {
+      if (!value) return null;
+      const [y, m, d] = value.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+    function formatShortDate(d) {
+      return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+    }
+
+    function renderExamRows() {
+      const container = document.getElementById('examRows');
+      container.innerHTML = settings.exam.exams.map((ex, i) => `
+        <div class="row-item" data-idx="${i}">
+          <div class="field"><input type="date" class="exam-date-input" value="${escapeHtml(ex.date)}"></div>
+          <div class="field" style="flex:1.2 1 150px;"><input type="text" class="exam-subject-input" placeholder="Subject" value="${escapeHtml(ex.subject)}"></div>
+          <div class="field" style="flex:2 1 220px;"><input type="text" class="exam-portion-input" placeholder="Portion / Syllabus" value="${escapeHtml(ex.portion)}"></div>
+          <button class="btn-danger" type="button" data-remove-exam="${i}">✕</button>
+        </div>`).join('');
+    }
+    function renderHolidayRows() {
+      const container = document.getElementById('holidayRows');
+      container.innerHTML = settings.exam.holidays.map((h, i) => `
+        <div class="row-item" data-idx="${i}">
+          <div class="field"><input type="date" class="holiday-date-input" value="${escapeHtml(h.date)}"></div>
+          <div class="field" style="flex:2 1 220px;"><input type="text" class="holiday-label-input" placeholder="Reason (optional)" value="${escapeHtml(h.label)}"></div>
+          <button class="btn-danger" type="button" data-remove-holiday="${i}">✕</button>
+        </div>`).join('') || '<p style="font-size:12px;color:var(--text-muted);margin:0;">No holidays added.</p>';
+    }
+
+    function buildExamMonthCalendar(year, month, examsByDate, holidaysByDate) {
+      const firstOfMonth = new Date(year, month, 1);
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const leadBlanks = firstOfMonth.getDay();
+      const headerCells = DOW_SHORT.map((l) => `<div class="exam-dow">${l}</div>`).join('');
+      let cells = '';
+      for (let i = 0; i < leadBlanks; i++) cells += '<div class="exam-cell is-blank"></div>';
+      for (let day = 1; day <= daysInMonth; day++) {
+        const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const exams = examsByDate[key];
+        const holiday = holidaysByDate[key];
+        let cls = 'exam-cell';
+        let label = '';
+        if (holiday) { cls += ' is-holiday'; label = holiday.label ? escapeHtml(holiday.label) : 'Holiday'; }
+        else if (exams && exams.length) { cls += ' is-exam'; label = exams.map((e) => escapeHtml(e.subject || 'Exam')).join(', '); }
+        cells += `<div class="${cls}"><div class="exam-cell-date">${day}</div>${label ? `<div class="exam-cell-label">${label}</div>` : ''}</div>`;
+      }
+      return `<div class="exam-month"><div class="exam-month-title">${MONTH_NAMES[month]} ${year}</div><div class="exam-grid">${headerCells}${cells}</div></div>`;
+    }
+
+    function renderExamTimetable() {
+      const cfg = settings.exam;
+      const validExams = cfg.exams.filter((e) => e.date).slice().sort((a, b) => a.date.localeCompare(b.date));
+      const validHolidays = cfg.holidays.filter((h) => h.date);
+
+      const examsByDate = {};
+      validExams.forEach((e) => { (examsByDate[e.date] = examsByDate[e.date] || []).push(e); });
+      const holidaysByDate = {};
+      validHolidays.forEach((h) => { holidaysByDate[h.date] = h; });
+
+      const titleLine = cfg.title ? `<div class="print-title">${escapeHtml(cfg.title)}</div>` : '';
+
+      // Table view: exams + holidays merged, sorted by date.
+      const merged = validExams.map((e) => ({ ...e, isHoliday: false }))
+        .concat(validHolidays.map((h) => ({ date: h.date, subject: h.label || 'Holiday', portion: '', isHoliday: true })))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      let tableRows = '';
+      if (!merged.length) {
+        tableRows = '<tr><td colspan="4" style="text-align:center;color:#6b7488;">No exam dates added yet.</td></tr>';
+      } else {
+        merged.forEach((row) => {
+          const d = parseDateInput(row.date);
+          tableRows += `<tr class="${row.isHoliday ? 'is-holiday' : ''}"><td class="exam-date">${escapeHtml(formatShortDate(d))}</td><td>${escapeHtml(DOW_FULL[d.getDay()])}</td><td>${row.isHoliday ? 'HOLIDAY' : escapeHtml(row.subject)}</td><td>${escapeHtml(row.portion || '')}</td></tr>`;
+        });
+      }
+      const table = `<table class="exam-table"><thead><tr><th>Date</th><th>Day</th><th>Subject</th><th>Portion / Syllabus</th></tr></thead><tbody>${tableRows}</tbody></table>`;
+
+      // Calendar view: one mini month per calendar month spanned by the dates (split across months automatically).
+      let calendarHtml = '';
+      const allDates = validExams.map((e) => e.date).concat(validHolidays.map((h) => h.date));
+      if (allDates.length) {
+        const sorted = allDates.slice().sort();
+        const first = parseDateInput(sorted[0]);
+        const last = parseDateInput(sorted[sorted.length - 1]);
+        let cursor = new Date(first.getFullYear(), first.getMonth(), 1);
+        const lastMonth = new Date(last.getFullYear(), last.getMonth(), 1);
+        let months = '';
+        while (cursor <= lastMonth) {
+          months += buildExamMonthCalendar(cursor.getFullYear(), cursor.getMonth(), examsByDate, holidaysByDate);
+          cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+        }
+        calendarHtml = `<div class="exam-cal-wrap">${months}</div>`;
+      }
+
+      return `${titleLine}${table}${calendarHtml}`;
+    }
+
+    // ------------------------------ Days picker (School / Study) ------------------------------
+    function renderDaysPicker() {
+      const cfg = settings[settings.mode];
+      const picker = document.getElementById('daysPicker');
+      picker.innerHTML = DOW_FULL.map((name, d) => `
+        <label class="day-chip"><input type="checkbox" data-day="${d}" ${cfg.days.includes(d) ? 'checked' : ''}> ${DOW_SHORT[d]}</label>
+      `).join('');
+    }
+
+    function renderBreakSelects() {
+      const cfg = settings[settings.mode];
+      const opts = (selected) => {
+        let html = '<option value="0">None</option>';
+        for (let p = 1; p <= cfg.periodsPerDay; p++) html += `<option value="${p}" ${p === selected ? 'selected' : ''}>After Period ${p}</option>`;
+        return html;
+      };
+      document.getElementById('breakAfterInput').innerHTML = opts(cfg.breakAfter);
+      document.getElementById('break2AfterInput').innerHTML = opts(cfg.break2After);
+      document.getElementById('break3AfterInput').innerHTML = opts(cfg.break3After);
+    }
+
+    // ------------------------------ Form <-> settings ------------------------------
+    function applyModeToForm() {
+      const mode = settings.mode;
+      document.getElementById('periodCard').style.display = (mode === 'exam') ? 'none' : '';
+      document.getElementById('examCard').style.display = (mode === 'exam') ? '' : 'none';
+      ['school', 'exam', 'study'].forEach((m) => document.getElementById('tab' + m[0].toUpperCase() + m.slice(1)).classList.toggle('active', m === mode));
+
+      if (mode !== 'exam') {
+        const cfg = settings[mode];
+        document.getElementById('periodCardTitle').textContent = mode === 'school' ? '🏫 School Timetable Setup' : '📚 Study Timetable Setup';
+        document.getElementById('periodTitleInput').value = cfg.title;
+        document.getElementById('periodsPerDayInput').value = cfg.periodsPerDay;
+        document.getElementById('periodDurationInput').value = cfg.periodDuration;
+        document.getElementById('startTimeInput').value = cfg.startTime;
+        document.getElementById('breakDurationInput').value = cfg.breakDuration;
+        document.getElementById('break2DurationInput').value = cfg.break2Duration;
+        document.getElementById('break3DurationInput').value = cfg.break3Duration;
+        document.getElementById('schoolNameInput').value = cfg.schoolName;
+        document.getElementById('schoolYearInput').value = cfg.year;
+        document.getElementById('schoolClassInput').value = cfg.className;
+        document.getElementById('schoolDivisionInput').value = cfg.division;
+        document.getElementById('schoolDetailsRow').style.display = (mode === 'school') ? '' : 'none';
+        document.getElementById('flipGridInput').checked = cfg.flipGrid;
+        renderBreakSelects();
+        renderDaysPicker();
+      } else {
+        document.getElementById('examTitleInput').value = settings.exam.title;
+        renderExamRows();
+        renderHolidayRows();
+      }
+      document.getElementById('orientationInput').value = settings.orientation;
+      document.getElementById('pageStylePortrait').disabled = settings.orientation !== 'portrait';
+      document.getElementById('pageStyleLandscape').disabled = settings.orientation !== 'landscape';
+    }
+
+    function readPeriodFormIntoSettings() {
+      const mode = settings.mode;
+      if (mode === 'exam') return;
+      const cfg = settings[mode];
+      cfg.title = document.getElementById('periodTitleInput').value.trim();
+      let pp = parseInt(document.getElementById('periodsPerDayInput').value, 10);
+      if (!Number.isFinite(pp) || pp < 1) pp = 1;
+      if (pp > 14) pp = 14;
+      cfg.periodsPerDay = pp;
+      let pd = parseInt(document.getElementById('periodDurationInput').value, 10);
+      if (!Number.isFinite(pd) || pd < 5) pd = 5;
+      if (pd > 180) pd = 180;
+      cfg.periodDuration = pd;
+      cfg.startTime = document.getElementById('startTimeInput').value || '09:00';
+      let ba = parseInt(document.getElementById('breakAfterInput').value, 10) || 0;
+      if (ba > cfg.periodsPerDay) ba = 0;
+      cfg.breakAfter = ba;
+      let bd = parseInt(document.getElementById('breakDurationInput').value, 10);
+      if (!Number.isFinite(bd) || bd < 0) bd = 0;
+      cfg.breakDuration = bd;
+      let b2a = parseInt(document.getElementById('break2AfterInput').value, 10) || 0;
+      if (b2a > cfg.periodsPerDay) b2a = 0;
+      cfg.break2After = b2a;
+      let b2d = parseInt(document.getElementById('break2DurationInput').value, 10);
+      if (!Number.isFinite(b2d) || b2d < 0) b2d = 0;
+      cfg.break2Duration = b2d;
+      let b3a = parseInt(document.getElementById('break3AfterInput').value, 10) || 0;
+      if (b3a > cfg.periodsPerDay) b3a = 0;
+      cfg.break3After = b3a;
+      let b3d = parseInt(document.getElementById('break3DurationInput').value, 10);
+      if (!Number.isFinite(b3d) || b3d < 0) b3d = 0;
+      cfg.break3Duration = b3d;
+      if (mode === 'school') {
+        cfg.schoolName = document.getElementById('schoolNameInput').value.trim();
+        cfg.year = document.getElementById('schoolYearInput').value.trim();
+        cfg.className = document.getElementById('schoolClassInput').value.trim();
+        cfg.division = document.getElementById('schoolDivisionInput').value.trim();
+      }
+      cfg.flipGrid = document.getElementById('flipGridInput').checked;
+    }
+
+    function readDaysFromPicker() {
+      const mode = settings.mode;
+      if (mode === 'exam') return;
+      const cfg = settings[mode];
+      const checked = Array.from(document.querySelectorAll('#daysPicker input[type="checkbox"]:checked')).map((el) => parseInt(el.dataset.day, 10));
+      cfg.days = checked.length ? checked : cfg.days;
+    }
+
+    // ------------------------------ Main render ------------------------------
+    function render() {
+      const printArea = document.getElementById('printArea');
+      if (settings.mode === 'exam') {
+        printArea.innerHTML = renderExamTimetable();
+      } else {
+        printArea.innerHTML = renderPeriodTable(settings.mode);
+      }
+    }
+
+    function commitAndRender() {
+      readPeriodFormIntoSettings();
+      saveSettings();
+      render();
+    }
+
+    // ------------------------------ Wiring: mode tabs ------------------------------
+    ['school', 'exam', 'study'].forEach((mode) => {
+      document.getElementById('tab' + mode[0].toUpperCase() + mode.slice(1)).addEventListener('click', () => {
+        settings.mode = mode;
+        saveSettings();
+        applyModeToForm();
+        render();
+      });
+    });
+
+    // ------------------------------ Wiring: period setup ------------------------------
+    ['periodTitleInput', 'periodsPerDayInput', 'periodDurationInput', 'startTimeInput', 'breakDurationInput', 'break2DurationInput', 'break3DurationInput', 'schoolNameInput', 'schoolYearInput', 'schoolClassInput', 'schoolDivisionInput'].forEach((id) => {
+      document.getElementById(id).addEventListener('input', () => {
+        readPeriodFormIntoSettings();
+        renderBreakSelects();
+        saveSettings();
+        render();
+      });
+    });
+    document.getElementById('breakAfterInput').addEventListener('change', commitAndRender);
+    document.getElementById('break2AfterInput').addEventListener('change', commitAndRender);
+    document.getElementById('break3AfterInput').addEventListener('change', commitAndRender);
+    document.getElementById('daysPicker').addEventListener('change', () => {
+      readDaysFromPicker();
+      saveSettings();
+      render();
+    });
+    document.getElementById('flipGridInput').addEventListener('change', commitAndRender);
+
+    document.getElementById('printArea').addEventListener('input', onPeriodCellInput);
+
+    // ------------------------------ Wiring: exam setup ------------------------------
+    document.getElementById('examTitleInput').addEventListener('input', (e) => {
+      settings.exam.title = e.target.value.trim();
+      saveSettings();
+      render();
+    });
+
+    document.getElementById('addExamRow').addEventListener('click', () => {
+      settings.exam.exams.push({ date: '', subject: '', portion: '' });
+      saveSettings();
+      renderExamRows();
+      render();
+    });
+    document.getElementById('addHolidayRow').addEventListener('click', () => {
+      settings.exam.holidays.push({ date: '', label: '' });
+      saveSettings();
+      renderHolidayRows();
+      render();
+    });
+
+    document.getElementById('examRows').addEventListener('input', (e) => {
+      const row = e.target.closest('.row-item');
+      if (!row) return;
+      const i = parseInt(row.dataset.idx, 10);
+      const ex = settings.exam.exams[i];
+      if (e.target.classList.contains('exam-date-input')) ex.date = e.target.value;
+      if (e.target.classList.contains('exam-subject-input')) ex.subject = e.target.value;
+      if (e.target.classList.contains('exam-portion-input')) ex.portion = e.target.value;
+      saveSettings();
+      render();
+    });
+    document.getElementById('examRows').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-remove-exam]');
+      if (!btn) return;
+      const i = parseInt(btn.dataset.removeExam, 10);
+      settings.exam.exams.splice(i, 1);
+      if (!settings.exam.exams.length) settings.exam.exams.push({ date: '', subject: '', portion: '' });
+      saveSettings();
+      renderExamRows();
+      render();
+    });
+
+    document.getElementById('holidayRows').addEventListener('input', (e) => {
+      const row = e.target.closest('.row-item');
+      if (!row) return;
+      const i = parseInt(row.dataset.idx, 10);
+      const h = settings.exam.holidays[i];
+      if (e.target.classList.contains('holiday-date-input')) h.date = e.target.value;
+      if (e.target.classList.contains('holiday-label-input')) h.label = e.target.value;
+      saveSettings();
+      render();
+    });
+    document.getElementById('holidayRows').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-remove-holiday]');
+      if (!btn) return;
+      const i = parseInt(btn.dataset.removeHoliday, 10);
+      settings.exam.holidays.splice(i, 1);
+      saveSettings();
+      renderHolidayRows();
+      render();
+    });
+
+    // ------------------------------ Wiring: orientation / print / reset ------------------------------
+    document.getElementById('orientationInput').addEventListener('change', (e) => {
+      settings.orientation = e.target.value === 'portrait' ? 'portrait' : 'landscape';
+      saveSettings();
+      document.getElementById('pageStylePortrait').disabled = settings.orientation !== 'portrait';
+      document.getElementById('pageStyleLandscape').disabled = settings.orientation !== 'landscape';
+    });
+
+    document.getElementById('printBtn').addEventListener('click', () => window.print());
+    document.getElementById('printBtn2').addEventListener('click', () => window.print());
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      if (!confirm('Reset the current timetable to defaults?')) return;
+      if (settings.mode === 'exam') settings.exam = defaultExamConfig();
+      else settings[settings.mode] = defaultPeriodConfig(settings.mode);
+      saveSettings();
+      applyModeToForm();
+      render();
+    });
+
+    // ------------------------------- Theme --------------------------------
+    const THEME_KEY = 'timetableTheme';
+    document.getElementById('themeToggle').checked = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.getElementById('themeToggle').addEventListener('change', function () {
+      if (this.checked) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem(THEME_KEY, 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem(THEME_KEY, 'light');
+      }
+    });
+
+    // --------------------------------- Init ---------------------------------
+    applyModeToForm();
+    render();
+  </script>
+</body>
+</html>
