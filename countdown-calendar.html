@@ -187,9 +187,9 @@
   .field--checkbox input { width: auto; }
   .field--checkbox label { margin: 0; text-transform: none; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
 
-  .view-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+  .view-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
   .view-tab {
-    flex: 1;
+    flex: 1 1 150px;
     text-align: center;
     padding: 10px 8px;
     border-radius: 8px;
@@ -197,7 +197,7 @@
     background: var(--surface);
     color: var(--text-secondary);
     font-weight: 700;
-    font-size: 13.5px;
+    font-size: 13px;
     cursor: pointer;
   }
   .view-tab.active { background: linear-gradient(180deg, var(--primary), var(--primary-dark)); color: #fff; border-color: transparent; }
@@ -263,41 +263,111 @@
   .count-box-sub { font-size: 8px; font-weight: 600; color: #6b7488; margin-top: 3px; text-align: center; line-height: 1.2; }
   .count-box-sub.is-weekend { color: #d92d2d; }
 
-  /* Calendar-months view */
-  .cal-month { margin-bottom: 26px; break-inside: avoid; }
-  .cal-month:last-child { margin-bottom: 0; }
-  .cal-month-title { font-size: 15.5px; font-weight: 800; color: #17203a; margin: 0 0 2px; text-align: center; }
-  .cal-month-range { font-size: 11px; color: #6b7488; text-align: center; margin: 0 0 10px; }
-  .cal-grid { display: grid; grid-template-columns: 34px repeat(7, 1fr); gap: 4px; }
-  .cal-dow { text-align: center; font-size: 10px; font-weight: 700; color: #6b7488; text-transform: uppercase; padding-bottom: 4px; }
+  /* Calendar-months view -- months are laid out in a compact multi-column
+     grid (instead of one full-width month stacked after another) so
+     several months fit on a single A4 page. Column count is responsive
+     (auto-fit) rather than fixed, so it naturally packs more columns in
+     landscape than portrait. */
+  .cal-months-wrap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px 14px;
+    align-items: start;
+  }
+  .cal-month { break-inside: avoid; }
+  .cal-month-title { font-size: 12.5px; font-weight: 800; color: #17203a; margin: 0 0 1px; text-align: center; }
+  .cal-month-range { font-size: 9px; color: #6b7488; text-align: center; margin: 0 0 5px; }
+  .cal-grid { display: grid; grid-template-columns: 20px repeat(7, 1fr); gap: 2px; }
+  .cal-dow { text-align: center; font-size: 7px; font-weight: 700; color: #6b7488; text-transform: uppercase; padding-bottom: 2px; }
   .cal-dow.is-weekend { color: #d92d2d; }
   .cal-dow.cal-week-header { color: #9aa2b7; }
   .cal-week-num {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10px;
+    font-size: 6.5px;
     font-weight: 700;
     color: #9aa2b7;
   }
   .cal-cell {
     aspect-ratio: 1 / 1;
-    border-radius: 6px;
+    border-radius: 3px;
     border: 1px solid #dde2ee;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 11.5px;
+    font-size: 8px;
     color: #24304d;
     background: #fff;
   }
   .cal-cell.is-blank { border: none; background: none; }
   .cal-cell.in-range { background: #eaf2fc; border-color: #a9c8ee; font-weight: 700; }
-  .cal-cell.is-today { border-color: #1baf7a; border-width: 2px; }
-  .cal-cell-date { font-size: 11px; }
+  .cal-cell.is-today { border-color: #1baf7a; border-width: 1.5px; }
+  .cal-cell-date { font-size: 8px; }
   .cal-cell-date.is-weekend { color: #d92d2d; }
-  .cal-cell-day { font-size: 9px; font-weight: 800; color: var(--primary, #2a78d6); }
+  .cal-cell-day { font-size: 6px; font-weight: 800; color: var(--primary, #2a78d6); }
+
+  /* Full Year view: fixed 4-column layout (3 rows of 4 months) so all 12
+     fit on one A4 sheet, instead of the auto-fit column count the
+     multi-month countdown-calendar view uses. */
+  .cal-months-wrap--year { grid-template-columns: repeat(4, 1fr); gap: 8px 10px; }
+
+  /* Single Month: one big month filling the page, reusing the same
+     month-block markup as the other calendar views but scaled up via these
+     descendant overrides. */
+  .cal-months-wrap--solo { grid-template-columns: 1fr; max-width: 460px; margin: 0 auto; }
+  .cal-months-wrap--solo .cal-month-title { font-size: 22px; margin-bottom: 4px; }
+  .cal-months-wrap--solo .cal-month-range { font-size: 13px; margin-bottom: 10px; }
+  .cal-months-wrap--solo .cal-grid { grid-template-columns: 34px repeat(7, 1fr); gap: 6px; }
+  .cal-months-wrap--solo .cal-dow { font-size: 11px; padding-bottom: 4px; }
+  .cal-months-wrap--solo .cal-week-num { font-size: 10px; }
+  .cal-months-wrap--solo .cal-cell { font-size: 13px; border-radius: 6px; }
+  .cal-months-wrap--solo .cal-cell-date { font-size: 13px; }
+  .cal-months-wrap--solo .cal-cell-day { font-size: 10px; }
+
+  /* -------- Planner views (Daily / Weekly) -------- */
+  .planner-header { text-align: center; margin-bottom: 16px; }
+  .planner-header-day { font-size: 20px; font-weight: 800; color: #17203a; }
+  .planner-header-day.is-weekend { color: #d92d2d; }
+  .planner-header-date { font-size: 12.5px; color: #6b7488; margin-top: 2px; }
+  .planner-header-week { font-size: 11px; color: #9aa2b7; margin-top: 2px; }
+
+  .planner-section { margin-bottom: 14px; break-inside: avoid; }
+  .planner-section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: #6b7488; margin-bottom: 6px; }
+
+  /* Ruled-lines box for free-form notes/goals -- the gradient steps double
+     as printable ruled lines so it's usable with a pen once printed. */
+  .lines-box {
+    border: 1px solid #dde2ee;
+    border-radius: 6px;
+    background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 20px, #e3e7ef 21px);
+    height: 90px;
+  }
+  .lines-box--wide { height: 60px; }
+
+  /* Daily planner: an hourly schedule column beside priorities/to-do/notes. */
+  .daily-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 18px; }
+  .hour-list { border: 1px solid #dde2ee; border-radius: 6px; overflow: hidden; }
+  .hour-row { display: flex; border-bottom: 1px solid #eef1f7; min-height: 22px; }
+  .hour-row:last-child { border-bottom: none; }
+  .hour-label { width: 54px; flex: none; font-size: 9px; color: #9aa2b7; padding: 4px 6px; border-right: 1px solid #eef1f7; }
+  .hour-line { flex: 1; }
+  .lined-item { border-bottom: 1px solid #e3e7ef; padding: 6px 2px; font-size: 11px; color: #9aa2b7; min-height: 20px; }
+  .lined-num { color: #9aa2b7; font-weight: 700; margin-right: 4px; }
+  .todo-item { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #eef1f7; padding: 5px 2px; min-height: 18px; }
+  .todo-box { width: 11px; height: 11px; border: 1.5px solid #9aa2b7; border-radius: 3px; flex: none; }
+
+  /* Weekly planner: 7 day columns + a notes strip below. */
+  .weekly-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .weekly-day-col { border: 1px solid #dde2ee; border-radius: 6px; overflow: hidden; break-inside: avoid; }
+  .weekly-day-head { text-align: center; padding: 5px 2px; background: #f6f8fb; border-bottom: 1px solid #dde2ee; }
+  .weekly-day-head.is-weekend { color: #d92d2d; }
+  .weekly-day-name { font-size: 9px; font-weight: 800; text-transform: uppercase; }
+  .weekly-day-date { font-size: 12px; font-weight: 700; }
+  .weekly-day-body { padding: 4px 6px; }
+  .weekly-line { border-bottom: 1px solid #eef1f7; height: 16px; }
+  .weekly-line:last-child { border-bottom: none; }
 
   .nav-link { display: block; text-align: center; margin-top: 8px; text-decoration: none; color: var(--primary); font-size: 13.5px; }
 
@@ -317,9 +387,7 @@
     .container { max-width: none; }
     h1, .subtitle, .theme-toggle, .card, .nav-link, .view-counter, .summary-line, .print-hide { display: none !important; }
     #printArea { box-shadow: none; border-radius: 0; padding: 6mm; }
-    .count-box, .cal-cell { break-inside: avoid; }
-    .cal-month { break-after: page; }
-    .cal-month:last-child { break-after: auto; }
+    .count-box, .cal-cell, .cal-month, .weekly-day-col, .planner-section, .lines-box { break-inside: avoid; }
   }
 </style>
 <!-- Two mutually-exclusive @page rules -- JS enables/disables whichever
@@ -356,25 +424,8 @@
       <h2>⚙️ Setup</h2>
       <div class="field-row">
         <div class="field" style="flex: 2 1 260px;">
-          <label for="titleInput">Title</label>
-          <input type="text" id="titleInput" maxlength="80" placeholder="e.g. 100 Days to Graduation">
-        </div>
-        <div class="field">
-          <label for="daysInput">Number of Days</label>
-          <input type="number" id="daysInput" min="1" max="3650" value="100">
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label for="startDateInput">Start Date</label>
-          <input type="date" id="startDateInput">
-        </div>
-        <div class="field">
-          <label for="directionInput">Direction</label>
-          <select id="directionInput">
-            <option value="down">Countdown (100 → 1)</option>
-            <option value="up">Count Up (1 → 100)</option>
-          </select>
+          <label for="titleInput">Title (optional)</label>
+          <input type="text" id="titleInput" maxlength="80" placeholder="e.g. 100 Days to Graduation -- leave blank for no title">
         </div>
         <div class="field">
           <label for="orientationInput">Print Orientation</label>
@@ -388,9 +439,38 @@
       <div class="view-tabs">
         <div class="view-tab active" data-view="grid" id="tabGrid">🔢 Numbered Grid</div>
         <div class="view-tab" data-view="calendar" id="tabCalendar">📅 Calendar Months</div>
+        <div class="view-tab" data-view="fullyear" id="tabFullYear">🗓️ Full Year</div>
+        <div class="view-tab" data-view="singlemonth" id="tabSingleMonth">📆 Single Month</div>
+        <div class="view-tab" data-view="daily" id="tabDaily">📝 Daily Planner</div>
+        <div class="view-tab" data-view="weekly" id="tabWeekly">📋 Weekly Planner</div>
       </div>
 
-      <div id="gridOptions">
+      <!-- Countdown-specific: Numbered Grid + Calendar Months -->
+      <div id="optCountdown">
+        <div class="field-row">
+          <div class="field">
+            <label for="daysInput">Number of Days</label>
+            <input type="number" id="daysInput" min="1" max="3650" value="100">
+          </div>
+          <div class="field">
+            <label for="startDateInput">Start Date</label>
+            <input type="date" id="startDateInput">
+          </div>
+          <div class="field">
+            <label for="endDateInput">End Date</label>
+            <input type="date" id="endDateInput">
+          </div>
+          <div class="field">
+            <label for="directionInput">Direction</label>
+            <select id="directionInput">
+              <option value="down">Countdown (100 → 1)</option>
+              <option value="up">Count Up (1 → 100)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div id="optGridExtra">
         <div class="field-row">
           <div class="field">
             <label for="colsInput">Boxes per Row</label>
@@ -403,7 +483,34 @@
         </div>
       </div>
 
-      <div id="calendarOptions" style="display: none;">
+      <div id="optYear">
+        <div class="field-row">
+          <div class="field">
+            <label for="yearInput">Year</label>
+            <input type="number" id="yearInput" min="1900" max="2200" value="2026">
+          </div>
+        </div>
+      </div>
+
+      <div id="optMonth">
+        <div class="field-row">
+          <div class="field">
+            <label for="monthInput">Month</label>
+            <input type="month" id="monthInput">
+          </div>
+        </div>
+      </div>
+
+      <div id="optPlannerDate">
+        <div class="field-row">
+          <div class="field">
+            <label for="plannerDateInput">Date</label>
+            <input type="date" id="plannerDateInput">
+          </div>
+        </div>
+      </div>
+
+      <div id="optWeekStart">
         <div class="field-row">
           <div class="field">
             <label for="weekStartInput">Week Starts On</label>
@@ -416,6 +523,15 @@
               <option value="5">Friday</option>
               <option value="6">Saturday</option>
             </select>
+          </div>
+        </div>
+      </div>
+
+      <div id="optShowCountdown">
+        <div class="field-row">
+          <div class="field--checkbox">
+            <input type="checkbox" id="showCountdownInput">
+            <label for="showCountdownInput">Overlay countdown numbers (using the Number of Days / Start Date / Direction above)</label>
           </div>
         </div>
       </div>
@@ -453,13 +569,24 @@
       view: 'grid',
       cols: 10,
       showDates: true,
-      weekStart: 1, // Monday
+      weekStart: 0, // Sunday
+      year: null, // filled with current year at init
+      month: null, // filled with current YYYY-MM at init
+      plannerDate: null, // filled with today at init
+      showCountdown: false, // Full Year / Single Month: overlay off by default
     };
 
-    function todayDateInputValue() {
-      const d = new Date();
+    function formatDateInputValue(d) {
       const pad = (n) => String(n).padStart(2, '0');
       return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+    function todayDateInputValue() {
+      return formatDateInputValue(new Date());
+    }
+    function currentMonthInputValue() {
+      const d = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
     }
 
     function loadSettings() {
@@ -471,6 +598,9 @@
       }
       const settings = Object.assign({}, DEFAULTS, stored);
       if (!settings.startDate) settings.startDate = todayDateInputValue();
+      if (!settings.year) settings.year = new Date().getFullYear();
+      if (!settings.month) settings.month = currentMonthInputValue();
+      if (!settings.plannerDate) settings.plannerDate = todayDateInputValue();
       return settings;
     }
 
@@ -486,6 +616,10 @@
       const [y, m, d] = value.split('-').map(Number);
       return new Date(y, m - 1, d);
     }
+    function parseMonthInput(value) {
+      const [y, m] = value.split('-').map(Number);
+      return { year: y, month: m - 1 };
+    }
     function addDays(date, n) {
       const d = new Date(date);
       d.setDate(d.getDate() + n);
@@ -497,14 +631,17 @@
     function formatShortDate(d) {
       return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
     }
+    function formatLongDate(d) {
+      return d.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+    }
     function isWeekend(d) {
       const dow = d.getDay();
       return dow === 0 || dow === 6;
     }
     // Standard ISO-8601 week number (Monday-first weeks; week 1 is the week
     // containing the year's first Thursday) -- used as the "week number"
-    // label in both views, independent of whichever day the calendar grid
-    // itself is configured to start on.
+    // label in every calendar-based view, independent of whichever day the
+    // grid itself is configured to start on.
     function getISOWeek(date) {
       const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
       const dayNum = (d.getUTCDay() + 6) % 7;
@@ -516,6 +653,7 @@
     }
     const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     const DOW_LABELS_FROM_SUNDAY = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const DOW_FULL_FROM_SUNDAY = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     // Reorders the week's day labels (and their weekend-ness) to start on
     // `weekStart` (0=Sun..6=Sat), for both the header row and the leading
     // blank-cell count of each month.
@@ -529,45 +667,97 @@
       return div.innerHTML;
     }
 
+    // ------------------------------ View metadata ------------------------------
+    // Which option field-rows are relevant per view -- drives both visibility
+    // (updateOptionVisibility) and the view-tabs list itself.
+    const VIEWS = ['grid', 'calendar', 'fullyear', 'singlemonth', 'daily', 'weekly'];
+    const VIEW_FIELDS = {
+      grid: ['countdown', 'gridExtra'],
+      calendar: ['countdown', 'weekStart'],
+      // 'showCountdown' is the toggle; 'countdown' (Number of Days/Start
+      // Date/Direction) is shown alongside it on these views too -- so the
+      // range being overlaid is visible and editable right where the
+      // toggle is, instead of being hidden state only reachable from the
+      // Numbered Grid/Calendar Months tabs. Without this, checking the
+      // toggle while viewing a month/year outside that hidden range shows
+      // nothing and looks like the toggle is broken.
+      fullyear: ['year', 'weekStart', 'showCountdown', 'countdown'],
+      singlemonth: ['month', 'weekStart', 'showCountdown', 'countdown'],
+      daily: ['plannerDate'],
+      weekly: ['plannerDate', 'weekStart'],
+    };
+
     // ------------------------------ Form elements ------------------------------
     const titleInput = document.getElementById('titleInput');
     const daysInput = document.getElementById('daysInput');
     const startDateInput = document.getElementById('startDateInput');
+    const endDateInput = document.getElementById('endDateInput');
     const directionInput = document.getElementById('directionInput');
     const orientationInput = document.getElementById('orientationInput');
     const colsInput = document.getElementById('colsInput');
     const showDatesInput = document.getElementById('showDatesInput');
     const weekStartInput = document.getElementById('weekStartInput');
-    const tabGrid = document.getElementById('tabGrid');
-    const tabCalendar = document.getElementById('tabCalendar');
-    const gridOptions = document.getElementById('gridOptions');
-    const calendarOptions = document.getElementById('calendarOptions');
+    const yearInput = document.getElementById('yearInput');
+    const monthInput = document.getElementById('monthInput');
+    const plannerDateInput = document.getElementById('plannerDateInput');
+    const showCountdownInput = document.getElementById('showCountdownInput');
     const printArea = document.getElementById('printArea');
     const summaryLine = document.getElementById('summaryLine');
     const pageStylePortrait = document.getElementById('pageStylePortrait');
     const pageStyleLandscape = document.getElementById('pageStyleLandscape');
 
+    const optPanels = {
+      countdown: document.getElementById('optCountdown'),
+      gridExtra: document.getElementById('optGridExtra'),
+      weekStart: document.getElementById('optWeekStart'),
+      year: document.getElementById('optYear'),
+      month: document.getElementById('optMonth'),
+      plannerDate: document.getElementById('optPlannerDate'),
+      showCountdown: document.getElementById('optShowCountdown'),
+    };
+    const tabs = {};
+    VIEWS.forEach((view) => {
+      const el = document.querySelector(`.view-tab[data-view="${view}"]`);
+      if (el) tabs[view] = el;
+    });
+
     let settings = loadSettings();
+    // A view saved by a previous, now-removed feature (e.g. the old "Yearly
+    // Calendar"/"Monthly Planner" tabs) would otherwise leave no tab active
+    // and render() with no matching branch -- fall back to the default view.
+    if (!VIEWS.includes(settings.view)) settings.view = DEFAULTS.view;
+
+    function updateOptionVisibility() {
+      const active = new Set(VIEW_FIELDS[settings.view] || []);
+      Object.keys(optPanels).forEach((key) => {
+        optPanels[key].style.display = active.has(key) ? '' : 'none';
+      });
+      VIEWS.forEach((view) => {
+        if (tabs[view]) tabs[view].classList.toggle('active', settings.view === view);
+      });
+    }
 
     function applySettingsToForm() {
       titleInput.value = settings.title;
       daysInput.value = settings.days;
       startDateInput.value = settings.startDate;
+      endDateInput.value = formatDateInputValue(addDays(parseDateInput(settings.startDate), settings.days - 1));
       directionInput.value = settings.direction;
       orientationInput.value = settings.orientation;
       colsInput.value = settings.cols;
       showDatesInput.checked = settings.showDates;
       weekStartInput.value = settings.weekStart;
-      tabGrid.classList.toggle('active', settings.view === 'grid');
-      tabCalendar.classList.toggle('active', settings.view === 'calendar');
-      gridOptions.style.display = settings.view === 'grid' ? '' : 'none';
-      calendarOptions.style.display = settings.view === 'calendar' ? '' : 'none';
+      yearInput.value = settings.year;
+      monthInput.value = settings.month;
+      plannerDateInput.value = settings.plannerDate;
+      showCountdownInput.checked = settings.showCountdown;
+      updateOptionVisibility();
       pageStylePortrait.disabled = settings.orientation !== 'portrait';
       pageStyleLandscape.disabled = settings.orientation !== 'landscape';
     }
 
     function readFormIntoSettings() {
-      settings.title = titleInput.value.trim() || DEFAULTS.title;
+      settings.title = titleInput.value.trim(); // optional -- empty means no title line is printed
       let days = parseInt(daysInput.value, 10);
       if (!Number.isFinite(days) || days < 1) days = 1;
       if (days > 3650) days = 3650;
@@ -581,8 +771,15 @@
       settings.cols = cols;
       settings.showDates = showDatesInput.checked;
       let weekStart = parseInt(weekStartInput.value, 10);
-      if (!Number.isFinite(weekStart) || weekStart < 0 || weekStart > 6) weekStart = 1;
+      if (!Number.isFinite(weekStart) || weekStart < 0 || weekStart > 6) weekStart = 0;
       settings.weekStart = weekStart;
+      let year = parseInt(yearInput.value, 10);
+      if (!Number.isFinite(year) || year < 1900) year = new Date().getFullYear();
+      if (year > 2200) year = 2200;
+      settings.year = year;
+      settings.month = monthInput.value || currentMonthInputValue();
+      settings.plannerDate = plannerDateInput.value || todayDateInputValue();
+      settings.showCountdown = showCountdownInput.checked;
     }
 
     // ------------------------------ Rendering: numbered grid ------------------------------
@@ -590,7 +787,7 @@
       return direction === 'down' ? totalDays - index : index + 1;
     }
 
-    const DOW_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const DOW_SHORT = DOW_LABELS_FROM_SUNDAY;
 
     function renderGrid(start, totalDays, direction, cols, showDates) {
       const today = new Date();
@@ -610,103 +807,227 @@
       return `<div class="count-grid" style="grid-template-columns: repeat(${cols}, 1fr);">${boxes}</div>`;
     }
 
-    // ------------------------------ Rendering: calendar months ------------------------------
-    // weekStart: 0=Sunday..6=Saturday, the first column of every week row.
-    // Each month is laid out as an 8-column grid (a leading week-number
-    // column + 7 day columns) -- the week number shown per row is the
-    // ISO-8601 week of that row's first real (non-blank) date.
-    function renderCalendarMonths(start, totalDays, direction, weekStart) {
-      const rangeEnd = addDays(start, totalDays - 1); // inclusive last day
+    // ------------------------------ Rendering: shared month-grid builder ------------------------------
+    // Used by Calendar Months, Full Year and Single Month -- one month laid
+    // out as an 8-column grid (a leading
+    // week-number column + 7 day columns). rangeStart/rangeEnd/direction/
+    // totalDays are optional: when given, any date inside that range also
+    // gets its countdown day-number overlaid (harmless/no-op when the month
+    // doesn't overlap the range at all).
+    function buildMonthBlockHtml(year, month, weekStart, rangeStart, rangeEnd, direction, totalDays) {
       const today = new Date();
-      let html = '';
-
-      let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
-      const lastMonth = new Date(rangeEnd.getFullYear(), rangeEnd.getMonth(), 1);
+      const firstOfMonth = new Date(year, month, 1);
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const leadBlanks = (firstOfMonth.getDay() - weekStart + 7) % 7;
       const dowLabels = dowLabelsFrom(weekStart);
 
-      while (cursor <= lastMonth) {
-        const year = cursor.getFullYear();
-        const month = cursor.getMonth();
-        const firstOfMonth = new Date(year, month, 1);
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const leadBlanks = (firstOfMonth.getDay() - weekStart + 7) % 7;
+      const headerCells = '<div class="cal-dow cal-week-header">Wk</div>' + dowLabels.map((label, idx) => {
+        const colDow = (weekStart + idx) % 7;
+        const weekendClass = (colDow === 0 || colDow === 6) ? ' is-weekend' : '';
+        return `<div class="cal-dow${weekendClass}">${label}</div>`;
+      }).join('');
 
-        const headerCells = '<div class="cal-dow cal-week-header">Wk</div>' + dowLabels.map((label, idx) => {
-          const colDow = (weekStart + idx) % 7;
-          const weekendClass = (colDow === 0 || colDow === 6) ? ' is-weekend' : '';
-          return `<div class="cal-dow${weekendClass}">${label}</div>`;
-        }).join('');
+      const dayCells = [];
+      for (let i = 0; i < leadBlanks; i++) dayCells.push({ blank: true });
+      for (let day = 1; day <= daysInMonth; day++) dayCells.push({ date: new Date(year, month, day), day });
+      while (dayCells.length % 7 !== 0) dayCells.push({ blank: true });
 
-        const dayCells = [];
-        for (let i = 0; i < leadBlanks; i++) dayCells.push({ blank: true });
-        for (let day = 1; day <= daysInMonth; day++) dayCells.push({ date: new Date(year, month, day), day });
-        while (dayCells.length % 7 !== 0) dayCells.push({ blank: true });
+      let bodyCells = '';
+      let minDayNum = null;
+      let maxDayNum = null;
+      for (let r = 0; r < dayCells.length / 7; r++) {
+        const rowCells = dayCells.slice(r * 7, (r + 1) * 7);
+        const firstDated = rowCells.find((c) => !c.blank);
+        bodyCells += `<div class="cal-week-num">${firstDated ? getISOWeek(firstDated.date) : ''}</div>`;
 
-        let bodyCells = '';
-        let minDayNum = null;
-        let maxDayNum = null;
-        for (let r = 0; r < dayCells.length / 7; r++) {
-          const rowCells = dayCells.slice(r * 7, (r + 1) * 7);
-          const firstDated = rowCells.find((c) => !c.blank);
-          bodyCells += `<div class="cal-week-num">${firstDated ? getISOWeek(firstDated.date) : ''}</div>`;
-
-          rowCells.forEach((c) => {
-            if (c.blank) { bodyCells += '<div class="cal-cell is-blank"></div>'; return; }
-            const date = c.date;
-            const inRange = date >= start && date <= rangeEnd;
-            const weekendClass = isWeekend(date) ? ' is-weekend' : '';
-            let dayNumHtml = '';
-            if (inRange) {
-              const index = Math.round((date - start) / 86400000);
-              const num = dayNumberFor(index, totalDays, direction);
-              if (minDayNum === null) minDayNum = num;
-              maxDayNum = num;
-              dayNumHtml = `<div class="cal-cell-day">${num}</div>`;
-            }
-            const classes = ['cal-cell'];
-            if (inRange) classes.push('in-range');
-            if (isSameDate(date, today)) classes.push('is-today');
-            bodyCells += `<div class="${classes.join(' ')}"><div class="cal-cell-date${weekendClass}">${c.day}</div>${dayNumHtml}</div>`;
-          });
-        }
-
-        let rangeLabel = '';
-        if (minDayNum !== null) {
-          const lo = Math.min(minDayNum, maxDayNum);
-          const hi = Math.max(minDayNum, maxDayNum);
-          rangeLabel = lo === hi ? `Day ${lo}` : `Days ${lo}–${hi}`;
-        }
-
-        html += `
-          <div class="cal-month">
-            <div class="cal-month-title">${MONTH_NAMES[month]} ${year}</div>
-            <div class="cal-month-range">${rangeLabel}</div>
-            <div class="cal-grid">${headerCells}${bodyCells}</div>
-          </div>`;
-
-        cursor = new Date(year, month + 1, 1);
+        rowCells.forEach((c) => {
+          if (c.blank) { bodyCells += '<div class="cal-cell is-blank"></div>'; return; }
+          const date = c.date;
+          const inRange = !!(rangeStart && rangeEnd && date >= rangeStart && date <= rangeEnd);
+          const weekendClass = isWeekend(date) ? ' is-weekend' : '';
+          let dayNumHtml = '';
+          if (inRange) {
+            const index = Math.round((date - rangeStart) / 86400000);
+            const num = dayNumberFor(index, totalDays, direction);
+            if (minDayNum === null) minDayNum = num;
+            maxDayNum = num;
+            dayNumHtml = `<div class="cal-cell-day">${num}</div>`;
+          }
+          const classes = ['cal-cell'];
+          if (inRange) classes.push('in-range');
+          if (isSameDate(date, today)) classes.push('is-today');
+          bodyCells += `<div class="${classes.join(' ')}"><div class="cal-cell-date${weekendClass}">${c.day}</div>${dayNumHtml}</div>`;
+        });
       }
-      return html;
+
+      let rangeLabel = '';
+      if (minDayNum !== null) {
+        const lo = Math.min(minDayNum, maxDayNum);
+        const hi = Math.max(minDayNum, maxDayNum);
+        rangeLabel = lo === hi ? `Day ${lo}` : `Days ${lo}–${hi}`;
+      }
+
+      return `
+        <div class="cal-month">
+          <div class="cal-month-title">${MONTH_NAMES[month]} ${year}</div>
+          <div class="cal-month-range">${rangeLabel}</div>
+          <div class="cal-grid">${headerCells}${bodyCells}</div>
+        </div>`;
+    }
+
+    // ------------------------------ Rendering: calendar months (countdown) ------------------------------
+    function renderCalendarMonths(start, totalDays, direction, weekStart) {
+      const rangeEnd = addDays(start, totalDays - 1); // inclusive last day
+      let html = '';
+      let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+      const lastMonth = new Date(rangeEnd.getFullYear(), rangeEnd.getMonth(), 1);
+      while (cursor <= lastMonth) {
+        html += buildMonthBlockHtml(cursor.getFullYear(), cursor.getMonth(), weekStart, start, rangeEnd, direction, totalDays);
+        cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+      }
+      return `<div class="cal-months-wrap">${html}</div>`;
+    }
+
+    // ------------------------------ Rendering: full year (single A4 sheet) ------------------------------
+    function renderFullYear(year, weekStart, rangeStart, rangeEnd, direction, totalDays) {
+      let html = '';
+      for (let m = 0; m < 12; m++) {
+        html += buildMonthBlockHtml(year, m, weekStart, rangeStart, rangeEnd, direction, totalDays);
+      }
+      return `<div class="cal-months-wrap cal-months-wrap--year">${html}</div>`;
+    }
+
+    // ------------------------------ Rendering: single month (single A4 sheet) ------------------------------
+    function renderSingleMonth(year, month, weekStart, rangeStart, rangeEnd, direction, totalDays) {
+      const html = buildMonthBlockHtml(year, month, weekStart, rangeStart, rangeEnd, direction, totalDays);
+      return `<div class="cal-months-wrap cal-months-wrap--solo">${html}</div>`;
+    }
+
+    // ------------------------------ Rendering: daily planner ------------------------------
+    function renderDailyPlanner(date) {
+      const weekendClass = isWeekend(date) ? ' is-weekend' : '';
+      const hourRows = [];
+      for (let h = 6; h <= 21; h++) {
+        const label = h === 12 ? '12 PM' : (h < 12 ? `${h} AM` : `${h - 12} PM`);
+        hourRows.push(`<div class="hour-row"><div class="hour-label">${label}</div><div class="hour-line"></div></div>`);
+      }
+      const priorities = [1, 2, 3].map((n) => `<div class="lined-item"><span class="lined-num">${n}.</span></div>`).join('');
+      const todos = Array.from({ length: 8 }).map(() => '<div class="todo-item"><span class="todo-box"></span></div>').join('');
+
+      return `
+        <div class="planner-header">
+          <div class="planner-header-day${weekendClass}">${escapeHtml(DOW_FULL_FROM_SUNDAY[date.getDay()])}</div>
+          <div class="planner-header-date">${escapeHtml(formatLongDate(date))}</div>
+          <div class="planner-header-week">Week ${getISOWeek(date)}</div>
+        </div>
+        <div class="daily-grid">
+          <div class="planner-section">
+            <div class="planner-section-title">Schedule</div>
+            <div class="hour-list">${hourRows.join('')}</div>
+          </div>
+          <div>
+            <div class="planner-section">
+              <div class="planner-section-title">Top Priorities</div>
+              ${priorities}
+            </div>
+            <div class="planner-section">
+              <div class="planner-section-title">To-Do</div>
+              ${todos}
+            </div>
+            <div class="planner-section">
+              <div class="planner-section-title">Notes</div>
+              <div class="lines-box"></div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // ------------------------------ Rendering: weekly planner ------------------------------
+    function renderWeeklyPlanner(anyDateInWeek, weekStart) {
+      const dow = anyDateInWeek.getDay();
+      const diff = (dow - weekStart + 7) % 7;
+      const weekStartDate = addDays(anyDateInWeek, -diff);
+      const days = Array.from({ length: 7 }, (_, i) => addDays(weekStartDate, i));
+      const weekNum = getISOWeek(weekStartDate);
+      const rangeLabel = `${formatShortDate(weekStartDate)} – ${formatShortDate(addDays(weekStartDate, 6))}`;
+
+      const dayCols = days.map((d) => {
+        const weekendClass = isWeekend(d) ? ' is-weekend' : '';
+        const lines = Array.from({ length: 10 }).map(() => '<div class="weekly-line"></div>').join('');
+        return `
+          <div class="weekly-day-col">
+            <div class="weekly-day-head${weekendClass}">
+              <div class="weekly-day-name">${DOW_SHORT[d.getDay()]}</div>
+              <div class="weekly-day-date">${d.getDate()}</div>
+            </div>
+            <div class="weekly-day-body">${lines}</div>
+          </div>`;
+      }).join('');
+
+      return `
+        <div class="planner-header">
+          <div class="planner-header-day">Week ${weekNum}</div>
+          <div class="planner-header-date">${escapeHtml(rangeLabel)}</div>
+        </div>
+        <div class="weekly-grid">${dayCols}</div>
+        <div class="planner-section" style="margin-top: 12px;">
+          <div class="planner-section-title">Notes / Goals for the Week</div>
+          <div class="lines-box lines-box--wide"></div>
+        </div>`;
     }
 
     // ------------------------------ Main render ------------------------------
     function render() {
       const start = parseDateInput(settings.startDate);
       const end = addDays(start, settings.days - 1);
+      const view = settings.view;
 
       let body;
-      if (settings.view === 'grid') {
+      let subtitle;
+
+      if (view === 'grid') {
         body = renderGrid(start, settings.days, settings.direction, settings.cols, settings.showDates);
-      } else {
+        subtitle = `${escapeHtml(formatShortDate(start))} – ${escapeHtml(formatShortDate(end))} · ${settings.days} day${settings.days === 1 ? '' : 's'}`;
+      } else if (view === 'calendar') {
         body = renderCalendarMonths(start, settings.days, settings.direction, settings.weekStart);
+        subtitle = `${escapeHtml(formatShortDate(start))} – ${escapeHtml(formatShortDate(end))} · ${settings.days} day${settings.days === 1 ? '' : 's'}`;
+      } else if (view === 'fullyear') {
+        const overlayStart = settings.showCountdown ? start : null;
+        const overlayEnd = settings.showCountdown ? end : null;
+        body = renderFullYear(settings.year, settings.weekStart, overlayStart, overlayEnd, settings.direction, settings.days);
+        subtitle = String(settings.year);
+      } else if (view === 'singlemonth') {
+        const { year, month } = parseMonthInput(settings.month);
+        const overlayStart = settings.showCountdown ? start : null;
+        const overlayEnd = settings.showCountdown ? end : null;
+        body = renderSingleMonth(year, month, settings.weekStart, overlayStart, overlayEnd, settings.direction, settings.days);
+        subtitle = `${MONTH_NAMES[month]} ${year}`;
+      } else if (view === 'daily') {
+        const date = parseDateInput(settings.plannerDate);
+        body = renderDailyPlanner(date);
+        subtitle = '';
+      } else if (view === 'weekly') {
+        const date = parseDateInput(settings.plannerDate);
+        body = renderWeeklyPlanner(date, settings.weekStart);
+        subtitle = '';
       }
 
-      printArea.innerHTML = `
-        <div class="print-title">${escapeHtml(settings.title)}</div>
-        <div class="print-subtitle">${escapeHtml(formatShortDate(start))} – ${escapeHtml(formatShortDate(end))} · ${settings.days} day${settings.days === 1 ? '' : 's'}</div>
-        ${body}`;
+      // Daily/Weekly Planner already show their own header (date/week) --
+      // a page title above it would be redundant, so it's skipped there
+      // regardless of whether one is set. Elsewhere, the title line itself
+      // is optional and only appears when the user has entered one; the
+      // subtitle (date range/year/month) always appears on its own either way.
+      const titleLine = settings.title ? `<div class="print-title">${escapeHtml(settings.title)}</div>` : '';
+      const subtitleLine = subtitle ? `<div class="print-subtitle">${subtitle}</div>` : '';
+      const titleHtml = (view === 'daily' || view === 'weekly') ? '' : `${titleLine}${subtitleLine}`;
 
-      summaryLine.textContent = `${settings.days} day${settings.days === 1 ? '' : 's'}, from ${formatShortDate(start)} to ${formatShortDate(end)}.`;
+      printArea.innerHTML = `${titleHtml}${body}`;
+
+      if (view === 'grid' || view === 'calendar') {
+        summaryLine.textContent = `${settings.days} day${settings.days === 1 ? '' : 's'}, from ${formatShortDate(start)} to ${formatShortDate(end)}.`;
+      } else {
+        summaryLine.textContent = '';
+      }
     }
 
     function commitAndRender() {
@@ -717,20 +1038,43 @@
     }
 
     // ------------------------------ Wiring ------------------------------
-    [titleInput, daysInput, startDateInput, directionInput, orientationInput, colsInput, weekStartInput].forEach((el) => {
+    [titleInput, daysInput, startDateInput, directionInput, orientationInput, colsInput, weekStartInput, yearInput, monthInput, plannerDateInput].forEach((el) => {
       el.addEventListener('input', commitAndRender);
       el.addEventListener('change', commitAndRender);
     });
     showDatesInput.addEventListener('change', commitAndRender);
+    showCountdownInput.addEventListener('change', commitAndRender);
 
-    tabGrid.addEventListener('click', () => { settings.view = 'grid'; commitAndRender(); });
-    tabCalendar.addEventListener('click', () => { settings.view = 'calendar'; commitAndRender(); });
+    // End Date isn't itself a stored setting -- picking one just recomputes
+    // Number of Days from (End Date - Start Date), then commits normally.
+    // applySettingsToForm() re-derives End Date's displayed value from the
+    // (possibly clamped) result afterwards, so an out-of-range pick (e.g.
+    // before Start Date, or beyond the 3650-day cap) snaps back to what's
+    // actually in effect instead of showing a stale/impossible value.
+    endDateInput.addEventListener('change', () => {
+      const start = parseDateInput(startDateInput.value || todayDateInputValue());
+      const end = parseDateInput(endDateInput.value || startDateInput.value || todayDateInputValue());
+      let days = Math.round((end - start) / 86400000) + 1;
+      if (!Number.isFinite(days) || days < 1) days = 1;
+      if (days > 3650) days = 3650;
+      daysInput.value = days;
+      commitAndRender();
+    });
+
+    VIEWS.forEach((view) => {
+      if (tabs[view]) tabs[view].addEventListener('click', () => { settings.view = view; commitAndRender(); });
+    });
 
     document.getElementById('printBtn').addEventListener('click', () => window.print());
     document.getElementById('printBtn2').addEventListener('click', () => window.print());
     document.getElementById('resetBtn').addEventListener('click', () => {
       if (!confirm('Reset all settings to defaults?')) return;
-      settings = Object.assign({}, DEFAULTS, { startDate: todayDateInputValue() });
+      settings = Object.assign({}, DEFAULTS, {
+        startDate: todayDateInputValue(),
+        year: new Date().getFullYear(),
+        month: currentMonthInputValue(),
+        plannerDate: todayDateInputValue(),
+      });
       applySettingsToForm();
       saveSettings(settings);
       render();
