@@ -515,11 +515,15 @@
       align-items: center;
       gap: 10px;
     }
-    #backupSection .action-btn,
-    #backupSection .file-input-label {
+    #backupSection .action-btn {
       flex: 1 1 150px;
       width: auto;
       max-width: 220px;
+    }
+    #backupSection .file-input-label {
+      flex: 0 1 110px;
+      width: auto;
+      max-width: 130px;
     }
     .action-btn {
       max-width: 260px;
@@ -527,11 +531,6 @@
     .action-btn--primary {
       background: linear-gradient(180deg, var(--primary), var(--primary-dark));
       color: #fff;
-    }
-    .action-btn--accent {
-      background: linear-gradient(180deg, var(--accent), #159a68);
-      color: #fff;
-      box-shadow: 0 2px 3px rgba(27,175,122,.25), 0 10px 22px -4px rgba(27,175,122,.5);
     }
     .action-btn--outline {
       background: linear-gradient(180deg, var(--surface), var(--surface-muted));
@@ -551,18 +550,18 @@
       border: 0;
     }
     .file-input-label {
-      flex: 1 1 200px;
-      max-width: 260px;
+      flex: 1 1 110px;
+      max-width: 150px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      padding: 9px 14px;
+      padding: 9px 10px;
       background: linear-gradient(180deg, var(--surface), var(--surface-muted));
       color: var(--text-secondary);
       border: 1.5px dashed var(--border);
       border-radius: 8px;
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       text-align: center;
@@ -820,10 +819,12 @@
       #initialValuesDisplay, #usageInsights {
         font-size: 13px;
       }
-      /* Backup / Restore / Print stay together in one shrunk-down row; the
-         "Choose file" label (needed only when actually restoring) wraps to
-         its own full-width row below instead of crowding that row. */
-      #backupSection .action-btn {
+      /* Backup / Restore / Print all stay together in one evenly-shrunk row
+         -- Restore is just a short label now (not a "Choose file..." prompt
+         needing its own full-width row), so it can shrink like the other
+         two buttons instead of being singled out. */
+      #backupSection .action-btn,
+      #backupSection .file-input-label {
         flex: 1 1 0;
         min-width: 0;
         max-width: none;
@@ -832,11 +833,6 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-      }
-      #backupSection .file-input-label {
-        order: 1;
-        flex: 1 1 100%;
-        max-width: 100%;
       }
     }
     /* Responsive styles for small mobile (360px) */
@@ -1168,11 +1164,10 @@
       <h3>💾 Backup, Restore &amp; Print</h3>
       <div id="backupSection">
         <button class="action-btn action-btn--primary" id="backupBtn" onclick="backupReadings()" title="Save all your readings to a JSON file">💾 Backup</button>
-        <label class="file-input-label" for="restoreFile" title="Load readings back from a backup file">
-          📂 <span id="restoreFileName">Choose file…</span>
+        <label class="file-input-label" for="restoreFile" title="Selecting a backup file restores it right away">
+          <span id="restoreFileName">↩️ Restore</span>
         </label>
         <input type="file" id="restoreFile" accept=".json" class="visually-hidden-file">
-        <button class="action-btn action-btn--accent" onclick="restoreReadings()">↩️ Restore</button>
         <button class="action-btn action-btn--outline" id="printBtn" onclick="generatePrintableReport()" title="Generate a printable report of your entries">🖨️ Print</button>
       </div>
     </div>
@@ -2162,11 +2157,21 @@
       });
     }
 
-    // Show the chosen file's name on the styled label instead of the
-    // browser's default "No file chosen" text.
+    // Restoring used to be two steps (pick a file, then click a separate
+    // Restore button) -- picking the file now restores it immediately, after
+    // a confirm() since this overwrites all current data and there's no
+    // longer a second deliberate click acting as a safety pause.
     document.getElementById('restoreFile').addEventListener('change', (e) => {
       const nameEl = document.getElementById('restoreFileName');
-      nameEl.textContent = e.target.files[0] ? e.target.files[0].name : 'Choose backup file…';
+      const file = e.target.files[0];
+      if (!file) { nameEl.textContent = '↩️ Restore'; return; }
+      nameEl.textContent = file.name;
+      if (!confirm(`Restore readings from "${file.name}"? This will overwrite your current data.`)) {
+        e.target.value = '';
+        nameEl.textContent = '↩️ Restore';
+        return;
+      }
+      restoreReadings();
     });
 
     // Backup Readings
@@ -2218,7 +2223,7 @@
       };
       reader.readAsText(file);
       fileInput.value = '';
-      document.getElementById('restoreFileName').textContent = 'Choose backup file…';
+      document.getElementById('restoreFileName').textContent = '↩️ Restore';
     }
 
     // Generate Printable Report
@@ -2229,7 +2234,6 @@
     // This page's markup calls these via inline onclick="..." attributes;
     // module-scope functions aren't global, so expose the ones it needs.
     window.backupReadings = backupReadings;
-    window.restoreReadings = restoreReadings;
     window.generatePrintableReport = generatePrintableReport;
     window.deleteInitial = deleteInitial;
     window.deleteEntry = deleteEntry;
