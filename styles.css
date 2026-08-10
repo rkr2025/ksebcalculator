@@ -244,8 +244,10 @@ h1.title-js-active {
    --sx/--sy/--sr start offsets are clamped in JS to that word's actual safe
    surrounding space before .title-word-fly--go is added to trigger the
    keyframe animation. .title-animating on <html>/<body> is only set for the
-   brief duration of that animation, to suppress any transient scrollbar
-   from the (tightly clamped) start positions. */
+   brief duration of that animation, to suppress any transient horizontal
+   scrollbar from the (tightly clamped) start positions -- vertical
+   scrolling is deliberately left alone so the page stays responsive to the
+   user while the animation plays. */
 .title-word {
   display: inline-block;
 }
@@ -277,7 +279,15 @@ h1.title-js-active {
 
 html.title-animating,
 body.title-animating {
-  overflow: hidden;
+  /* Horizontal only -- the words' clamped start offsets can only ever
+     poke out sideways (HORIZ_CAP in title-animation.js), never vertically
+     by more than a few px, so there's nothing to suppress on the y-axis.
+     A blanket `overflow: hidden` here blocked the page from scrolling at
+     all -- via touch, wheel, or keyboard -- for the animation's full
+     ~1.4s-plus-per-word-delay duration, which read as the page being
+     unresponsive right after load. overflow-x keeps the original transient
+     -scrollbar fix without taking scrolling away from the user. */
+  overflow-x: hidden;
 }
 
 .app-subtitle {

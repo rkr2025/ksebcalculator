@@ -129,9 +129,11 @@
     });
 
     // Belt-and-suspenders clipping for the brief flight window: suppresses
-    // any transient scrollbar from the (now tightly clamped) start
-    // positions, without touching overflow behavior elsewhere or at any
-    // other time.
+    // any transient horizontal scrollbar from the (now tightly clamped)
+    // start positions, without touching overflow behavior elsewhere or at
+    // any other time. Horizontal only (see styles.css) -- vertical
+    // scrolling stays available throughout so the page doesn't feel frozen
+    // while the words are still flying in.
     document.documentElement.classList.add('title-animating');
     document.body.classList.add('title-animating');
     var animationDurationMs = 1400;
