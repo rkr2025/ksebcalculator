@@ -89,6 +89,6 @@ export function buildPrintInputsSummary(bill, readingPairs) {
             <h4 style="text-align: center;"><u>Entered Values</u></h4>
             ${section('Billing Setup', billingSetupRows(bill))}
             ${section('Solar Generation', solarGenerationRows(bill, readingPairs))}
-            ${section('KSEB Net Meter Consumption', netMeterRows(bill, readingPairs))}
+            ${section('KSEB NetMeter Info', netMeterRows(bill, readingPairs))}
         </div>`;
 }
