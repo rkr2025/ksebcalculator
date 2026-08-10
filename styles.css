@@ -909,6 +909,12 @@ details[open] > summary.sub-row-badge::after {
   color: var(--text-secondary);
 }
 
+.reading-mode-off-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
 .reading-pair {
   display: flex;
   gap: 6px;
