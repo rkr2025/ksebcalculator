@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🧳 Travel Diary</title>
+<script>
+  (function () {
+    var saved = localStorage.getItem('travelDiaryTheme');
+    var dark = saved ? saved === 'dark' : true;
+    if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+  })();
+</script>
+<style>
+  :root {
+    --primary: #2a78d6;
+    --primary-dark: #1f5fac;
+    --primary-light: #eaf2fc;
+    --accent: #1baf7a;
+    --accent-dark: #148f60;
+    --danger: #e34948;
+    --warn: #c97e00;
+    --surface: #ffffff;
+    --surface-muted: #f6f8fb;
+    --border: #e3e7ef;
+    --text-primary: #17203a;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --radius: 14px;
+    --shadow: 0 2px 4px rgba(23,32,58,.06), 0 12px 28px -6px rgba(23,32,58,.14), 0 28px 56px -20px rgba(23,32,58,.16);
+    --shadow-sm: 0 1px 2px rgba(23,32,58,.06), 0 6px 14px -4px rgba(23,32,58,.12);
+    --shadow-lift: 0 6px 12px rgba(23,32,58,.08), 0 22px 44px -10px rgba(23,32,58,.22), 0 36px 70px -24px rgba(23,32,58,.22);
+  }
+  :root[data-theme="dark"] {
+    --primary: #5b9ee8;
+    --primary-dark: #86b9ee;
+    --primary-light: rgba(91,158,232,.18);
+    --accent: #33d497;
+    --accent-dark: #16a874;
+    --danger: #f2726f;
+    --warn: #e0a030;
+    --surface: #1a2130;
+    --surface-muted: #232b3d;
+    --border: #313b52;
+    --text-primary: #eef1f8;
+    --text-secondary: #c3cadb;
+    --text-muted: #8792a8;
+    --shadow: 0 2px 4px rgba(0,0,0,.5), 0 12px 28px -6px rgba(0,0,0,.5), 0 28px 56px -20px rgba(0,0,0,.55);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.5), 0 6px 14px -4px rgba(0,0,0,.45);
+    --shadow-lift: 0 6px 12px rgba(0,0,0,.55), 0 22px 44px -10px rgba(0,0,0,.6), 0 36px 70px -24px rgba(0,0,0,.6);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px 10px 32px;
+    font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(42,120,214,.16), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(27,175,122,.14), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(227,73,72,.10), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(201,126,0,.10), transparent 55%),
+      linear-gradient(160deg, #eef1f7, #e4ebf7 60%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    transition: background-color .2s ease, color .2s ease;
+  }
+  :root[data-theme="dark"] body {
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(91,158,232,.10), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(51,212,151,.08), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(242,114,111,.08), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(224,160,48,.08), transparent 55%),
+      linear-gradient(160deg, #0f1420, #0b0f18 60%);
+    background-attachment: fixed;
+  }
+  .container { max-width: 980px; margin: 0 auto; }
+  h1 {
+    text-align: center; font-size: 24px; font-weight: 700; margin: 6px 0 4px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 2px 3px rgba(23,32,58,.15));
+  }
+  .subtitle { text-align: center; color: var(--text-muted); font-size: 13px; margin: 0 0 18px; }
+  .card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.82));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.6);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 16px;
+    transition: background-color .2s ease, border-color .2s ease;
+  }
+  :root[data-theme="dark"] .card {
+    background: linear-gradient(180deg, rgba(26,33,48,.94), rgba(26,33,48,.82));
+    border-color: rgba(255,255,255,.08);
+  }
+  .card h2 { font-size: 15px; margin: 0 0 14px; color: var(--text-secondary); }
+  .card h3 { font-size: 13.5px; margin: 0 0 12px; color: var(--text-secondary); }
+
+  button {
+    position: relative;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: filter .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0) 55%);
+    pointer-events: none;
+  }
+  button:hover { filter: brightness(0.97); transform: translateY(-1px); }
+  button:active { transform: translateY(1px); filter: brightness(0.93); }
+  .btn-add {
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color: #fff;
+    box-shadow: 0 2px 3px rgba(27,175,122,.25), 0 10px 22px -4px rgba(27,175,122,.5);
+  }
+  .btn-add:hover { box-shadow: 0 4px 8px rgba(27,175,122,.3), 0 16px 30px -6px rgba(27,175,122,.55); }
+  .btn-outline {
+    background: linear-gradient(180deg, var(--surface), var(--surface-muted));
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-outline:hover { box-shadow: var(--shadow-lift); }
+  .btn-danger {
+    background: linear-gradient(180deg, var(--danger), #c53433);
+    color: #fff;
+    box-shadow: 0 2px 3px rgba(227,73,72,.25), 0 8px 18px -4px rgba(227,73,72,.5);
+  }
+  .btn-sm { padding: 6px 11px; font-size: 12.5px; }
+
+  input, select, textarea {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 9px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: inset 0 1px 3px rgba(23,32,58,.05);
+    transition: border-color .15s ease, box-shadow .15s ease;
+    width: 100%;
+  }
+  textarea { resize: vertical; min-height: 60px; }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light), inset 0 1px 3px rgba(23,32,58,.05);
+  }
+  input[type="date"] { color-scheme: light; }
+  :root[data-theme="dark"] input[type="date"] { color-scheme: dark; }
+  label { font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .02em; display: block; margin-bottom: 4px; }
+
+  .theme-toggle { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 16px; font-size: 13px; }
+  .switch { position: relative; display: inline-block; width: 36px; height: 21px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch-slider {
+    position: absolute; inset: 0;
+    background: var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.15);
+    transition: background .15s ease;
+  }
+  .switch-slider::before {
+    content: "";
+    position: absolute;
+    height: 15px; width: 15px; left: 3px; top: 3px;
+    background: linear-gradient(180deg, #ffffff, #eef1f7);
+    border-radius: 50%;
+    transition: transform .15s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  }
+  .switch input:checked + .switch-slider { background: linear-gradient(180deg, var(--primary), var(--primary-dark)); }
+  .switch input:checked + .switch-slider::before { transform: translateX(15px); }
+
+  .field-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .field { flex: 1 1 160px; min-width: 0; }
+  .actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+
+  /* -------- Trip selector & header -------- */
+  .trip-select-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .trip-select-row .field { flex: 2 1 220px; }
+  .trip-select-row .actions-row { flex: 1 1 260px; margin-top: 0; }
+
+  .trip-header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+  .trip-header-emoji { font-size: 36px; line-height: 1; }
+  .trip-header-title { font-size: 19px; font-weight: 800; margin: 0; }
+  .trip-header-dest { font-size: 13px; color: var(--text-muted); margin: 2px 0 0; }
+  .trip-header-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+  .trip-status-badge { border-radius: 999px; padding: 4px 12px; font-size: 11.5px; font-weight: 800; }
+  .trip-status-badge.upcoming { background: rgba(42,120,214,.15); color: var(--primary-dark); }
+  .trip-status-badge.ongoing { background: rgba(27,175,122,.15); color: var(--accent-dark); }
+  .trip-status-badge.completed { background: rgba(137,135,129,.18); color: var(--text-muted); }
+  .trip-empty { text-align: center; color: var(--text-muted); font-size: 13.5px; padding: 24px 10px; }
+
+  /* -------- Section tabs -------- */
+  .mode-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .mode-tab {
+    flex: 1 1 100px;
+    text-align: center;
+    padding: 9px 6px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    font-weight: 700;
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+  .mode-tab.active { background: linear-gradient(180deg, var(--primary), var(--primary-dark)); color: #fff; border-color: transparent; }
+
+  /* -------- Mood picker -------- */
+  .mood-picker { display: flex; gap: 8px; }
+  .mood-btn {
+    flex: 1 1 0; font-size: 22px; padding: 8px 4px; border-radius: 10px;
+    background: var(--surface-muted); border: 1.5px solid var(--border); box-shadow: none;
+  }
+  .mood-btn.active { background: linear-gradient(180deg, var(--primary-light), var(--primary-light)); border-color: var(--primary); }
+
+  /* -------- Rows list (Info / generic small rows) -------- */
+  .rows-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+  .row-item { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; }
+  .row-item .row-main { flex: 1 1 auto; min-width: 0; }
+  .row-item .row-actions { display: flex; gap: 4px; margin-left: auto; }
+  .icon-btn { background: none; border: none; box-shadow: none; padding: 3px 6px; font-size: 13px; color: var(--text-muted); }
+  .icon-btn:hover { color: var(--primary); transform: none; filter: none; }
+  .icon-btn::after { display: none; }
+  .icon-btn.is-danger:hover { color: var(--danger); }
+
+  /* -------- Diary entries -------- */
+  .entry-card { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+  .entry-card-head { display: flex; align-items: center; gap: 8px; }
+  .entry-date { font-weight: 800; font-size: 13px; }
+  .entry-mood { font-size: 18px; }
+  .entry-place { font-size: 12.5px; color: var(--primary); font-weight: 700; margin-top: 4px; }
+  .entry-notes { font-size: 13px; color: var(--text-secondary); margin-top: 6px; white-space: pre-wrap; }
+  .entry-highlight { font-size: 12px; color: var(--warn); font-weight: 700; margin-top: 6px; }
+
+  /* -------- Itinerary -------- */
+  .itin-item { display: flex; align-items: flex-start; gap: 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; margin-bottom: 8px; }
+  .itin-item.is-done { opacity: .6; }
+  .itin-item.is-done .itin-place { text-decoration: line-through; }
+  .itin-check { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--border); background: var(--surface); flex: none; padding: 0; box-shadow: none; font-size: 13px; }
+  .itin-check.is-done { background: linear-gradient(180deg, var(--accent), var(--accent-dark)); border-color: transparent; color: #fff; }
+  .itin-check::after { display: none; }
+  .itin-body { flex: 1 1 auto; min-width: 0; }
+  .itin-date { font-size: 11px; color: var(--text-muted); font-weight: 700; }
+  .itin-place { font-size: 13.5px; font-weight: 700; }
+  .itin-notes { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+  /* -------- Expenses -------- */
+  .budget-summary { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
+  .budget-summary-line { display: flex; justify-content: space-between; font-size: 13.5px; font-weight: 700; margin-bottom: 6px; }
+  .budget-summary-line .over { color: var(--danger); }
+  .progress-track { height: 10px; border-radius: 999px; background: var(--border); overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-dark)); border-radius: 999px; }
+  .progress-fill.is-over { background: linear-gradient(90deg, var(--danger), #c53433); }
+  .cat-breakdown-row { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--text-secondary); margin-top: 8px; }
+  .cat-breakdown-row .cat-label { flex: 0 0 90px; }
+  .cat-breakdown-row .progress-track { flex: 1 1 auto; height: 6px; }
+  .cat-breakdown-row .cat-amount { flex: 0 0 70px; text-align: right; }
+  .expense-row .row-main { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+  .expense-amount { font-weight: 800; margin-left: auto; }
+
+  /* -------- Packing -------- */
+  .pack-cat-title { font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: var(--text-muted); margin: 14px 0 6px; }
+  .pack-cat-title:first-child { margin-top: 0; }
+  .pack-item { display: flex; align-items: center; gap: 8px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; margin-bottom: 6px; }
+  .pack-item.is-packed .pack-text { text-decoration: line-through; color: var(--text-muted); }
+  .pack-check { width: 20px; height: 20px; border-radius: 5px; border: 1.5px solid var(--border); background: var(--surface); flex: none; padding: 0; box-shadow: none; font-size: 12px; }
+  .pack-check.is-packed { background: linear-gradient(180deg, var(--accent), var(--accent-dark)); border-color: transparent; color: #fff; }
+  .pack-check::after { display: none; }
+  .pack-text { flex: 1 1 auto; font-size: 13px; }
+
+  /* -------- Summary -------- */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+  .stat-box { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
+  .stat-box-value { font-size: 20px; font-weight: 800; color: var(--primary); }
+  .stat-box-label { font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-top: 2px; }
+
+  .empty-note { text-align: center; color: var(--text-muted); font-size: 12.5px; padding: 14px; }
+  .search-row { margin-bottom: 12px; }
+
+  /* -------- Print -------- */
+  #printArea { display: none; }
+  .print-title { text-align: center; font-size: 22px; font-weight: 800; margin: 0 0 4px; color: #17203a; }
+  .print-subtitle { text-align: center; font-size: 12.5px; color: #6b7488; margin: 0 0 16px; }
+  .print-entry { border-bottom: 1px solid #dde2ee; padding: 10px 0; }
+  .print-entry-date { font-weight: 800; font-size: 13px; color: #17203a; }
+  .print-entry-place { font-size: 12px; color: #2a78d6; font-weight: 700; margin-top: 2px; }
+  .print-entry-notes { font-size: 12.5px; color: #333; margin-top: 4px; white-space: pre-wrap; }
+  .print-entry-highlight { font-size: 11.5px; color: #9a6b00; font-weight: 700; margin-top: 4px; }
+
+  .nav-link { display: block; text-align: center; margin-top: 8px; text-decoration: none; color: var(--primary); font-size: 13.5px; }
+
+  @media screen and (max-width: 480px) {
+    body { padding: 10px 6px 24px; }
+    .card { padding: 14px; }
+    h1 { font-size: 20px; }
+    .mode-tab { flex: 1 1 30%; font-size: 11px; padding: 8px 4px; }
+    .trip-header-emoji { font-size: 28px; }
+    .trip-header-title { font-size: 16px; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media print {
+    html, body { background: #fff !important; padding: 0; }
+    .container { max-width: none; }
+    body > .container > *:not(#printArea) { display: none !important; }
+    #printArea { display: block; padding: 6mm; }
+  }
+</style>
+<style id="pageStylePortrait">@page { size: A4 portrait; margin: 12mm; }</style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JFG7JRVYNV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-JFG7JRVYNV');
+</script>
+</head>
+<body>
+  <div class="container">
+    <h1>🧳 Travel Diary</h1>
+    <p class="subtitle">Plan, journal, and track every trip — itinerary, day-by-day diary, expenses, packing, and important info, all in one place.</p>
+
+    <div class="theme-toggle">
+      <span>☀️</span>
+      <label class="switch">
+        <input type="checkbox" id="themeToggle">
+        <span class="switch-slider"></span>
+      </label>
+      <span>🌙</span>
+    </div>
+
+    <div class="card" id="tripSelectorCard">
+      <h2>✈️ Your Trips</h2>
+      <div class="trip-select-row">
+        <div class="field">
+          <label for="tripSelect">Current Trip</label>
+          <select id="tripSelect"></select>
+        </div>
+        <div class="actions-row">
+          <button class="btn-add btn-sm" id="newTripBtn" type="button">➕ New Trip</button>
+          <button class="btn-outline btn-sm" id="editTripBtn" type="button">✎ Edit Trip</button>
+          <button class="btn-danger btn-sm" id="deleteTripBtn" type="button">🗑️ Delete Trip</button>
+        </div>
+      </div>
+
+      <div id="tripMetaForm" style="display:none; margin-top: 14px;">
+        <div class="field-row">
+          <div class="field" style="flex: 2 1 220px;">
+            <label for="tripNameInput">Trip Name</label>
+            <input type="text" id="tripNameInput" maxlength="80" placeholder="e.g. Kerala Backwaters Trip">
+          </div>
+          <div class="field" style="flex: 0 0 80px;">
+            <label for="tripEmojiInput">Icon</label>
+            <input type="text" id="tripEmojiInput" maxlength="4" placeholder="🧳">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field" style="flex: 2 1 220px;">
+            <label for="tripDestInput">Destination(s)</label>
+            <input type="text" id="tripDestInput" maxlength="120" placeholder="e.g. Munnar, Alleppey, Kochi">
+          </div>
+          <div class="field">
+            <label for="tripStartInput">Start Date</label>
+            <input type="date" id="tripStartInput">
+          </div>
+          <div class="field">
+            <label for="tripEndInput">End Date</label>
+            <input type="date" id="tripEndInput">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field" style="flex: 2 1 220px;">
+            <label for="tripCompanionsInput">Travelling With (optional)</label>
+            <input type="text" id="tripCompanionsInput" maxlength="150" placeholder="e.g. Priya, Arun">
+          </div>
+          <div class="field" style="flex: 0 0 90px;">
+            <label for="tripCurrencyInput">Currency</label>
+            <input type="text" id="tripCurrencyInput" maxlength="4" placeholder="₹">
+          </div>
+          <div class="field">
+            <label for="tripBudgetInput">Budget (optional)</label>
+            <input type="number" id="tripBudgetInput" min="0" step="any" placeholder="e.g. 20000">
+          </div>
+        </div>
+        <div class="actions-row">
+          <button class="btn-add btn-sm" id="saveTripBtn" type="button">💾 Save Trip</button>
+          <button class="btn-outline btn-sm" id="cancelTripBtn" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="tripEmptyState" class="card trip-empty" style="display:none;">
+      No trips yet — click "➕ New Trip" above to start your travel diary.
+    </div>
+
+    <div id="tripHeaderCard" class="card trip-header" style="display:none;"></div>
+
+    <div class="mode-tabs" id="sectionTabs" style="display:none;">
+      <div class="mode-tab active" data-tab="diary">📓 Diary</div>
+      <div class="mode-tab" data-tab="itinerary">🗺️ Itinerary</div>
+      <div class="mode-tab" data-tab="expenses">💰 Expenses</div>
+      <div class="mode-tab" data-tab="packing">🎒 Packing</div>
+      <div class="mode-tab" data-tab="info">📇 Info</div>
+      <div class="mode-tab" data-tab="summary">📊 Summary</div>
+    </div>
+
+    <div id="tabContent"></div>
+
+    <div class="card" id="backupCard" style="display:none;">
+      <h2>💾 Backup &amp; Restore</h2>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 10px;">Saves/restores <strong>all</strong> your trips at once, as one file.</p>
+      <div class="actions-row">
+        <button class="btn-outline btn-sm" id="exportFileBtn" type="button">⬇️ Export to File</button>
+        <button class="btn-outline btn-sm" id="importFileBtn" type="button">⬆️ Import from File</button>
+        <input type="file" id="importFileInput" accept="application/json" style="display:none;">
+        <button class="btn-outline btn-sm" id="printDiaryBtn" type="button">🖨️ Print This Trip's Diary</button>
+      </div>
+    </div>
+
+    <a href="tools.html" class="nav-link">← Back to Tools</a>
+  </div>
+
+  <div id="printArea"></div>
+
+  <script>
+    // ============================== Storage ==============================
+    const STORAGE_KEY = 'travelDiaryData';
+    const DOW_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+    const EXPENSE_CATEGORIES = [
+      { id: 'food', label: '🍔 Food' },
+      { id: 'transport', label: '🚕 Transport' },
+      { id: 'stay', label: '🏨 Stay' },
+      { id: 'shopping', label: '🛍️ Shopping' },
+      { id: 'activities', label: '🎟️ Activities' },
+      { id: 'misc', label: '📦 Misc' },
+    ];
+    const PACK_CATEGORIES = [
+      { id: 'documents', label: '📄 Documents' },
+      { id: 'clothing', label: '👕 Clothing' },
+      { id: 'electronics', label: '🔌 Electronics' },
+      { id: 'toiletries', label: '🧴 Toiletries' },
+      { id: 'health', label: '💊 Health' },
+      { id: 'misc', label: '🎒 Misc' },
+    ];
+    const COMMON_PACKING_ITEMS = [
+      { text: 'Passport / ID card', cat: 'documents' },
+      { text: 'Tickets / booking confirmations', cat: 'documents' },
+      { text: 'Travel insurance papers', cat: 'documents' },
+      { text: 'Phone charger', cat: 'electronics' },
+      { text: 'Power bank', cat: 'electronics' },
+      { text: 'Camera', cat: 'electronics' },
+      { text: 'Toothbrush & toothpaste', cat: 'toiletries' },
+      { text: 'Sunscreen', cat: 'toiletries' },
+      { text: 'Prescription medicines', cat: 'health' },
+      { text: 'First-aid basics', cat: 'health' },
+      { text: 'Comfortable walking shoes', cat: 'clothing' },
+      { text: 'Weather-appropriate jacket', cat: 'clothing' },
+      { text: 'Reusable water bottle', cat: 'misc' },
+      { text: 'Cash / cards', cat: 'misc' },
+    ];
+    const MOOD_EMOJI = ['', '😞', '🙁', '😐', '🙂', '😄'];
+
+    function defaultData() {
+      return { trips: [], activeTripId: null, activeTab: 'diary' };
+    }
+    function defaultTrip() {
+      return {
+        id: uid(), name: '', destination: '', coverEmoji: '🧳',
+        startDate: '', endDate: '', companions: '', currency: '₹', budgetAmount: 0,
+        diary: [], itinerary: [], expenses: [], packing: [], info: [],
+      };
+    }
+
+    function loadData() {
+      let stored = {};
+      try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { stored = {}; }
+      const d = Object.assign(defaultData(), stored);
+      if (!Array.isArray(d.trips)) d.trips = [];
+      d.trips.forEach((t) => {
+        ['diary', 'itinerary', 'expenses', 'packing', 'info'].forEach((k) => { if (!Array.isArray(t[k])) t[k] = []; });
+        if (!t.currency) t.currency = '₹';
+      });
+      if (!d.activeTripId || !d.trips.some((t) => t.id === d.activeTripId)) {
+        d.activeTripId = d.trips.length ? d.trips[0].id : null;
+      }
+      return d;
+    }
+    function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+    let data = loadData();
+    let editing = null; // { tab: 'diary'|'itinerary'|'expenses'|'packing'|'info', id }
+    let selectedMood = 3;
+    let diarySearchTerm = '';
+    let editingTripId = null; // null = creating new trip
+
+    function uid() { return 't_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str == null ? '' : str;
+      return div.innerHTML;
+    }
+    function getActiveTrip() { return data.trips.find((t) => t.id === data.activeTripId) || null; }
+    function todayStr() { return formatDateInputValue(new Date()); }
+    function formatDateInputValue(d) {
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+    function parseDateInput(value) {
+      const [y, m, d] = value.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+    function formatDisplayDate(value) {
+      if (!value) return '';
+      const d = parseDateInput(value);
+      return `${DOW_FULL[d.getDay()].slice(0, 3)}, ${d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+    }
+    function fmtMoney(trip, n) {
+      const num = Number(n) || 0;
+      return `${trip.currency}${num.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+    }
+
+    // ============================== Trip status ==============================
+    function computeTripStatus(trip) {
+      if (!trip.startDate || !trip.endDate) return { label: 'No dates set', cls: '' };
+      const today = parseDateInput(todayStr());
+      const start = parseDateInput(trip.startDate);
+      const end = parseDateInput(trip.endDate);
+      if (today.getTime() < start.getTime()) {
+        const days = Math.round((start - today) / 86400000);
+        return { label: `🕓 Upcoming — in ${days} day${days === 1 ? '' : 's'}`, cls: 'upcoming' };
+      }
+      if (today.getTime() > end.getTime()) {
+        const days = Math.round((today - end) / 86400000);
+        return { label: `✅ Completed — ${days} day${days === 1 ? '' : 's'} ago`, cls: 'completed' };
+      }
+      const totalDays = Math.round((end - start) / 86400000) + 1;
+      const dayNum = Math.round((today - start) / 86400000) + 1;
+      return { label: `🟢 Ongoing — Day ${dayNum} of ${totalDays}`, cls: 'ongoing' };
+    }
+
+    // ============================== Trip selector / header ==============================
+    function renderTripSelect() {
+      const sel = document.getElementById('tripSelect');
+      if (!data.trips.length) {
+        sel.innerHTML = '<option value="">No trips yet</option>';
+        return;
+      }
+      sel.innerHTML = data.trips.map((t) => `<option value="${t.id}" ${t.id === data.activeTripId ? 'selected' : ''}>${escapeHtml(t.coverEmoji || '🧳')} ${escapeHtml(t.name || 'Untitled trip')}</option>`).join('');
+    }
+
+    function renderTripHeader() {
+      const trip = getActiveTrip();
+      const headerCard = document.getElementById('tripHeaderCard');
+      const emptyState = document.getElementById('tripEmptyState');
+      const tabsEl = document.getElementById('sectionTabs');
+      const backupCard = document.getElementById('backupCard');
+      backupCard.style.display = data.trips.length ? '' : 'none';
+      if (!trip) {
+        headerCard.style.display = 'none';
+        tabsEl.style.display = 'none';
+        emptyState.style.display = '';
+        document.getElementById('tabContent').innerHTML = '';
+        return;
+      }
+      emptyState.style.display = 'none';
+      headerCard.style.display = 'flex';
+      tabsEl.style.display = '';
+      const status = computeTripStatus(trip);
+      const dateRange = trip.startDate && trip.endDate ? `${formatDisplayDate(trip.startDate)} – ${formatDisplayDate(trip.endDate)}` : 'Dates not set';
+      headerCard.innerHTML = `
+        <div class="trip-header-emoji">${escapeHtml(trip.coverEmoji || '🧳')}</div>
+        <div style="flex:1 1 auto; min-width:0;">
+          <div class="trip-header-title">${escapeHtml(trip.name || 'Untitled trip')}</div>
+          <div class="trip-header-dest">📍 ${escapeHtml(trip.destination || 'Destination not set')}</div>
+          <div class="trip-header-meta">
+            <span class="trip-status-badge ${status.cls}">${escapeHtml(status.label)}</span>
+            <span>🗓️ ${escapeHtml(dateRange)}</span>
+            ${trip.companions ? `<span>👥 With ${escapeHtml(trip.companions)}</span>` : ''}
+          </div>
+        </div>`;
+    }
+
+    // ============================== Trip meta form (add/edit) ==============================
+    function openTripForm(trip) {
+      editingTripId = trip ? trip.id : null;
+      document.getElementById('tripMetaForm').style.display = '';
+      document.getElementById('tripNameInput').value = trip ? trip.name : '';
+      document.getElementById('tripEmojiInput').value = trip ? trip.coverEmoji : '🧳';
+      document.getElementById('tripDestInput').value = trip ? trip.destination : '';
+      document.getElementById('tripStartInput').value = trip ? trip.startDate : todayStr();
+      document.getElementById('tripEndInput').value = trip ? trip.endDate : todayStr();
+      document.getElementById('tripCompanionsInput').value = trip ? trip.companions : '';
+      document.getElementById('tripCurrencyInput').value = trip ? trip.currency : '₹';
+      document.getElementById('tripBudgetInput').value = trip && trip.budgetAmount ? trip.budgetAmount : '';
+      document.getElementById('tripNameInput').focus();
+    }
+    function closeTripForm() {
+      editingTripId = null;
+      document.getElementById('tripMetaForm').style.display = 'none';
+    }
+
+    document.getElementById('newTripBtn').addEventListener('click', () => openTripForm(null));
+    document.getElementById('editTripBtn').addEventListener('click', () => {
+      const trip = getActiveTrip();
+      if (!trip) { alert('Create a trip first.'); return; }
+      openTripForm(trip);
+    });
+    document.getElementById('cancelTripBtn').addEventListener('click', closeTripForm);
+    document.getElementById('deleteTripBtn').addEventListener('click', () => {
+      const trip = getActiveTrip();
+      if (!trip) return;
+      if (!confirm(`Delete "${trip.name || 'this trip'}" and everything in it (diary, itinerary, expenses, packing list)? This cannot be undone.`)) return;
+      data.trips = data.trips.filter((t) => t.id !== trip.id);
+      data.activeTripId = data.trips.length ? data.trips[0].id : null;
+      saveData();
+      renderAll();
+    });
+
+    document.getElementById('saveTripBtn').addEventListener('click', () => {
+      const name = document.getElementById('tripNameInput').value.trim();
+      if (!name) { alert('Please enter a trip name.'); return; }
+      const startDate = document.getElementById('tripStartInput').value;
+      const endDate = document.getElementById('tripEndInput').value;
+      if (startDate && endDate && endDate < startDate) { alert('End Date must be on or after Start Date.'); return; }
+      let budget = parseFloat(document.getElementById('tripBudgetInput').value);
+      if (!Number.isFinite(budget) || budget < 0) budget = 0;
+
+      if (editingTripId) {
+        const trip = data.trips.find((t) => t.id === editingTripId);
+        Object.assign(trip, {
+          name, destination: document.getElementById('tripDestInput').value.trim(),
+          coverEmoji: document.getElementById('tripEmojiInput').value.trim() || '🧳',
+          startDate, endDate,
+          companions: document.getElementById('tripCompanionsInput').value.trim(),
+          currency: document.getElementById('tripCurrencyInput').value.trim() || '₹',
+          budgetAmount: budget,
+        });
+      } else {
+        const trip = defaultTrip();
+        Object.assign(trip, {
+          name, destination: document.getElementById('tripDestInput').value.trim(),
+          coverEmoji: document.getElementById('tripEmojiInput').value.trim() || '🧳',
+          startDate, endDate,
+          companions: document.getElementById('tripCompanionsInput').value.trim(),
+          currency: document.getElementById('tripCurrencyInput').value.trim() || '₹',
+          budgetAmount: budget,
+        });
+        data.trips.push(trip);
+        data.activeTripId = trip.id;
+      }
+      saveData();
+      closeTripForm();
+      renderAll();
+    });
+
+    document.getElementById('tripSelect').addEventListener('change', (e) => {
+      data.activeTripId = e.target.value;
+      editing = null;
+      saveData();
+      renderAll();
+    });
+
+    // ============================== Section tabs ==============================
+    document.getElementById('sectionTabs').addEventListener('click', (e) => {
+      const tab = e.target.closest('.mode-tab');
+      if (!tab) return;
+      data.activeTab = tab.dataset.tab;
+      editing = null;
+      diarySearchTerm = '';
+      saveData();
+      renderTabsUI();
+      renderTabContent();
+    });
+    function renderTabsUI() {
+      document.querySelectorAll('#sectionTabs .mode-tab').forEach((el) => el.classList.toggle('active', el.dataset.tab === data.activeTab));
+    }
+
+    function renderTabContent() {
+      const trip = getActiveTrip();
+      const el = document.getElementById('tabContent');
+      if (!trip) { el.innerHTML = ''; return; }
+      switch (data.activeTab) {
+        case 'diary': el.innerHTML = renderDiaryTab(trip); break;
+        case 'itinerary': el.innerHTML = renderItineraryTab(trip); break;
+        case 'expenses': el.innerHTML = renderExpensesTab(trip); break;
+        case 'packing': el.innerHTML = renderPackingTab(trip); break;
+        case 'info': el.innerHTML = renderInfoTab(trip); break;
+        case 'summary': el.innerHTML = renderSummaryTab(trip); break;
+        default: el.innerHTML = '';
+      }
+    }
+
+    // ============================== Diary tab ==============================
+    function renderDiaryTab(trip) {
+      const isEdit = editing && editing.tab === 'diary';
+      const item = isEdit ? trip.diary.find((x) => x.id === editing.id) : null;
+      selectedMood = item ? item.mood : 3;
+      const moodButtons = [1, 2, 3, 4, 5].map((m) => `<button type="button" class="mood-btn${m === selectedMood ? ' active' : ''}" data-mood="${m}">${MOOD_EMOJI[m]}</button>`).join('');
+
+      const entries = trip.diary.slice().sort((a, b) => a.date.localeCompare(b.date));
+      const filtered = diarySearchTerm
+        ? entries.filter((e) => (e.place + ' ' + e.notes + ' ' + e.highlight).toLowerCase().includes(diarySearchTerm.toLowerCase()))
+        : entries;
+
+      const list = filtered.length
+        ? filtered.map((e) => `
+          <div class="entry-card">
+            <div class="entry-card-head">
+              <span class="entry-date">${escapeHtml(formatDisplayDate(e.date))}</span>
+              <span class="entry-mood">${MOOD_EMOJI[e.mood] || ''}</span>
+              <span class="row-actions" style="margin-left:auto;">
+                <button class="icon-btn" data-act="edit-diary" data-id="${e.id}" title="Edit">✎</button>
+                <button class="icon-btn is-danger" data-act="del-diary" data-id="${e.id}" title="Delete">🗑</button>
+              </span>
+            </div>
+            ${e.place || e.weather ? `<div class="entry-place">📍 ${escapeHtml(e.place)}${e.weather ? ' · ' + escapeHtml(e.weather) : ''}</div>` : ''}
+            ${e.notes ? `<div class="entry-notes">${escapeHtml(e.notes)}</div>` : ''}
+            ${e.highlight ? `<div class="entry-highlight">⭐ ${escapeHtml(e.highlight)}</div>` : ''}
+          </div>`).join('')
+        : `<p class="empty-note">${diarySearchTerm ? 'No entries match your search.' : 'No diary entries yet — log your first day above.'}</p>`;
+
+      return `
+        <div class="card">
+          <h3>${isEdit ? '✎ Edit Diary Entry' : '➕ Add Diary Entry'}</h3>
+          <div class="field-row">
+            <div class="field"><label for="diaryDateInput">Date</label><input type="date" id="diaryDateInput" value="${item ? item.date : todayStr()}"></div>
+            <div class="field" style="flex:2 1 220px;"><label for="diaryPlaceInput">Place</label><input type="text" id="diaryPlaceInput" placeholder="e.g. Munnar Tea Gardens" value="${escapeHtml(item ? item.place : '')}"></div>
+            <div class="field"><label for="diaryWeatherInput">Weather</label><input type="text" id="diaryWeatherInput" placeholder="e.g. Sunny, 24°C" value="${escapeHtml(item ? item.weather : '')}"></div>
+          </div>
+          <div class="field-row">
+            <div class="field" style="flex:1 1 100%;">
+              <label>Mood</label>
+              <div class="mood-picker" id="diaryMoodPicker">${moodButtons}</div>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field" style="flex:1 1 100%;"><label for="diaryNotesInput">What happened today?</label><textarea id="diaryNotesInput" rows="3" placeholder="Journal your day...">${escapeHtml(item ? item.notes : '')}</textarea></div>
+          </div>
+          <div class="field-row">
+            <div class="field" style="flex:1 1 100%;"><label for="diaryHighlightInput">Highlight of the day (optional)</label><input type="text" id="diaryHighlightInput" placeholder="e.g. Watched the sunset at the viewpoint" value="${escapeHtml(item ? item.highlight : '')}"></div>
+          </div>
+          <div class="actions-row">
+            <button class="btn-add btn-sm" data-act="${isEdit ? 'save-diary' : 'add-diary'}" ${isEdit ? `data-id="${item.id}"` : ''}>${isEdit ? '💾 Save Changes' : '➕ Add Entry'}</button>
+            ${isEdit ? '<button class="btn-outline btn-sm" data-act="cancel-edit">Cancel</button>' : ''}
+          </div>
+        </div>
+        <div class="card">
+          <h3>📓 Diary Entries (${entries.length})</h3>
+          <div class="field-row search-row">
+            <div class="field" style="flex:1 1 100%;"><input type="text" id="diarySearchInput" placeholder="🔍 Search by place or notes…" value="${escapeHtml(diarySearchTerm)}"></div>
+          </div>
+          ${list}
+        </div>`;
+    }
+
+    // ============================== Itinerary tab ==============================
+    function renderItineraryTab(trip) {
+      const isEdit = editing && editing.tab === 'itinerary';
+      const item = isEdit ? trip.itinerary.find((x) => x.id === editing.id) : null;
+      const items = trip.itinerary.slice().sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+      const doneCount = items.filter((i) => i.done).length;
+
+      const list = items.length ? items.map((i) => `
+        <div class="itin-item${i.done ? ' is-done' : ''}">
+          <button class="itin-check${i.done ? ' is-done' : ''}" data-act="toggle-itin" data-id="${i.id}" title="Mark done">${i.done ? '✓' : ''}</button>
+          <div class="itin-body">
+            <div class="itin-date">${escapeHtml(formatDisplayDate(i.date))}${i.time ? ' · ' + escapeHtml(i.time) : ''}</div>
+            <div class="itin-place">${escapeHtml(i.place)}</div>
+            ${i.notes ? `<div class="itin-notes">${escapeHtml(i.notes)}</div>` : ''}
+          </div>
+          <span class="row-actions">
+            <button class="icon-btn" data-act="edit-itin" data-id="${i.id}" title="Edit">✎</button>
+            <button class="icon-btn is-danger" data-act="del-itin" data-id="${i.id}" title="Delete">🗑</button>
+          </span>
+        </div>`).join('') : '<p class="empty-note">No planned items yet — add places/activities you want to do above.</p>';
+
+      return `
+        <div class="card">
+          <h3>${isEdit ? '✎ Edit Planned Item' : '➕ Add Planned Item'}</h3>
+          <div class="field-row">
+            <div class="field"><label for="itinDateInput">Date</label><input type="date" id="itinDateInput" value="${item ? item.date : todayStr()}"></div>
+            <div class="field" style="flex:0 1 120px;"><label for="itinTimeInput">Time (optional)</label><input type="time" id="itinTimeInput" value="${item ? item.time || '' : ''}"></div>
+            <div class="field" style="flex:2 1 220px;"><label for="itinPlaceInput">Place / Activity</label><input type="text" id="itinPlaceInput" placeholder="e.g. Eravikulam National Park" value="${escapeHtml(item ? item.place : '')}"></div>
+          </div>
+          <div class="field-row">
+            <div class="field" style="flex:1 1 100%;"><label for="itinNotesInput">Notes (optional)</label><input type="text" id="itinNotesInput" placeholder="e.g. Entry closes at 4pm, book jeep in advance" value="${escapeHtml(item ? item.notes : '')}"></div>
+          </div>
+          <div class="actions-row">
+            <button class="btn-add btn-sm" data-act="${isEdit ? 'save-itin' : 'add-itin'}" ${isEdit ? `data-id="${item.id}"` : ''}>${isEdit ? '💾 Save Changes' : '➕ Add to Itinerary'}</button>
+            ${isEdit ? '<button class="btn-outline btn-sm" data-act="cancel-edit">Cancel</button>' : ''}
+          </div>
+        </div>
+        <div class="card">
+          <h3>🗺️ Planned Items (${doneCount}/${items.length} done)</h3>
+          ${list}
+        </div>`;
+    }
+
+    // ============================== Expenses tab ==============================
+    function renderExpensesTab(trip) {
+      const isEdit = editing && editing.tab === 'expenses';
+      const item = isEdit ? trip.expenses.find((x) => x.id === editing.id) : null;
+      const catOptions = EXPENSE_CATEGORIES.map((c) => `<option value="${c.id}" ${item && item.category === c.id ? 'selected' : ''}>${c.label}</option>`).join('');
+
+      const expenses = trip.expenses.slice().sort((a, b) => a.date.localeCompare(b.date));
+      const total = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+      const budget = Number(trip.budgetAmount) || 0;
+      const pct = budget > 0 ? Math.min(100, Math.round((total / budget) * 100)) : 0;
+      const over = budget > 0 && total > budget;
+
+      const catTotals = {};
+      expenses.forEach((e) => { catTotals[e.category] = (catTotals[e.category] || 0) + (Number(e.amount) || 0); });
+      const catBreakdown = EXPENSE_CATEGORIES.filter((c) => catTotals[c.id] > 0).map((c) => {
+        const amt = catTotals[c.id];
+        const p = total > 0 ? Math.round((amt / total) * 100) : 0;
+        return `<div class="cat-breakdown-row"><span class="cat-label">${c.label}</span><span class="progress-track"><span class="progress-fill" style="width:${p}%;"></span></span><span class="cat-amount">${escapeHtml(fmtMoney(trip, amt))}</span></div>`;
+      }).join('');
+
+      const summary = `
+        <div class="budget-summary">
+          <div class="budget-summary-line"><span>Total Spent</span><span class="${over ? 'over' : ''}">${escapeHtml(fmtMoney(trip, total))}${budget > 0 ? ' / ' + escapeHtml(fmtMoney(trip, budget)) : ''}</span></div>
+          ${budget > 0 ? `<div class="progress-track"><span class="progress-fill${over ? ' is-over' : ''}" style="width:${pct}%;"></span></div>` : ''}
+          ${over ? `<div style="font-size:11.5px;color:var(--danger);font-weight:700;margin-top:6px;">⚠ Over budget by ${escapeHtml(fmtMoney(trip, total - budget))}</div>` : ''}
+          ${catBreakdown}
+        </div>`;
+
+      const list = expenses.length ? expenses.map((e) => {
+        const cat = EXPENSE_CATEGORIES.find((c) => c.id === e.category) || EXPENSE_CATEGORIES[EXPENSE_CATEGORIES.length - 1];
+        return `<div class="row-item expense-row">
+          <div class="row-main">${escapeHtml(formatDisplayDate(e.date))} · ${cat.label}${e.description ? ' · ' + escapeHtml(e.description) : ''}</div>
+          <span class="expense-amount">${escapeHtml(fmtMoney(trip, e.amount))}</span>
+          <span class="row-actions">
+            <button class="icon-btn" data-act="edit-exp" data-id="${e.id}" title="Edit">✎</button>
+            <button class="icon-btn is-danger" data-act="del-exp" data-id="${e.id}" title="Delete">🗑</button>
+          </span>
+        </div>`;
+      }).join('') : '<p class="empty-note">No expenses logged yet.</p>';
+
+      return `
+        <div class="card">
+          <h3>${isEdit ? '✎ Edit Expense' : '➕ Add Expense'}</h3>
+          <div class="field-row">
+            <div class="field"><label for="expDateInput">Date</label><input type="date" id="expDateInput" value="${item ? item.date : todayStr()}"></div>
+            <div class="field"><label for="expCategoryInput">Category</label><select id="expCategoryInput">${catOptions}</select></div>
+            <div class="field"><label for="expAmountInput">Amount</label><input type="number" id="expAmountInput" min="0" step="any" placeholder="0" value="${item ? item.amount : ''}"></div>
+          </div>
+          <div class="field-row">
+            <div class="field" style="flex:1 1 100%;"><label for="expDescInput">Description (optional)</label><input type="text" id="expDescInput" placeholder="e.g. Houseboat lunch" value="${escapeHtml(item ? item.description : '')}"></div>
+          </div>
+          <div class="actions-row">
+            <button class="btn-add btn-sm" data-act="${isEdit ? 'save-exp' : 'add-exp'}" ${isEdit ? `data-id="${item.id}"` : ''}>${isEdit ? '💾 Save Changes' : '➕ Add Expense'}</button>
+            ${isEdit ? '<button class="btn-outline btn-sm" data-act="cancel-edit">Cancel</button>' : ''}
+          </div>
+        </div>
+        <div class="card">
+          <h3>💰 Budget</h3>
+          ${summary}
+        </div>
+        <div class="card">
+          <h3>🧾 Expense Log (${expenses.length})</h3>
+          <div class="rows-list">${list}</div>
+        </div>`;
+    }
+
+    // ============================== Packing tab ==============================
+    function renderPackingTab(trip) {
+      const catOptions = PACK_CATEGORIES.map((c) => `<option value="${c.id}">${c.label}</option>`).join('');
+      const items = trip.packing;
+      const packedCount = items.filter((i) => i.packed).length;
+      const pct = items.length ? Math.round((packedCount / items.length) * 100) : 0;
+
+      let listHtml = '';
+      if (!items.length) {
+        listHtml = '<p class="empty-note">Your packing list is empty — add items above, or use "Add Common Items" for a quick starter list.</p>';
+      } else {
+        PACK_CATEGORIES.forEach((cat) => {
+          const inCat = items.filter((i) => i.cat === cat.id);
+          if (!inCat.length) return;
+          listHtml += `<div class="pack-cat-title">${cat.label} (${inCat.filter((i) => i.packed).length}/${inCat.length})</div>`;
+          listHtml += inCat.map((i) => `
+            <div class="pack-item${i.packed ? ' is-packed' : ''}">
+              <button class="pack-check${i.packed ? ' is-packed' : ''}" data-act="toggle-pack" data-id="${i.id}">${i.packed ? '✓' : ''}</button>
+              <span class="pack-text">${escapeHtml(i.text)}</span>
+              <button class="icon-btn is-danger" data-act="del-pack" data-id="${i.id}" title="Remove">🗑</button>
+            </div>`).join('');
+        });
+      }
+
+      return `
+        <div class="card">
+          <h3>➕ Add Packing Item</h3>
+          <div class="field-row">
+            <div class="field" style="flex:2 1 220px;"><label for="packTextInput">Item</label><input type="text" id="packTextInput" placeholder="e.g. Rain jacket"></div>
+            <div class="field"><label for="packCatInput">Category</label><select id="packCatInput">${catOptions}</select></div>
+          </div>
+          <div class="actions-row">
+            <button class="btn-add btn-sm" data-act="add-pack">➕ Add Item</button>
+            <button class="btn-outline btn-sm" data-act="add-common-pack">✨ Add Common Items</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>🎒 Packing List — ${packedCount}/${items.length} packed</h3>
+          ${items.length ? `<div class="progress-track" style="margin-bottom:12px;"><span class="progress-fill" style="width:${pct}%;"></span></div>` : ''}
+          ${listHtml}
+        </div>`;
+    }
+
+    // ============================== Info tab ==============================
+    function renderInfoTab(trip) {
+      const isEdit = editing && editing.tab === 'info';
+      const item = isEdit ? trip.info.find((x) => x.id === editing.id) : null;
+      const list = trip.info.length ? trip.info.map((i) => `
+        <div class="row-item">
+          <div class="row-main"><strong>${escapeHtml(i.label)}:</strong> ${escapeHtml(i.value)}</div>
+          <span class="row-actions">
+            <button class="icon-btn" data-act="edit-info" data-id="${i.id}" title="Edit">✎</button>
+            <button class="icon-btn is-danger" data-act="del-info" data-id="${i.id}" title="Delete">🗑</button>
+          </span>
+        </div>`).join('') : '<p class="empty-note">No reference info saved yet — flight/train numbers, hotel booking refs, emergency contacts, etc.</p>';
+
+      return `
+        <div class="card">
+          <h3>${isEdit ? '✎ Edit Info' : '➕ Add Important Info'}</h3>
+          <div class="field-row">
+            <div class="field"><label for="infoLabelInput">Label</label><input type="text" id="infoLabelInput" placeholder="e.g. Flight PNR" value="${escapeHtml(item ? item.label : '')}"></div>
+            <div class="field" style="flex:2 1 220px;"><label for="infoValueInput">Value</label><input type="text" id="infoValueInput" placeholder="e.g. ABC123" value="${escapeHtml(item ? item.value : '')}"></div>
+          </div>
+          <div class="actions-row">
+            <button class="btn-add btn-sm" data-act="${isEdit ? 'save-info' : 'add-info'}" ${isEdit ? `data-id="${item.id}"` : ''}>${isEdit ? '💾 Save Changes' : '➕ Add'}</button>
+            ${isEdit ? '<button class="btn-outline btn-sm" data-act="cancel-edit">Cancel</button>' : ''}
+          </div>
+        </div>
+        <div class="card">
+          <h3>📇 Reference Info</h3>
+          <div class="rows-list">${list}</div>
+        </div>`;
+    }
+
+    // ============================== Summary tab ==============================
+    function renderSummaryTab(trip) {
+      const totalDays = trip.startDate && trip.endDate ? Math.round((parseDateInput(trip.endDate) - parseDateInput(trip.startDate)) / 86400000) + 1 : 0;
+      const spent = trip.expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+      const budget = Number(trip.budgetAmount) || 0;
+      const itinDone = trip.itinerary.filter((i) => i.done).length;
+      const packDone = trip.packing.filter((i) => i.packed).length;
+      return `
+        <div class="card">
+          <h3>📊 Trip Summary</h3>
+          <div class="stat-grid">
+            <div class="stat-box"><div class="stat-box-value">${totalDays || '—'}</div><div class="stat-box-label">Total Days</div></div>
+            <div class="stat-box"><div class="stat-box-value">${trip.diary.length}</div><div class="stat-box-label">Diary Entries</div></div>
+            <div class="stat-box"><div class="stat-box-value">${itinDone}/${trip.itinerary.length}</div><div class="stat-box-label">Itinerary Done</div></div>
+            <div class="stat-box"><div class="stat-box-value">${packDone}/${trip.packing.length}</div><div class="stat-box-label">Packed</div></div>
+            <div class="stat-box"><div class="stat-box-value">${escapeHtml(fmtMoney(trip, spent))}</div><div class="stat-box-label">Total Spent</div></div>
+            <div class="stat-box"><div class="stat-box-value">${budget > 0 ? escapeHtml(fmtMoney(trip, Math.max(0, budget - spent))) : '—'}</div><div class="stat-box-label">Budget Left</div></div>
+          </div>
+          ${trip.companions ? `<p style="font-size:12.5px;color:var(--text-secondary);margin:14px 0 0;">👥 Travelling with: ${escapeHtml(trip.companions)}</p>` : ''}
+        </div>`;
+    }
+
+    // ============================== Generic CRUD helper ==============================
+    function startEdit(tab, id) { editing = { tab, id }; renderTabContent(); }
+    function cancelEdit() { editing = null; renderTabContent(); }
+
+    document.getElementById('tabContent').addEventListener('click', (e) => {
+      const trip = getActiveTrip();
+      if (!trip) return;
+      const btn = e.target.closest('[data-act]');
+
+      // Mood picker (not a data-act button with an id action, handled separately)
+      const moodBtn = e.target.closest('.mood-btn');
+      if (moodBtn) {
+        selectedMood = Number(moodBtn.dataset.mood);
+        document.querySelectorAll('.mood-btn').forEach((b) => b.classList.toggle('active', Number(b.dataset.mood) === selectedMood));
+        return;
+      }
+      if (!btn) return;
+      const act = btn.dataset.act;
+      const id = btn.dataset.id;
+
+      if (act === 'cancel-edit') { cancelEdit(); return; }
+
+      // ---- Diary ----
+      if (act === 'add-diary' || act === 'save-diary') {
+        const date = document.getElementById('diaryDateInput').value || todayStr();
+        const place = document.getElementById('diaryPlaceInput').value.trim();
+        const weather = document.getElementById('diaryWeatherInput').value.trim();
+        const notes = document.getElementById('diaryNotesInput').value.trim();
+        const highlight = document.getElementById('diaryHighlightInput').value.trim();
+        if (!place && !notes) { alert('Please enter at least a place or some notes.'); return; }
+        if (act === 'add-diary') {
+          trip.diary.push({ id: uid(), date, place, weather, mood: selectedMood, notes, highlight });
+        } else {
+          const item = trip.diary.find((x) => x.id === id);
+          Object.assign(item, { date, place, weather, mood: selectedMood, notes, highlight });
+        }
+        editing = null; saveData(); renderTabContent(); return;
+      }
+      if (act === 'edit-diary') { startEdit('diary', id); return; }
+      if (act === 'del-diary') {
+        if (!confirm('Delete this diary entry?')) return;
+        trip.diary = trip.diary.filter((x) => x.id !== id);
+        saveData(); renderTabContent(); return;
+      }
+
+      // ---- Itinerary ----
+      if (act === 'add-itin' || act === 'save-itin') {
+        const date = document.getElementById('itinDateInput').value || todayStr();
+        const time = document.getElementById('itinTimeInput').value;
+        const place = document.getElementById('itinPlaceInput').value.trim();
+        const notes = document.getElementById('itinNotesInput').value.trim();
+        if (!place) { alert('Please enter a place or activity.'); return; }
+        if (act === 'add-itin') {
+          trip.itinerary.push({ id: uid(), date, time, place, notes, done: false });
+        } else {
+          const item = trip.itinerary.find((x) => x.id === id);
+          Object.assign(item, { date, time, place, notes });
+        }
+        editing = null; saveData(); renderTabContent(); return;
+      }
+      if (act === 'edit-itin') { startEdit('itinerary', id); return; }
+      if (act === 'del-itin') {
+        if (!confirm('Delete this planned item?')) return;
+        trip.itinerary = trip.itinerary.filter((x) => x.id !== id);
+        saveData(); renderTabContent(); return;
+      }
+      if (act === 'toggle-itin') {
+        const item = trip.itinerary.find((x) => x.id === id);
+        item.done = !item.done;
+        saveData(); renderTabContent(); return;
+      }
+
+      // ---- Expenses ----
+      if (act === 'add-exp' || act === 'save-exp') {
+        const date = document.getElementById('expDateInput').value || todayStr();
+        const category = document.getElementById('expCategoryInput').value;
+        const amount = parseFloat(document.getElementById('expAmountInput').value);
+        const description = document.getElementById('expDescInput').value.trim();
+        if (!Number.isFinite(amount) || amount <= 0) { alert('Please enter a valid amount.'); return; }
+        if (act === 'add-exp') {
+          trip.expenses.push({ id: uid(), date, category, amount, description });
+        } else {
+          const item = trip.expenses.find((x) => x.id === id);
+          Object.assign(item, { date, category, amount, description });
+        }
+        editing = null; saveData(); renderTabContent(); return;
+      }
+      if (act === 'edit-exp') { startEdit('expenses', id); return; }
+      if (act === 'del-exp') {
+        if (!confirm('Delete this expense?')) return;
+        trip.expenses = trip.expenses.filter((x) => x.id !== id);
+        saveData(); renderTabContent(); return;
+      }
+
+      // ---- Packing ----
+      if (act === 'add-pack') {
+        const text = document.getElementById('packTextInput').value.trim();
+        const cat = document.getElementById('packCatInput').value;
+        if (!text) { alert('Please enter an item.'); return; }
+        trip.packing.push({ id: uid(), text, cat, packed: false });
+        saveData(); renderTabContent(); return;
+      }
+      if (act === 'add-common-pack') {
+        COMMON_PACKING_ITEMS.forEach((ci) => {
+          if (!trip.packing.some((p) => p.text.toLowerCase() === ci.text.toLowerCase())) {
+            trip.packing.push({ id: uid(), text: ci.text, cat: ci.cat, packed: false });
+          }
+        });
+        saveData(); renderTabContent(); return;
+      }
+      if (act === 'toggle-pack') {
+        const item = trip.packing.find((x) => x.id === id);
+        item.packed = !item.packed;
+        saveData(); renderTabContent(); return;
+      }
+      if (act === 'del-pack') {
+        trip.packing = trip.packing.filter((x) => x.id !== id);
+        saveData(); renderTabContent(); return;
+      }
+
+      // ---- Info ----
+      if (act === 'add-info' || act === 'save-info') {
+        const label = document.getElementById('infoLabelInput').value.trim();
+        const value = document.getElementById('infoValueInput').value.trim();
+        if (!label || !value) { alert('Please enter both a label and a value.'); return; }
+        if (act === 'add-info') {
+          trip.info.push({ id: uid(), label, value });
+        } else {
+          const item = trip.info.find((x) => x.id === id);
+          Object.assign(item, { label, value });
+        }
+        editing = null; saveData(); renderTabContent(); return;
+      }
+      if (act === 'edit-info') { startEdit('info', id); return; }
+      if (act === 'del-info') {
+        if (!confirm('Delete this info entry?')) return;
+        trip.info = trip.info.filter((x) => x.id !== id);
+        saveData(); renderTabContent(); return;
+      }
+    });
+
+    // Diary search -- only re-renders the diary tab, debounced via direct call (list is small).
+    document.getElementById('tabContent').addEventListener('input', (e) => {
+      if (e.target.id === 'diarySearchInput') {
+        diarySearchTerm = e.target.value;
+        renderTabContent();
+        // restore focus + cursor since the whole tab was rebuilt
+        const input = document.getElementById('diarySearchInput');
+        input.focus();
+        input.selectionStart = input.selectionEnd = input.value.length;
+      }
+    });
+
+    // ============================== Backup / Restore / Print ==============================
+    document.getElementById('exportFileBtn').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `travel-diary-backup-${todayStr()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+    document.getElementById('importFileBtn').addEventListener('click', () => document.getElementById('importFileInput').click());
+    document.getElementById('importFileInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      e.target.value = '';
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        let parsed;
+        try { parsed = JSON.parse(reader.result); } catch { parsed = null; }
+        if (!parsed || !Array.isArray(parsed.trips)) { alert("That file doesn't look like a valid Travel Diary backup."); return; }
+        if (!confirm('This will replace all your current trips with the imported file. Continue?')) return;
+        data = Object.assign(defaultData(), parsed);
+        if (!data.activeTripId || !data.trips.some((t) => t.id === data.activeTripId)) data.activeTripId = data.trips.length ? data.trips[0].id : null;
+        saveData();
+        editing = null;
+        renderAll();
+        alert('Import complete.');
+      };
+      reader.readAsText(file);
+    });
+
+    document.getElementById('printDiaryBtn').addEventListener('click', () => {
+      const trip = getActiveTrip();
+      if (!trip) { alert('Create a trip first.'); return; }
+      const entries = trip.diary.slice().sort((a, b) => a.date.localeCompare(b.date));
+      const dateRange = trip.startDate && trip.endDate ? `${formatDisplayDate(trip.startDate)} – ${formatDisplayDate(trip.endDate)}` : '';
+      const body = entries.length
+        ? entries.map((e) => `
+          <div class="print-entry">
+            <div class="print-entry-date">${escapeHtml(formatDisplayDate(e.date))} ${MOOD_EMOJI[e.mood] || ''}</div>
+            ${e.place || e.weather ? `<div class="print-entry-place">📍 ${escapeHtml(e.place)}${e.weather ? ' · ' + escapeHtml(e.weather) : ''}</div>` : ''}
+            ${e.notes ? `<div class="print-entry-notes">${escapeHtml(e.notes)}</div>` : ''}
+            ${e.highlight ? `<div class="print-entry-highlight">⭐ ${escapeHtml(e.highlight)}</div>` : ''}
+          </div>`).join('')
+        : '<p style="text-align:center;color:#6b7488;">No diary entries yet.</p>';
+      document.getElementById('printArea').innerHTML = `
+        <div class="print-title">${escapeHtml(trip.coverEmoji || '')} ${escapeHtml(trip.name || 'Trip Diary')}</div>
+        <div class="print-subtitle">${escapeHtml(trip.destination || '')}${dateRange ? ' · ' + escapeHtml(dateRange) : ''}</div>
+        ${body}`;
+      window.print();
+    });
+
+    // ============================== Theme ==============================
+    const THEME_KEY = 'travelDiaryTheme';
+    document.getElementById('themeToggle').checked = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.getElementById('themeToggle').addEventListener('change', function () {
+      if (this.checked) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem(THEME_KEY, 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem(THEME_KEY, 'light');
+      }
+    });
+
+    // ============================== Init ==============================
+    function renderAll() {
+      renderTripSelect();
+      renderTripHeader();
+      renderTabsUI();
+      renderTabContent();
+    }
+    renderAll();
+  </script>
+</body>
+</html>
