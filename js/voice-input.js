@@ -216,20 +216,24 @@ export function initVoiceInput() {
         enableToggle.addEventListener('change', () => setEnabled(enableToggle.checked));
     }
     if (offBtn) {
+        // Pressing a button normally steals focus away from whatever was
+        // focused before (here, the number field) the instant the pointer
+        // goes down -- before the click handler even runs. Blocking that
+        // default action keeps the field focused (and its virtual keyboard
+        // open on mobile) through the whole interaction, so the field is
+        // immediately ready to type into with no visible focus-loss flicker
+        // and no need to explicitly refocus it afterward.
+        offBtn.addEventListener('pointerdown', (e) => e.preventDefault());
+
         // Dismiss-only: stop any in-progress listening and hide this one
         // popup, but leave the `enabled` flag (and the Admin Options
         // checkbox) untouched -- see the comment above `enabled` for why.
-        // Also hands focus straight back to the field it was open for, so
-        // the field is immediately ready to type into -- clicking the ✕
-        // button itself would otherwise leave focus stranded on the button,
-        // one extra tap away from the field the user actually wants.
+        // Since the field never lost focus (see above), there's nothing
+        // left to hand back to it -- it was ready to type into the whole
+        // time and stays that way.
         offBtn.addEventListener('click', () => {
             stopListening();
             hideWidget();
-            if (targetField && document.body.contains(targetField)) {
-                suppressShowField = targetField;
-                targetField.focus();
-            }
         });
     }
 
@@ -259,12 +263,6 @@ export function initVoiceInput() {
     let targetField = null;
     let hideTimer = null;
     let pointerInsideWidget = false;
-    // Set by the ✕ (dismiss) handler right before it refocuses the field it
-    // just hid the popup for -- consumed by the very next focusin so that
-    // one specific refocus doesn't immediately reopen the popup it was just
-    // dismissed from, while leaving every *other* focus (a different field,
-    // or genuinely refocusing this same field later) to show it as normal.
-    let suppressShowField = null;
 
     function positionWidgetNear(field) {
         const rect = field.getBoundingClientRect();
@@ -308,10 +306,6 @@ export function initVoiceInput() {
 
     document.addEventListener('focusin', (e) => {
         if (e.target instanceof HTMLInputElement && e.target.type === 'number') {
-            if (suppressShowField === e.target) {
-                suppressShowField = null;
-                return;
-            }
             showWidgetFor(e.target);
         }
     });
