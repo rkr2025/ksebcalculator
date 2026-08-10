@@ -122,6 +122,74 @@ export function initReadingGroups() {
         });
     }
 
+    // Solar Generation's reading-mode switch drives KSEB NetMeter Info's the
+    // same way in both directions -- turning Solar's ON also turns NetMeter
+    // Info's ON (which for the ToD pair then cascades on to Export via the
+    // rule above), and turning Solar's OFF also turns NetMeter Info's OFF
+    // (Import and Export both explicitly, since the on-cascade above has no
+    // matching off-cascade of its own). One-directional from Solar outward
+    // only: changing NetMeter Info's toggles directly afterward doesn't
+    // reach back and change Solar's. Wired for both the non-ToD pair
+    // (solarGenReadingModeToggle -> netMeterReadingModeToggle) and the ToD
+    // pair (solarReadingModeToggle -> importReadingModeToggle + exportReadingModeToggle).
+    const solarGenModeToggle = document.getElementById('solarGenReadingModeToggle');
+    const netMeterModeToggle = document.getElementById('netMeterReadingModeToggle');
+    if (solarGenModeToggle && netMeterModeToggle) {
+        solarGenModeToggle.addEventListener('change', () => {
+            if (solarGenModeToggle.checked !== netMeterModeToggle.checked) {
+                netMeterModeToggle.checked = solarGenModeToggle.checked;
+                netMeterModeToggle.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+    const solarModeToggle = document.getElementById('solarReadingModeToggle');
+    if (solarModeToggle && importModeToggle) {
+        solarModeToggle.addEventListener('change', () => {
+            if (solarModeToggle.checked !== importModeToggle.checked) {
+                importModeToggle.checked = solarModeToggle.checked;
+                importModeToggle.dispatchEvent(new Event('change'));
+            }
+            if (!solarModeToggle.checked && exportModeToggle && exportModeToggle.checked) {
+                exportModeToggle.checked = false;
+                exportModeToggle.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+
+    // Solar Generation's "Enter Present Reading first" order switch drives
+    // KSEB NetMeter Info's the same way too, fully both directions -- unlike
+    // the mode toggle above, there's no asymmetry here (it's just a display
+    // preference, not something that hides/reveals fields), so ON and OFF
+    // are handled identically. One-directional from Solar outward only,
+    // same as the mode toggle. Wired for both the non-ToD pair
+    // (solarGenReadingOrderToggle -> netMeterReadingOrderToggle) and the ToD
+    // pair (solarReadingOrderToggle -> importReadingOrderToggle + exportReadingOrderToggle).
+    const solarGenOrderToggle = document.getElementById('solarGenReadingOrderToggle');
+    const netMeterOrderToggle = document.getElementById('netMeterReadingOrderToggle');
+    if (solarGenOrderToggle && netMeterOrderToggle) {
+        solarGenOrderToggle.addEventListener('change', () => {
+            if (solarGenOrderToggle.checked !== netMeterOrderToggle.checked) {
+                netMeterOrderToggle.checked = solarGenOrderToggle.checked;
+                netMeterOrderToggle.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+    const solarOrderToggle = document.getElementById('solarReadingOrderToggle');
+    const importOrderToggle = document.getElementById('importReadingOrderToggle');
+    const exportOrderToggle = document.getElementById('exportReadingOrderToggle');
+    if (solarOrderToggle && importOrderToggle && exportOrderToggle) {
+        solarOrderToggle.addEventListener('change', () => {
+            if (solarOrderToggle.checked !== importOrderToggle.checked) {
+                importOrderToggle.checked = solarOrderToggle.checked;
+                importOrderToggle.dispatchEvent(new Event('change'));
+            }
+            if (solarOrderToggle.checked !== exportOrderToggle.checked) {
+                exportOrderToggle.checked = solarOrderToggle.checked;
+                exportOrderToggle.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+
     return function resetAllReadingGroups() {
         resetSolar();
         resetImport();
