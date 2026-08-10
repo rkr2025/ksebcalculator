@@ -1944,6 +1944,18 @@ td {
   100% { box-shadow: 0 0 0 0 rgba(27, 175, 122, 0); }
 }
 
+/* While the voice popup is open for a field, js/voice-input.js marks it
+   read-only so typed/tapped-keyboard input can't fight with speech input
+   over the same field at once (paired with the popup's ✕ button, which
+   removes it again). This cue is what stops that from just looking like
+   the field silently stopped responding -- readOnly alone carries no
+   default browser styling. */
+input[type="number"]:read-only {
+  background: var(--surface-muted);
+  border-style: dashed;
+  cursor: default;
+}
+
 @media (max-width: 480px) {
   .voice-mic-btn {
     width: 38px;

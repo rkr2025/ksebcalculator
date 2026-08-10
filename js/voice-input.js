@@ -298,10 +298,21 @@ export function initVoiceInput() {
         if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
         positionWidgetNear(field);
         widget.style.display = '';
+        // Voice-first while the popup is up: block manual typing (and the
+        // mobile on-screen keyboard, which browsers suppress for read-only
+        // fields) so the two input methods can't fight over the same field
+        // at once. Paired 1:1 with the unlock in hideWidget() below, so
+        // "popup showing" and "field locked" can never drift out of sync
+        // regardless of *how* the popup ends up hidden (explicit ✕, losing
+        // focus to something else, or the assistant being turned off).
+        field.readOnly = true;
     }
 
     function hideWidget() {
         widget.style.display = 'none';
+        if (targetField && document.body.contains(targetField)) {
+            targetField.readOnly = false;
+        }
     }
 
     document.addEventListener('focusin', (e) => {
