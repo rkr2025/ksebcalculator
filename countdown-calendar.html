@@ -321,6 +321,18 @@
      multi-month countdown-calendar view uses. */
   .cal-months-wrap--year { grid-template-columns: repeat(4, 1fr); gap: 8px 10px; }
 
+  /* Column Calendar: months as columns, weekdays repeated down the rows
+     (Mon..Sun, Mon..Sun, ...) -- a single wide table instead of 12 separate
+     month blocks, so the whole year reads as one grid. */
+  .col-cal-wrap { overflow-x: auto; }
+  .col-cal-table { border-collapse: collapse; width: 100%; font-size: 8px; }
+  .col-cal-table th, .col-cal-table td { border: 1px solid #dde2ee; text-align: center; padding: 2px 3px; }
+  .col-cal-table th { background: #f6f8fb; font-size: 8px; font-weight: 800; color: #17203a; }
+  .col-cal-daylabel { font-weight: 700; color: #6b7488; background: #f8f9fc; font-size: 7px; text-align: left; padding-left: 5px; white-space: nowrap; }
+  .col-cal-cell.is-blank { background: #fafbfd; }
+  .col-cal-cell.is-weekend, .col-cal-daylabel.is-weekend { color: #d92d2d; }
+  .col-cal-cell.is-today { background: #eafbf3; font-weight: 800; }
+
   /* Single Month: one big month filling the page, reusing the same
      month-block markup as the other calendar views but scaled up via these
      descendant overrides. */
@@ -459,6 +471,7 @@
         <div class="view-tab" data-view="calendar" id="tabCalendar">📅 Calendar Months</div>
         <div class="view-tab" data-view="fullyear" id="tabFullYear">🗓️ Full Year</div>
         <div class="view-tab" data-view="singlemonth" id="tabSingleMonth">📆 Single Month</div>
+        <div class="view-tab" data-view="columncal" id="tabColumnCal">🗂️ Column Calendar</div>
       </div>
 
       <div class="view-tabs-label">Planner</div>
@@ -692,7 +705,7 @@
     // ------------------------------ View metadata ------------------------------
     // Which option field-rows are relevant per view -- drives both visibility
     // (updateOptionVisibility) and the view-tabs list itself.
-    const VIEWS = ['grid', 'calendar', 'fullyear', 'singlemonth', 'daily', 'weekly'];
+    const VIEWS = ['grid', 'calendar', 'fullyear', 'singlemonth', 'columncal', 'daily', 'weekly'];
     const VIEW_FIELDS = {
       grid: ['countdown', 'gridExtra'],
       calendar: ['countdown', 'weekStart'],
@@ -705,6 +718,7 @@
       // nothing and looks like the toggle is broken.
       fullyear: ['year', 'weekStart', 'showCountdown', 'countdown'],
       singlemonth: ['month', 'weekStart', 'showCountdown', 'countdown'],
+      columncal: ['year', 'weekStart'],
       daily: ['plannerDate'],
       weekly: ['plannerDate', 'weekStart'],
     };
@@ -925,6 +939,60 @@
       return `<div class="cal-months-wrap cal-months-wrap--solo">${html}</div>`;
     }
 
+    // ------------------------------ Rendering: column calendar (months as columns) ------------------------------
+    // Returns the month's days as an array of weeks (each week an array of 7
+    // entries: a Date, or null for a leading/trailing blank), padded to full
+    // weeks -- the same shape buildMonthBlockHtml uses internally, just
+    // returned as data instead of markup so it can be transposed below.
+    function buildMonthDayGrid(year, month, weekStart) {
+      const firstOfMonth = new Date(year, month, 1);
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const leadBlanks = (firstOfMonth.getDay() - weekStart + 7) % 7;
+      const cells = [];
+      for (let i = 0; i < leadBlanks; i++) cells.push(null);
+      for (let day = 1; day <= daysInMonth; day++) cells.push(new Date(year, month, day));
+      while (cells.length % 7 !== 0) cells.push(null);
+      const weeks = [];
+      for (let r = 0; r < cells.length / 7; r++) weeks.push(cells.slice(r * 7, (r + 1) * 7));
+      return weeks;
+    }
+
+    // Months run across as columns; rows are individual weekdays repeated
+    // for as many weeks as the longest month needs (up to 6), so the row
+    // labels read Mon, Tue, ... Sun, Mon, Tue, ... rather than one header
+    // row per week.
+    function renderColumnCalendar(year, weekStart) {
+      const today = new Date();
+      const dowLabels = dowLabelsFrom(weekStart);
+      const monthGrids = [];
+      for (let m = 0; m < 12; m++) monthGrids.push(buildMonthDayGrid(year, m, weekStart));
+      const maxWeeks = Math.max(...monthGrids.map((g) => g.length));
+
+      let headerCells = '<th class="col-cal-daylabel">Day</th>';
+      for (let m = 0; m < 12; m++) headerCells += `<th>${MONTH_NAMES[m].slice(0, 3)}</th>`;
+
+      let rows = '';
+      for (let w = 0; w < maxWeeks; w++) {
+        for (let d = 0; d < 7; d++) {
+          const colDow = (weekStart + d) % 7;
+          const weekendRow = colDow === 0 || colDow === 6;
+          let rowCells = `<td class="col-cal-daylabel${weekendRow ? ' is-weekend' : ''}">${dowLabels[d]}</td>`;
+          for (let m = 0; m < 12; m++) {
+            const week = monthGrids[m][w];
+            const date = week ? week[d] : null;
+            if (!date) { rowCells += '<td class="col-cal-cell is-blank"></td>'; continue; }
+            const classes = ['col-cal-cell'];
+            if (weekendRow) classes.push('is-weekend');
+            if (isSameDate(date, today)) classes.push('is-today');
+            rowCells += `<td class="${classes.join(' ')}">${date.getDate()}</td>`;
+          }
+          rows += `<tr>${rowCells}</tr>`;
+        }
+      }
+
+      return `<div class="col-cal-wrap"><table class="col-cal-table"><thead><tr>${headerCells}</tr></thead><tbody>${rows}</tbody></table></div>`;
+    }
+
     // ------------------------------ Rendering: daily planner ------------------------------
     function renderDailyPlanner(date) {
       const weekendClass = isWeekend(date) ? ' is-weekend' : '';
@@ -1024,6 +1092,9 @@
         const overlayEnd = settings.showCountdown ? end : null;
         body = renderSingleMonth(year, month, settings.weekStart, overlayStart, overlayEnd, settings.direction, settings.days);
         subtitle = `${MONTH_NAMES[month]} ${year}`;
+      } else if (view === 'columncal') {
+        body = renderColumnCalendar(settings.year, settings.weekStart);
+        subtitle = String(settings.year);
       } else if (view === 'daily') {
         const date = parseDateInput(settings.plannerDate);
         body = renderDailyPlanner(date);
