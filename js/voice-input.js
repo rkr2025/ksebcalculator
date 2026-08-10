@@ -14,7 +14,6 @@
 // else in the app is affected either way.
 
 const LANG_STORAGE_KEY = 'voiceInputLang';
-const ENABLED_STORAGE_KEY = 'voiceAssistantEnabled';
 const DEFAULT_LANG = 'en-IN';
 
 // English spoken-number words -> value, used only as a fallback for when
@@ -31,6 +30,12 @@ const ONES = {
     ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
 };
 const TENS = { twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90 };
+// Single-digit words only, used by parseDigitSequence() below -- a meter
+// reading read out digit-by-digit ("one five zero") needs each word treated
+// as one character of the result ("150"), which is a completely different
+// interpretation from the magnitude-word grammar in wordsToNumber() (which
+// would read the same three words as 1 + 5 + 0 = 6).
+const DIGIT_WORDS = { zero: '0', one: '1', two: '2', three: '3', four: '4', five: '5', six: '6', seven: '7', eight: '8', nine: '9' };
 
 // Parses a spelled-out English number phrase like "one hundred fifty point
 // five" -> 150.5, or "minus twelve" -> -12. Returns null if the phrase
@@ -74,14 +79,68 @@ export function wordsToNumber(text) {
     return negative ? -total : total;
 }
 
-// Pulls a single numeric value out of a raw speech transcript. Tries a
-// plain digit match first (covers both languages in practice, and also
-// sentences like "it's one fifty" transcribed as "it's 150"), then falls
-// back to the English word-parser above. Returns null if no number could
-// be found at all.
+// Meter readings are very often read out digit-by-digit ("one five zero",
+// or literally "1 5 0" when the recognizer hears a pause between each
+// digit) rather than as one fluent number -- both languages exhibit this,
+// since it's simply a more careful/deliberate way to read out a long
+// number aloud. That pattern needs its own parser: a plain digit-run regex
+// only ever grabs the *first* space-separated chunk and silently drops the
+// rest (so "1 5 0" would come out as just "1"), and the magnitude-word
+// grammar in wordsToNumber() would (wrongly) sum "one five zero" as
+// 1 + 5 + 0 = 6 instead of reading it as the digit sequence "150". This
+// walks the whole transcript and, as long as *every* token is a single
+// digit/digit-word (with at most one decimal-point marker and an optional
+// leading minus), concatenates them into one number; it bails out (returns
+// null) the moment it sees anything else, so it never misfires on an
+// ordinary sentence or a spelled-out compound number -- those are left to
+// the other two strategies in extractNumber() below.
+function parseDigitSequence(text) {
+    const tokens = text.replace(/,/g, ' ').split(/\s+/).filter(Boolean);
+    if (tokens.length < 2) return null; // a lone token is handled by the plain digit-run/word-number paths instead
+
+    let negative = false;
+    let i = 0;
+    if (tokens[i] === 'minus' || tokens[i] === 'negative' || tokens[i] === '-') { negative = true; i++; }
+
+    let intPart = '';
+    let fracPart = '';
+    let sawPoint = false;
+    let sawAnyDigit = false;
+
+    for (; i < tokens.length; i++) {
+        const t = tokens[i];
+        if (t === 'point' || t === 'decimal' || t === '.') {
+            if (sawPoint) return null; // a second decimal marker doesn't make sense as a plain digit sequence
+            sawPoint = true;
+            continue;
+        }
+        let digits;
+        if (/^\d+$/.test(t)) digits = t; // the recognizer grouped a few consecutive digits into one chunk, e.g. "12"
+        else if (t in DIGIT_WORDS) digits = DIGIT_WORDS[t];
+        else return null; // a tens/hundred/thousand word or unrelated speech -- not a plain digit sequence
+
+        if (sawPoint) fracPart += digits; else intPart += digits;
+        sawAnyDigit = true;
+    }
+    if (!sawAnyDigit || !intPart) return null;
+
+    const value = parseFloat(fracPart ? `${intPart}.${fracPart}` : intPart);
+    return negative ? -value : value;
+}
+
+// Pulls a single numeric value out of a raw speech transcript, trying three
+// strategies in order: a digit-by-digit reading (see parseDigitSequence()
+// above), then a single coherent digit run (covers both languages in
+// practice, and sentences like "it's 150 units" where only part of the
+// transcript is the number), then spelled-out English magnitude words
+// ("one hundred fifty"). Returns null if none of them find a number.
 export function extractNumber(transcript) {
     if (!transcript) return null;
     const text = transcript.trim().toLowerCase();
+    if (!text) return null;
+
+    const digitSequence = parseDigitSequence(text);
+    if (digitSequence != null) return digitSequence;
 
     const digitMatch = text.match(/-?\d+(?:\.\d+)?/);
     if (digitMatch) return parseFloat(digitMatch[0]);
@@ -114,27 +173,63 @@ export function initVoiceInput() {
     }
 
     const micBtn = document.getElementById('voiceMicBtn');
+    const offBtn = document.getElementById('voiceOffBtn');
     const statusEl = document.getElementById('voiceInputStatus');
     const langButtons = Array.from(document.querySelectorAll('.voice-lang-btn'));
 
-    // Opt-in and off by default -- most users never need this, so it stays
-    // out of the way until deliberately turned on via Admin Options.
-    let enabled = localStorage.getItem(ENABLED_STORAGE_KEY) === 'true';
-    if (enableToggle) enableToggle.checked = enabled;
+    // Off by default on *every* page load -- deliberately not remembered
+    // across reloads (no localStorage read/write for this flag at all), so
+    // the user has to explicitly turn it on again each time they load the
+    // page, rather than it silently staying on forever once enabled once.
+    let enabled = false;
+    if (enableToggle) enableToggle.checked = false;
 
-    // Defined here (used by the toggle's change listener below) but not
-    // invoked until the very end of this function, once stopListening() has
-    // actually been declared -- see the closing applyEnabledState() call.
+    // Admin Options is deliberately the *only* place that turns the feature
+    // on/off for the rest of this page load: the ✕ button on the popover
+    // itself just dismisses that one popup (so the user can type the value
+    // into the field by hand instead, without the popover sitting there) --
+    // it does NOT flip this setting. A user who dismisses the popup on one
+    // field still sees it on the next number field they tap, exactly as if
+    // they'd never touched the ✕ at all.
+    function setEnabled(next) {
+        enabled = next;
+        if (enableToggle) enableToggle.checked = enabled;
+        applyEnabledState();
+    }
+
+    // Defined here (used below) but not invoked until the very end of this
+    // function, once stopListening()/hideWidget() have actually been
+    // declared -- see the closing applyEnabledState() call.
     function applyEnabledState() {
-        widget.style.display = enabled ? '' : 'none';
-        if (!enabled) stopListening();
+        if (!enabled) {
+            stopListening();
+            hideWidget();
+        } else if (document.activeElement instanceof HTMLInputElement && document.activeElement.type === 'number') {
+            // Flipping the setting on while a number field already has
+            // focus should show the popover immediately, not require an
+            // extra blur+refocus.
+            showWidgetFor(document.activeElement);
+        }
     }
 
     if (enableToggle) {
-        enableToggle.addEventListener('change', () => {
-            enabled = enableToggle.checked;
-            localStorage.setItem(ENABLED_STORAGE_KEY, String(enabled));
-            applyEnabledState();
+        enableToggle.addEventListener('change', () => setEnabled(enableToggle.checked));
+    }
+    if (offBtn) {
+        // Dismiss-only: stop any in-progress listening and hide this one
+        // popup, but leave the `enabled` flag (and the Admin Options
+        // checkbox) untouched -- see the comment above `enabled` for why.
+        // Also hands focus straight back to the field it was open for, so
+        // the field is immediately ready to type into -- clicking the ✕
+        // button itself would otherwise leave focus stranded on the button,
+        // one extra tap away from the field the user actually wants.
+        offBtn.addEventListener('click', () => {
+            stopListening();
+            hideWidget();
+            if (targetField && document.body.contains(targetField)) {
+                suppressShowField = targetField;
+                targetField.focus();
+            }
         });
     }
 
@@ -154,15 +249,99 @@ export function initVoiceInput() {
         });
     });
 
-    // Tracks the most recently focused numeric field anywhere on the page --
-    // delegated on document (rather than bound per-field at setup time) so
-    // it also picks up fields inside dynamically-added Wheeling site cards
-    // that don't exist yet when this runs. This is what "last selected
-    // field" means for this feature.
+    // ---- Positioning: the popover follows whichever numeric field is
+    // currently focused, rather than sitting fixed in a page corner (which
+    // on a long form is often far from the field actually being edited, and
+    // needs constant scrolling back and forth to reach). Delegated focus
+    // tracking on document (rather than bound per-field at setup time) also
+    // picks up fields inside dynamically-added Wheeling site cards that
+    // don't exist yet when this runs.
     let targetField = null;
+    let hideTimer = null;
+    let pointerInsideWidget = false;
+    // Set by the ✕ (dismiss) handler right before it refocuses the field it
+    // just hid the popup for -- consumed by the very next focusin so that
+    // one specific refocus doesn't immediately reopen the popup it was just
+    // dismissed from, while leaving every *other* focus (a different field,
+    // or genuinely refocusing this same field later) to show it as normal.
+    let suppressShowField = null;
+
+    function positionWidgetNear(field) {
+        const rect = field.getBoundingClientRect();
+        const margin = 8;
+        const approxWidth = 190; // wide enough for status bubble + controls row
+        const approxHeight = 50;
+        const narrow = window.innerWidth < 480;
+
+        let left;
+        let top;
+        if (narrow) {
+            // Little horizontal room on phones -- sit below the field,
+            // left-aligned with it, rather than beside it.
+            left = rect.left;
+            top = rect.bottom + margin;
+        } else {
+            left = rect.right + margin;
+            top = rect.top + rect.height / 2 - 21;
+            if (left + approxWidth > window.innerWidth - margin) {
+                left = rect.left - approxWidth - margin; // not enough room to the right -- flip to the left of the field
+            }
+        }
+        left = Math.min(Math.max(left, margin), window.innerWidth - approxWidth - margin);
+        top = Math.min(Math.max(top, margin), window.innerHeight - approxHeight - margin);
+
+        widget.style.left = `${left}px`;
+        widget.style.top = `${top}px`;
+    }
+
+    function showWidgetFor(field) {
+        if (!enabled) return;
+        targetField = field;
+        if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+        positionWidgetNear(field);
+        widget.style.display = '';
+    }
+
+    function hideWidget() {
+        widget.style.display = 'none';
+    }
+
     document.addEventListener('focusin', (e) => {
         if (e.target instanceof HTMLInputElement && e.target.type === 'number') {
-            targetField = e.target;
+            if (suppressShowField === e.target) {
+                suppressShowField = null;
+                return;
+            }
+            showWidgetFor(e.target);
+        }
+    });
+
+    document.addEventListener('focusout', (e) => {
+        if (!(e.target instanceof HTMLInputElement) || e.target.type !== 'number') return;
+        // Delay the hide: if the user is moving focus onto the popover
+        // itself (e.g. tapping the mic button, which blurs the field
+        // first), pointerInsideWidget will already be true by the time this
+        // timer fires, and it backs off instead of hiding under the user's
+        // finger.
+        hideTimer = setTimeout(() => {
+            if (!pointerInsideWidget) hideWidget();
+        }, 180);
+    });
+
+    widget.addEventListener('pointerdown', () => { pointerInsideWidget = true; });
+    document.addEventListener('pointerup', () => { pointerInsideWidget = false; });
+
+    // The field being edited can itself move on screen (page scroll, or a
+    // resize/orientation change) while the popover is open -- keep it
+    // glued to the field rather than left floating over the wrong spot.
+    window.addEventListener('scroll', () => {
+        if (widget.style.display !== 'none' && targetField && document.body.contains(targetField)) {
+            positionWidgetNear(targetField);
+        }
+    }, { passive: true, capture: true });
+    window.addEventListener('resize', () => {
+        if (widget.style.display !== 'none' && targetField && document.body.contains(targetField)) {
+            positionWidgetNear(targetField);
         }
     });
 

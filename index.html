@@ -1209,10 +1209,13 @@
     </div>
 
     <!-- Voice-to-Number Input Assistant: speak a number (English or
-         Malayalam) into whichever numeric field was last tapped. Hidden by
-         default -- js/voice-input.js only reveals it if the browser
-         actually supports the Web Speech API, so browsers without support
-         (e.g. Firefox) never see a mic button that wouldn't work. -->
+         Malayalam) into whichever numeric field is currently focused. Hidden
+         by default -- js/voice-input.js only reveals it when the browser
+         supports the Web Speech API AND the feature is turned on via Admin
+         Options (off by default); it then appears next to a number field
+         only while that field is focused, positioned there by JS (not fixed
+         in a page corner), so it's always right where the user is already
+         looking, however far down the form that is. -->
     <div id="voiceInputWidget" class="voice-input-widget" style="display: none;">
         <div id="voiceInputStatus" class="voice-input-status" role="status" aria-live="polite"></div>
         <div class="voice-input-controls">
@@ -1220,7 +1223,8 @@
                 <button type="button" class="voice-lang-btn" data-lang="en-IN" aria-pressed="true">EN</button>
                 <button type="button" class="voice-lang-btn" data-lang="ml-IN" aria-pressed="false">മല</button>
             </div>
-            <button type="button" class="voice-mic-btn" id="voiceMicBtn" aria-label="Speak a number into the last-selected field" title="Tap a number field, then tap to speak a value">🎤</button>
+            <button type="button" class="voice-mic-btn" id="voiceMicBtn" aria-label="Speak a number into this field" title="Tap to speak a value for this field">🎤</button>
+            <button type="button" class="voice-off-btn" id="voiceOffBtn" aria-label="Close this popup and type the value instead" title="Close this popup and type the value instead (to turn the assistant off entirely, use Admin Options)">✕</button>
         </div>
     </div>
 

@@ -88,13 +88,28 @@ body {
   margin: 0;
   padding: 16px 12px 40px;
   color: var(--text-primary);
-  perspective: 1400px;
 }
 
 .container {
   max-width: 720px;
   margin: 0 auto;
   position: relative;
+  /* Lives here (not on body) specifically so it only affects the .card 3D
+     hover tilt below, which is entirely inside .container -- putting it on
+     body would make body itself the CSS containing block for every
+     position:fixed descendant anywhere on the page (per spec, `perspective`
+     forms a containing block for fixed/absolute descendants same as
+     `transform` does), which silently breaks "stays pinned to the
+     viewport" for anything outside .container. That's exactly what was
+     happening to the Voice Input widget (js/voice-input.js): it never
+     actually stayed fixed to the viewport, it was fixed to the bottom of
+     body's full scrollable height instead, which is why it showed up "at
+     the end of the page" instead of staying in view while scrolling.
+     Scoping perspective to .container keeps the identical 3D effect for
+     every .card (all of which are inside .container) while leaving
+     position:fixed elements elsewhere on the page (siblings of .container)
+     free to anchor to the real viewport as expected. */
+  perspective: 1400px;
 }
 
 /* ---------------------------------- Digital clock ----------------------- */
@@ -1784,29 +1799,33 @@ td {
   background: rgba(255, 255, 255, 0.28);
 }
 
-/* Voice-to-Number Input Assistant (js/voice-input.js) -- a floating mic
-   button fixed to the bottom-right corner so it's reachable no matter how
-   far down the long form the user has scrolled. Stays display:none (set in
-   index.html) unless the browser actually supports the Web Speech API. */
+/* Voice-to-Number Input Assistant (js/voice-input.js) -- a small popover
+   that appears right next to whichever numeric field the user just tapped,
+   rather than a single button fixed in a page corner (a corner button
+   either sits far from the field currently being edited on a long form, or
+   -- before .container took over `perspective` above -- didn't even stay
+   fixed to the viewport at all). top/left are set inline by JS, computed
+   fresh from the focused field's own on-screen position each time it's
+   shown and again on scroll/resize while visible. Stays display:none (set
+   in index.html) unless the browser supports the Web Speech API AND the
+   feature is turned on via Admin Options (off by default). */
 .voice-input-widget {
   position: fixed;
-  right: 18px;
-  bottom: 18px;
   z-index: 900;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 6px;
 }
 
 .voice-input-status {
-  max-width: 230px;
+  max-width: 220px;
   background: var(--text-primary);
   color: #fff;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 8px 12px;
-  border-radius: 10px;
+  padding: 7px 11px;
+  border-radius: 9px;
   box-shadow: var(--shadow-lift);
   opacity: 0;
   transform: translateY(6px);
@@ -1822,23 +1841,26 @@ td {
 .voice-input-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  padding: 4px;
+  box-shadow: var(--shadow-lift);
 }
 
 .voice-lang-toggle {
   display: flex;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
+  background: var(--surface-muted);
   border-radius: 999px;
   padding: 3px;
-  box-shadow: var(--shadow-sm);
 }
 
 .voice-lang-btn {
   border: none;
   background: none;
-  padding: 5px 10px;
-  font-size: 11.5px;
+  padding: 4px 8px;
+  font-size: 10.5px;
   font-weight: 800;
   font-family: inherit;
   border-radius: 999px;
@@ -1852,20 +1874,21 @@ td {
 }
 
 .voice-mic-btn {
-  width: 54px;
-  height: 54px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   border: none;
   background: linear-gradient(180deg, var(--primary), var(--primary-dark));
   color: #fff;
-  font-size: 22px;
-  box-shadow: var(--shadow-lift);
+  font-size: 18px;
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   padding: 0;
+  flex: none;
 }
 
 .voice-mic-btn:hover {
@@ -1882,8 +1905,32 @@ td {
 }
 
 @keyframes voice-mic-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(227, 73, 72, 0.45), var(--shadow-lift); }
-  50% { box-shadow: 0 0 0 12px rgba(227, 73, 72, 0), var(--shadow-lift); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(227, 73, 72, 0.45), var(--shadow-sm); }
+  50% { box-shadow: 0 0 0 10px rgba(227, 73, 72, 0), var(--shadow-sm); }
+}
+
+.voice-off-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex: none;
+}
+
+.voice-off-btn:hover {
+  background: var(--import-light);
+  color: var(--import);
+  transform: none;
 }
 
 /* Brief highlight on whichever numeric field a spoken value just landed in
@@ -1898,14 +1945,10 @@ td {
 }
 
 @media (max-width: 480px) {
-  .voice-input-widget {
-    right: 12px;
-    bottom: 12px;
-  }
   .voice-mic-btn {
-    width: 48px;
-    height: 48px;
-    font-size: 19px;
+    width: 38px;
+    height: 38px;
+    font-size: 16px;
   }
 }
 
@@ -1965,7 +2008,6 @@ td {
 
   body {
     background: none;
-    perspective: none;
   }
 
   h1 {
