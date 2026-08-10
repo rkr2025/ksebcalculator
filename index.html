@@ -886,22 +886,22 @@
 
                     <div class="field-grid" id="importDirectFields">
                         <div class="field field--import">
-                            <label for="importNormal">Normal (NL) <span class="field-tag">6am–6pm</span></label>
+                            <label for="importNormal">Normal (NL/I) <span class="field-tag">6am–6pm</span></label>
                             <input type="number" id="importNormal" name="importNormal" value="0" min="0" step="0.01">
                         </div>
                         <div class="field field--import">
-                            <label for="importOffPeak">Off Peak (OP) <span class="field-tag">10pm–6am</span></label>
+                            <label for="importOffPeak">Off Peak (OP/I) <span class="field-tag">10pm–6am</span></label>
                             <input type="number" id="importOffPeak" name="importOffPeak" value="0" min="0" step="0.01">
                         </div>
                         <div class="field field--import">
-                            <label for="importPeak">Peak (PK) <span class="field-tag">6pm–10pm</span></label>
+                            <label for="importPeak">Peak (PK/I) <span class="field-tag">6pm–10pm</span></label>
                             <input type="number" id="importPeak" name="importPeak" value="0" min="0" step="0.01">
                         </div>
                     </div>
 
                     <div class="field-grid reading-order-swapped" id="importReadingFields" style="display: none;">
                         <div class="field field--import">
-                            <label>Normal (NL) <span class="field-tag">6am–6pm</span></label>
+                            <label>Normal (NL/I) <span class="field-tag">6am–6pm</span></label>
                             <div class="reading-pair">
                                 <input type="number" id="importNormal_initial" placeholder="Previous Reading" aria-label="Previous Reading" min="0" step="0.01">
                                 <input type="number" id="importNormal_final" placeholder="Present Reading" aria-label="Present Reading" min="0" step="0.01">
@@ -910,7 +910,7 @@
                             <div class="reading-warn" id="importNormal_warn">Present Reading should be ≥ Previous Reading</div>
                         </div>
                         <div class="field field--import">
-                            <label>Off Peak (OP) <span class="field-tag">10pm–6am</span></label>
+                            <label>Off Peak (OP/I) <span class="field-tag">10pm–6am</span></label>
                             <div class="reading-pair">
                                 <input type="number" id="importOffPeak_initial" placeholder="Previous Reading" aria-label="Previous Reading" min="0" step="0.01">
                                 <input type="number" id="importOffPeak_final" placeholder="Present Reading" aria-label="Present Reading" min="0" step="0.01">
@@ -919,7 +919,7 @@
                             <div class="reading-warn" id="importOffPeak_warn">Present Reading should be ≥ Previous Reading</div>
                         </div>
                         <div class="field field--import">
-                            <label>Peak (PK) <span class="field-tag">6pm–10pm</span></label>
+                            <label>Peak (PK/I) <span class="field-tag">6pm–10pm</span></label>
                             <div class="reading-pair">
                                 <input type="number" id="importPeak_initial" placeholder="Previous Reading" aria-label="Previous Reading" min="0" step="0.01">
                                 <input type="number" id="importPeak_final" placeholder="Present Reading" aria-label="Present Reading" min="0" step="0.01">
@@ -947,22 +947,22 @@
 
                     <div class="field-grid" id="exportDirectFields">
                         <div class="field field--export">
-                            <label for="exportNormal">Normal (NL) <span class="field-tag">6am–6pm</span></label>
+                            <label for="exportNormal">Normal (NL/E) <span class="field-tag">6am–6pm</span></label>
                             <input type="number" id="exportNormal" name="exportNormal" value="0" min="0" step="0.01">
                         </div>
                         <div class="field field--export">
-                            <label for="exportOffPeak">Off Peak (OP) <span class="field-tag">10pm–6am</span></label>
+                            <label for="exportOffPeak">Off Peak (OP/E) <span class="field-tag">10pm–6am</span></label>
                             <input type="number" id="exportOffPeak" name="exportOffPeak" value="0" min="0" step="0.01">
                         </div>
                         <div class="field field--export">
-                            <label for="exportPeak">Peak (PK) <span class="field-tag">6pm–10pm</span></label>
+                            <label for="exportPeak">Peak (PK/E) <span class="field-tag">6pm–10pm</span></label>
                             <input type="number" id="exportPeak" name="exportPeak" value="0" min="0" step="0.01">
                         </div>
                     </div>
 
                     <div class="field-grid reading-order-swapped" id="exportReadingFields" style="display: none;">
                         <div class="field field--export">
-                            <label>Normal (NL) <span class="field-tag">6am–6pm</span></label>
+                            <label>Normal (NL/E) <span class="field-tag">6am–6pm</span></label>
                             <div class="reading-pair">
                                 <input type="number" id="exportNormal_initial" placeholder="Previous Reading" aria-label="Previous Reading" min="0" step="0.01">
                                 <input type="number" id="exportNormal_final" placeholder="Present Reading" aria-label="Present Reading" min="0" step="0.01">
@@ -971,7 +971,7 @@
                             <div class="reading-warn" id="exportNormal_warn">Present Reading should be ≥ Previous Reading</div>
                         </div>
                         <div class="field field--export">
-                            <label>Off Peak (OP) <span class="field-tag">10pm–6am</span></label>
+                            <label>Off Peak (OP/E) <span class="field-tag">10pm–6am</span></label>
                             <div class="reading-pair">
                                 <input type="number" id="exportOffPeak_initial" placeholder="Previous Reading" aria-label="Previous Reading" min="0" step="0.01">
                                 <input type="number" id="exportOffPeak_final" placeholder="Present Reading" aria-label="Present Reading" min="0" step="0.01">
@@ -980,7 +980,7 @@
                             <div class="reading-warn" id="exportOffPeak_warn">Present Reading should be ≥ Previous Reading</div>
                         </div>
                         <div class="field field--export">
-                            <label>Peak (PK) <span class="field-tag">6pm–10pm</span></label>
+                            <label>Peak (PK/E) <span class="field-tag">6pm–10pm</span></label>
                             <div class="reading-pair">
                                 <input type="number" id="exportPeak_initial" placeholder="Previous Reading" aria-label="Previous Reading" min="0" step="0.01">
                                 <input type="number" id="exportPeak_final" placeholder="Present Reading" aria-label="Present Reading" min="0" step="0.01">
