@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>📝 Meeting Notes</title>
+<script>
+  (function () {
+    var saved = localStorage.getItem('meetingNotesTheme');
+    var dark = saved ? saved === 'dark' : true;
+    if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+  })();
+</script>
+<style>
+  :root {
+    --primary: #2a78d6;
+    --primary-dark: #1f5fac;
+    --primary-light: #eaf2fc;
+    --accent: #1baf7a;
+    --accent-dark: #148f60;
+    --danger: #e34948;
+    --warn: #c97e00;
+    --surface: #ffffff;
+    --surface-muted: #f6f8fb;
+    --border: #e3e7ef;
+    --text-primary: #17203a;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --radius: 14px;
+    --shadow: 0 2px 4px rgba(23,32,58,.06), 0 12px 28px -6px rgba(23,32,58,.14), 0 28px 56px -20px rgba(23,32,58,.16);
+    --shadow-sm: 0 1px 2px rgba(23,32,58,.06), 0 6px 14px -4px rgba(23,32,58,.12);
+    --shadow-lift: 0 6px 12px rgba(23,32,58,.08), 0 22px 44px -10px rgba(23,32,58,.22), 0 36px 70px -24px rgba(23,32,58,.22);
+  }
+  :root[data-theme="dark"] {
+    --primary: #5b9ee8;
+    --primary-dark: #86b9ee;
+    --primary-light: rgba(91,158,232,.18);
+    --accent: #33d497;
+    --accent-dark: #16a874;
+    --danger: #f2726f;
+    --warn: #e0a030;
+    --surface: #1a2130;
+    --surface-muted: #232b3d;
+    --border: #313b52;
+    --text-primary: #eef1f8;
+    --text-secondary: #c3cadb;
+    --text-muted: #8792a8;
+    --shadow: 0 2px 4px rgba(0,0,0,.5), 0 12px 28px -6px rgba(0,0,0,.5), 0 28px 56px -20px rgba(0,0,0,.55);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.5), 0 6px 14px -4px rgba(0,0,0,.45);
+    --shadow-lift: 0 6px 12px rgba(0,0,0,.55), 0 22px 44px -10px rgba(0,0,0,.6), 0 36px 70px -24px rgba(0,0,0,.6);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px 10px 32px;
+    font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(42,120,214,.16), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(27,175,122,.14), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(227,73,72,.10), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(201,126,0,.10), transparent 55%),
+      linear-gradient(160deg, #eef1f7, #e4ebf7 60%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    transition: background-color .2s ease, color .2s ease;
+  }
+  :root[data-theme="dark"] body {
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(91,158,232,.10), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(51,212,151,.08), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(242,114,111,.08), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(224,160,48,.08), transparent 55%),
+      linear-gradient(160deg, #0f1420, #0b0f18 60%);
+    background-attachment: fixed;
+  }
+  .container { max-width: 980px; margin: 0 auto; }
+  h1 {
+    text-align: center; font-size: 24px; font-weight: 700; margin: 6px 0 4px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 2px 3px rgba(23,32,58,.15));
+  }
+  .subtitle { text-align: center; color: var(--text-muted); font-size: 13px; margin: 0 0 18px; }
+  .card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.82));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.6);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 16px;
+    transition: background-color .2s ease, border-color .2s ease;
+  }
+  :root[data-theme="dark"] .card {
+    background: linear-gradient(180deg, rgba(26,33,48,.94), rgba(26,33,48,.82));
+    border-color: rgba(255,255,255,.08);
+  }
+  .card h2 { font-size: 15px; margin: 0 0 14px; color: var(--text-secondary); }
+  .card h3 { font-size: 13.5px; margin: 0 0 12px; color: var(--text-secondary); }
+
+  button {
+    position: relative;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: filter .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0) 55%);
+    pointer-events: none;
+  }
+  button:hover { filter: brightness(0.97); transform: translateY(-1px); }
+  button:active { transform: translateY(1px); filter: brightness(0.93); }
+  .btn-add {
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color: #fff;
+    box-shadow: 0 2px 3px rgba(27,175,122,.25), 0 10px 22px -4px rgba(27,175,122,.5);
+  }
+  .btn-add:hover { box-shadow: 0 4px 8px rgba(27,175,122,.3), 0 16px 30px -6px rgba(27,175,122,.55); }
+  .btn-outline {
+    background: linear-gradient(180deg, var(--surface), var(--surface-muted));
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-outline:hover { box-shadow: var(--shadow-lift); }
+  .btn-danger {
+    background: linear-gradient(180deg, var(--danger), #c53433);
+    color: #fff;
+    box-shadow: 0 2px 3px rgba(227,73,72,.25), 0 8px 18px -4px rgba(227,73,72,.5);
+  }
+  .btn-sm { padding: 6px 11px; font-size: 12.5px; }
+
+  input, select, textarea {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 9px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: inset 0 1px 3px rgba(23,32,58,.05);
+    transition: border-color .15s ease, box-shadow .15s ease;
+    width: 100%;
+  }
+  textarea { resize: vertical; min-height: 56px; }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light), inset 0 1px 3px rgba(23,32,58,.05);
+  }
+  input[type="date"], input[type="time"] { color-scheme: light; }
+  :root[data-theme="dark"] input[type="date"], :root[data-theme="dark"] input[type="time"] { color-scheme: dark; }
+  label { font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .02em; display: block; margin-bottom: 4px; }
+
+  .theme-toggle { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 16px; font-size: 13px; }
+  .switch { position: relative; display: inline-block; width: 36px; height: 21px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch-slider {
+    position: absolute; inset: 0;
+    background: var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.15);
+    transition: background .15s ease;
+  }
+  .switch-slider::before {
+    content: "";
+    position: absolute;
+    height: 15px; width: 15px; left: 3px; top: 3px;
+    background: linear-gradient(180deg, #ffffff, #eef1f7);
+    border-radius: 50%;
+    transition: transform .15s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  }
+  .switch input:checked + .switch-slider { background: linear-gradient(180deg, var(--primary), var(--primary-dark)); }
+  .switch input:checked + .switch-slider::before { transform: translateX(15px); }
+
+  .field-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .field { flex: 1 1 160px; min-width: 0; }
+  .actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+
+  /* -------- Meeting selector & header -------- */
+  .meeting-select-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .meeting-select-row .field { flex: 2 1 220px; }
+  .meeting-select-row .actions-row { flex: 1 1 260px; margin-top: 0; }
+
+  .meeting-header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+  .meeting-header-icon { font-size: 32px; line-height: 1; }
+  .meeting-header-title { font-size: 19px; font-weight: 800; margin: 0; }
+  .meeting-header-purpose { font-size: 13px; color: var(--text-muted); margin: 2px 0 0; white-space: pre-wrap; }
+  .meeting-header-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+  .meeting-status-badge { border-radius: 999px; padding: 4px 12px; font-size: 11.5px; font-weight: 800; }
+  .meeting-status-badge.today { background: rgba(27,175,122,.15); color: var(--accent-dark); }
+  .meeting-status-badge.upcoming { background: rgba(42,120,214,.15); color: var(--primary-dark); }
+  .meeting-status-badge.past { background: rgba(137,135,129,.18); color: var(--text-muted); }
+  .meeting-empty { text-align: center; color: var(--text-muted); font-size: 13.5px; padding: 24px 10px; }
+
+  /* -------- Section tabs -------- */
+  .mode-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .mode-tab {
+    flex: 1 1 100px;
+    text-align: center;
+    padding: 9px 6px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    font-weight: 700;
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+  .mode-tab.active { background: linear-gradient(180deg, var(--primary), var(--primary-dark)); color: #fff; border-color: transparent; }
+
+  /* -------- Rows list (generic) -------- */
+  .rows-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+  .row-item { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; }
+  .row-item .row-main { flex: 1 1 auto; min-width: 0; }
+  .row-item .row-actions { display: flex; gap: 4px; margin-left: auto; }
+  .icon-btn { background: none; border: none; box-shadow: none; padding: 3px 6px; font-size: 13px; color: var(--text-muted); }
+  .icon-btn:hover { color: var(--primary); transform: none; filter: none; }
+  .icon-btn::after { display: none; }
+  .icon-btn.is-danger:hover { color: var(--danger); }
+
+  .progress-track { height: 8px; border-radius: 999px; background: var(--border); overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-dark)); border-radius: 999px; }
+
+  /* -------- Agenda -------- */
+  .agenda-item { display: flex; align-items: center; gap: 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; margin-bottom: 8px; }
+  .agenda-item.is-covered { opacity: .6; }
+  .agenda-item.is-covered .agenda-topic { text-decoration: line-through; }
+  .agenda-check { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--border); background: var(--surface); flex: none; padding: 0; box-shadow: none; font-size: 13px; }
+  .agenda-check.is-covered { background: linear-gradient(180deg, var(--accent), var(--accent-dark)); border-color: transparent; color: #fff; }
+  .agenda-check::after { display: none; }
+  .agenda-topic { flex: 1 1 auto; font-size: 13.5px; font-weight: 700; }
+  .agenda-mins { font-size: 11px; color: var(--text-muted); font-weight: 700; }
+
+  /* -------- Participants -------- */
+  .attendance-pill { border-radius: 999px; padding: 3px 10px; font-size: 10.5px; font-weight: 800; }
+  .attendance-pill.present { background: rgba(27,175,122,.15); color: var(--accent-dark); }
+  .attendance-pill.absent { background: rgba(227,73,72,.15); color: var(--danger); }
+  .attendance-pill.late { background: rgba(201,126,0,.15); color: var(--warn); }
+
+  /* -------- Discussion (who said what) -------- */
+  .discussion-entry { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; margin-bottom: 8px; }
+  .discussion-speaker { font-size: 12.5px; font-weight: 800; color: var(--primary); }
+  .discussion-point { font-size: 13.5px; color: var(--text-primary); margin-top: 3px; white-space: pre-wrap; }
+
+  /* -------- Decisions & Actions -------- */
+  .decision-item { background: var(--surface-muted); border-left: 3px solid var(--accent); border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; }
+  .decision-text { font-size: 13.5px; font-weight: 600; }
+  .decision-by { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  .priority-pill, .status-pill { border-radius: 999px; padding: 3px 9px; font-size: 10.5px; font-weight: 800; cursor: pointer; border: none; }
+  .priority-pill.priority-high { background: rgba(227,73,72,.15); color: var(--danger); }
+  .priority-pill.priority-medium { background: rgba(201,126,0,.15); color: var(--warn); }
+  .priority-pill.priority-low { background: rgba(27,175,122,.15); color: var(--accent-dark); }
+  .status-pill.status-not-started { background: var(--border); color: var(--text-secondary); }
+  .status-pill.status-in-progress { background: rgba(42,120,214,.15); color: var(--primary-dark); }
+  .status-pill.status-done { background: rgba(27,175,122,.15); color: var(--accent-dark); }
+  .action-row .row-main { display: flex; flex-direction: column; gap: 2px; }
+  .action-task { font-size: 13.5px; font-weight: 700; }
+  .action-task.is-done { text-decoration: line-through; color: var(--text-muted); }
+  .action-meta { font-size: 11px; color: var(--text-muted); }
+  .action-badges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+  /* -------- To-Dos & Parking Lot -------- */
+  .todo-item { display: flex; align-items: center; gap: 8px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; margin-bottom: 6px; }
+  .todo-item.is-done .todo-text { text-decoration: line-through; color: var(--text-muted); }
+  .todo-check { width: 20px; height: 20px; border-radius: 5px; border: 1.5px solid var(--border); background: var(--surface); flex: none; padding: 0; box-shadow: none; font-size: 12px; }
+  .todo-check.is-done { background: linear-gradient(180deg, var(--accent), var(--accent-dark)); border-color: transparent; color: #fff; }
+  .todo-check::after { display: none; }
+  .todo-text { flex: 1 1 auto; font-size: 13px; }
+  .parking-item { background: var(--surface-muted); border-left: 3px solid var(--warn); border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; }
+  .parking-topic { font-size: 13.5px; font-weight: 700; }
+  .parking-notes { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+  /* -------- Summary -------- */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+  .stat-box { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
+  .stat-box-value { font-size: 20px; font-weight: 800; color: var(--primary); }
+  .stat-box-label { font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-top: 2px; }
+
+  .empty-note { text-align: center; color: var(--text-muted); font-size: 12.5px; padding: 14px; }
+  .search-row { margin-bottom: 12px; }
+
+  /* -------- Print -------- */
+  #printArea { display: none; }
+  .print-title { text-align: center; font-size: 22px; font-weight: 800; margin: 0 0 4px; color: #17203a; }
+  .print-subtitle { text-align: center; font-size: 12.5px; color: #6b7488; margin: 0 0 6px; }
+  .print-meta { text-align: center; font-size: 11.5px; color: #6b7488; margin: 0 0 16px; }
+  .print-section-title { font-size: 14px; font-weight: 800; color: #17203a; margin: 18px 0 8px; border-bottom: 1px solid #dde2ee; padding-bottom: 4px; }
+  .print-line { font-size: 12.5px; color: #333; padding: 4px 0; border-bottom: 1px solid #eef1f7; }
+  .print-line strong { color: #17203a; }
+
+  .nav-link { display: block; text-align: center; margin-top: 8px; text-decoration: none; color: var(--primary); font-size: 13.5px; }
+
+  @media screen and (max-width: 480px) {
+    body { padding: 10px 6px 24px; }
+    .card { padding: 14px; }
+    h1 { font-size: 20px; }
+    .mode-tab { flex: 1 1 30%; font-size: 11px; padding: 8px 4px; }
+    .meeting-header-icon { font-size: 26px; }
+    .meeting-header-title { font-size: 16px; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media print {
+    html, body { background: #fff !important; padding: 0; }
+    .container { max-width: none; }
+    body > .container > *:not(#printArea) { display: none !important; }
+    #printArea { display: block; padding: 6mm; }
+  }
+</style>
+<style id="pageStylePortrait">@page { size: A4 portrait; margin: 12mm; }</style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JFG7JRVYNV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-JFG7JRVYNV');
+</script>
+</head>
+<body>
+  <div class="container">
+    <h1>📝 Meeting Notes</h1>
+    <p class="subtitle">Capture agenda, attendance, who said what, decisions, action items, and follow-ups — everything for effective meeting minutes, in one place.</p>
+
+    <div class="theme-toggle">
+      <span>☀️</span>
+      <label class="switch">
+        <input type="checkbox" id="themeToggle">
+        <span class="switch-slider"></span>
+      </label>
+      <span>🌙</span>
+    </div>
+
+    <div class="card" id="meetingSelectorCard">
+      <h2>🗓️ Your Meetings</h2>
+      <div class="meeting-select-row">
+        <div class="field">
+          <label for="meetingSelect">Current Meeting</label>
+          <select id="meetingSelect"></select>
+        </div>
+        <div class="actions-row">
+          <button class="btn-add btn-sm" id="newMeetingBtn" type="button">➕ New Meeting</button>
+          <button class="btn-outline btn-sm" id="editMeetingBtn" type="button">✎ Edit Meeting</button>
+          <button class="btn-danger btn-sm" id="deleteMeetingBtn" type="button">🗑️ Delete Meeting</button>
+        </div>
+      </div>
+
+      <div id="meetingMetaForm" style="display:none; margin-top: 14px;">
+        <div class="field-row">
+          <div class="field" style="flex: 2 1 220px;">
+            <label for="meetingTitleInput">Meeting Title</label>
+            <input type="text" id="meetingTitleInput" maxlength="100" placeholder="e.g. Q3 Roadmap Planning">
+          </div>
+          <div class="field" style="flex: 0 0 70px;">
+            <label for="meetingIconInput">Icon</label>
+            <input type="text" id="meetingIconInput" maxlength="4" placeholder="📝">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="meetingDateInput">Date</label>
+            <input type="date" id="meetingDateInput">
+          </div>
+          <div class="field">
+            <label for="meetingStartInput">Start Time</label>
+            <input type="time" id="meetingStartInput">
+          </div>
+          <div class="field">
+            <label for="meetingEndInput">End Time</label>
+            <input type="time" id="meetingEndInput">
+          </div>
+          <div class="field">
+            <label for="meetingCategoryInput">Category</label>
+            <input type="text" id="meetingCategoryInput" maxlength="40" placeholder="e.g. Sprint Planning">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field" style="flex: 2 1 220px;">
+            <label for="meetingLocationInput">Location / Link</label>
+            <input type="text" id="meetingLocationInput" maxlength="150" placeholder="e.g. Room 2B or meet.google.com/xyz">
+          </div>
+          <div class="field">
+            <label for="meetingOrganizerInput">Organizer</label>
+            <input type="text" id="meetingOrganizerInput" maxlength="60" placeholder="e.g. Priya">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field" style="flex: 1 1 100%;">
+            <label for="meetingPurposeInput">Purpose / Summary (optional)</label>
+            <textarea id="meetingPurposeInput" rows="2" placeholder="Why this meeting, or a short recap"></textarea>
+          </div>
+        </div>
+        <div class="actions-row">
+          <button class="btn-add btn-sm" id="saveMeetingBtn" type="button">💾 Save Meeting</button>
+          <button class="btn-outline btn-sm" id="cancelMeetingBtn" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="meetingEmptyState" class="card meeting-empty" style="display:none;">
+      No meetings yet — click "➕ New Meeting" above to start taking notes.
+    </div>
+
+    <div id="meetingHeaderCard" class="card meeting-header" style="display:none;"></div>
+
+    <div class="mode-tabs" id="sectionTabs" style="display:none;">
+      <div class="mode-tab active" data-tab="agenda">📋 Agenda</div>
+      <div class="mode-tab" data-tab="participants">👥 Participants</div>
+      <div class="mode-tab" data-tab="discussion">💬 Discussion</div>
+      <div class="mode-tab" data-tab="actions">✅ Decisions &amp; Actions</div>
+      <div class="mode-tab" data-tab="followups">📝 To-Dos &amp; Parking Lot</div>
+      <div class="mode-tab" data-tab="summary">📊 Summary</div>
+    </div>
+
+    <div id="tabContent"></div>
+
+    <div class="card" id="backupCard" style="display:none;">
+      <h2>💾 Backup &amp; Restore</h2>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 10px;">Saves/restores <strong>all</strong> your meetings at once, as one file.</p>
+      <div class="actions-row">
+        <button class="btn-outline btn-sm" id="exportFileBtn" type="button">⬇️ Export to File</button>
+        <button class="btn-outline btn-sm" id="importFileBtn" type="button">⬆️ Import from File</button>
+        <input type="file" id="importFileInput" accept="application/json" style="display:none;">
+        <button class="btn-outline btn-sm" id="printNotesBtn" type="button">🖨️ Print This Meeting's Notes</button>
+      </div>
+    </div>
+
+    <a href="tools.html" class="nav-link">← Back to Tools</a>
+  </div>
+
+  <div id="printArea"></div>
+
+  <script>
+    // ============================== Storage ==============================
+    const STORAGE_KEY = 'meetingNotesData';
+
+    const PRIORITIES = [
+      { id: 'high', label: '🔴 High' },
+      { id: 'medium', label: '🟡 Medium' },
+      { id: 'low', label: '🟢 Low' },
+    ];
+    const STATUSES = ['not-started', 'in-progress', 'done'];
+    const STATUS_LABEL = { 'not-started': 'Not Started', 'in-progress': 'In Progress', 'done': '✓ Done' };
+    const ATTENDANCE = ['present', 'absent', 'late'];
+    const ATTENDANCE_LABEL = { present: '✓ Present', absent: '✕ Absent', late: '⏰ Late' };
+
+    function defaultData() {
+      return { meetings: [], activeMeetingId: null, activeTab: 'agenda' };
+    }
+    function defaultMeeting() {
+      return {
+        id: uid(), title: '', icon: '📝', date: todayStr(), startTime: '', endTime: '',
+        location: '', organizer: '', category: '', purpose: '',
+        agenda: [], participants: [], discussion: [], decisions: [], actions: [], todos: [], parkingLot: [],
+      };
+    }
+
+    function loadData() {
+      let stored = {};
+      try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { stored = {}; }
+      const d = Object.assign(defaultData(), stored);
+      if (!Array.isArray(d.meetings)) d.meetings = [];
+      d.meetings.forEach((m) => {
+        ['agenda', 'participants', 'discussion', 'decisions', 'actions', 'todos', 'parkingLot'].forEach((k) => { if (!Array.isArray(m[k])) m[k] = []; });
+        if (!m.icon) m.icon = '📝';
+      });
+      if (!d.activeMeetingId || !d.meetings.some((m) => m.id === d.activeMeetingId)) {
+        d.activeMeetingId = d.meetings.length ? d.meetings[0].id : null;
+      }
+      return d;
+    }
+    function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+    let data = loadData();
+    let editing = null; // { tab: 'agenda'|'participants'|'discussion'|'decisions'|'actions'|'todos'|'parkingLot', id }
+    let discussionSearchTerm = '';
+    let editingMeetingId = null; // null = creating new meeting
+
+    function uid() { return 'm_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str == null ? '' : str;
+      return div.innerHTML;
+    }
+    function getActiveMeeting() { return data.meetings.find((m) => m.id === data.activeMeetingId) || null; }
+    function todayStr() { return formatDateInputValue(new Date()); }
+    function formatDateInputValue(d) {
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+    function parseDateInput(value) {
+      const [y, m, d] = value.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+    function formatDisplayDate(value) {
+      if (!value) return '';
+      const d = parseDateInput(value);
+      return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    }
+    function formatTimeRange(m) {
+      if (!m.startTime && !m.endTime) return '';
+      if (m.startTime && m.endTime) return `${m.startTime} – ${m.endTime}`;
+      return m.startTime || m.endTime;
+    }
+    function computeDurationLabel(m) {
+      if (!m.startTime || !m.endTime) return null;
+      const [sh, sm] = m.startTime.split(':').map(Number);
+      const [eh, em] = m.endTime.split(':').map(Number);
+      let mins = (eh * 60 + em) - (sh * 60 + sm);
+      if (mins < 0) mins += 24 * 60;
+      const h = Math.floor(mins / 60);
+      const mm = mins % 60;
+      if (h === 0) return `${mm}m`;
+      if (mm === 0) return `${h}h`;
+      return `${h}h ${mm}m`;
+    }
+
+    // ============================== Meeting status ==============================
+    function computeMeetingStatus(m) {
+      if (!m.date) return { label: 'No date set', cls: '' };
+      const today = todayStr();
+      if (m.date === today) return { label: '🟢 Today', cls: 'today' };
+      if (m.date > today) return { label: '🕓 Upcoming', cls: 'upcoming' };
+      return { label: '✅ Past', cls: 'past' };
+    }
+
+    // ============================== Meeting selector / header ==============================
+    function renderMeetingSelect() {
+      const sel = document.getElementById('meetingSelect');
+      if (!data.meetings.length) {
+        sel.innerHTML = '<option value="">No meetings yet</option>';
+        return;
+      }
+      const sorted = data.meetings.slice().sort((a, b) => (b.date + (b.startTime || '')).localeCompare(a.date + (a.startTime || '')));
+      sel.innerHTML = sorted.map((m) => `<option value="${m.id}" ${m.id === data.activeMeetingId ? 'selected' : ''}>${escapeHtml(m.icon || '📝')} ${escapeHtml(m.title || 'Untitled meeting')}${m.date ? ' — ' + escapeHtml(formatDisplayDate(m.date)) : ''}</option>`).join('');
+    }
+
+    function renderMeetingHeader() {
+      const m = getActiveMeeting();
+      const headerCard = document.getElementById('meetingHeaderCard');
+      const emptyState = document.getElementById('meetingEmptyState');
+      const tabsEl = document.getElementById('sectionTabs');
+      const backupCard = document.getElementById('backupCard');
+      backupCard.style.display = data.meetings.length ? '' : 'none';
+      if (!m) {
+        headerCard.style.display = 'none';
+        tabsEl.style.display = 'none';
+        emptyState.style.display = '';
+        document.getElementById('tabContent').innerHTML = '';
+        return;
+      }
+      emptyState.style.display = 'none';
+      headerCard.style.display = 'flex';
+      tabsEl.style.display = '';
+      const status = computeMeetingStatus(m);
+      const timeRange = formatTimeRange(m);
+      const duration = computeDurationLabel(m);
+      headerCard.innerHTML = `
+        <div class="meeting-header-icon">${escapeHtml(m.icon || '📝')}</div>
+        <div style="flex:1 1 auto; min-width:0;">
+          <div class="meeting-header-title">${escapeHtml(m.title || 'Untitled meeting')}</div>
+          ${m.purpose ? `<div class="meeting-header-purpose">${escapeHtml(m.purpose)}</div>` : ''}
+          <div class="meeting-header-meta">
+            <span class="meeting-status-badge ${status.cls}">${escapeHtml(status.label)}</span>
+            ${m.date ? `<span>🗓️ ${escapeHtml(formatDisplayDate(m.date))}</span>` : ''}
+            ${timeRange ? `<span>⏱️ ${escapeHtml(timeRange)}${duration ? ' (' + escapeHtml(duration) + ')' : ''}</span>` : ''}
+            ${m.location ? `<span>📍 ${escapeHtml(m.location)}</span>` : ''}
+            ${m.organizer ? `<span>🙋 ${escapeHtml(m.organizer)}</span>` : ''}
+            ${m.category ? `<span>🏷️ ${escapeHtml(m.category)}</span>` : ''}
+          </div>
+        </div>`;
+    }
+
+    // ============================== Meeting meta form (add/edit) ==============================
+    function openMeetingForm(m) {
+      editingMeetingId = m ? m.id : null;
+      document.getElementById('meetingMetaForm').style.display = '';
+      document.getElementById('meetingTitleInput').value = m ? m.title : '';
+      document.getElementById('meetingIconInput').value = m ? m.icon : '📝';
+      document.getElementById('meetingDateInput').value = m ? m.date : todayStr();
+      document.getElementById('meetingStartInput').value = m ? m.startTime : '';
+      document.getElementById('meetingEndInput').value = m ? m.endTime : '';
+      document.getElementById('meetingCategoryInput').value = m ? m.category : '';
+      document.getElementById('meetingLocationInput').value = m ? m.location : '';
+      document.getElementById('meetingOrganizerInput').value = m ? m.organizer : '';
+      document.getElementById('meetingPurposeInput').value = m ? m.purpose : '';
+      document.getElementById('meetingTitleInput').focus();
+    }
+    function closeMeetingForm() {
+      editingMeetingId = null;
+      document.getElementById('meetingMetaForm').style.display = 'none';
+    }
+
+    document.getElementById('newMeetingBtn').addEventListener('click', () => openMeetingForm(null));
+    document.getElementById('editMeetingBtn').addEventListener('click', () => {
+      const m = getActiveMeeting();
+      if (!m) { alert('Create a meeting first.'); return; }
+      openMeetingForm(m);
+    });
+    document.getElementById('cancelMeetingBtn').addEventListener('click', closeMeetingForm);
+    document.getElementById('deleteMeetingBtn').addEventListener('click', () => {
+      const m = getActiveMeeting();
+      if (!m) return;
+      if (!confirm(`Delete "${m.title || 'this meeting'}" and everything in it (agenda, notes, actions, etc.)? This cannot be undone.`)) return;
+      data.meetings = data.meetings.filter((x) => x.id !== m.id);
+      data.activeMeetingId = data.meetings.length ? data.meetings[0].id : null;
+      saveData();
+      renderAll();
+    });
+
+    document.getElementById('saveMeetingBtn').addEventListener('click', () => {
+      const title = document.getElementById('meetingTitleInput').value.trim();
+      if (!title) { alert('Please enter a meeting title.'); return; }
+      const fields = {
+        title,
+        icon: document.getElementById('meetingIconInput').value.trim() || '📝',
+        date: document.getElementById('meetingDateInput').value,
+        startTime: document.getElementById('meetingStartInput').value,
+        endTime: document.getElementById('meetingEndInput').value,
+        category: document.getElementById('meetingCategoryInput').value.trim(),
+        location: document.getElementById('meetingLocationInput').value.trim(),
+        organizer: document.getElementById('meetingOrganizerInput').value.trim(),
+        purpose: document.getElementById('meetingPurposeInput').value.trim(),
+      };
+      if (editingMeetingId) {
+        Object.assign(data.meetings.find((m) => m.id === editingMeetingId), fields);
+      } else {
+        const m = defaultMeeting();
+        Object.assign(m, fields);
+        data.meetings.push(m);
+        data.activeMeetingId = m.id;
+      }
+      saveData();
+      closeMeetingForm();
+      renderAll();
+    });
+
+    document.getElementById('meetingSelect').addEventListener('change', (e) => {
+      data.activeMeetingId = e.target.value;
+      editing = null;
+      saveData();
+      renderAll();
+    });
+
+    // ============================== Section tabs ==============================
+    document.getElementById('sectionTabs').addEventListener('click', (e) => {
+      const tab = e.target.closest('.mode-tab');
+      if (!tab) return;
+      data.activeTab = tab.dataset.tab;
+      editing = null;
+      discussionSearchTerm = '';
+      saveData();
+      renderTabsUI();
+      renderTabContent();
+    });
+    function renderTabsUI() {
+      document.querySelectorAll('#sectionTabs .mode-tab').forEach((el) => el.classList.toggle('active', el.dataset.tab === data.activeTab));
+    }
+
+    function renderTabContent() {
+      const m = getActiveMeeting();
+      const el = document.getElementById('tabContent');
+      if (!m) { el.innerHTML = ''; return; }
+      switch (data.activeTab) {
+        case 'agenda': el.innerHTML = renderAgendaTab(m); break;
+        case 'participants': el.innerHTML = renderParticipantsTab(m); break;
+        case 'discussion': el.innerHTML = renderDiscussionTab(m); break;
+        case 'actions': el.innerHTML = renderActionsTab(m); break;
+        case 'followups': el.innerHTML = renderFollowupsTab(m); break;
+        case 'summary': el.innerHTML = renderSummaryTab(m); break;
+        default: el.innerHTML = '';
+      }
+    }
+
+    function participantDatalist(m) {
+      return `<datalist id="participantNames">${m.participants.map((p) => `<option value="${escapeHtml(p.name)}">`).join('')}</datalist>`;
+    }
+
+    // ============================== Agenda tab ==============================
+    function renderAgendaTab(m) {
+      const isEdit = editing && editing.tab === 'agenda';
+      const item = isEdit ? m.agenda.find((x) => x.id === editing.id) : null;
+      const coveredCount = m.agenda.filter((x) => x.covered).length;
+
+      const list = m.agenda.length ? m.agenda.map((a) => `
+        <div class="agenda-item${a.covered ? ' is-covered' : ''}">
+          <button class="agenda-check${a.covered ? ' is-covered' : ''}" data-act="toggle-agenda" data-id="${a.id}" title="Mark covered">${a.covered ? '✓' : ''}</button>
+          <span class="agenda-topic">${escapeHtml(a.topic)}</span>
+          ${a.minutes ? `<span class="agenda-mins">${a.minutes} min</span>` : ''}
+          <span class="row-actions">
+            <button class="icon-btn" data-act="edit-agenda" data-id="${a.id}" title="Edit">✎</button>
+            <button class="icon-btn is-danger" data-act="del-agenda" data-id="${a.id}" title="Delete">🗑</button>
+          </span>
+        </div>`).join('') : '<p class="empty-note">No agenda items yet — plan what you want to cover above.</p>';
+
+      return `
+        <div class="card">
+          <h3>${isEdit ? '✎ Edit Agenda Item' : '➕ Add Agenda Item'}</h3>
+          <div class="field-row">
+            <div class="field" style="flex:2 1 220px;"><label for="agendaTopicInput">Topic</label><input type="text" id="agendaTopicInput" placeholder="e.g. Q3 budget review" value="${escapeHtml(item ? item.topic : '')}"></div>
+            <div class="field" style="flex:0 1 120px;"><label for="agendaMinutesInput">Minutes (optional)</label><input type="number" id="agendaMinutesInput" min="0" placeholder="10" value="${item && item.minutes ? item.minutes : ''}"></div>
+          </div>
+          <div class="actions-row">
+            <button class="btn-add btn-sm" data-act="${isEdit ? 'save-agenda' : 'add-agenda'}" ${isEdit ? `data-id="${item.id}"` : ''}>${isEdit ? '💾 Save Changes' : '➕ Add to Agenda'}</button>
+            ${isEdit ? '<button class="btn-outline btn-sm" data-act="cancel-edit">Cancel</button>' : ''}
+          </div>
+        </div>
+        <div class="card">
+          <h3>📋 Agenda — ${coveredCount}/${m.agenda.length} covered</h3>
+          ${m.agenda.length ? `<div class="progress-track" style="margin-bottom:12px;"><span class="progress-fill" style="width:${m.agenda.length ? Math.round((coveredCount / m.agenda.length) * 100) : 0}%;"></span></div>` : ''}
+          ${list}
+        </div>`;
+    }
+
+    // ============================== Participants tab ==============================
+    function renderParticipantsTab(m) {
+      const isEdit = editing && editing.tab === 'participants';
+      const item = isEdit ? m.participants.find((x) => x.id === editing.id) : null;
+      const attOptions = ATTENDANCE.map((a) => `<option value="${a}" ${item && item.attendance === a ? 'selected' : ''}>${ATTENDANCE_LABEL[a]}</option>`).join('');
+      const presentCount = m.participants.filter((p) => p.attendance === 'present').length;
+
+      const list = m.participants.length ? m.participants.map((p) => `
+        <div class="row-item">
+          <div class="row-main"><strong>${escapeHtml(p.name)}</strong>${p.role ? ' · ' + escapeHtml(p.role) : ''}</div>
+          <span class="attendance-pill ${p.attendance}">${ATTENDANCE_LABEL[p.attendance]}</span>
+          <span class="row-actions">
+            <button class="icon-btn" data-act="edit-participant" data-id="${p.id}" title="Edit">✎</button>
+            <button class="icon-btn is-danger" data-act="del-participant" data-id="${p.id}" title="Delete">🗑</button>
+          </span>
+        </div>`).join('') : '<p class="empty-note">No participants added yet.</p>';
+
+      return `
+        <div class="card">
+          <h3>${isEdit ? '✎ Edit Participant' : '➕ Add Participant'}</h3>
+          <div class="field-row">
+            <div class="field"><label for="participantNameInput">Name</label><input type="text" id="participantNameInput" placeholder="e.g. Arun" value="${escapeHtml(item ? item.name : '')}"></div>
+            <div class="field"><label for="participantRoleInput">Role (optional)</label><input type="text" id="participantRoleInput" placeholder="e.g. Product Manager" value="${escapeHtml(item ? item.role : '')}"></div>
+            <div class="field"><label for="participantAttendanceInput">Attendance</label><select id="participantAttendanceInput">${attOptions}</select></div>
+          </div>
+          <div class="actions-row">
+            <button class="btn-add btn-sm" data-act="${isEdit ? 'save-participant' : 'add-participant'}" ${isEdit ? `data-id="${item.id}"` : ''}>${isEdit ? '💾 Save Changes' : '➕ Add Participant'}</button>
+            ${isEdit ? '<button class="btn-outline btn-sm" data-act="cancel-edit">Cancel</button>' : ''}
+          </div>
+        </div>
+        <div class="card">
+          <h3>👥 Participants — ${presentCount}/${m.participants.length} present</h3>
+          <div class="rows-list">${list}</div>
+        </div>`;
+    }
+
+    // ============================== Discussion tab ("who said what") ==============================
+    function renderDiscussionTab(m) {
+      const isEdit = editing && editing.tab === 'discussion';
+      const item = isEdit ? m.discussion.find((x) => x.id === editing.id) : null;
+      const filtered = discussionSearchTerm
+        ? m.discussion.filter((d) => (d.speaker + ' ' + d.point).toLowerCase().includes(discussionSearchTerm.toLowerCase()))
+        : m.discussion;
+
+      const list = filtered.length ? filtered.map((d) => `
+        <div class="discussion-entry">
+          <div class="discussion-speaker">${d.speaker ? '🗣️ ' + escapeHtml(d.speaker) : '📝 Note'}</div>
+          <div class="discussion-point">${escapeHtml(d.point)}</div>
+          <span class="row-actions">
+            <button class="icon-btn" data-act="edit-discussion" data-id="${d.id}" title="Edit">✎</button>
+            <button class="icon-btn is-danger" data-act="del-discussion" data-id="${d.id}" title="Delete">🗑</button>
+          </span>
+        </div>`).join('') : `<p class="empty-note">${discussionSearchTerm ? 'No entries match your search.' : 'Nothing logged yet — capture points as they come up, with who said them.'}</p>`;
+
+      return `
+        ${participantDatalist(m)}
+        <div class="card">
+          <h3>${isEdit ? '✎ Edit Entry' : '➕ Add Discussion Point'}</h3>
+          <div class="field-row">
+            <div class="field" style="flex:0 1 220px;"><label for="discussionSpeakerInput">Speaker (optional)</label><input type="text" id="discussionSpeakerInput" list="participantNames" placeholder="Who said this?" value="${escapeHtml(item ? item.speaker : '')}"></div>
+            <div class="field" style="flex:2 1 260px;"><label for="discussionPointInput">Point</label><textarea id="discussionPointInput" rows="2" placeholder="What was said or discussed...">${escapeHtml(item ? item.point : '')}</textarea></div>
+          </div>
+          <div class="actions-row">
+            <button class="btn-add btn-sm" data-act="${isEdit ? 'save-discussion' : 'add-discussion'}" ${isEdit ? `data-id="${item.id}"` : ''}>${isEdit ? '💾 Save Changes' : '➕ Add'}</button>
+            ${isEdit ? '<button class="btn-outline btn-sm" data-act="cancel-edit">Cancel</button>' : ''}
+          </div>
+        </div>
+        <div class="card">
+          <h3>💬 Discussion Log (${m.discussion.length})</h3>
+          <div class="field-row search-row">
+            <div class="field" style="flex:1 1 100%;"><input type="text" id="discussionSearchInput" placeholder="🔍 Search by speaker or point…" value="${escapeHtml(discussionSearchTerm)}"></div>
+          </div>
+          ${list}
+        </div>`;
+    }
+
+    // ============================== Decisions & Actions tab ==============================
+    function renderActionsTab(m) {
+      const isEditD = editing && editing.tab === 'decisions';
+      const decItem = isEditD ? m.decisions.find((x) => x.id === editing.id) : null;
+      const isEditA = editing && editing.tab === 'actions';
+      const actItem = isEditA ? m.actions.find((x) => x.id === editing.id) : null;
+      const priOptions = PRIORITIES.map((p) => `<option value="${p.id}" ${actItem && actItem.priority === p.id ? 'selected' : ''}>${p.label}</option>`).join('');
+      const doneCount = m.actions.filter((a) => a.status === 'done').length;
+
+      const decisionList = m.decisions.length ? m.decisions.map((d) => `
+        <div class="decision-item">
+          <div class="decision-text">✔️ ${escapeHtml(d.decision)}</div>
+          ${d.decidedBy ? `<div class="decision-by">Decided by: ${escapeHtml(d.decidedBy)}</div>` : ''}
+          <span class="row-actions">
+            <button class="icon-btn" data-act="edit-decision" data-id="${d.id}" title="Edit">✎</button>
+            <button class="icon-btn is-danger" data-act="del-decision" data-id="${d.id}" title="Delete">🗑</button>
+          </span>
+        </div>`).join('') : '<p class="empty-note">No decisions recorded yet.</p>';
+
+      const actionList = m.actions.length ? m.actions.map((a) => {
+        const pri = PRIORITIES.find((p) => p.id === a.priority) || PRIORITIES[1];
+        return `<div class="row-item action-row">
+          <div class="row-main">
+            <span class="action-task${a.status === 'done' ? ' is-done' : ''}">${escapeHtml(a.task)}</span>
+            <span class="action-meta">${a.assignee ? '👤 ' + escapeHtml(a.assignee) : 'Unassigned'}${a.dueDate ? ' · 📅 ' + escapeHtml(formatDisplayDate(a.dueDate)) : ''}</span>
+          </div>
+          <div class="action-badges">
+            <span class="priority-pill priority-${a.priority}">${pri.label}</span>
+            <button class="status-pill status-${a.status}" data-act="cycle-action-status" data-id="${a.id}" title="Click to change status">${STATUS_LABEL[a.status]}</button>
+          </div>
+          <span class="row-actions">
+            <button class="icon-btn" data-act="edit-action" data-id="${a.id}" title="Edit">✎</button>
+            <button class="icon-btn is-danger" data-act="del-action" data-id="${a.id}" title="Delete">🗑</button>
+          </span>
+        </div>`;
+      }).join('') : '<p class="empty-note">No action items yet.</p>';
+
+      return `
+        ${participantDatalist(m)}
+        <div class="card">
+          <h3>${isEditD ? '✎ Edit Decision' : '➕ Add Decision'}</h3>
+          <div class="field-row">
+            <div class="field" style="flex:2 1 220px;"><label for="decisionTextInput">Decision</label><input type="text" id="decisionTextInput" placeholder="e.g. Ship the v2 redesign in Q3" value="${escapeHtml(decItem ? decItem.decision : '')}"></div>
+            <div class="field"><label for="decisionByInput">Decided By (optional)</label><input type="text" id="decisionByInput" list="participantNames" value="${escapeHtml(decItem ? decItem.decidedBy : '')}"></div>
+          </div>
+          <div class="actions-row">
+            <button class="btn-add btn-sm" data-act="${isEditD ? 'save-decision' : 'add-decision'}" ${isEditD ? `data-id="${decItem.id}"` : ''}>${isEditD ? '💾 Save Changes' : '➕ Add Decision'}</button>
+            ${isEditD ? '<button class="btn-outline btn-sm" data-act="cancel-edit">Cancel</button>' : ''}
+          </div>
+        </div>
+        <div class="card">
+          <h3>✔️ Decisions Made (${m.decisions.length})</h3>
+          ${decisionList}
+        </div>
+        <div class="card">
+          <h3>${isEditA ? '✎ Edit Action Item' : '➕ Add Action Item'}</h3>
+          <div class="field-row">
+            <div class="field" style="flex:2 1 220px;"><label for="actionTaskInput">Task</label><input type="text" id="actionTaskInput" placeholder="e.g. Send updated deck to stakeholders" value="${escapeHtml(actItem ? actItem.task : '')}"></div>
+            <div class="field"><label for="actionAssigneeInput">Assignee (optional)</label><input type="text" id="actionAssigneeInput" list="participantNames" value="${escapeHtml(actItem ? actItem.assignee : '')}"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label for="actionDueInput">Due Date (optional)</label><input type="date" id="actionDueInput" value="${actItem ? actItem.dueDate : ''}"></div>
+            <div class="field"><label for="actionPriorityInput">Priority</label><select id="actionPriorityInput">${priOptions}</select></div>
+          </div>
+          <div class="actions-row">
+            <button class="btn-add btn-sm" data-act="${isEditA ? 'save-action' : 'add-action'}" ${isEditA ? `data-id="${actItem.id}"` : ''}>${isEditA ? '💾 Save Changes' : '➕ Add Action Item'}</button>
+            ${isEditA ? '<button class="btn-outline btn-sm" data-act="cancel-edit">Cancel</button>' : ''}
+          </div>
+        </div>
+        <div class="card">
+          <h3>✅ Action Items — ${doneCount}/${m.actions.length} done</h3>
+          <div class="rows-list">${actionList}</div>
+        </div>`;
+    }
+
+    // ============================== To-Dos & Parking Lot tab ==============================
+    function renderFollowupsTab(m) {
+      const isEditP = editing && editing.tab === 'parkingLot';
+      const pItem = isEditP ? m.parkingLot.find((x) => x.id === editing.id) : null;
+      const todoDone = m.todos.filter((t) => t.done).length;
+
+      const todoList = m.todos.length ? m.todos.map((t) => `
+        <div class="todo-item${t.done ? ' is-done' : ''}">
+          <button class="todo-check${t.done ? ' is-done' : ''}" data-act="toggle-todo" data-id="${t.id}">${t.done ? '✓' : ''}</button>
+          <span class="todo-text">${escapeHtml(t.text)}</span>
+          <button class="icon-btn is-danger" data-act="del-todo" data-id="${t.id}" title="Remove">🗑</button>
+        </div>`).join('') : '<p class="empty-note">No quick to-dos yet.</p>';
+
+      const parkingList = m.parkingLot.length ? m.parkingLot.map((p) => `
+        <div class="parking-item">
+          <div class="parking-topic">❓ ${escapeHtml(p.topic)}</div>
+          ${p.notes ? `<div class="parking-notes">${escapeHtml(p.notes)}</div>` : ''}
+          <span class="row-actions">
+            <button class="icon-btn" data-act="edit-parking" data-id="${p.id}" title="Edit">✎</button>
+            <button class="icon-btn is-danger" data-act="del-parking" data-id="${p.id}" title="Resolved / Remove">🗑</button>
+          </span>
+        </div>`).join('') : '<p class="empty-note">Nothing parked — this is for topics you want to defer to a future meeting.</p>';
+
+      return `
+        <div class="card">
+          <h3>➕ Add Quick To-Do</h3>
+          <div class="field-row">
+            <div class="field" style="flex:1 1 100%;"><label for="todoTextInput">Item</label><input type="text" id="todoTextInput" placeholder="e.g. Book the follow-up room"></div>
+          </div>
+          <div class="actions-row">
+            <button class="btn-add btn-sm" data-act="add-todo">➕ Add</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>📝 To-Dos — ${todoDone}/${m.todos.length} done</h3>
+          ${m.todos.length ? `<div class="progress-track" style="margin-bottom:12px;"><span class="progress-fill" style="width:${Math.round((todoDone / m.todos.length) * 100)}%;"></span></div>` : ''}
+          ${todoList}
+        </div>
+        <div class="card">
+          <h3>${isEditP ? '✎ Edit Parking Lot Item' : '➕ Add to Parking Lot'}</h3>
+          <p style="font-size:12px;color:var(--text-muted);margin:0 0 10px;">For questions or topics raised that couldn't be resolved now — revisit them later instead of derailing this meeting.</p>
+          <div class="field-row">
+            <div class="field" style="flex:2 1 220px;"><label for="parkingTopicInput">Topic / Question</label><input type="text" id="parkingTopicInput" placeholder="e.g. Should we migrate to the new billing system?" value="${escapeHtml(pItem ? pItem.topic : '')}"></div>
+          </div>
+          <div class="field-row">
+            <div class="field" style="flex:1 1 100%;"><label for="parkingNotesInput">Notes (optional)</label><input type="text" id="parkingNotesInput" placeholder="Context, who raised it, etc." value="${escapeHtml(pItem ? pItem.notes : '')}"></div>
+          </div>
+          <div class="actions-row">
+            <button class="btn-add btn-sm" data-act="${isEditP ? 'save-parking' : 'add-parking'}" ${isEditP ? `data-id="${pItem.id}"` : ''}>${isEditP ? '💾 Save Changes' : '➕ Add to Parking Lot'}</button>
+            ${isEditP ? '<button class="btn-outline btn-sm" data-act="cancel-edit">Cancel</button>' : ''}
+          </div>
+        </div>
+        <div class="card">
+          <h3>🅿️ Parking Lot (${m.parkingLot.length})</h3>
+          ${parkingList}
+        </div>`;
+    }
+
+    // ============================== Summary tab ==============================
+    function renderSummaryTab(m) {
+      const presentCount = m.participants.filter((p) => p.attendance === 'present').length;
+      const agendaCovered = m.agenda.filter((a) => a.covered).length;
+      const actionsDone = m.actions.filter((a) => a.status === 'done').length;
+      const actionsOpen = m.actions.length - actionsDone;
+      const todosDone = m.todos.filter((t) => t.done).length;
+      const duration = computeDurationLabel(m);
+      return `
+        <div class="card">
+          <h3>📊 Meeting Summary</h3>
+          <div class="stat-grid">
+            <div class="stat-box"><div class="stat-box-value">${presentCount}/${m.participants.length}</div><div class="stat-box-label">Present</div></div>
+            <div class="stat-box"><div class="stat-box-value">${agendaCovered}/${m.agenda.length}</div><div class="stat-box-label">Agenda Covered</div></div>
+            <div class="stat-box"><div class="stat-box-value">${m.discussion.length}</div><div class="stat-box-label">Points Logged</div></div>
+            <div class="stat-box"><div class="stat-box-value">${m.decisions.length}</div><div class="stat-box-label">Decisions</div></div>
+            <div class="stat-box"><div class="stat-box-value">${actionsOpen}</div><div class="stat-box-label">Open Actions</div></div>
+            <div class="stat-box"><div class="stat-box-value">${todosDone}/${m.todos.length}</div><div class="stat-box-label">To-Dos Done</div></div>
+            <div class="stat-box"><div class="stat-box-value">${m.parkingLot.length}</div><div class="stat-box-label">Parked Topics</div></div>
+            <div class="stat-box"><div class="stat-box-value">${duration || '—'}</div><div class="stat-box-label">Duration</div></div>
+          </div>
+        </div>`;
+    }
+
+    // ============================== Generic CRUD helper ==============================
+    function startEdit(tab, id) { editing = { tab, id }; renderTabContent(); }
+    function cancelEdit() { editing = null; renderTabContent(); }
+
+    document.getElementById('tabContent').addEventListener('click', (e) => {
+      const m = getActiveMeeting();
+      if (!m) return;
+      const btn = e.target.closest('[data-act]');
+      if (!btn) return;
+      const act = btn.dataset.act;
+      const id = btn.dataset.id;
+
+      if (act === 'cancel-edit') { cancelEdit(); return; }
+
+      // ---- Agenda ----
+      if (act === 'add-agenda' || act === 'save-agenda') {
+        const topic = document.getElementById('agendaTopicInput').value.trim();
+        const minutes = parseInt(document.getElementById('agendaMinutesInput').value, 10) || 0;
+        if (!topic) { alert('Please enter a topic.'); return; }
+        if (act === 'add-agenda') m.agenda.push({ id: uid(), topic, minutes, covered: false });
+        else Object.assign(m.agenda.find((x) => x.id === id), { topic, minutes });
+        editing = null; saveData(); renderTabContent(); return;
+      }
+      if (act === 'edit-agenda') { startEdit('agenda', id); return; }
+      if (act === 'del-agenda') { if (!confirm('Delete this agenda item?')) return; m.agenda = m.agenda.filter((x) => x.id !== id); saveData(); renderTabContent(); return; }
+      if (act === 'toggle-agenda') { const item = m.agenda.find((x) => x.id === id); item.covered = !item.covered; saveData(); renderTabContent(); return; }
+
+      // ---- Participants ----
+      if (act === 'add-participant' || act === 'save-participant') {
+        const name = document.getElementById('participantNameInput').value.trim();
+        const role = document.getElementById('participantRoleInput').value.trim();
+        const attendance = document.getElementById('participantAttendanceInput').value;
+        if (!name) { alert('Please enter a name.'); return; }
+        if (act === 'add-participant') m.participants.push({ id: uid(), name, role, attendance });
+        else Object.assign(m.participants.find((x) => x.id === id), { name, role, attendance });
+        editing = null; saveData(); renderTabContent(); return;
+      }
+      if (act === 'edit-participant') { startEdit('participants', id); return; }
+      if (act === 'del-participant') { if (!confirm('Delete this participant?')) return; m.participants = m.participants.filter((x) => x.id !== id); saveData(); renderTabContent(); return; }
+
+      // ---- Discussion ----
+      if (act === 'add-discussion' || act === 'save-discussion') {
+        const speaker = document.getElementById('discussionSpeakerInput').value.trim();
+        const point = document.getElementById('discussionPointInput').value.trim();
+        if (!point) { alert('Please enter what was discussed.'); return; }
+        if (act === 'add-discussion') m.discussion.push({ id: uid(), speaker, point });
+        else Object.assign(m.discussion.find((x) => x.id === id), { speaker, point });
+        editing = null; saveData(); renderTabContent(); return;
+      }
+      if (act === 'edit-discussion') { startEdit('discussion', id); return; }
+      if (act === 'del-discussion') { if (!confirm('Delete this entry?')) return; m.discussion = m.discussion.filter((x) => x.id !== id); saveData(); renderTabContent(); return; }
+
+      // ---- Decisions ----
+      if (act === 'add-decision' || act === 'save-decision') {
+        const decision = document.getElementById('decisionTextInput').value.trim();
+        const decidedBy = document.getElementById('decisionByInput').value.trim();
+        if (!decision) { alert('Please enter the decision.'); return; }
+        if (act === 'add-decision') m.decisions.push({ id: uid(), decision, decidedBy });
+        else Object.assign(m.decisions.find((x) => x.id === id), { decision, decidedBy });
+        editing = null; saveData(); renderTabContent(); return;
+      }
+      if (act === 'edit-decision') { startEdit('decisions', id); return; }
+      if (act === 'del-decision') { if (!confirm('Delete this decision?')) return; m.decisions = m.decisions.filter((x) => x.id !== id); saveData(); renderTabContent(); return; }
+
+      // ---- Actions ----
+      if (act === 'add-action' || act === 'save-action') {
+        const task = document.getElementById('actionTaskInput').value.trim();
+        const assignee = document.getElementById('actionAssigneeInput').value.trim();
+        const dueDate = document.getElementById('actionDueInput').value;
+        const priority = document.getElementById('actionPriorityInput').value;
+        if (!task) { alert('Please enter a task.'); return; }
+        if (act === 'add-action') m.actions.push({ id: uid(), task, assignee, dueDate, priority, status: 'not-started' });
+        else Object.assign(m.actions.find((x) => x.id === id), { task, assignee, dueDate, priority });
+        editing = null; saveData(); renderTabContent(); return;
+      }
+      if (act === 'edit-action') { startEdit('actions', id); return; }
+      if (act === 'del-action') { if (!confirm('Delete this action item?')) return; m.actions = m.actions.filter((x) => x.id !== id); saveData(); renderTabContent(); return; }
+      if (act === 'cycle-action-status') {
+        const item = m.actions.find((x) => x.id === id);
+        const idx = STATUSES.indexOf(item.status);
+        item.status = STATUSES[(idx + 1) % STATUSES.length];
+        saveData(); renderTabContent(); return;
+      }
+
+      // ---- To-Dos ----
+      if (act === 'add-todo') {
+        const text = document.getElementById('todoTextInput').value.trim();
+        if (!text) { alert('Please enter an item.'); return; }
+        m.todos.push({ id: uid(), text, done: false });
+        saveData(); renderTabContent(); return;
+      }
+      if (act === 'toggle-todo') { const item = m.todos.find((x) => x.id === id); item.done = !item.done; saveData(); renderTabContent(); return; }
+      if (act === 'del-todo') { m.todos = m.todos.filter((x) => x.id !== id); saveData(); renderTabContent(); return; }
+
+      // ---- Parking Lot ----
+      if (act === 'add-parking' || act === 'save-parking') {
+        const topic = document.getElementById('parkingTopicInput').value.trim();
+        const notes = document.getElementById('parkingNotesInput').value.trim();
+        if (!topic) { alert('Please enter a topic.'); return; }
+        if (act === 'add-parking') m.parkingLot.push({ id: uid(), topic, notes });
+        else Object.assign(m.parkingLot.find((x) => x.id === id), { topic, notes });
+        editing = null; saveData(); renderTabContent(); return;
+      }
+      if (act === 'edit-parking') { startEdit('parkingLot', id); return; }
+      if (act === 'del-parking') { m.parkingLot = m.parkingLot.filter((x) => x.id !== id); saveData(); renderTabContent(); return; }
+    });
+
+    // Discussion search -- re-renders just the discussion tab, restoring focus.
+    document.getElementById('tabContent').addEventListener('input', (e) => {
+      if (e.target.id === 'discussionSearchInput') {
+        discussionSearchTerm = e.target.value;
+        renderTabContent();
+        const input = document.getElementById('discussionSearchInput');
+        input.focus();
+        input.selectionStart = input.selectionEnd = input.value.length;
+      }
+    });
+
+    // ============================== Backup / Restore / Print ==============================
+    document.getElementById('exportFileBtn').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `meeting-notes-backup-${todayStr()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+    document.getElementById('importFileBtn').addEventListener('click', () => document.getElementById('importFileInput').click());
+    document.getElementById('importFileInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      e.target.value = '';
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        let parsed;
+        try { parsed = JSON.parse(reader.result); } catch { parsed = null; }
+        if (!parsed || !Array.isArray(parsed.meetings)) { alert("That file doesn't look like a valid Meeting Notes backup."); return; }
+        if (!confirm('This will replace all your current meetings with the imported file. Continue?')) return;
+        data = Object.assign(defaultData(), parsed);
+        if (!data.activeMeetingId || !data.meetings.some((m) => m.id === data.activeMeetingId)) data.activeMeetingId = data.meetings.length ? data.meetings[0].id : null;
+        saveData();
+        editing = null;
+        renderAll();
+        alert('Import complete.');
+      };
+      reader.readAsText(file);
+    });
+
+    document.getElementById('printNotesBtn').addEventListener('click', () => {
+      const m = getActiveMeeting();
+      if (!m) { alert('Create a meeting first.'); return; }
+      const metaParts = [];
+      if (m.date) metaParts.push(formatDisplayDate(m.date));
+      const timeRange = formatTimeRange(m);
+      if (timeRange) metaParts.push(timeRange);
+      if (m.location) metaParts.push(m.location);
+      if (m.organizer) metaParts.push('Organizer: ' + m.organizer);
+
+      const section = (title, rows) => rows.length ? `<div class="print-section-title">${escapeHtml(title)}</div>${rows.join('')}` : '';
+
+      const agendaRows = m.agenda.map((a) => `<div class="print-line">${a.covered ? '✓' : '◻'} ${escapeHtml(a.topic)}${a.minutes ? ' (' + a.minutes + ' min)' : ''}</div>`);
+      const participantRows = m.participants.map((p) => `<div class="print-line"><strong>${escapeHtml(p.name)}</strong>${p.role ? ' — ' + escapeHtml(p.role) : ''} · ${ATTENDANCE_LABEL[p.attendance]}</div>`);
+      const discussionRows = m.discussion.map((d) => `<div class="print-line">${d.speaker ? '<strong>' + escapeHtml(d.speaker) + ':</strong> ' : ''}${escapeHtml(d.point)}</div>`);
+      const decisionRows = m.decisions.map((d) => `<div class="print-line">✔️ ${escapeHtml(d.decision)}${d.decidedBy ? ' — ' + escapeHtml(d.decidedBy) : ''}</div>`);
+      const actionRows = m.actions.map((a) => `<div class="print-line">[${STATUS_LABEL[a.status]}] <strong>${escapeHtml(a.task)}</strong>${a.assignee ? ' — ' + escapeHtml(a.assignee) : ''}${a.dueDate ? ' (due ' + escapeHtml(formatDisplayDate(a.dueDate)) + ')' : ''}</div>`);
+      const todoRows = m.todos.map((t) => `<div class="print-line">${t.done ? '✓' : '◻'} ${escapeHtml(t.text)}</div>`);
+      const parkingRows = m.parkingLot.map((p) => `<div class="print-line">❓ ${escapeHtml(p.topic)}${p.notes ? ' — ' + escapeHtml(p.notes) : ''}</div>`);
+
+      document.getElementById('printArea').innerHTML = `
+        <div class="print-title">${escapeHtml(m.icon || '')} ${escapeHtml(m.title || 'Meeting Notes')}</div>
+        ${m.purpose ? `<div class="print-subtitle">${escapeHtml(m.purpose)}</div>` : ''}
+        <div class="print-meta">${escapeHtml(metaParts.join(' · '))}</div>
+        ${section('Agenda', agendaRows)}
+        ${section('Participants', participantRows)}
+        ${section('Discussion', discussionRows)}
+        ${section('Decisions', decisionRows)}
+        ${section('Action Items', actionRows)}
+        ${section('To-Dos', todoRows)}
+        ${section('Parking Lot', parkingRows)}`;
+      window.print();
+    });
+
+    // ============================== Theme ==============================
+    const THEME_KEY = 'meetingNotesTheme';
+    document.getElementById('themeToggle').checked = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.getElementById('themeToggle').addEventListener('change', function () {
+      if (this.checked) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem(THEME_KEY, 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem(THEME_KEY, 'light');
+      }
+    });
+
+    // ============================== Init ==============================
+    function renderAll() {
+      renderMeetingSelect();
+      renderMeetingHeader();
+      renderTabsUI();
+      renderTabContent();
+    }
+    renderAll();
+  </script>
+</body>
+</html>
