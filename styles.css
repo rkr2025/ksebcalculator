@@ -1784,6 +1784,137 @@ td {
   background: rgba(255, 255, 255, 0.28);
 }
 
+/* Voice-to-Number Input Assistant (js/voice-input.js) -- a floating mic
+   button fixed to the bottom-right corner so it's reachable no matter how
+   far down the long form the user has scrolled. Stays display:none (set in
+   index.html) unless the browser actually supports the Web Speech API. */
+.voice-input-widget {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.voice-input-status {
+  max-width: 230px;
+  background: var(--text-primary);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 10px;
+  box-shadow: var(--shadow-lift);
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.voice-input-status.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.voice-input-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.voice-lang-toggle {
+  display: flex;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  padding: 3px;
+  box-shadow: var(--shadow-sm);
+}
+
+.voice-lang-btn {
+  border: none;
+  background: none;
+  padding: 5px 10px;
+  font-size: 11.5px;
+  font-weight: 800;
+  font-family: inherit;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.voice-lang-btn[aria-pressed="true"] {
+  background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+  color: #fff;
+}
+
+.voice-mic-btn {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+  color: #fff;
+  font-size: 22px;
+  box-shadow: var(--shadow-lift);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  padding: 0;
+}
+
+.voice-mic-btn:hover {
+  transform: translateY(-2px);
+}
+
+.voice-mic-btn:active {
+  transform: translateY(0);
+}
+
+.voice-mic-btn.is-listening {
+  background: linear-gradient(180deg, var(--import), #c53433);
+  animation: voice-mic-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes voice-mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(227, 73, 72, 0.45), var(--shadow-lift); }
+  50% { box-shadow: 0 0 0 12px rgba(227, 73, 72, 0), var(--shadow-lift); }
+}
+
+/* Brief highlight on whichever numeric field a spoken value just landed in
+   -- purely visual confirmation, applied/removed by voice-input.js. */
+.voice-target-flash {
+  animation: voice-target-flash-kf 0.9s ease;
+}
+
+@keyframes voice-target-flash-kf {
+  0% { box-shadow: 0 0 0 0 rgba(27, 175, 122, 0.55); border-color: var(--solar); }
+  100% { box-shadow: 0 0 0 0 rgba(27, 175, 122, 0); }
+}
+
+@media (max-width: 480px) {
+  .voice-input-widget {
+    right: 12px;
+    bottom: 12px;
+  }
+  .voice-mic-btn {
+    width: 48px;
+    height: 48px;
+    font-size: 19px;
+  }
+}
+
+@media print {
+  .voice-input-widget {
+    display: none !important;
+  }
+}
+
 /* Print-only recap of the entered Billing Setup / Solar Generation / KSEB
    Net Meter Consumption values -- populated by main.js alongside the other
    result panels, but (unlike those) never shown on screen. */

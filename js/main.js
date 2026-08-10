@@ -1,6 +1,7 @@
 // Entry point: wires up DOM events to the pure calculator/render layers
-// (js/main.js). Besides reading-inputs.js (a self-contained DOM-only
-// widget), this is the only file that touches document/window.
+// (js/main.js). Besides reading-inputs.js, wheeling-ui.js, card-info.js and
+// voice-input.js (each a self-contained DOM-only widget), this is the only
+// file that touches document/window.
 
 import { computeBill, BILL_ERRORS } from './calculator.js';
 import { renderBillResults, APP_VERSION_LABEL } from './render-results.js';
@@ -10,6 +11,7 @@ import { initReadingGroups } from './reading-inputs.js';
 import { initWheelingUI } from './wheeling-ui.js';
 import { computeWheelingResult } from './wheeling-calculator.js';
 import { initCardInfoPanels } from './card-info.js';
+import { initVoiceInput } from './voice-input.js';
 import {
     TELESCOPIC_SLABS,
     NON_TELESCOPIC_SLABS,
@@ -27,6 +29,7 @@ import {
 const resetReadingGroups = initReadingGroups();
 const wheelingUI = initWheelingUI();
 initCardInfoPanels();
+initVoiceInput();
 
 const RESULT_PANEL_IDS = ['billExplanation', 'billChart', 'billAnalysis', 'wheelingBreakdown', 'result', 'result2', 'result3', 'result6'];
 // Print-only -- populated/cleared alongside the panels above, but never

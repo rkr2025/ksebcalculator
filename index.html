@@ -163,6 +163,10 @@
                     <summary>What happens if I don't pay my electricity bill by the due date?</summary>
                     <p>KSEB typically charges a late payment surcharge, and continued non-payment can lead to disconnection of supply after the notice period specified in the bill/Supply Code. Reconnection usually requires clearing dues (and sometimes a reconnection fee).</p>
                 </details>
+                <details class="faq-item">
+                    <summary>What's the 🎤 microphone button at the bottom of the page for?</summary>
+                    <p>It's a Voice-to-Number Input Assistant: tap any number field on the form, then tap the 🎤 button and say a value out loud (in English or Malayalam -- switch languages with the EN/മല toggle next to it) and it's typed into that field for you, using your browser's own built-in speech recognition. It only appears in browsers that support this (e.g. Chrome/Edge); nothing changes if your browser doesn't.</p>
+                </details>
             </div>
             <div class="faq-list" data-faq-lang-content="ml" lang="ml">
                 <details class="faq-item">
@@ -293,6 +297,10 @@
                 <details class="faq-item">
                     <summary>അവസാന തീയതിക്കകം ബിൽ അടച്ചില്ലെങ്കിൽ എന്ത് സംഭവിക്കും?</summary>
                     <p>സാധാരണയായി KSEB ലേറ്റ് പേയ്‌മെന്റ് സർചാർജ് ഈടാക്കും, തുടർച്ചയായി അടയ്ക്കാതിരുന്നാൽ ബില്ലിൽ/സപ്ലൈ കോഡിൽ പറഞ്ഞിരിക്കുന്ന നോട്ടീസ് കാലയളവിന് ശേഷം വൈദ്യുതി വിച്ഛേദിക്കപ്പെടാം. പുനഃസ്ഥാപനത്തിന് സാധാരണയായി കുടിശ്ശിക തീർക്കുകയും (ചിലപ്പോൾ) ഒരു റീകണക്ഷൻ ഫീസ് നൽകുകയും വേണ്ടിവരും.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>പേജിന്റെ താഴെയുള്ള 🎤 മൈക്രോഫോൺ ബട്ടൺ എന്തിനാണ്?</summary>
+                    <p>ഇതൊരു Voice-to-Number Input Assistant ആണ്: ഏതെങ്കിലും നമ്പർ ഫീൽഡിൽ ടാപ്പ് ചെയ്ത ശേഷം 🎤 ബട്ടൺ ടാപ്പ് ചെയ്ത് ഒരു സംഖ്യ ഉച്ചത്തിൽ പറയുക (ഇംഗ്ലീഷ് അല്ലെങ്കിൽ മലയാളം -- അതിനടുത്തുള്ള EN/മല ടോഗിൾ ഉപയോഗിച്ച് ഭാഷ മാറ്റാം), അത് ആ ഫീൽഡിൽ ടൈപ്പ് ചെയ്യപ്പെടും -- നിങ്ങളുടെ ബ്രൗസറിന്റെ തന്നെ സ്പീച്ച് റെക്കഗ്നിഷൻ ഉപയോഗിച്ചാണ് ഇത് പ്രവർത്തിക്കുന്നത്. ഇത് പിന്തുണയ്ക്കുന്ന ബ്രൗസറുകളിൽ (ഉദാ. Chrome/Edge) മാത്രമേ കാണിക്കൂ; നിങ്ങളുടെ ബ്രൗസർ പിന്തുണയ്ക്കുന്നില്ലെങ്കിൽ ഒന്നും മാറില്ല.</p>
                 </details>
             </div>
             <div class="view-counter">
@@ -649,6 +657,23 @@
                             </div>
                         </div>
                         <button type="button" class="rate-reset-btn" id="resetMeterRentButton">↺ Reset to Default Rates</button>
+                    </details>
+
+                    <!-- Voice-to-Number Input Assistant is opt-in and off by
+                         default (js/voice-input.js reads this same
+                         localStorage key on load) -- most users never need
+                         it, so it stays out of the way until someone
+                         deliberately turns it on here. -->
+                    <details id="voiceAssistantContainer" style="margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border);">
+                        <summary class="sub-row-badge">🎤 Voice-to-Number Input Assistant</summary>
+                        <p style="margin: 8px 0 12px; font-size: 12px; color: var(--text-muted);">Speak a number (English or Malayalam) into whichever numeric field you last tapped, using your browser's built-in speech recognition.</p>
+                        <div class="reading-mode-toggle">
+                            <label class="switch">
+                                <input type="checkbox" id="voiceAssistantEnableToggle" aria-labelledby="voiceAssistantEnableToggleLabel">
+                                <span class="switch-slider"></span>
+                            </label>
+                            <span id="voiceAssistantEnableToggleLabel">Enable voice input assistant</span>
+                        </div>
                     </details>
                 </details>
             </section>
@@ -1181,6 +1206,22 @@
         </div>
         <div id="quote" style="display: none;"></div>
         <div id="appVersionFooter" class="app-version-footer"></div>
+    </div>
+
+    <!-- Voice-to-Number Input Assistant: speak a number (English or
+         Malayalam) into whichever numeric field was last tapped. Hidden by
+         default -- js/voice-input.js only reveals it if the browser
+         actually supports the Web Speech API, so browsers without support
+         (e.g. Firefox) never see a mic button that wouldn't work. -->
+    <div id="voiceInputWidget" class="voice-input-widget" style="display: none;">
+        <div id="voiceInputStatus" class="voice-input-status" role="status" aria-live="polite"></div>
+        <div class="voice-input-controls">
+            <div class="voice-lang-toggle" role="group" aria-label="Voice input language">
+                <button type="button" class="voice-lang-btn" data-lang="en-IN" aria-pressed="true">EN</button>
+                <button type="button" class="voice-lang-btn" data-lang="ml-IN" aria-pressed="false">മല</button>
+            </div>
+            <button type="button" class="voice-mic-btn" id="voiceMicBtn" aria-label="Speak a number into the last-selected field" title="Tap a number field, then tap to speak a value">🎤</button>
+        </div>
     </div>
 
     <!-- CSS-only lightbox (no JS needed): the link's #tariffImageOverlay
