@@ -332,6 +332,7 @@
   .col-cal-cell.is-blank { background: #fafbfd; }
   .col-cal-cell.is-weekend, .col-cal-daylabel.is-weekend { color: #d92d2d; }
   .col-cal-cell.is-today { background: #eafbf3; font-weight: 800; }
+  .col-cal-weeknum { display: block; font-size: 5.5px; font-weight: 700; color: #9aa2b7; line-height: 1; }
 
   /* Single Month: one big month filling the page, reusing the same
      month-block markup as the other calendar views but scaled up via these
@@ -984,7 +985,11 @@
             const classes = ['col-cal-cell'];
             if (weekendRow) classes.push('is-weekend');
             if (isSameDate(date, today)) classes.push('is-today');
-            rowCells += `<td class="${classes.join(' ')}">${date.getDate()}</td>`;
+            // d === 0 is each week's starting day (the weekday chosen in
+            // "Week Starts On"), so the week number is only shown there --
+            // once per week per month, not repeated on every row.
+            const weekNumHtml = d === 0 ? `<span class="col-cal-weeknum">(${getISOWeek(date)})</span>` : '';
+            rowCells += `<td class="${classes.join(' ')}">${date.getDate()}${weekNumHtml}</td>`;
           }
           rows += `<tr>${rowCells}</tr>`;
         }
