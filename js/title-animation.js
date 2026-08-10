@@ -118,7 +118,7 @@
         // of the flight -- that's what read as a "stray line of letters"
         // during testing, even though the word was correctly positioned.
         var rot = (Math.random() * 2 - 1) * 14; // deg
-        var delayMs = i * 380;
+        var delayMs = i * 460;
         maxDelayMs = Math.max(maxDelayMs, delayMs);
 
         flySpan.style.setProperty('--sx', sx.toFixed(1) + 'px');
@@ -136,7 +136,7 @@
     // while the words are still flying in.
     document.documentElement.classList.add('title-animating');
     document.body.classList.add('title-animating');
-    var animationDurationMs = 1400;
+    var animationDurationMs = 2100; // keep in sync with .title-word-fly--go's animation-duration in styles.css
     window.setTimeout(function () {
         document.documentElement.classList.remove('title-animating');
         document.body.classList.remove('title-animating');

@@ -25,7 +25,7 @@ import { buildPrintInputsSummary } from './render-print-summary.js';
 // results' ENDING_NOTE_HTML below and in a persistent page-footer (rendered
 // by main.js at load time, independent of whether a bill has been
 // calculated yet).
-export const APP_VERSION_LABEL = 'Version 3.0.146: Last updated: 08-August-2026';
+export const APP_VERSION_LABEL = 'Version 3.0.147: Last updated: 08-August-2026';
 
 const ENDING_NOTE_HTML = `
     <div style="background: var(--surface-muted); padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); margin: 20px auto; max-width: 90%; font-family: 'Georgia', serif; border-left: 4px solid #2ecc71;">
