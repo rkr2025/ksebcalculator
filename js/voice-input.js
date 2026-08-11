@@ -204,6 +204,19 @@ export function initVoiceInput() {
         if (!enabled) {
             stopListening();
             hideWidget();
+            // Belt-and-braces: hideWidget() above only unlocks whichever one
+            // field is currently tracked as targetField, but a field can be
+            // left readOnly without ever becoming (or un-becoming) that
+            // tracked field -- e.g. tabbing rapidly between number fields
+            // fires the next field's focusin (which moves targetField on)
+            // before the previous field's own delayed focusout-hide has run,
+            // so that previous field's unlock never happens. Turning the
+            // assistant off is exactly the moment every number field must
+            // be guaranteed typeable again, so sweep all of them here rather
+            // than trust a single tracked reference.
+            document.querySelectorAll('input[type="number"]').forEach((el) => {
+                el.readOnly = false;
+            });
         } else if (document.activeElement instanceof HTMLInputElement && document.activeElement.type === 'number') {
             // Flipping the setting on while a number field already has
             // focus should show the popover immediately, not require an
@@ -294,6 +307,15 @@ export function initVoiceInput() {
 
     function showWidgetFor(field) {
         if (!enabled) return;
+        // Tabbing straight from one number field to another fires the new
+        // field's focusin (and thus this function) before the old field's
+        // own focusout-triggered hide/unlock has run (see the focusout
+        // listener below) -- unlock the field being switched away from
+        // right here too, so it can never end up stuck readOnly with
+        // nothing left pointing back at it once targetField moves on.
+        if (targetField && targetField !== field && document.body.contains(targetField)) {
+            targetField.readOnly = false;
+        }
         targetField = field;
         if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
         positionWidgetNear(field);
@@ -323,13 +345,19 @@ export function initVoiceInput() {
 
     document.addEventListener('focusout', (e) => {
         if (!(e.target instanceof HTMLInputElement) || e.target.type !== 'number') return;
+        const blurredField = e.target;
         // Delay the hide: if the user is moving focus onto the popover
         // itself (e.g. tapping the mic button, which blurs the field
         // first), pointerInsideWidget will already be true by the time this
         // timer fires, and it backs off instead of hiding under the user's
         // finger.
         hideTimer = setTimeout(() => {
-            if (!pointerInsideWidget) hideWidget();
+            // Only act if targetField is still the field that just blurred
+            // -- if focus has already moved straight to another number
+            // field, showWidgetFor() already switched targetField over (and
+            // unlocked this one itself), so this stale timer must not hide
+            // the *new* field's popup or unlock the *new* field early.
+            if (!pointerInsideWidget && targetField === blurredField) hideWidget();
         }, 180);
     });
 
