@@ -265,6 +265,12 @@
       color: var(--accent);
       margin: 0 0 6px;
     }
+    .session-plan-remaining {
+      display: block;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin: 0 0 6px;
+    }
     .session-plan-input-row { display: flex; align-items: center; gap: 6px; }
     .session-plan-row input {
       display: block;
@@ -2849,6 +2855,9 @@
         const countdownSpan = document.createElement('span');
         countdownSpan.className = 'session-plan-countdown';
 
+        const remainingSpan = document.createElement('span');
+        remainingSpan.className = 'session-plan-remaining';
+
         const input = document.createElement('input');
         input.type = 'text';
         input.className = 'session-plan-input';
@@ -2881,6 +2890,7 @@
         row.appendChild(label);
         row.appendChild(timeSpan);
         row.appendChild(countdownSpan);
+        row.appendChild(remainingSpan);
         row.appendChild(inputRow);
         // Appended to the flat container for now -- updateSessionPlanHighlight
         // (called below) immediately re-parents this into completedRowsContainer
@@ -3056,13 +3066,25 @@
         // freezes automatically while paused (computeSessionSchedule's
         // anchor freezes with it).
         const countdownEl = row.querySelector('.session-plan-countdown');
+        const remainingEl = row.querySelector('.session-plan-remaining');
         if (i === activeSession) {
           const secondsLeft = Math.max(0, Math.round((slot.end.getTime() - Date.now()) / 1000));
           countdownEl.textContent = `⏳ ${formatPomodoroTime(secondsLeft)} left`;
           countdownEl.style.display = '';
+
+          // How many sessions remain after this one, so the user has a
+          // sense of how much of the set is still ahead without having to
+          // count segments in the progress bar above.
+          const sessionsAfterThis = pomodoroTotalSessions - i;
+          remainingEl.textContent = sessionsAfterThis > 0
+            ? `📌 ${sessionsAfterThis} session${sessionsAfterThis === 1 ? '' : 's'} left after this one`
+            : '📌 This is the last session';
+          remainingEl.style.display = '';
         } else {
           countdownEl.textContent = '';
           countdownEl.style.display = 'none';
+          remainingEl.textContent = '';
+          remainingEl.style.display = 'none';
         }
 
         // A future session (its scheduled start hasn't arrived yet) can't
