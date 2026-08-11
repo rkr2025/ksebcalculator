@@ -258,6 +258,11 @@
       color: var(--text-primary);
       transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
     }
+    .session-plan-row input:read-only {
+      background: var(--surface-muted);
+      color: var(--text-muted);
+      cursor: default;
+    }
     .session-plan-diary-btn {
       flex: none;
       font-size: 14px;
@@ -1708,6 +1713,23 @@
     const SESSION_DIARY_MAP_PREFIX = 'life_diary_session_diary_map_';
     const SESSION_DIARY_STOP_KEY = 'life_diary_session_diary_stop';
 
+    // Identifies the current Pomodoro *run* (not calendar date) that Session
+    // Plans/the Diary-save lock belong to. Reset gets a fresh id rather than
+    // deleting anything under the old one -- a previous run's plan text and
+    // "already saved" bookkeeping are simply left behind under their own id
+    // (harmless, unread) instead of being wiped, which used to also destroy
+    // any later/unrelated plan text that happened to share the same date key.
+    const SESSION_RUN_ID_KEY = 'life_diary_session_run_id';
+    let sessionRunId = localStorage.getItem(SESSION_RUN_ID_KEY);
+    if (!sessionRunId) {
+      sessionRunId = String(Date.now());
+      localStorage.setItem(SESSION_RUN_ID_KEY, sessionRunId);
+    }
+    function startNewSessionRun() {
+      sessionRunId = String(Date.now());
+      localStorage.setItem(SESSION_RUN_ID_KEY, sessionRunId);
+    }
+
     function loadEntries() {
       try {
         return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
@@ -2607,31 +2629,33 @@
       updatePomodoroDisplay();
       localStorage.removeItem(POMODORO_STATE_KEY);
       showSessionEndPreview();
-      // Order matters: clearSessionDiaryTracking() must remove the
-      // session->diary-entry map *before* clearSessionPlans() rebuilds the
-      // input rows, otherwise those rows would read the stale map and
-      // redraw their 📔 buttons as already-locked (✅) for a run that no
-      // longer exists.
+      // Order matters: clearSessionDiaryTracking() must remove the ENDING
+      // run's session->diary-entry map before clearSessionPlans() rotates
+      // sessionRunId, since sessionDiaryMapKey() resolves using whatever
+      // sessionRunId is current at the time it's called.
       clearSessionDiaryTracking();
       clearSessionPlans();
     }
 
     // Reset always puts the set back at session 1 -- any plans typed in for
-    // the run that just ended would otherwise linger (they're saved per
-    // calendar date, not per run) and show up stale against the new run's
-    // session numbers. Wipes storage and, if the panel is currently open,
-    // rebuilds it blank right away.
+    // the run that just ended would otherwise linger and show up stale
+    // against the new run's session numbers. Rather than deleting that old
+    // run's plan text outright (which used to also wipe out anything else
+    // saved under the same date key), this just rotates to a fresh
+    // sessionRunId -- the old run's data is simply orphaned under its own
+    // id instead of destroyed, and reads under the new id start blank.
+    // Rebuilds the panel right away if it's currently open.
     function clearSessionPlans() {
-      localStorage.removeItem(sessionPlanStorageKey());
+      startNewSessionRun();
       if (document.getElementById('sessionPlanRows').children.length) renderSessionPlanInputs();
     }
 
     // Companion to clearSessionPlans() -- Reset means the run that just
     // ended is genuinely over, so: finalize (rather than silently abandon)
-    // whatever session-diary entry was still auto-tracking, and forget
-    // which entries belonged to which session number so the next run's
-    // Session 1, 2, ... start a clean slate instead of overwriting today's
-    // already-completed entries from the run that just ended.
+    // whatever session-diary entry was still auto-tracking, and remove the
+    // ending run's own session->diary-entry map (using the still-current,
+    // about-to-be-rotated sessionRunId) so the next run's Session 1, 2, ...
+    // start unlocked instead of reading stale "already saved" state.
     function clearSessionDiaryTracking() {
       if (sessionDiaryStop) {
         const entries = loadEntries();
@@ -2704,11 +2728,13 @@
 
     // ---------------------------- Session plans -------------------------
     // "What do I plan to do for each session" -- one free-text line per
-    // session (1..pomodoroTotalSessions), cached per calendar date like
-    // What's Special Today so tomorrow starts with a blank plan again.
+    // session (1..pomodoroTotalSessions), cached per calendar date (like
+    // What's Special Today, so a stale run left open overnight still
+    // starts blank the next day) AND per run (sessionRunId, so Reset can
+    // start a fresh set of blanks without deleting any other run's text).
     const SESSION_PLAN_KEY_PREFIX = 'life_diary_session_plan_';
     function sessionPlanStorageKey() {
-      return SESSION_PLAN_KEY_PREFIX + dateKey(new Date());
+      return SESSION_PLAN_KEY_PREFIX + dateKey(new Date()) + '_' + sessionRunId;
     }
     function loadSessionPlans() {
       try { return JSON.parse(localStorage.getItem(sessionPlanStorageKey())) || {}; }
@@ -2815,8 +2841,15 @@
       renderSessionPlanList();
     }
 
+    // Scoped by run only, not by "today" -- the map's job is just "has this
+    // session already been saved this run", which has nothing to do with
+    // calendar dates. Keying it by today's date used to cause a real
+    // mismatch: a past session saved just after midnight is filed in the
+    // Diary under its own actual (earlier) day (see saveSessionPlanToDiary's
+    // anchorTime), but the lock would've been looked up under "today"
+    // instead -- missing it and letting a duplicate note through.
     function sessionDiaryMapKey() {
-      return SESSION_DIARY_MAP_PREFIX + dateKey(new Date());
+      return SESSION_DIARY_MAP_PREFIX + sessionRunId;
     }
     function loadSessionDiaryMap() {
       try { return JSON.parse(localStorage.getItem(sessionDiaryMapKey())) || {}; }
@@ -2952,7 +2985,17 @@
         if (!slot) return;
         const rangeText = `${formatClockShort(slot.start)} - ${formatClockShort(slot.end)}`;
         row.querySelector('.session-plan-time').textContent = rangeText;
-        row.querySelector('.session-plan-input').placeholder = `Nothing planned (${rangeText})`;
+        const planInput = row.querySelector('.session-plan-input');
+        planInput.placeholder = `Nothing planned (${rangeText})`;
+
+        // Once a session's window has passed, its plan text is a record of
+        // what was intended, not something still being drafted -- lock it
+        // read-only so it can't be rewritten after the fact. The only
+        // action left for a past session is saving whatever text it
+        // already has as a plain Diary note (see saveSessionPlanToDiary's
+        // sessionIsOver branch), which stays available since readOnly
+        // doesn't block reading .value or clicking the 📔 button.
+        planInput.readOnly = slot.end.getTime() <= Date.now();
 
         // Live "minutes left" -- shown only for the session that's actually
         // active right now, not for future (or past) sessions, so it's
