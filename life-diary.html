@@ -244,9 +244,11 @@
       color: var(--accent);
       margin: 0 0 6px;
     }
+    .session-plan-input-row { display: flex; align-items: center; gap: 6px; }
     .session-plan-row input {
       display: block;
-      width: 100%;
+      flex: 1 1 auto;
+      min-width: 0;
       box-sizing: border-box;
       font-size: 13px;
       padding: 7px 10px;
@@ -256,6 +258,18 @@
       color: var(--text-primary);
       transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
     }
+    .session-plan-diary-btn {
+      flex: none;
+      font-size: 14px;
+      line-height: 1;
+      padding: 7px 8px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      cursor: pointer;
+    }
+    .session-plan-diary-btn:hover { border-color: var(--primary); }
+    .session-plan-diary-btn:disabled { cursor: default; opacity: .8; }
     .session-plan-row.is-active-session .session-plan-label { color: var(--accent); }
     .session-plan-row.is-active-session input {
       border-color: var(--accent);
@@ -1687,6 +1701,12 @@
     // Shape: { "YYYY-MM-DD": [ { t: <ISO timestamp>, text: <string> }, ... ] }
     const STORAGE_KEY = 'life_diary_entries';
     const THEME_KEY = 'life_diary_theme';
+    // Per-session "save to Diary" bookkeeping (see the Session Plans panel
+    // further down): which diary entry each session number currently owns
+    // (so re-saving replaces it instead of piling up duplicates), and the
+    // pending auto-stop for whichever one is actively tracking right now.
+    const SESSION_DIARY_MAP_PREFIX = 'life_diary_session_diary_map_';
+    const SESSION_DIARY_STOP_KEY = 'life_diary_session_diary_stop';
 
     function loadEntries() {
       try {
@@ -2046,6 +2066,42 @@
       return null;
     }
 
+    // Pending auto-stop for a session saved to the Diary via the Session
+    // Plans panel's 📔 button -- { key, t, stopAt (ms), sessionNumber } or
+    // null. Persisted so it survives a reload/close and still fires (or
+    // catches up, if the stop time already passed while away).
+    let sessionDiaryStop = null;
+    try {
+      const storedStop = JSON.parse(localStorage.getItem(SESSION_DIARY_STOP_KEY));
+      if (storedStop && storedStop.stopAt) sessionDiaryStop = storedStop;
+    } catch { sessionDiaryStop = null; }
+
+    function saveSessionDiaryStopState() {
+      if (sessionDiaryStop) localStorage.setItem(SESSION_DIARY_STOP_KEY, JSON.stringify(sessionDiaryStop));
+      else localStorage.removeItem(SESSION_DIARY_STOP_KEY);
+    }
+
+    // Finalizes the tracked session entry (gives it an endT) once its
+    // planned length has elapsed -- but only if it's still genuinely the
+    // live entry. If something else has since taken over "currently
+    // tracking" (another session saved, a new manual entry, etc.), that
+    // already implicitly capped this entry's duration at the gap before it
+    // (see buildEntryTimerInfo), so forcing an endT here would wrongly
+    // stretch it back out -- just drop the stale pending stop instead.
+    function checkSessionDiaryAutoStop() {
+      if (!sessionDiaryStop || Date.now() < sessionDiaryStop.stopAt) return;
+      const entries = loadEntries();
+      const location = findEntryLocation(entries, sessionDiaryStop.t);
+      const { latestTimestamp } = buildEntryTimerInfo(entries);
+      if (location && !location.entry.endT && location.entry.t === latestTimestamp) {
+        location.entry.endT = new Date(sessionDiaryStop.stopAt).toISOString();
+        saveEntries(entries);
+        if (document.getElementById('viewDateInput').value === location.key) renderEntries();
+      }
+      sessionDiaryStop = null;
+      saveSessionDiaryStopState();
+    }
+
     function renderCurrentRunningEntry() {
       const el = document.getElementById('currentRunningEntry');
       const entries = loadEntries();
@@ -2084,8 +2140,19 @@
       renderCurrentRunningEntry();
     });
 
-    renderCurrentRunningEntry();
-    setInterval(renderCurrentRunningEntry, 1000);
+    function tickCurrentRunningEntry() {
+      checkSessionDiaryAutoStop();
+      renderCurrentRunningEntry();
+    }
+    // Deferred rather than called synchronously here: if a restored
+    // sessionDiaryStop is already overdue (e.g. the tab was closed past its
+    // stop time), this immediately calls saveEntries() -> scheduleAutoBackup(),
+    // which touches `backupHandle` -- a `let` declared further down the
+    // script that hasn't run yet at this exact point. setTimeout(0) pushes
+    // this first tick to right after the whole script finishes executing,
+    // by which point every later declaration is safely initialized.
+    setTimeout(tickCurrentRunningEntry, 0);
+    setInterval(tickCurrentRunningEntry, 1000);
 
     // ---------------------------- Add an entry ----------------------------
     document.getElementById('addEntryBtn').addEventListener('click', () => {
@@ -2541,6 +2608,7 @@
       localStorage.removeItem(POMODORO_STATE_KEY);
       showSessionEndPreview();
       clearSessionPlans();
+      clearSessionDiaryTracking();
     }
 
     // Reset always puts the set back at session 1 -- any plans typed in for
@@ -2551,6 +2619,28 @@
     function clearSessionPlans() {
       localStorage.removeItem(sessionPlanStorageKey());
       if (document.getElementById('sessionPlanRows').children.length) renderSessionPlanInputs();
+    }
+
+    // Companion to clearSessionPlans() -- Reset means the run that just
+    // ended is genuinely over, so: finalize (rather than silently abandon)
+    // whatever session-diary entry was still auto-tracking, and forget
+    // which entries belonged to which session number so the next run's
+    // Session 1, 2, ... start a clean slate instead of overwriting today's
+    // already-completed entries from the run that just ended.
+    function clearSessionDiaryTracking() {
+      if (sessionDiaryStop) {
+        const entries = loadEntries();
+        const location = findEntryLocation(entries, sessionDiaryStop.t);
+        if (location && !location.entry.endT) {
+          location.entry.endT = new Date().toISOString();
+          saveEntries(entries);
+          if (document.getElementById('viewDateInput').value === location.key) renderEntries();
+        }
+        sessionDiaryStop = null;
+        saveSessionDiaryStopState();
+      }
+      localStorage.removeItem(sessionDiaryMapKey());
+      renderCurrentRunningEntry();
     }
 
     document.getElementById('pomodoroStartBtn').addEventListener('click', startPomodoro);
@@ -2689,14 +2779,90 @@
           renderSessionPlanList();
         });
 
+        const diaryBtn = document.createElement('button');
+        diaryBtn.type = 'button';
+        diaryBtn.className = 'session-plan-diary-btn';
+        diaryBtn.textContent = '📔';
+        diaryBtn.title = `Save Session ${i} to Diary Entries`;
+        diaryBtn.addEventListener('click', () => saveSessionPlanToDiary(i, input, diaryBtn));
+
+        const inputRow = document.createElement('div');
+        inputRow.className = 'session-plan-input-row';
+        inputRow.appendChild(input);
+        inputRow.appendChild(diaryBtn);
+
         row.appendChild(label);
         row.appendChild(timeSpan);
         row.appendChild(countdownSpan);
-        row.appendChild(input);
+        row.appendChild(inputRow);
         container.appendChild(row);
       }
       updateSessionPlanHighlight();
       renderSessionPlanList();
+    }
+
+    function sessionDiaryMapKey() {
+      return SESSION_DIARY_MAP_PREFIX + dateKey(new Date());
+    }
+    function loadSessionDiaryMap() {
+      try { return JSON.parse(localStorage.getItem(sessionDiaryMapKey())) || {}; }
+      catch { return {}; }
+    }
+    function saveSessionDiaryMap(map) {
+      localStorage.setItem(sessionDiaryMapKey(), JSON.stringify(map));
+    }
+
+    // Logs a single session as its own real, time-tracked Diary Entry --
+    // separate from the Pomodoro's own "Log to Diary" (which logs *actual*
+    // focused seconds for whatever's running right now). Starts tracking
+    // from this exact moment (not the session's projected schedule time)
+    // and auto-stops once the session's own configured length has elapsed
+    // (see checkSessionDiaryAutoStop, ticking once a second above).
+    //
+    // Re-clicking for the same session replaces its previous entry rather
+    // than adding a duplicate (sessionDiaryMap remembers which entry each
+    // session number currently owns, for today). Starting this one also
+    // implicitly stops whatever else was tracking: buildEntryTimerInfo caps
+    // a no-endT entry's duration at the gap before the next entry, so the
+    // instant this new entry is added it becomes the one "currently
+    // tracking" and the previous one is done.
+    function saveSessionPlanToDiary(sessionNumber, inputEl, btnEl) {
+      const planText = inputEl.value.trim();
+      const now = new Date();
+      const text = `🍅 Session ${sessionNumber}: ${planText || 'Pomodoro session'}`;
+
+      const key = dateKey(now);
+      const entries = loadEntries();
+      const map = loadSessionDiaryMap();
+
+      const previous = map[sessionNumber] ? findEntryLocation(entries, map[sessionNumber].t) : null;
+      if (previous) {
+        entries[previous.key] = entries[previous.key].filter((e) => e !== previous.entry);
+        if (!entries[previous.key].length) delete entries[previous.key];
+      }
+
+      if (!entries[key]) entries[key] = [];
+      const t = now.toISOString();
+      entries[key].push({ t, text });
+      saveEntries(entries);
+
+      map[sessionNumber] = { key, t };
+      saveSessionDiaryMap(map);
+
+      sessionDiaryStop = { key, t, stopAt: now.getTime() + pomodoroWorkSeconds * 1000, sessionNumber };
+      saveSessionDiaryStopState();
+
+      document.getElementById('viewDateInput').value = key;
+      renderEntries();
+      renderCalendar();
+      renderCurrentRunningEntry();
+
+      // Brief inline confirmation on the button itself, since this panel
+      // has no shared status line the way the main Log to Diary button does.
+      const original = btnEl.textContent;
+      btnEl.textContent = '✅';
+      btnEl.disabled = true;
+      setTimeout(() => { btnEl.textContent = original; btnEl.disabled = false; }, 1500);
     }
 
     // Highlights the row for whichever session is actively running (only
