@@ -236,7 +236,14 @@
     .session-plan-row { margin-bottom: 12px; }
     .session-plan-row:last-child { margin-bottom: 0; }
     .session-plan-label { display: block; font-size: 12.5px; font-weight: 700; color: var(--text-muted); }
-    .session-plan-time { display: block; font-size: 11px; color: var(--text-muted); white-space: nowrap; margin: 2px 0 6px; }
+    .session-plan-time { display: block; font-size: 11px; color: var(--text-muted); white-space: nowrap; margin: 2px 0; }
+    .session-plan-countdown {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      margin: 0 0 6px;
+    }
     .session-plan-row input {
       display: block;
       width: 100%;
@@ -2611,6 +2618,9 @@
         const timeSpan = document.createElement('span');
         timeSpan.className = 'session-plan-time';
 
+        const countdownSpan = document.createElement('span');
+        countdownSpan.className = 'session-plan-countdown';
+
         const input = document.createElement('input');
         input.type = 'text';
         input.className = 'session-plan-input';
@@ -2619,6 +2629,7 @@
 
         row.appendChild(label);
         row.appendChild(timeSpan);
+        row.appendChild(countdownSpan);
         row.appendChild(input);
         container.appendChild(row);
       }
@@ -2645,6 +2656,22 @@
         const rangeText = `${formatClockShort(slot.start)} - ${formatClockShort(slot.end)}`;
         row.querySelector('.session-plan-time').textContent = rangeText;
         row.querySelector('.session-plan-input').placeholder = `Nothing planned (${rangeText})`;
+
+        // Live "minutes left" -- shown only for the session that's actually
+        // active right now, not for future (or past) sessions, so it's
+        // unambiguous which countdown is real. Counts down for real while
+        // the timer is running (this function is re-run every tick) and
+        // freezes automatically while paused (computeSessionSchedule's
+        // anchor freezes with it).
+        const countdownEl = row.querySelector('.session-plan-countdown');
+        if (i === activeSession) {
+          const secondsLeft = Math.max(0, Math.round((slot.end.getTime() - Date.now()) / 1000));
+          countdownEl.textContent = `⏳ ${formatPomodoroTime(secondsLeft)} left`;
+          countdownEl.style.display = '';
+        } else {
+          countdownEl.textContent = '';
+          countdownEl.style.display = 'none';
+        }
       });
     }
 
