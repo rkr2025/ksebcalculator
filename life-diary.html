@@ -2812,19 +2812,24 @@
       localStorage.setItem(sessionDiaryMapKey(), JSON.stringify(map));
     }
 
-    // Logs a single session as its own real, time-tracked Diary Entry --
-    // separate from the Pomodoro's own "Log to Diary" (which logs *actual*
-    // focused seconds for whatever's running right now). Starts tracking
-    // from this exact moment (not the session's projected schedule time)
-    // and auto-stops once the session's own configured length has elapsed
-    // (see checkSessionDiaryAutoStop, ticking once a second above).
+    // Logs a single session as a Diary Entry -- separate from the
+    // Pomodoro's own "Log to Diary" (which logs *actual* focused seconds
+    // for whatever's running right now).
+    //
+    // If the session's projected window is still ahead (or in progress),
+    // this starts a real, live-tracked entry from this exact moment,
+    // auto-stopping once the session's own configured length has elapsed
+    // (see checkSessionDiaryAutoStop, ticking once a second above). If the
+    // session's window has already passed, live-tracking a "session" that's
+    // already over makes no sense -- it's saved as a plain untracked note
+    // instead (noTrack: true), with no auto-stop scheduled.
     //
     // Re-clicking for the same session replaces its previous entry rather
     // than adding a duplicate (sessionDiaryMap remembers which entry each
-    // session number currently owns, for today). Starting this one also
-    // implicitly stops whatever else was tracking: buildEntryTimerInfo caps
-    // a no-endT entry's duration at the gap before the next entry, so the
-    // instant this new entry is added it becomes the one "currently
+    // session number currently owns, for today). Starting a tracked entry
+    // also implicitly stops whatever else was tracking: buildEntryTimerInfo
+    // caps a no-endT entry's duration at the gap before the next entry, so
+    // the instant this new entry is added it becomes the one "currently
     // tracking" and the previous one is done.
     function saveSessionPlanToDiary(sessionNumber, inputEl, btnEl) {
       const planText = inputEl.value.trim();
@@ -2841,16 +2846,27 @@
         if (!entries[previous.key].length) delete entries[previous.key];
       }
 
+      const slot = computeSessionSchedule()[sessionNumber - 1];
+      const sessionIsOver = !!(slot && slot.end.getTime() <= now.getTime());
+
       if (!entries[key]) entries[key] = [];
       const t = now.toISOString();
-      entries[key].push({ t, text });
+      const entry = { t, text };
+      if (sessionIsOver) entry.noTrack = true;
+      entries[key].push(entry);
       saveEntries(entries);
 
       map[sessionNumber] = { key, t };
       saveSessionDiaryMap(map);
 
-      sessionDiaryStop = { key, t, stopAt: now.getTime() + pomodoroWorkSeconds * 1000, sessionNumber };
-      saveSessionDiaryStopState();
+      // Only schedule live-tracking/auto-stop for a session that isn't
+      // already over -- and only touch sessionDiaryStop at all when we
+      // actually are starting fresh tracking, so a past-session note can't
+      // accidentally cancel some *other* session's still-active tracking.
+      if (!sessionIsOver) {
+        sessionDiaryStop = { key, t, stopAt: now.getTime() + pomodoroWorkSeconds * 1000, sessionNumber };
+        saveSessionDiaryStopState();
+      }
 
       document.getElementById('viewDateInput').value = key;
       renderEntries();
