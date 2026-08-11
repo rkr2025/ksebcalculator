@@ -338,12 +338,21 @@
       padding-top: 12px;
       border-top: 1px solid var(--border);
     }
-    .session-plan-list-heading {
+    .session-plan-list-toggle {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: var(--surface-muted);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 10px;
       font-size: 12px;
       font-weight: 700;
       color: var(--text-muted);
-      margin-bottom: 8px;
+      cursor: pointer;
     }
+    .session-plan-list-toggle:hover { border-color: var(--primary); color: var(--primary); }
+    .session-plan-list-groups { margin-top: 10px; }
     .session-plan-list-empty { font-size: 12.5px; color: var(--text-muted); margin: 0; }
     .session-plan-group { margin-bottom: 10px; }
     .session-plan-group:last-child { margin-bottom: 0; }
@@ -3218,6 +3227,12 @@
       return `${h} ${ampm}`;
     }
 
+    // Collapsed by default, like the Completed/Upcoming groups above --
+    // this list can get long over a busy day, and it's a secondary
+    // "everything I've saved" reference rather than something needed open
+    // at a glance every time the panel is opened.
+    let savedPlansListExpanded = false;
+
     // Lists every session that actually has a plan saved (blank/"Nothing
     // planned" sessions are skipped), grouped under the hour its projected
     // start time falls in, each with a delete button. Reflects the same
@@ -3247,10 +3262,21 @@
         return;
       }
 
-      const heading = document.createElement('div');
-      heading.className = 'session-plan-list-heading';
-      heading.textContent = '📋 Saved Session Plans (by hour)';
-      listEl.appendChild(heading);
+      const totalCount = groups.reduce((sum, g) => sum + g.items.length, 0);
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'session-plan-list-toggle';
+      toggle.textContent = `${savedPlansListExpanded ? '▾' : '▸'} 📋 Saved Session Plans (by hour) (${totalCount})`;
+      toggle.addEventListener('click', () => {
+        savedPlansListExpanded = !savedPlansListExpanded;
+        renderSessionPlanList();
+      });
+      listEl.appendChild(toggle);
+
+      const groupsEl = document.createElement('div');
+      groupsEl.className = 'session-plan-list-groups';
+      groupsEl.style.display = savedPlansListExpanded ? '' : 'none';
+      listEl.appendChild(groupsEl);
 
       groups.forEach((group) => {
         const groupEl = document.createElement('div');
@@ -3286,7 +3312,7 @@
           groupEl.appendChild(itemRow);
         });
 
-        listEl.appendChild(groupEl);
+        groupsEl.appendChild(groupEl);
       });
     }
 
