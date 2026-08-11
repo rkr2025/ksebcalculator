@@ -2836,7 +2836,15 @@
       const now = new Date();
       const text = `🍅 Session ${sessionNumber}: ${planText || 'Pomodoro session'}`;
 
-      const key = dateKey(now);
+      const slot = computeSessionSchedule()[sessionNumber - 1];
+      const sessionIsOver = !!(slot && slot.end.getTime() <= now.getTime());
+      // A past session's note is timestamped at when that session actually
+      // happened (its scheduled start), not the moment the button was
+      // clicked -- otherwise it'd land at the end of the day's log instead
+      // of its real chronological slot. A still-live/upcoming session is
+      // timestamped "now" since that's genuinely when its tracking starts.
+      const anchorTime = sessionIsOver ? slot.start : now;
+      const key = dateKey(anchorTime);
       const entries = loadEntries();
       const map = loadSessionDiaryMap();
 
@@ -2846,14 +2854,15 @@
         if (!entries[previous.key].length) delete entries[previous.key];
       }
 
-      const slot = computeSessionSchedule()[sessionNumber - 1];
-      const sessionIsOver = !!(slot && slot.end.getTime() <= now.getTime());
-
       if (!entries[key]) entries[key] = [];
-      const t = now.toISOString();
+      const t = anchorTime.toISOString();
       const entry = { t, text };
       if (sessionIsOver) entry.noTrack = true;
       entries[key].push(entry);
+      // Keep the day's entries in chronological order -- a past-session
+      // note is timestamped earlier than "now" (see anchorTime above), so a
+      // plain push would otherwise leave it out of order at the end.
+      entries[key].sort((a, b) => a.t.localeCompare(b.t));
       saveEntries(entries);
 
       map[sessionNumber] = { key, t };
