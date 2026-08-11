@@ -231,6 +231,34 @@
     }
     .btn-outline:hover { border-color: var(--primary); color: var(--primary); box-shadow: var(--shadow-lift); }
     .whats-special-toggle-btn { width: 100%; }
+    .session-plan-toggle-btn { width: 100%; margin-top: 10px; }
+    .session-plan-content { margin-top: 10px; }
+    .session-plan-row { margin-bottom: 12px; }
+    .session-plan-row:last-child { margin-bottom: 0; }
+    .session-plan-label { display: block; font-size: 12.5px; font-weight: 700; color: var(--text-muted); }
+    .session-plan-time { display: block; font-size: 11px; color: var(--text-muted); white-space: nowrap; margin: 2px 0 6px; }
+    .session-plan-row input {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 13px;
+      padding: 7px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text-primary);
+      transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+    }
+    .session-plan-row.is-active-session .session-plan-label { color: var(--accent); }
+    .session-plan-row.is-active-session input {
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+    }
+    .pomodoro-current-session.is-live {
+      color: var(--accent);
+      font-weight: 800;
+    }
     .whats-special-status {
       font-size: 12.5px;
       color: var(--text-muted);
@@ -1512,6 +1540,8 @@
         <button class="btn-outline btn" id="pomodoroLogBtn" type="button" style="display: none;" title="Add this session's focused minutes as a new, time-tracked diary entry">📔 Log to Diary</button>
       </div>
       <p class="pomodoro-log-status" id="pomodoroLogStatus"></p>
+      <button class="btn-outline btn session-plan-toggle-btn" id="sessionPlanToggleBtn" type="button">📝 Plan for Each Session</button>
+      <div id="sessionPlanContent" class="session-plan-content" style="display: none;"></div>
     </div>
 
     <!-- 24-hour countdown -->
@@ -2203,8 +2233,11 @@
       document.getElementById('pomodoroDisplay').textContent = formatPomodoroTime(pomodoroRemaining);
       const modeLabel = pomodoroMode === 'work' ? '🎯 Work Session' : '☕ Break';
       const sessionNumber = Math.min(pomodoroSessionsCompleted + 1, Math.max(pomodoroTotalSessions, 1));
-      const sessionLabel = pomodoroTotalSessions > 0 ? ` (Session ${sessionNumber} of ${pomodoroTotalSessions})` : '';
-      document.getElementById('pomodoroMode').textContent = modeLabel + sessionLabel;
+      const sessionLabel = pomodoroTotalSessions > 0
+        ? ` (Session <span class="pomodoro-current-session${pomodoroRunning && pomodoroMode === 'work' ? ' is-live' : ''}">${sessionNumber}</span> of ${pomodoroTotalSessions})`
+        : '';
+      document.getElementById('pomodoroMode').innerHTML = escapeHtml(modeLabel) + sessionLabel;
+      updateSessionPlanHighlight();
 
       // Both progress bars only make sense while the timer is actually
       // counting down -- hide the whole section otherwise (paused/idle).
@@ -2396,6 +2429,7 @@
       document.getElementById('pomodoroLogBtn').style.display = 'none';
       savePomodoroState();
       showSessionEndPreview();
+      updatePomodoroDisplay();
     }
 
     // Stops the diary entry (if any) that "Log to Diary" created for this
@@ -2481,6 +2515,7 @@
       }
       savePomodoroState();
       showSessionEndPreview();
+      updateSessionPlanHighlight();
     });
 
     document.getElementById('pomodoroBreakMinutesInput').addEventListener('change', (e) => {
@@ -2493,6 +2528,7 @@
       }
       savePomodoroState();
       showSessionEndPreview();
+      updateSessionPlanHighlight();
     });
 
     document.getElementById('pomodoroTotalSessionsInput').addEventListener('change', (e) => {
@@ -2502,6 +2538,122 @@
       updatePomodoroDisplay();
       savePomodoroState();
       showSessionEndPreview();
+      renderSessionPlanInputs();
+    });
+
+    // ---------------------------- Session plans -------------------------
+    // "What do I plan to do for each session" -- one free-text line per
+    // session (1..pomodoroTotalSessions), cached per calendar date like
+    // What's Special Today so tomorrow starts with a blank plan again.
+    const SESSION_PLAN_KEY_PREFIX = 'life_diary_session_plan_';
+    function sessionPlanStorageKey() {
+      return SESSION_PLAN_KEY_PREFIX + dateKey(new Date());
+    }
+    function loadSessionPlans() {
+      try { return JSON.parse(localStorage.getItem(sessionPlanStorageKey())) || {}; }
+      catch { return {}; }
+    }
+    function saveSessionPlan(sessionNumber, text) {
+      const plans = loadSessionPlans();
+      if (text) plans[sessionNumber] = text;
+      else delete plans[sessionNumber];
+      localStorage.setItem(sessionPlanStorageKey(), JSON.stringify(plans));
+    }
+
+    // "9:10am" -- deliberately shorter than formatClockTime (no seconds, no
+    // space before am/pm) since it has to fit inline for every session row.
+    function formatClockShort(date) {
+      let h = date.getHours();
+      const m = String(date.getMinutes()).padStart(2, '0');
+      const ampm = h >= 12 ? 'pm' : 'am';
+      h = h % 12 || 12;
+      return `${h}:${m}${ampm}`;
+    }
+
+    // Projects a start/end clock time for every session, anchored so the
+    // schedule lines up with reality once the timer is actually running:
+    // "how far into the whole set are we right now" is derived from the
+    // same committed-seconds counters the progress bars use, then
+    // subtracted from now to find when session 1 must have started (or, if
+    // nothing has run yet, that's simply now -- i.e. "if you started this
+    // instant, here's when each session would fall").
+    function computeSessionSchedule() {
+      const elapsedMs = (pomodoroWorkSecondsCommitted + pomodoroBreakSecondsCommitted + currentPhaseElapsed()) * 1000;
+      let cursor = Date.now() - elapsedMs;
+      const schedule = [];
+      for (let i = 1; i <= pomodoroTotalSessions; i++) {
+        const start = new Date(cursor);
+        cursor += pomodoroWorkSeconds * 1000;
+        const end = new Date(cursor);
+        schedule.push({ start, end });
+        if (i < pomodoroTotalSessions) cursor += pomodoroBreakSeconds * 1000;
+      }
+      return schedule;
+    }
+
+    // Rebuilds the Session N input rows to match the current total-sessions
+    // count -- called whenever that count changes, and once whenever the
+    // panel is opened, so it always reflects the live setting rather than
+    // whatever it happened to show when last built.
+    function renderSessionPlanInputs() {
+      const container = document.getElementById('sessionPlanContent');
+      const plans = loadSessionPlans();
+      container.innerHTML = '';
+      for (let i = 1; i <= pomodoroTotalSessions; i++) {
+        const row = document.createElement('div');
+        row.className = 'session-plan-row';
+        row.dataset.session = i;
+
+        const label = document.createElement('span');
+        label.className = 'session-plan-label';
+        label.textContent = `Session ${i}`;
+
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'session-plan-time';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'session-plan-input';
+        input.value = plans[i] || '';
+        input.addEventListener('change', () => saveSessionPlan(i, input.value.trim()));
+
+        row.appendChild(label);
+        row.appendChild(timeSpan);
+        row.appendChild(input);
+        container.appendChild(row);
+      }
+      updateSessionPlanHighlight();
+    }
+
+    // Highlights the row for whichever session is actively running (only
+    // meaningful during a work phase -- breaks sit between sessions, not
+    // inside one). No-op if the panel hasn't been opened yet, since its
+    // rows don't exist in the DOM until renderSessionPlanInputs() has run.
+    function updateSessionPlanHighlight() {
+      const container = document.getElementById('sessionPlanContent');
+      const rows = container.querySelectorAll('.session-plan-row');
+      if (!rows.length) return;
+      const activeSession = pomodoroRunning && pomodoroMode === 'work'
+        ? Math.min(pomodoroSessionsCompleted + 1, Math.max(pomodoroTotalSessions, 1))
+        : null;
+      const schedule = computeSessionSchedule();
+      rows.forEach((row) => {
+        const i = Number(row.dataset.session);
+        row.classList.toggle('is-active-session', i === activeSession);
+        const slot = schedule[i - 1];
+        if (!slot) return;
+        const rangeText = `${formatClockShort(slot.start)} - ${formatClockShort(slot.end)}`;
+        row.querySelector('.session-plan-time').textContent = rangeText;
+        row.querySelector('.session-plan-input').placeholder = `Nothing planned (${rangeText})`;
+      });
+    }
+
+    document.getElementById('sessionPlanToggleBtn').addEventListener('click', () => {
+      const content = document.getElementById('sessionPlanContent');
+      const showing = content.style.display !== 'none';
+      if (showing) { content.style.display = 'none'; return; }
+      renderSessionPlanInputs();
+      content.style.display = '';
     });
 
     // +/- steppers adjust the actual count by exactly 1 -- the dropdown
