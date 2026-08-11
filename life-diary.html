@@ -236,6 +236,27 @@
     .session-plan-row { margin-bottom: 12px; }
     .session-plan-row:last-child { margin-bottom: 0; }
     .session-plan-label { display: block; font-size: 12.5px; font-weight: 700; color: var(--text-muted); }
+    .session-plan-completed-wrap { margin-bottom: 14px; }
+    .session-plan-completed-toggle {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: var(--surface-muted);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .session-plan-completed-toggle:hover { border-color: var(--primary); color: var(--primary); }
+    .session-plan-completed-rows {
+      margin-top: 10px;
+      padding-top: 4px;
+      border-top: 1px dashed var(--border);
+    }
+    .session-plan-completed-rows .session-plan-row { opacity: .75; }
     .session-plan-time { display: block; font-size: 11px; color: var(--text-muted); white-space: nowrap; margin: 2px 0; }
     .session-plan-countdown {
       display: inline-block;
@@ -2778,6 +2799,14 @@
       return schedule;
     }
 
+    // Single shrink/expand toggle covering ALL completed sessions together
+    // (not one per session -- see updateSessionPlanHighlight, the only place
+    // that moves rows in/out of the completed group and toggles this).
+    // Forced back to collapsed whenever a *new* session joins the group --
+    // see completedSessionCount below -- even if the user had it expanded.
+    let completedGroupExpanded = false;
+    let completedSessionCount = 0;
+
     // Rebuilds the Session N input rows to match the current total-sessions
     // count -- called whenever that count changes, and once whenever the
     // panel is opened, so it always reflects the live setting rather than
@@ -2787,6 +2816,24 @@
       const plans = loadSessionPlans();
       const diaryMap = loadSessionDiaryMap();
       container.innerHTML = '';
+      completedGroupExpanded = false;
+      completedSessionCount = 0;
+
+      const completedWrap = document.createElement('div');
+      completedWrap.className = 'session-plan-completed-wrap';
+      const completedToggle = document.createElement('button');
+      completedToggle.type = 'button';
+      completedToggle.className = 'session-plan-completed-toggle';
+      const completedRowsContainer = document.createElement('div');
+      completedRowsContainer.className = 'session-plan-completed-rows';
+      completedToggle.addEventListener('click', () => {
+        completedGroupExpanded = !completedGroupExpanded;
+        updateSessionPlanHighlight();
+      });
+      completedWrap.appendChild(completedToggle);
+      completedWrap.appendChild(completedRowsContainer);
+      container.appendChild(completedWrap);
+
       for (let i = 1; i <= pomodoroTotalSessions; i++) {
         const row = document.createElement('div');
         row.className = 'session-plan-row';
@@ -2835,6 +2882,9 @@
         row.appendChild(timeSpan);
         row.appendChild(countdownSpan);
         row.appendChild(inputRow);
+        // Appended to the flat container for now -- updateSessionPlanHighlight
+        // (called below) immediately re-parents this into completedRowsContainer
+        // instead if the session already turned out to be past.
         container.appendChild(row);
       }
       updateSessionPlanHighlight();
@@ -2995,7 +3045,9 @@
         // already has as a plain Diary note (see saveSessionPlanToDiary's
         // sessionIsOver branch), which stays available since readOnly
         // doesn't block reading .value or clicking the 📔 button.
-        planInput.readOnly = slot.end.getTime() <= Date.now();
+        const isPast = slot.end.getTime() <= Date.now();
+        planInput.readOnly = isPast;
+        row.classList.toggle('is-past', isPast);
 
         // Live "minutes left" -- shown only for the session that's actually
         // active right now, not for future (or past) sessions, so it's
@@ -3030,6 +3082,42 @@
             : `Save Session ${i} to Diary Entries`;
         }
       });
+
+      // One single group for every completed session, rather than each row
+      // collapsing individually -- re-parent past rows into it (in session
+      // order; only actually re-parented the first time a row turns past --
+      // see the parentElement guards below). A session, once past, never
+      // becomes not-past again, so an active/future row's own parent never
+      // needs to change after its initial render.
+      //
+      // Those guards matter for more than tidiness: this whole function
+      // re-runs every second while the Pomodoro is running (see
+      // updatePomodoroDisplay), including while the user is mid-keystroke
+      // in the active session's plan input. calling appendChild on a node
+      // that's already exactly where it belongs still detaches and
+      // reattaches it per the DOM spec -- which blurs (and thus kills
+      // keyboard input into) whatever was focused inside it. Only moving a
+      // row when its parent is actually wrong avoids that unless the row
+      // truly is transitioning into the completed group this tick.
+      const completedWrap = container.querySelector('.session-plan-completed-wrap');
+      const completedRowsContainer = completedWrap.querySelector('.session-plan-completed-rows');
+      const completedToggle = completedWrap.querySelector('.session-plan-completed-toggle');
+      const pastRows = Array.from(rows).filter((row) => row.classList.contains('is-past'));
+      pastRows.forEach((row) => {
+        if (row.parentElement !== completedRowsContainer) completedRowsContainer.appendChild(row);
+      });
+      Array.from(rows)
+        .filter((row) => !row.classList.contains('is-past'))
+        .forEach((row) => {
+          if (row.parentElement !== container) container.appendChild(row);
+        });
+
+      if (pastRows.length > completedSessionCount) completedGroupExpanded = false;
+      completedSessionCount = pastRows.length;
+
+      completedWrap.style.display = pastRows.length ? '' : 'none';
+      completedToggle.textContent = `${completedGroupExpanded ? '▾' : '▸'} Completed Sessions (${pastRows.length})`;
+      completedRowsContainer.style.display = completedGroupExpanded ? '' : 'none';
     }
 
     // "7 AM" -- the bucket label entries are grouped under below.
