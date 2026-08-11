@@ -2846,19 +2846,25 @@
     //
     // If the session's projected window is still ahead (or in progress),
     // this starts a real, live-tracked entry from this exact moment,
-    // auto-stopping once the session's own configured length has elapsed
-    // (see checkSessionDiaryAutoStop, ticking once a second above). If the
+    // auto-stopping once the session's own scheduled END TIME arrives (see
+    // checkSessionDiaryAutoStop, ticking once a second above) -- not a
+    // fixed full-duration offset, since re-saving partway through a session
+    // (after editing the plan) should only track the remainder, not restart
+    // a whole new full-length window that overruns the session. If the
     // session's window has already passed, live-tracking a "session" that's
     // already over makes no sense -- it's saved as a plain untracked note
     // instead (noTrack: true), with no auto-stop scheduled.
     //
-    // Re-clicking for the same session replaces its previous entry rather
-    // than adding a duplicate (sessionDiaryMap remembers which entry each
-    // session number currently owns, for today). Starting a tracked entry
-    // also implicitly stops whatever else was tracking: buildEntryTimerInfo
-    // caps a no-endT entry's duration at the gap before the next entry, so
-    // the instant this new entry is added it becomes the one "currently
-    // tracking" and the previous one is done.
+    // The button is locked (see setSessionDiaryBtnLocked) right after a
+    // save and only unlocks once the plan text is edited -- so re-clicking
+    // this only ever happens after a genuine edit, at which point it adds a
+    // SEPARATE new entry rather than replacing the previous one: the
+    // earlier save already reflects real tracked time that happened, and
+    // starting a new entry implicitly closes it out at exactly this moment
+    // (buildEntryTimerInfo caps a no-endT entry's duration at the gap
+    // before the next entry), so together they form an accurate two-part
+    // record of the session instead of one entry silently overwriting time
+    // that already elapsed.
     function saveSessionPlanToDiary(sessionNumber, inputEl, btnEl) {
       const now = new Date();
       const slot = computeSessionSchedule()[sessionNumber - 1];
@@ -2887,12 +2893,6 @@
       const entries = loadEntries();
       const map = loadSessionDiaryMap();
 
-      const previous = map[sessionNumber] ? findEntryLocation(entries, map[sessionNumber].t) : null;
-      if (previous) {
-        entries[previous.key] = entries[previous.key].filter((e) => e !== previous.entry);
-        if (!entries[previous.key].length) delete entries[previous.key];
-      }
-
       if (!entries[key]) entries[key] = [];
       const t = anchorTime.toISOString();
       const entry = { t, text };
@@ -2911,8 +2911,12 @@
       // already over -- and only touch sessionDiaryStop at all when we
       // actually are starting fresh tracking, so a past-session note can't
       // accidentally cancel some *other* session's still-active tracking.
+      // stopAt is the session's own scheduled END, not "now + full length"
+      // -- saving partway through (after an edit) should track only the
+      // remainder, not a fresh full-length window that runs past the
+      // session's actual end.
       if (!sessionIsOver) {
-        sessionDiaryStop = { key, t, stopAt: now.getTime() + pomodoroWorkSeconds * 1000, sessionNumber };
+        sessionDiaryStop = { key, t, stopAt: slot.end.getTime(), sessionNumber };
         saveSessionDiaryStopState();
       }
 
