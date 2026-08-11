@@ -2832,11 +2832,22 @@
     // the instant this new entry is added it becomes the one "currently
     // tracking" and the previous one is done.
     function saveSessionPlanToDiary(sessionNumber, inputEl, btnEl) {
-      const planText = inputEl.value.trim();
       const now = new Date();
-      const text = `🍅 Session ${sessionNumber}: ${planText || 'Pomodoro session'}`;
-
       const slot = computeSessionSchedule()[sessionNumber - 1];
+
+      // A session whose scheduled start hasn't arrived yet can't be logged
+      // -- there's no real time to attach the entry to. Its plan text can
+      // still be typed and saved (that's handled separately, on the input's
+      // own change event) -- only the Diary hand-off is gated here. The
+      // button is also disabled for this case in updateSessionPlanHighlight,
+      // so this is mainly a safety net.
+      if (slot && slot.start.getTime() > now.getTime()) {
+        alert(`Session ${sessionNumber} hasn't started yet -- it can be added to the Diary once it's active.`);
+        return;
+      }
+
+      const planText = inputEl.value.trim();
+      const text = `🍅 Session ${sessionNumber}: ${planText || 'Pomodoro session'}`;
       const sessionIsOver = !!(slot && slot.end.getTime() <= now.getTime());
       // A past session's note is timestamped at when that session actually
       // happened (its scheduled start), not the moment the button was
@@ -2926,6 +2937,17 @@
           countdownEl.textContent = '';
           countdownEl.style.display = 'none';
         }
+
+        // A future session (its scheduled start hasn't arrived yet) can't
+        // be logged to the Diary -- there's no real time to attach the
+        // entry to. Disable the button until it's actually active (or
+        // already over, which is handled as a plain note).
+        const diaryBtn = row.querySelector('.session-plan-diary-btn');
+        const isFuture = slot.start.getTime() > Date.now();
+        diaryBtn.disabled = isFuture;
+        diaryBtn.title = isFuture
+          ? `Session ${i} hasn't started yet`
+          : `Save Session ${i} to Diary Entries`;
       });
     }
 
