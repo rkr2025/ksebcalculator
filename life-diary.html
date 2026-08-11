@@ -2607,8 +2607,13 @@
       updatePomodoroDisplay();
       localStorage.removeItem(POMODORO_STATE_KEY);
       showSessionEndPreview();
-      clearSessionPlans();
+      // Order matters: clearSessionDiaryTracking() must remove the
+      // session->diary-entry map *before* clearSessionPlans() rebuilds the
+      // input rows, otherwise those rows would read the stale map and
+      // redraw their 📔 buttons as already-locked (✅) for a run that no
+      // longer exists.
       clearSessionDiaryTracking();
+      clearSessionPlans();
     }
 
     // Reset always puts the set back at session 1 -- any plans typed in for
@@ -2754,6 +2759,7 @@
     function renderSessionPlanInputs() {
       const container = document.getElementById('sessionPlanRows');
       const plans = loadSessionPlans();
+      const diaryMap = loadSessionDiaryMap();
       container.innerHTML = '';
       for (let i = 1; i <= pomodoroTotalSessions; i++) {
         const row = document.createElement('div');
@@ -2782,9 +2788,17 @@
         const diaryBtn = document.createElement('button');
         diaryBtn.type = 'button';
         diaryBtn.className = 'session-plan-diary-btn';
-        diaryBtn.textContent = '📔';
-        diaryBtn.title = `Save Session ${i} to Diary Entries`;
         diaryBtn.addEventListener('click', () => saveSessionPlanToDiary(i, input, diaryBtn));
+        // Already saved (from before the panel was last rebuilt) -- start
+        // locked so it isn't accidentally re-saved (and, for an active
+        // session, doesn't restart/overwrite its ongoing tracked entry)
+        // until the plan text is actually edited.
+        setSessionDiaryBtnLocked(diaryBtn, !!diaryMap[i], i);
+
+        // Editing the plan after it's been saved means the saved entry no
+        // longer reflects what's typed -- unlock so it can be saved again,
+        // fixing the "can't correct a mistake" side of the lock.
+        input.addEventListener('input', () => setSessionDiaryBtnLocked(diaryBtn, false, i));
 
         const inputRow = document.createElement('div');
         inputRow.className = 'session-plan-input-row';
@@ -2810,6 +2824,20 @@
     }
     function saveSessionDiaryMap(map) {
       localStorage.setItem(sessionDiaryMapKey(), JSON.stringify(map));
+    }
+
+    // Toggles a session's 📔 button between its normal, clickable state and
+    // "already saved" (✅, disabled) -- kept as its own dataset flag rather
+    // than inferred from disabled alone, since updateSessionPlanHighlight
+    // also disables the button for an unrelated reason (future session) and
+    // needs to combine both without one silently overwriting the other.
+    function setSessionDiaryBtnLocked(diaryBtn, locked, sessionNumber) {
+      diaryBtn.dataset.locked = locked ? '1' : '0';
+      diaryBtn.textContent = locked ? '✅' : '📔';
+      diaryBtn.title = locked
+        ? `Session ${sessionNumber} already saved to Diary -- edit the plan text to save again`
+        : `Save Session ${sessionNumber} to Diary Entries`;
+      diaryBtn.disabled = locked || diaryBtn.dataset.future === '1';
     }
 
     // Logs a single session as a Diary Entry -- separate from the
@@ -2893,12 +2921,12 @@
       renderCalendar();
       renderCurrentRunningEntry();
 
-      // Brief inline confirmation on the button itself, since this panel
-      // has no shared status line the way the main Log to Diary button does.
-      const original = btnEl.textContent;
-      btnEl.textContent = '✅';
-      btnEl.disabled = true;
-      setTimeout(() => { btnEl.textContent = original; btnEl.disabled = false; }, 1500);
+      // Locks the button on ✅ rather than a brief confirmation that reverts
+      // -- re-clicking an active session's button used to silently restart
+      // its tracked entry (discarding the ongoing time), and re-clicking a
+      // past session's just duplicated its note. Locked until the plan
+      // text is actually edited (see the input's 'input' listener above).
+      setSessionDiaryBtnLocked(btnEl, true, sessionNumber);
     }
 
     // Highlights the row for whichever session is actively running (only
@@ -2941,13 +2969,19 @@
         // A future session (its scheduled start hasn't arrived yet) can't
         // be logged to the Diary -- there's no real time to attach the
         // entry to. Disable the button until it's actually active (or
-        // already over, which is handled as a plain note).
+        // already over, which is handled as a plain note). Combined with
+        // (not overwriting) the separate "already saved" lock from
+        // setSessionDiaryBtnLocked, via the dataset flags on the button.
         const diaryBtn = row.querySelector('.session-plan-diary-btn');
         const isFuture = slot.start.getTime() > Date.now();
-        diaryBtn.disabled = isFuture;
-        diaryBtn.title = isFuture
-          ? `Session ${i} hasn't started yet`
-          : `Save Session ${i} to Diary Entries`;
+        diaryBtn.dataset.future = isFuture ? '1' : '0';
+        const isLocked = diaryBtn.dataset.locked === '1';
+        diaryBtn.disabled = isFuture || isLocked;
+        if (!isLocked) {
+          diaryBtn.title = isFuture
+            ? `Session ${i} hasn't started yet`
+            : `Save Session ${i} to Diary Entries`;
+        }
       });
     }
 
