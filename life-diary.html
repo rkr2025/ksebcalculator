@@ -266,6 +266,49 @@
       color: var(--accent);
       font-weight: 800;
     }
+    .session-plan-list {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .session-plan-list-heading {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .session-plan-list-empty { font-size: 12.5px; color: var(--text-muted); margin: 0; }
+    .session-plan-group { margin-bottom: 10px; }
+    .session-plan-group:last-child { margin-bottom: 0; }
+    .session-plan-group-hour {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+    .session-plan-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      background: var(--surface-muted);
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+    .session-plan-list-item:last-child { margin-bottom: 0; }
+    .session-plan-list-text { flex: 1 1 auto; min-width: 0; word-break: break-word; }
+    .session-plan-list-delete {
+      flex: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      padding: 2px 4px;
+      border-radius: 6px;
+    }
+    .session-plan-list-delete:hover { background: color-mix(in srgb, var(--danger, #e5533d) 15%, transparent); }
     .whats-special-status {
       font-size: 12.5px;
       color: var(--text-muted);
@@ -1548,7 +1591,10 @@
       </div>
       <p class="pomodoro-log-status" id="pomodoroLogStatus"></p>
       <button class="btn-outline btn session-plan-toggle-btn" id="sessionPlanToggleBtn" type="button">📝 Plan for Each Session</button>
-      <div id="sessionPlanContent" class="session-plan-content" style="display: none;"></div>
+      <div id="sessionPlanContent" class="session-plan-content" style="display: none;">
+        <div id="sessionPlanRows"></div>
+        <div id="sessionPlanList" class="session-plan-list"></div>
+      </div>
     </div>
 
     <!-- 24-hour countdown -->
@@ -2494,6 +2540,17 @@
       updatePomodoroDisplay();
       localStorage.removeItem(POMODORO_STATE_KEY);
       showSessionEndPreview();
+      clearSessionPlans();
+    }
+
+    // Reset always puts the set back at session 1 -- any plans typed in for
+    // the run that just ended would otherwise linger (they're saved per
+    // calendar date, not per run) and show up stale against the new run's
+    // session numbers. Wipes storage and, if the panel is currently open,
+    // rebuilds it blank right away.
+    function clearSessionPlans() {
+      localStorage.removeItem(sessionPlanStorageKey());
+      if (document.getElementById('sessionPlanRows').children.length) renderSessionPlanInputs();
     }
 
     document.getElementById('pomodoroStartBtn').addEventListener('click', startPomodoro);
@@ -2523,6 +2580,7 @@
       savePomodoroState();
       showSessionEndPreview();
       updateSessionPlanHighlight();
+      renderSessionPlanList();
     });
 
     document.getElementById('pomodoroBreakMinutesInput').addEventListener('change', (e) => {
@@ -2536,6 +2594,7 @@
       savePomodoroState();
       showSessionEndPreview();
       updateSessionPlanHighlight();
+      renderSessionPlanList();
     });
 
     document.getElementById('pomodoroTotalSessionsInput').addEventListener('change', (e) => {
@@ -2603,7 +2662,7 @@
     // panel is opened, so it always reflects the live setting rather than
     // whatever it happened to show when last built.
     function renderSessionPlanInputs() {
-      const container = document.getElementById('sessionPlanContent');
+      const container = document.getElementById('sessionPlanRows');
       const plans = loadSessionPlans();
       container.innerHTML = '';
       for (let i = 1; i <= pomodoroTotalSessions; i++) {
@@ -2625,7 +2684,10 @@
         input.type = 'text';
         input.className = 'session-plan-input';
         input.value = plans[i] || '';
-        input.addEventListener('change', () => saveSessionPlan(i, input.value.trim()));
+        input.addEventListener('change', () => {
+          saveSessionPlan(i, input.value.trim());
+          renderSessionPlanList();
+        });
 
         row.appendChild(label);
         row.appendChild(timeSpan);
@@ -2634,6 +2696,7 @@
         container.appendChild(row);
       }
       updateSessionPlanHighlight();
+      renderSessionPlanList();
     }
 
     // Highlights the row for whichever session is actively running (only
@@ -2641,7 +2704,7 @@
     // inside one). No-op if the panel hasn't been opened yet, since its
     // rows don't exist in the DOM until renderSessionPlanInputs() has run.
     function updateSessionPlanHighlight() {
-      const container = document.getElementById('sessionPlanContent');
+      const container = document.getElementById('sessionPlanRows');
       const rows = container.querySelectorAll('.session-plan-row');
       if (!rows.length) return;
       const activeSession = pomodoroRunning && pomodoroMode === 'work'
@@ -2672,6 +2735,86 @@
           countdownEl.textContent = '';
           countdownEl.style.display = 'none';
         }
+      });
+    }
+
+    // "7 AM" -- the bucket label entries are grouped under below.
+    function formatHourLabel(date) {
+      let h = date.getHours();
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      return `${h} ${ampm}`;
+    }
+
+    // Lists every session that actually has a plan saved (blank/"Nothing
+    // planned" sessions are skipped), grouped under the hour its projected
+    // start time falls in, each with a delete button. Reflects the same
+    // schedule the input rows use, so it stays in sync as settings change.
+    function renderSessionPlanList() {
+      const listEl = document.getElementById('sessionPlanList');
+      const plans = loadSessionPlans();
+      const schedule = computeSessionSchedule();
+
+      const groups = []; // [{ hour, items: [{ session, text, rangeText }] }]
+      for (let i = 1; i <= pomodoroTotalSessions; i++) {
+        const text = (plans[i] || '').trim();
+        const slot = schedule[i - 1];
+        if (!text || !slot) continue;
+        const hour = formatHourLabel(slot.start);
+        let group = groups.find((g) => g.hour === hour);
+        if (!group) { group = { hour, items: [] }; groups.push(group); }
+        group.items.push({ session: i, text, rangeText: `${formatClockShort(slot.start)} - ${formatClockShort(slot.end)}` });
+      }
+
+      listEl.innerHTML = '';
+      if (!groups.length) {
+        const empty = document.createElement('p');
+        empty.className = 'session-plan-list-empty';
+        empty.textContent = 'No session plans saved yet.';
+        listEl.appendChild(empty);
+        return;
+      }
+
+      const heading = document.createElement('div');
+      heading.className = 'session-plan-list-heading';
+      heading.textContent = '📋 Saved Session Plans (by hour)';
+      listEl.appendChild(heading);
+
+      groups.forEach((group) => {
+        const groupEl = document.createElement('div');
+        groupEl.className = 'session-plan-group';
+
+        const hourHeading = document.createElement('div');
+        hourHeading.className = 'session-plan-group-hour';
+        hourHeading.textContent = group.hour;
+        groupEl.appendChild(hourHeading);
+
+        group.items.forEach((item) => {
+          const itemRow = document.createElement('div');
+          itemRow.className = 'session-plan-list-item';
+
+          const textEl = document.createElement('span');
+          textEl.className = 'session-plan-list-text';
+          textEl.textContent = `Session ${item.session}: ${item.text} (${item.rangeText})`;
+
+          const deleteBtn = document.createElement('button');
+          deleteBtn.type = 'button';
+          deleteBtn.className = 'session-plan-list-delete';
+          deleteBtn.textContent = '🗑️';
+          deleteBtn.title = `Delete Session ${item.session}'s plan`;
+          deleteBtn.addEventListener('click', () => {
+            saveSessionPlan(item.session, '');
+            const input = document.querySelector(`.session-plan-row[data-session="${item.session}"] .session-plan-input`);
+            if (input) input.value = '';
+            renderSessionPlanList();
+          });
+
+          itemRow.appendChild(textEl);
+          itemRow.appendChild(deleteBtn);
+          groupEl.appendChild(itemRow);
+        });
+
+        listEl.appendChild(groupEl);
       });
     }
 
