@@ -257,6 +257,27 @@
       border-top: 1px dashed var(--border);
     }
     .session-plan-completed-rows .session-plan-row { opacity: .75; }
+    .session-plan-upcoming-wrap { margin-top: 14px; }
+    .session-plan-upcoming-toggle {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: var(--surface-muted);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .session-plan-upcoming-toggle:hover { border-color: var(--primary); color: var(--primary); }
+    .session-plan-upcoming-rows {
+      margin-top: 10px;
+      padding-top: 4px;
+      border-top: 1px dashed var(--border);
+    }
+    .session-plan-upcoming-rows .session-plan-row { opacity: .75; }
     .session-plan-time { display: block; font-size: 11px; color: var(--text-muted); white-space: nowrap; margin: 2px 0; }
     .session-plan-countdown {
       display: inline-block;
@@ -2812,6 +2833,11 @@
     // see completedSessionCount below -- even if the user had it expanded.
     let completedGroupExpanded = false;
     let completedSessionCount = 0;
+    // Upcoming sessions only ever leave this group (once they become
+    // active), never newly join it mid-run, so there's no equivalent
+    // "force recollapse" need here -- the user's expand/collapse choice is
+    // left alone until the next full rebuild.
+    let upcomingGroupExpanded = false;
 
     // Rebuilds the Session N input rows to match the current total-sessions
     // count -- called whenever that count changes, and once whenever the
@@ -2824,6 +2850,7 @@
       container.innerHTML = '';
       completedGroupExpanded = false;
       completedSessionCount = 0;
+      upcomingGroupExpanded = false;
 
       const completedWrap = document.createElement('div');
       completedWrap.className = 'session-plan-completed-wrap';
@@ -2839,6 +2866,24 @@
       completedWrap.appendChild(completedToggle);
       completedWrap.appendChild(completedRowsContainer);
       container.appendChild(completedWrap);
+
+      // Appended now but stays visually last -- future rows get re-parented
+      // into upcomingRowsContainer below (in updateSessionPlanHighlight),
+      // while whichever row is active stays directly in the main flow
+      // between this group and the completed one above.
+      const upcomingWrap = document.createElement('div');
+      upcomingWrap.className = 'session-plan-upcoming-wrap';
+      const upcomingToggle = document.createElement('button');
+      upcomingToggle.type = 'button';
+      upcomingToggle.className = 'session-plan-upcoming-toggle';
+      const upcomingRowsContainer = document.createElement('div');
+      upcomingRowsContainer.className = 'session-plan-upcoming-rows';
+      upcomingToggle.addEventListener('click', () => {
+        upcomingGroupExpanded = !upcomingGroupExpanded;
+        updateSessionPlanHighlight();
+      });
+      upcomingWrap.appendChild(upcomingToggle);
+      upcomingWrap.appendChild(upcomingRowsContainer);
 
       for (let i = 1; i <= pomodoroTotalSessions; i++) {
         const row = document.createElement('div');
@@ -2894,9 +2939,11 @@
         row.appendChild(inputRow);
         // Appended to the flat container for now -- updateSessionPlanHighlight
         // (called below) immediately re-parents this into completedRowsContainer
-        // instead if the session already turned out to be past.
+        // or upcomingRowsContainer instead if the session is already past or
+        // still ahead.
         container.appendChild(row);
       }
+      container.appendChild(upcomingWrap);
       updateSessionPlanHighlight();
       renderSessionPlanList();
     }
@@ -3095,6 +3142,7 @@
         // setSessionDiaryBtnLocked, via the dataset flags on the button.
         const diaryBtn = row.querySelector('.session-plan-diary-btn');
         const isFuture = slot.start.getTime() > Date.now();
+        row.classList.toggle('is-future', isFuture);
         diaryBtn.dataset.future = isFuture ? '1' : '0';
         const isLocked = diaryBtn.dataset.locked === '1';
         diaryBtn.disabled = isFuture || isLocked;
@@ -3105,12 +3153,13 @@
         }
       });
 
-      // One single group for every completed session, rather than each row
-      // collapsing individually -- re-parent past rows into it (in session
-      // order; only actually re-parented the first time a row turns past --
-      // see the parentElement guards below). A session, once past, never
-      // becomes not-past again, so an active/future row's own parent never
-      // needs to change after its initial render.
+      // One single group each for every completed session and every
+      // upcoming (not-yet-started) session, rather than each row collapsing
+      // individually -- re-parent rows into whichever group applies (in
+      // session order; only actually re-parented the tick a row's category
+      // first changes -- see the parentElement guards below). Only the
+      // active session (neither past nor future) stays directly in the
+      // main flow, between the two groups.
       //
       // Those guards matter for more than tidiness: this whole function
       // re-runs every second while the Pomodoro is running (see
@@ -3120,19 +3169,34 @@
       // reattaches it per the DOM spec -- which blurs (and thus kills
       // keyboard input into) whatever was focused inside it. Only moving a
       // row when its parent is actually wrong avoids that unless the row
-      // truly is transitioning into the completed group this tick.
+      // truly is changing groups this tick.
       const completedWrap = container.querySelector('.session-plan-completed-wrap');
       const completedRowsContainer = completedWrap.querySelector('.session-plan-completed-rows');
       const completedToggle = completedWrap.querySelector('.session-plan-completed-toggle');
+      const upcomingWrap = container.querySelector('.session-plan-upcoming-wrap');
+      const upcomingRowsContainer = upcomingWrap.querySelector('.session-plan-upcoming-rows');
+      const upcomingToggle = upcomingWrap.querySelector('.session-plan-upcoming-toggle');
+
       const pastRows = Array.from(rows).filter((row) => row.classList.contains('is-past'));
+      const futureRows = Array.from(rows).filter((row) => row.classList.contains('is-future'));
+      const activeRows = Array.from(rows).filter((row) =>
+        !row.classList.contains('is-past') && !row.classList.contains('is-future'));
+
       pastRows.forEach((row) => {
         if (row.parentElement !== completedRowsContainer) completedRowsContainer.appendChild(row);
       });
-      Array.from(rows)
-        .filter((row) => !row.classList.contains('is-past'))
-        .forEach((row) => {
-          if (row.parentElement !== container) container.appendChild(row);
-        });
+      activeRows.forEach((row) => {
+        // Re-inserted right before the upcoming group, so it lands between
+        // the two groups regardless of DOM order left over from a previous
+        // tick (appendChild before a specific node moves it there, not just
+        // to the end).
+        if (row.nextElementSibling !== upcomingWrap || row.parentElement !== container) {
+          container.insertBefore(row, upcomingWrap);
+        }
+      });
+      futureRows.forEach((row) => {
+        if (row.parentElement !== upcomingRowsContainer) upcomingRowsContainer.appendChild(row);
+      });
 
       if (pastRows.length > completedSessionCount) completedGroupExpanded = false;
       completedSessionCount = pastRows.length;
@@ -3140,6 +3204,10 @@
       completedWrap.style.display = pastRows.length ? '' : 'none';
       completedToggle.textContent = `${completedGroupExpanded ? '▾' : '▸'} Completed Sessions (${pastRows.length})`;
       completedRowsContainer.style.display = completedGroupExpanded ? '' : 'none';
+
+      upcomingWrap.style.display = futureRows.length ? '' : 'none';
+      upcomingToggle.textContent = `${upcomingGroupExpanded ? '▾' : '▸'} Upcoming Sessions (${futureRows.length})`;
+      upcomingRowsContainer.style.display = upcomingGroupExpanded ? '' : 'none';
     }
 
     // "7 AM" -- the bucket label entries are grouped under below.
