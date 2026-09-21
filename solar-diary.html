@@ -910,6 +910,14 @@
   <div class="container">
     <h2>📘 Solar Diary</h2>
     <p class="note">This diary records your daily solar and meter usage, and estimates your electricity bill both for today and projected for the full month.</p>
+    <div class="section-box print-hide-section" id="monthSwitcher">
+      <label for="viewMonthSelect" style="font-weight: 700;">📆 View month</label>
+      <select id="viewMonthSelect"></select>
+      <div id="viewMonthNotice" style="display: none; margin-top: 10px; font-size: 13px; color: var(--text-secondary);">
+        <span id="viewMonthNoticeText"></span>
+        <button type="button" id="backToCurrentBtn" class="action-btn action-btn--outline" style="margin-top: 8px;">↩️ Back to current month</button>
+      </div>
+    </div>
     <div class="section-box print-hide-section">
       <div class="section-box-header">
         <h3>⚙️ Billing Profile</h3>
@@ -1001,6 +1009,9 @@
           </ul>
         </div>
       </div>
+      <div id="initialVerifyNotice" style="display: none; margin-bottom: 12px; padding: 10px 12px; border: 1.5px solid var(--accent); border-radius: 10px; font-size: 13px; color: var(--text-secondary);">
+        ⚠️ <span id="initialVerifyText"></span>
+      </div>
       <p class="note" id="initialReadingNote">ഈ മാസത്തെ Initial റീഡിങ് ഇവിടെ enter ചെയ്യുക. കഴിഞ്ഞ മാസം ലഭിച്ച ബില്ലിലെ Current റീഡിങ് ആണ് ഈ മാസത്തെ Initial Reading ആയി എടുക്കേണ്ടത്.</p>
       <form id="initialForm" class="reading-form">
         <div class="reading-field reading-field--date">
@@ -1031,7 +1042,7 @@
       </form>
       <div id="initialValuesDisplay"></div>
     </div>
-    <div class="section-box print-hide-section">
+    <div class="section-box print-hide-section" id="currentReadingsSection">
       <div class="section-box-header">
         <h3 id="currentReadingsHeading">➕ Current Solar Readings</h3>
         <button type="button" class="card-info-btn" aria-expanded="false" aria-label="How to use this section" data-info-target="currentReadingsInfo">ℹ️</button>
@@ -1210,23 +1221,105 @@
       });
     });
 
-    // Render the Initial Reading heading once the rest of this script's
-    // DOMContentLoaded-independent setup below has run (it needs
-    // initialReadings, defined further down).
-    document.addEventListener('DOMContentLoaded', () => {
-      renderInitialReadingForMonth();
-      const currentMonthName = new Date().toLocaleString('en-US', { month: 'long' });
-      document.getElementById('currentReadingsHeading').innerHTML = `➕ Current Solar Readings (<span style="color: var(--accent); font-weight: 800;">${currentMonthName}</span>)`;
-    });
+    // --- Per-month data ---------------------------------------------------
+    // Everything is stored per month in `monthlyData`, keyed by "YYYY-MM":
+    //   { "2026-06": { initialReadings, entries: [...] }, ... }
+    // `initialReadings`/`entries` below are just the working copy for
+    // whichever month the "View month" selector is showing
+    // (`selectedMonth`) -- everything else in this file (Total Days, Daily
+    // Usage Tracker, Estimated Bill) keeps reading them exactly as before,
+    // so switching months only has to swap these two variables and
+    // re-render. Starting a new month never touches an older month's data.
+    let initialReadings = null;
+    let entries = [];
+    let monthlyData = JSON.parse(localStorage.getItem("monthlyData")) || null;
+    let selectedMonth = currentMonthKey();
 
-    let initialReadings = JSON.parse(localStorage.getItem("initialReadings")) || null;
-    let entries = JSON.parse(localStorage.getItem("entries")) || [];
+    // Splits a pre-per-month (single continuous timeline) save into months so
+    // each month only holds dates from that month: entries go to the month
+    // of their own date; the first month keeps the old Initial Reading (its
+    // date moved to the 1st if it fell in an earlier month), and each later
+    // month starts from the previous month's last reading.
+    function splitLegacyIntoMonths(legacyInitial, legacyEntries) {
+      const data = {};
+      const byMonth = {};
+      legacyEntries.forEach((e) => {
+        const key = monthKeyOf(localDateKey(e.timestamp));
+        (byMonth[key] = byMonth[key] || []).push(e);
+      });
+      const keys = Object.keys(byMonth).sort();
+      if (keys.length === 0) {
+        if (legacyInitial) {
+          const initDate = legacyInitial.date || (legacyInitial.timestamp && localDateKey(legacyInitial.timestamp));
+          data[monthKeyOf(initDate)] = { initialReadings: legacyInitial, entries: [] };
+        }
+        return data;
+      }
+      let prevLast = null;
+      keys.forEach((key, i) => {
+        let initial;
+        if (i === 0) {
+          initial = legacyInitial && { ...legacyInitial };
+          if (initial && !(initial.date || '').startsWith(key)) initial.date = `${key}-01`;
+        } else {
+          initial = { date: `${key}-01`, solar: prevLast.solar, t1: prevLast.t1, t2: prevLast.t2, t3: prevLast.t3, export: prevLast.export, timestamp: Date.now() };
+        }
+        data[key] = { initialReadings: initial || null, entries: byMonth[key] };
+        prevLast = byMonth[key][byMonth[key].length - 1];
+      });
+      return data;
+    }
+
+    // One-time migration of data saved by the older single-timeline version.
+    if (!monthlyData) {
+      monthlyData = {};
+      const legacyInitial = JSON.parse(localStorage.getItem("initialReadings")) || null;
+      const legacyEntries = JSON.parse(localStorage.getItem("entries")) || [];
+      monthlyData = splitLegacyIntoMonths(legacyInitial, legacyEntries);
+      localStorage.setItem("monthlyData", JSON.stringify(monthlyData));
+      localStorage.removeItem("initialReadings");
+      localStorage.removeItem("entries");
+    }
+
+    // Repairs buckets that hold entries from other months (e.g. data saved
+    // by an earlier version that lumped a whole timeline into one month):
+    // each entry is moved to the month of its own date, and months created
+    // this way start from the previous month's last reading.
+    function normalizeMonthlyData(data) {
+      const result = {};
+      const merge = (key, bucket) => {
+        const existing = result[key];
+        if (!existing) { result[key] = bucket; return; }
+        const seen = new Set(existing.entries.map((e) => e.timestamp));
+        bucket.entries.forEach((e) => { if (!seen.has(e.timestamp)) existing.entries.push(e); });
+        existing.entries.sort((a, b) => a.timestamp - b.timestamp);
+        if (!existing.initialReadings) existing.initialReadings = bucket.initialReadings;
+      };
+      Object.keys(data).sort().forEach((key) => {
+        const bucket = data[key] || {};
+        const bucketEntries = bucket.entries || [];
+        const inMonth = bucketEntries.every((e) => !e.timestamp || monthKeyOf(localDateKey(e.timestamp)) === key);
+        if (inMonth) {
+          merge(key, { initialReadings: bucket.initialReadings || null, entries: [...bucketEntries] });
+        } else {
+          const split = splitLegacyIntoMonths(bucket.initialReadings || null, bucketEntries);
+          Object.keys(split).forEach((k) => merge(k, split[k]));
+        }
+      });
+      return result;
+    }
+    monthlyData = normalizeMonthlyData(monthlyData);
+    localStorage.setItem("monthlyData", JSON.stringify(monthlyData));
+
+    function loadSelectedMonthData() {
+      const data = monthlyData[selectedMonth];
+      initialReadings = (data && data.initialReadings) || null;
+      entries = (data && data.entries) || [];
+    }
+    loadSelectedMonthData();
 
     // --- Monthly archives -----------------------------------------------
-    // The live `initialReadings`/`entries` above stay a single continuous
-    // timeline (unchanged) -- everything else in this file (Total Days,
-    // Daily Usage Tracker, Estimated Bill) still reads from them exactly as
-    // before. These two archives are purely additive, keyed by "YYYY-MM":
+    // Two small extra archives, keyed by "YYYY-MM":
     //  - monthlyInitialReadings: a snapshot of the Initial Reading saved for
     //    each month, so a past month's Initial Reading can be browsed via
     //    the "View month" selector even after a newer one has been saved.
@@ -1237,12 +1330,24 @@
     let monthlyInitialReadings = JSON.parse(localStorage.getItem("monthlyInitialReadings")) || {};
     let monthlyCurrentReadings = JSON.parse(localStorage.getItem("monthlyCurrentReadings")) || {};
 
+    // Local-time (not UTC) date keys: a reading logged just after midnight
+    // in India must land on the local date's month, not the previous UTC day's.
+    function localDateKey(ts) {
+      const d = ts === undefined ? new Date() : new Date(ts);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
     function monthKeyOf(dateStr) {
-      return (dateStr || new Date().toISOString().slice(0, 10)).slice(0, 7);
+      return (dateStr || localDateKey()).slice(0, 7);
     }
 
     function currentMonthKey() {
-      return monthKeyOf(new Date().toISOString().slice(0, 10));
+      return localDateKey().slice(0, 7);
+    }
+
+    function lastDayKeyOfMonth(monthKey) {
+      const [y, m] = monthKey.split('-').map(Number);
+      return `${monthKey}-${String(new Date(y, m, 0).getDate()).padStart(2, '0')}`;
     }
 
     function monthLabelFor(monthKey) {
@@ -1250,9 +1355,8 @@
     }
 
     function previousMonthKey(monthKey) {
-      const d = new Date(`${monthKey}-01T00:00:00`);
-      d.setMonth(d.getMonth() - 1);
-      return d.toISOString().slice(0, 7);
+      const [y, m] = monthKey.split('-').map(Number);
+      return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
     }
 
     function saveMonthlyArchives() {
@@ -1263,7 +1367,7 @@
     // Renders the Initial Reading section for the current month, backed by
     // the live/editable `initialReadings`.
     function renderInitialReadingForMonth() {
-      const monthLabel = monthLabelFor(currentMonthKey());
+      const monthLabel = monthLabelFor(selectedMonth);
       document.getElementById('initialReadingHeading').innerHTML = `🔑 <span style="color: var(--accent); font-weight: 800;">${monthLabel}</span> Initial Reading`;
       displayInitialValues();
     }
@@ -1360,8 +1464,106 @@
     }
 
     function updateStorage() {
-      localStorage.setItem("initialReadings", JSON.stringify(initialReadings));
-      localStorage.setItem("entries", JSON.stringify(entries));
+      if (initialReadings || entries.length > 0) {
+        monthlyData[selectedMonth] = { initialReadings, entries };
+      } else {
+        delete monthlyData[selectedMonth];
+      }
+      localStorage.setItem("monthlyData", JSON.stringify(monthlyData));
+      renderMonthSelector();
+    }
+
+    // --- "View month" selector --------------------------------------------
+    // Lists every month that has saved data, plus the current month (so a
+    // new month is always available to start filling in).
+    function renderMonthSelector() {
+      const keys = new Set(Object.keys(monthlyData));
+      keys.add(currentMonthKey());
+      keys.add(selectedMonth);
+      const select = document.getElementById('viewMonthSelect');
+      select.innerHTML = Array.from(keys).sort().reverse().map((key) => (
+        `<option value="${key}">${monthLabelFor(key)}${key === currentMonthKey() ? ' (current)' : ''}</option>`
+      )).join('');
+      select.value = selectedMonth;
+    }
+
+    function defaultInitialDate() {
+      return selectedMonth === currentMonthKey() ? localDateKey() : `${selectedMonth}-01`;
+    }
+
+    // Repaints everything that depends on which month is selected.
+    // Last reading logged in the month before `monthKey`, if any.
+    function previousMonthLastReading(monthKey) {
+      const prevKey = previousMonthKey(monthKey);
+      const prevEntries = (monthlyData[prevKey] && monthlyData[prevKey].entries) || [];
+      return prevEntries[prevEntries.length - 1] || monthlyCurrentReadings[prevKey] || null;
+    }
+
+    // Set right after the user deletes the current month's Initial Reading,
+    // so refreshMonthView() doesn't immediately auto-fill it back and
+    // they can enter a different one.
+    let skipAutoInitial = false;
+
+    // A new month's Initial Reading IS the previous month's last reading, so
+    // save it automatically instead of making the user retype it.
+    function autoFillInitialReading() {
+      if (initialReadings || skipAutoInitial || selectedMonth !== currentMonthKey()) return false;
+      const prev = previousMonthLastReading(selectedMonth);
+      if (!prev) return false;
+      // Dated the 1st so this month only contains its own dates.
+      initialReadings = { date: `${selectedMonth}-01`, solar: prev.solar, t1: prev.t1, t2: prev.t2, t3: prev.t3, export: prev.export, timestamp: Date.now(), autoFilled: true };
+      updateStorage();
+      monthlyInitialReadings[selectedMonth] = { ...initialReadings };
+      saveMonthlyArchives();
+      return true;
+    }
+
+    function refreshMonthView() {
+      const isCurrent = selectedMonth === currentMonthKey();
+      autoFillInitialReading();
+      const notice = document.getElementById('initialVerifyNotice');
+      notice.style.display = isCurrent && initialReadings ? '' : 'none';
+      document.getElementById('initialVerifyText').textContent = initialReadings && initialReadings.autoFilled
+        ? `This month's Initial Reading was filled in automatically from your last reading of ${monthLabelFor(previousMonthKey(selectedMonth))}. Please make sure it is correct — the bill estimate for ${monthLabelFor(selectedMonth)} is calculated from it. / ഈ മാസത്തെ Initial Reading കഴിഞ്ഞ മാസത്തെ അവസാന റീഡിങ്ങിൽ നിന്ന് സ്വയമേവ ചേർത്തതാണ്. ബിൽ എസ്റ്റിമേറ്റ് ഇതിനെ അടിസ്ഥാനമാക്കിയായതിനാൽ ശരിയാണെന്ന് ഉറപ്പാക്കുക.`
+        : `Please make sure this month's Initial Reading is correct — the bill estimate for ${monthLabelFor(selectedMonth)} is calculated from it. / ഈ മാസത്തെ Initial Reading ശരിയാണെന്ന് ഉറപ്പാക്കുക — ബിൽ എസ്റ്റിമേറ്റ് ഇതിനെ അടിസ്ഥാനമാക്കിയാണ്.`;
+      renderMonthSelector();
+      renderInitialReadingForMonth();
+      document.getElementById('currentReadingsHeading').innerHTML = `➕ Current Solar Readings (<span style="color: var(--accent); font-weight: 800;">${new Date(`${selectedMonth}-01T00:00:00`).toLocaleString('en-US', { month: 'long' })}</span>)`;
+      // New readings are always stamped "now", so they only make sense for
+      // the current month; past months stay viewable/editable but not
+      // appendable.
+      document.getElementById('currentReadingsSection').style.display = isCurrent ? '' : 'none';
+      document.getElementById('viewMonthNotice').style.display = isCurrent ? 'none' : '';
+      document.getElementById('viewMonthNoticeText').textContent = `Viewing ${monthLabelFor(selectedMonth)} — a past month. You can review, edit or delete its entries, but new readings are added to the current month.`;
+      prefillInitialForm();
+      renderEntries();
+    }
+
+    function switchMonth(monthKey) {
+      selectedMonth = monthKey;
+      skipAutoInitial = false;
+      loadSelectedMonthData();
+      refreshMonthView();
+    }
+
+    // If this month has no Initial Reading yet, reset the form and prefill it
+    // with last month's final reading -- per the note above the form, that IS
+    // this month's Initial Reading.
+    function prefillInitialForm() {
+      document.getElementById('initialForm').reset();
+      const initDateEl = document.getElementById('init_date');
+      initDateEl.min = `${selectedMonth}-01`;
+      initDateEl.max = lastDayKeyOfMonth(selectedMonth);
+      initDateEl.value = defaultInitialDate();
+      if (initialReadings) return;
+      const prevReading = previousMonthLastReading(selectedMonth);
+      if (prevReading) {
+        document.getElementById("init_solar").value = prevReading.solar;
+        document.getElementById("init_t1").value = prevReading.t1;
+        document.getElementById("init_t2").value = prevReading.t2;
+        document.getElementById("init_t3").value = prevReading.t3;
+        document.getElementById("init_export").value = prevReading.export;
+      }
     }
 
     // "Daily Energy usage" divides by the number of days between the
@@ -1372,7 +1574,7 @@
       if (!initialReadings) return null;
       if (initialReadings.date) return initialReadings.date;
       // Back-compat: older saved readings only recorded a timestamp.
-      if (initialReadings.timestamp) return new Date(initialReadings.timestamp).toISOString().slice(0, 10);
+      if (initialReadings.timestamp) return localDateKey(initialReadings.timestamp);
       return null;
     }
 
@@ -2024,35 +2226,20 @@
       if (!confirm('Delete the initial reading? You will need to enter and save it again to continue tracking.')) return;
       const deletedMonthKey = initialReadingDateKey() ? monthKeyOf(initialReadingDateKey()) : currentMonthKey();
       initialReadings = null;
-      localStorage.removeItem("initialReadings");
+      skipAutoInitial = true;
+      updateStorage();
       delete monthlyInitialReadings[deletedMonthKey];
       saveMonthlyArchives();
-      renderInitialReadingForMonth();
-      renderEntries();
-      document.getElementById("init_date").value = new Date().toISOString().slice(0, 10);
-    }
-
-    // Default the Initial Reading date to today so a fresh visit is
-    // one less thing to fill in.
-    document.getElementById("init_date").value = new Date().toISOString().slice(0, 10);
-
-    // If no Initial Reading has been saved yet this month, prefill the form
-    // with last month's final "Current Solar Readings" entry -- per the
-    // note above the form, that IS this month's Initial Reading.
-    if (!initialReadings) {
-      const prevReading = monthlyCurrentReadings[previousMonthKey(currentMonthKey())];
-      if (prevReading) {
-        document.getElementById("init_solar").value = prevReading.solar;
-        document.getElementById("init_t1").value = prevReading.t1;
-        document.getElementById("init_t2").value = prevReading.t2;
-        document.getElementById("init_t3").value = prevReading.t3;
-        document.getElementById("init_export").value = prevReading.export;
-      }
+      refreshMonthView();
     }
 
     document.getElementById("initialForm").addEventListener("submit", e => {
       e.preventDefault();
-      const dateVal = document.getElementById("init_date").value || new Date().toISOString().slice(0, 10);
+      const dateVal = document.getElementById("init_date").value || defaultInitialDate();
+      if (monthKeyOf(dateVal) !== selectedMonth) {
+        alert(`The date must be within ${monthLabelFor(selectedMonth)}.`);
+        return;
+      }
       const solar = parseFloat(document.getElementById("init_solar").value) || 0;
       const t1 = parseFloat(document.getElementById("init_t1").value) || 0;
       const t2 = parseFloat(document.getElementById("init_t2").value) || 0;
@@ -2077,7 +2264,7 @@
         renderInitialReadingForMonth();
         renderEntries();
         e.target.reset();
-        document.getElementById("init_date").value = new Date().toISOString().slice(0, 10);
+        document.getElementById("init_date").value = defaultInitialDate();
       }
     });
 
@@ -2096,7 +2283,7 @@
       updateStorage();
       // Keep this month's "latest current reading" archived so it can
       // prefill next month's Initial Reading form.
-      monthlyCurrentReadings[monthKeyOf(new Date(entry.timestamp).toISOString().slice(0, 10))] = { ...entry };
+      monthlyCurrentReadings[monthKeyOf(localDateKey(entry.timestamp))] = { ...entry };
       saveMonthlyArchives();
       renderEntries();
       e.target.reset();
@@ -2143,7 +2330,13 @@
           alert('Please enter valid numbers for all fields.');
           return;
         }
-        entry.date = tr.querySelector('.edit-date').value.trim() || entry.date;
+        const newDate = tr.querySelector('.edit-date').value.trim() || entry.date;
+        const parsed = new Date(newDate);
+        if (!isNaN(parsed) && monthKeyOf(localDateKey(parsed.getTime())) !== selectedMonth) {
+          alert(`The date must be within ${monthLabelFor(selectedMonth)}.`);
+          return;
+        }
+        entry.date = newDate;
         entry.solar = newSolar;
         entry.t1 = newT1;
         entry.t2 = newT2;
@@ -2177,7 +2370,7 @@
 
     // Backup Readings
     function backupReadings() {
-      const data = { initialReadings, entries, billingProfile, monthlyInitialReadings, monthlyCurrentReadings };
+      const data = { monthlyData, billingProfile, monthlyInitialReadings, monthlyCurrentReadings };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -2199,13 +2392,18 @@
       reader.onload = function(e) {
         try {
           const data = JSON.parse(e.target.result);
-          if (data.initialReadings) {
-            initialReadings = data.initialReadings;
-            localStorage.setItem('initialReadings', JSON.stringify(initialReadings));
+          if (data.monthlyData) {
+            monthlyData = normalizeMonthlyData(data.monthlyData);
+          } else if (data.initialReadings || data.entries) {
+            // Backup from before per-month storage: one continuous timeline.
+            const legacyEntries = data.entries || [];
+            monthlyData = splitLegacyIntoMonths(data.initialReadings || null, legacyEntries);
           }
-          if (data.entries) {
-            entries = data.entries;
-            localStorage.setItem('entries', JSON.stringify(entries));
+          if (data.monthlyData || data.initialReadings || data.entries) {
+            // Land on the current month if it has data, else the latest one.
+            const keys = Object.keys(monthlyData).sort();
+            selectedMonth = monthlyData[currentMonthKey()] || keys.length === 0 ? currentMonthKey() : keys[keys.length - 1];
+            loadSelectedMonthData();
           }
           if (data.billingProfile) {
             billingProfile = { ...DEFAULT_BILLING_PROFILE, ...data.billingProfile };
@@ -2215,8 +2413,8 @@
           if (data.monthlyInitialReadings) monthlyInitialReadings = data.monthlyInitialReadings;
           if (data.monthlyCurrentReadings) monthlyCurrentReadings = data.monthlyCurrentReadings;
           saveMonthlyArchives();
-          renderInitialReadingForMonth();
-          renderEntries();
+          updateStorage();
+          refreshMonthView();
           alert('Readings restored successfully!');
         } catch (err) {
           alert('Error restoring readings: Invalid JSON file.');
@@ -2236,7 +2434,7 @@
     // variable and rendered table starts from a clean slate.
     function resetAllData() {
       if (!confirm('Delete ALL data? This permanently removes your initial reading, all entries, monthly archives and billing profile. This cannot be undone.\n\nTip: use Backup first if you may need it again.')) return;
-      ['initialReadings', 'entries', 'monthlyInitialReadings', 'monthlyCurrentReadings',
+      ['monthlyData', 'initialReadings', 'entries', 'monthlyInitialReadings', 'monthlyCurrentReadings',
         'billingProfile', DAILY_USAGE_HIDDEN_COLS_KEY, 'kseb_bill_handoff']
         .forEach(key => localStorage.removeItem(key));
       window.location.reload();
@@ -2251,9 +2449,11 @@
     window.deleteEntry = deleteEntry;
     window.startEditingEntry = startEditingEntry;
 
+    document.getElementById('viewMonthSelect').addEventListener('change', (e) => switchMonth(e.target.value));
+    document.getElementById('backToCurrentBtn').addEventListener('click', () => switchMonth(currentMonthKey()));
+
     loadBillingProfileIntoForm();
-    displayInitialValues();
-    renderEntries();
+    refreshMonthView();
   </script>
 </body>
 </html>
