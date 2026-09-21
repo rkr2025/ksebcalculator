@@ -2323,7 +2323,32 @@
       if (!confirm('Delete this entry?')) return;
       entries.splice(i, 1);
       updateStorage();
+      syncCarriedOverReadings();
       renderEntries();
+    }
+
+    // Next month's carried-over Initial Reading is a copy of this month's
+    // last entry, so when that last entry is edited or deleted, refresh the
+    // copy -- otherwise next month would keep calculating from the old value.
+    // (An Initial Reading the user typed in themselves is left alone.)
+    function syncCarriedOverReadings() {
+      const last = entries[entries.length - 1];
+      if (last) monthlyCurrentReadings[selectedMonth] = { ...last }; else delete monthlyCurrentReadings[selectedMonth];
+      const [y, m] = selectedMonth.split('-').map(Number);
+      const nextKey = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
+      const nextInitial = monthlyData[nextKey] && monthlyData[nextKey].initialReadings;
+      if (last && nextInitial && nextInitial.carriedOver) {
+        ['solar', 't1', 't2', 't3', 'export'].forEach((k) => { nextInitial[k] = last[k]; });
+        monthlyInitialReadings[nextKey] = { ...nextInitial };
+        localStorage.setItem("monthlyData", JSON.stringify(monthlyData));
+      }
+      saveMonthlyArchives();
+    }
+
+    // datetime-local wants "YYYY-MM-DDTHH:MM" in local time.
+    function toDateTimeLocalValue(ts) {
+      const d = new Date(ts);
+      return `${localDateKey(ts)}T${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
     }
 
     // Turns one Entries Log row into inline editable fields (Date, Solar,
@@ -2335,7 +2360,7 @@
       if (!entry || !tr) return;
 
       tr.innerHTML = `
-        <td><input type="text" class="edit-date" style="width: 100%; min-width: 90px;"></td>
+        <td><input type="datetime-local" class="edit-date" style="width: 100%; min-width: 150px;"></td>
         <td><input type="number" class="edit-solar" style="width: 100%; min-width: 60px;" value="${entry.solar}"></td>
         <td><input type="number" class="edit-t1" style="width: 100%; min-width: 60px;" value="${entry.t1}"></td>
         <td><input type="number" class="edit-t2" style="width: 100%; min-width: 60px;" value="${entry.t2}"></td>
@@ -2346,9 +2371,12 @@
           <button class="delete-btn edit-cancel-btn" title="Cancel">✕</button>
         </td>`;
 
-      // Date is free-form text (matches entry.date's stored format) --
-      // assign via .value, not interpolated into the template above.
-      tr.querySelector('.edit-date').value = entry.date;
+      // The date the calculations use is entry.timestamp (entry.date is only
+      // its display text), so edit the timestamp itself.
+      const dateInput = tr.querySelector('.edit-date');
+      dateInput.value = toDateTimeLocalValue(entry.timestamp);
+      dateInput.min = `${selectedMonth}-01T00:00`;
+      dateInput.max = `${lastDayKeyOfMonth(selectedMonth)}T23:59`;
 
       tr.querySelector('.edit-save-btn').addEventListener('click', () => {
         const newSolar = parseFloat(tr.querySelector('.edit-solar').value);
@@ -2360,19 +2388,24 @@
           alert('Please enter valid numbers for all fields.');
           return;
         }
-        const newDate = tr.querySelector('.edit-date').value.trim() || entry.date;
-        const parsed = new Date(newDate);
-        if (!isNaN(parsed) && monthKeyOf(localDateKey(parsed.getTime())) !== selectedMonth) {
+        const newTimestamp = dateInput.value ? new Date(dateInput.value).getTime() : entry.timestamp;
+        if (isNaN(newTimestamp) || monthKeyOf(localDateKey(newTimestamp)) !== selectedMonth) {
           alert(`The date must be within ${monthLabelFor(selectedMonth)}.`);
           return;
         }
-        entry.date = newDate;
+        if (newTimestamp !== entry.timestamp) {
+          entry.timestamp = newTimestamp;
+          entry.date = new Date(newTimestamp).toLocaleString();
+        }
         entry.solar = newSolar;
         entry.t1 = newT1;
         entry.t2 = newT2;
         entry.t3 = newT3;
         entry.export = newExport;
+        // Keep entries in date order -- every calculation walks them in order.
+        entries.sort((a, b) => a.timestamp - b.timestamp);
         updateStorage();
+        syncCarriedOverReadings();
         renderEntries();
       });
 
