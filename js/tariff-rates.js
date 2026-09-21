@@ -55,7 +55,7 @@ export const METER_RENT = {
 };
 
 export const DUTY_RATE = 0.10;
-export const FUEL_SURCHARGE_PER_UNIT = 0.00;
+export const FUEL_SURCHARGE_PER_UNIT = 0.03;
 
 // Wheeling: transferring banked export units to another KSEB connection to
 // offset its bill. Distribution loss % depends on whether the receiving
