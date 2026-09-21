@@ -1260,9 +1260,12 @@
         let initial;
         if (i === 0) {
           initial = legacyInitial && { ...legacyInitial };
-          if (initial && !(initial.date || '').startsWith(key)) initial.date = `${key}-01`;
+          if (initial && !(initial.date || '').startsWith(key)) {
+            initial.date = `${key}-01`;
+            initial.carriedOver = true;
+          }
         } else {
-          initial = { date: `${key}-01`, solar: prevLast.solar, t1: prevLast.t1, t2: prevLast.t2, t3: prevLast.t3, export: prevLast.export, timestamp: Date.now() };
+          initial = { date: `${key}-01`, solar: prevLast.solar, t1: prevLast.t1, t2: prevLast.t2, t3: prevLast.t3, export: prevLast.export, timestamp: Date.now(), carriedOver: true };
         }
         data[key] = { initialReadings: initial || null, entries: byMonth[key] };
         prevLast = byMonth[key][byMonth[key].length - 1];
@@ -1300,7 +1303,20 @@
         const bucketEntries = bucket.entries || [];
         const inMonth = bucketEntries.every((e) => !e.timestamp || monthKeyOf(localDateKey(e.timestamp)) === key);
         if (inMonth) {
-          merge(key, { initialReadings: bucket.initialReadings || null, entries: [...bucketEntries] });
+          // An Initial Reading dated outside its own month (e.g. one carried
+          // over by an earlier version using last month's date) is moved to
+          // the 1st, so Days Tracked counts from this month's start.
+          let initial = bucket.initialReadings ? { ...bucket.initialReadings } : null;
+          if (initial) {
+            const initKey = initial.date || (initial.timestamp && localDateKey(initial.timestamp));
+            if (initKey && !initKey.startsWith(key)) {
+              initial.date = `${key}-01`;
+              initial.carriedOver = true;
+            } else if (initial.autoFilled) {
+              initial.carriedOver = true;
+            }
+          }
+          merge(key, { initialReadings: initial, entries: [...bucketEntries] });
         } else {
           const split = splitLegacyIntoMonths(bucket.initialReadings || null, bucketEntries);
           Object.keys(split).forEach((k) => merge(k, split[k]));
@@ -1511,7 +1527,7 @@
       const prev = previousMonthLastReading(selectedMonth);
       if (!prev) return false;
       // Dated the 1st so this month only contains its own dates.
-      initialReadings = { date: `${selectedMonth}-01`, solar: prev.solar, t1: prev.t1, t2: prev.t2, t3: prev.t3, export: prev.export, timestamp: Date.now(), autoFilled: true };
+      initialReadings = { date: `${selectedMonth}-01`, solar: prev.solar, t1: prev.t1, t2: prev.t2, t3: prev.t3, export: prev.export, timestamp: Date.now(), autoFilled: true, carriedOver: true };
       updateStorage();
       monthlyInitialReadings[selectedMonth] = { ...initialReadings };
       saveMonthlyArchives();
@@ -1578,14 +1594,27 @@
       return null;
     }
 
+    // Whole calendar days from one "YYYY-MM-DD" to another, ignoring time of
+    // day (so a reading logged at 8am vs 8pm counts the same day).
+    function calendarDayDiff(fromKey, toKey) {
+      const [fy, fm, fd] = fromKey.split('-').map(Number);
+      const [ty, tm, td] = toKey.split('-').map(Number);
+      return Math.round((Date.UTC(ty, tm - 1, td) - Date.UTC(fy, fm - 1, fd)) / 86400000);
+    }
+
+    // A carried-over Initial Reading (last month's final reading, dated the
+    // 1st of this month) is really the meter as it stood at the START of
+    // the 1st, so the 1st itself counts as a tracked day. A manually entered
+    // one is the meter on its own date, so that date isn't counted.
+    function daysFromInitialTo(dateKey) {
+      const diff = calendarDayDiff(initialReadingDateKey(), dateKey);
+      return Math.max(1, diff + (initialReadings.carriedOver ? 1 : 0));
+    }
+
     function getTotalDaysInput() {
       const dateKey = initialReadingDateKey();
       if (!dateKey || entries.length === 0) return null;
-      const initDate = new Date(dateKey + 'T00:00:00');
-      const lastEntryDate = new Date(entries[entries.length - 1].timestamp);
-      const msPerDay = 1000 * 60 * 60 * 24;
-      const days = Math.round((lastEntryDate - initDate) / msPerDay);
-      return days > 0 ? days : 1;
+      return daysFromInitialTo(localDateKey(entries[entries.length - 1].timestamp));
     }
 
     function updateTotalDaysDisplay() {
@@ -1633,16 +1662,15 @@
       body.innerHTML = "";
       if (!initialReadings || entries.length === 0) return 0;
 
-      const msPerDay = 1000 * 60 * 60 * 24;
       const dailyByDate = [];
       let prev = initialReadings;
       // The Initial Reading's own entered date (not its save timestamp,
       // which is just whenever the "Save Initial" button happened to be
       // clicked) -- the correct starting point for the first row's
       // days-since-previous gap below.
-      let prevDate = new Date(initialReadingDateKey() + 'T00:00:00');
+      let prevKey = initialReadingDateKey();
+      let isFirstEntry = true;
       entries.forEach((entry) => {
-        const entryDate = new Date(entry.timestamp);
         const daily = {
           solar: entry.solar - prev.solar,
           export: entry.export - prev.export,
@@ -1677,11 +1705,13 @@
           // really several days' worth of usage lumped onto one row, not
           // just this one day's, so it needs its own per-day average (see
           // where daysSincePrevious is used below) to read correctly.
-          const daysSincePrevious = Math.max(1, Math.round((entryDate - prevDate) / msPerDay));
+          const entryKey = localDateKey(entry.timestamp);
+          const daysSincePrevious = isFirstEntry ? daysFromInitialTo(entryKey) : Math.max(1, calendarDayDiff(prevKey, entryKey));
           dailyByDate.push({ dayKey, date: new Date(entry.timestamp).toLocaleDateString(), ...daily, cumulative, daysSincePrevious });
         }
         prev = entry;
-        prevDate = entryDate;
+        prevKey = localDateKey(entry.timestamp);
+        isFirstEntry = false;
       });
 
       const lastEntry = entries[entries.length - 1];
