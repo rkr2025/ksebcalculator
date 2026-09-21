@@ -1169,6 +1169,7 @@
         </label>
         <input type="file" id="restoreFile" accept=".json" class="visually-hidden-file">
         <button class="action-btn action-btn--outline" id="printBtn" onclick="generatePrintableReport()" title="Generate a printable report of your entries">🖨️ Print</button>
+        <button class="action-btn action-btn--outline" id="resetBtn" onclick="resetAllData()" title="Permanently delete all data saved by this diary">🗑️ Reset</button>
       </div>
     </div>
     <a href="index.html" class="nav-link">← Back to Calculator</a>
@@ -2231,10 +2232,21 @@
       window.print();
     }
 
+    // Wipes everything this page has saved, then reloads so every in-memory
+    // variable and rendered table starts from a clean slate.
+    function resetAllData() {
+      if (!confirm('Delete ALL data? This permanently removes your initial reading, all entries, monthly archives and billing profile. This cannot be undone.\n\nTip: use Backup first if you may need it again.')) return;
+      ['initialReadings', 'entries', 'monthlyInitialReadings', 'monthlyCurrentReadings',
+        'billingProfile', DAILY_USAGE_HIDDEN_COLS_KEY, 'kseb_bill_handoff']
+        .forEach(key => localStorage.removeItem(key));
+      window.location.reload();
+    }
+
     // This page's markup calls these via inline onclick="..." attributes;
     // module-scope functions aren't global, so expose the ones it needs.
     window.backupReadings = backupReadings;
     window.generatePrintableReport = generatePrintableReport;
+    window.resetAllData = resetAllData;
     window.deleteInitial = deleteInitial;
     window.deleteEntry = deleteEntry;
     window.startEditingEntry = startEditingEntry;
