@@ -880,6 +880,9 @@
     }
     .entry-group + .entry-group { margin-top: 14px; }
     .entry-group-heading {
+      display: list-item;
+      cursor: pointer;
+      user-select: none;
       font-size: 12px;
       font-weight: 700;
       letter-spacing: 0.02em;
@@ -890,6 +893,8 @@
       padding: 4px 8px;
       margin-bottom: 2px;
     }
+    .entry-group-heading::marker { font-size: 10px; color: var(--text-muted); }
+    .entry-group-heading:hover { color: var(--accent); }
     .entry-group-progress {
       display: flex;
       align-items: center;
@@ -3884,20 +3889,28 @@
           </div>`;
       };
 
+      // The last block that actually has entries is the one the user's
+      // most likely still working within -- that's the only group open by
+      // default on load; every other group (including empty ones) starts
+      // shrunk, since <details> without an "open" attribute renders closed.
+      let lastActiveBlockIndex = -1;
+      blocks.forEach((blockEntries, b) => { if (blockEntries.length > 0) lastActiveBlockIndex = b; });
+
       list.innerHTML = blocks.map((blockEntries, b) => {
+        const openAttr = b === lastActiveBlockIndex ? ' open' : '';
         if (blockEntries.length === 0) {
           if (!blockHasStarted(b)) return '';
           return `
-        <div class="entry-group">
-          <div class="entry-group-heading">${THREE_HOUR_BLOCK_LABELS[b]}</div>
+        <details class="entry-group"${openAttr}>
+          <summary class="entry-group-heading">${THREE_HOUR_BLOCK_LABELS[b]}</summary>
           ${renderBlockProgress(b)}
           <div class="entry-group-empty" data-empty-block="${b}"></div>
-        </div>`;
+        </details>`;
         }
         const trackedCount = blockEntries.filter((e) => !e.noTrack).length;
         return `
-        <div class="entry-group">
-          <div class="entry-group-heading">${THREE_HOUR_BLOCK_LABELS[b]}</div>
+        <details class="entry-group"${openAttr}>
+          <summary class="entry-group-heading">${THREE_HOUR_BLOCK_LABELS[b]}</summary>
           ${renderBlockProgress(b)}
           <div class="entry-group-insight" data-block="${b}">
             ⏳ <strong><span class="insight-total"></span></strong> tracked across ${trackedCount} entr${trackedCount === 1 ? 'y' : 'ies'}
@@ -3968,7 +3981,7 @@
             <button class="entry-delete" data-index="${e.index}" title="Delete this entry" type="button">✕</button>
           </div>`;
           }).join('')}
-        </div>`;
+        </details>`;
       }).join('');
 
       // Entry text is user content -- assign via textContent, never innerHTML.
