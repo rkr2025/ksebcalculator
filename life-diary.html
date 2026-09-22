@@ -3932,7 +3932,7 @@
             const slotDayLabel = (() => {
               if (!isLastEntryOfDay) return '';
               const { slotsOver, slotsLeft } = computeSlotsOverAndLeft(slotMinutes);
-              return ` <span class="entry-slots-left"${isLive ? ` data-slotsleft-t="${e.t}"` : ''}>(${slotsOver} over, ${slotsLeft} left today)</span>`;
+              return ` <span class="entry-slots-left"${isLive ? ` data-slotsleft-t="${e.t}"` : ''} title="${slotsOver} slots over today, ${slotsLeft} left">(${slotsOver}/${slotsLeft})</span>`;
             })();
             // The badge itself (the "slots: N" part) still only shows once a
             // full slot has been used, but the last entry keeps showing the
@@ -4129,7 +4129,8 @@
           }
           if (liveSlotsLeftEl) {
             const { slotsOver, slotsLeft } = computeSlotsOverAndLeft(getSlotMinutes());
-            liveSlotsLeftEl.textContent = `(${slotsOver} over, ${slotsLeft} left today)`;
+            liveSlotsLeftEl.textContent = `(${slotsOver}/${slotsLeft})`;
+            liveSlotsLeftEl.title = `${slotsOver} slots over today, ${slotsLeft} left`;
           }
           refreshGroupInsights();
           refreshEmptyGroupNotes();
