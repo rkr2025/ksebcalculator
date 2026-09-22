@@ -919,6 +919,13 @@
     }
     .entry-group-heading::marker { font-size: 10px; color: var(--text-muted); }
     .entry-group-heading:hover { color: var(--accent); }
+    .entry-group-heading-total {
+      float: right;
+      text-transform: none;
+      letter-spacing: normal;
+      font-weight: 600;
+      color: var(--accent);
+    }
     .entry-group-progress {
       display: flex;
       align-items: center;
@@ -3928,7 +3935,7 @@
           if (!blockHasStarted(b)) return '';
           return `
         <details class="entry-group"${openAttr}>
-          <summary class="entry-group-heading">${THREE_HOUR_BLOCK_LABELS[b]}</summary>
+          <summary class="entry-group-heading">${THREE_HOUR_BLOCK_LABELS[b]} <span class="entry-group-heading-total">0m tracked</span></summary>
           ${renderBlockProgress(b)}
           <div class="entry-group-empty" data-empty-block="${b}"></div>
         </details>`;
@@ -3936,7 +3943,7 @@
         const trackedCount = blockEntries.filter((e) => !e.noTrack).length;
         return `
         <details class="entry-group"${openAttr}>
-          <summary class="entry-group-heading">${THREE_HOUR_BLOCK_LABELS[b]}</summary>
+          <summary class="entry-group-heading">${THREE_HOUR_BLOCK_LABELS[b]} <span class="entry-group-heading-total" data-heading-total="${b}"></span></summary>
           ${renderBlockProgress(b)}
           <div class="entry-group-insight" data-block="${b}">
             ⏳ <strong><span class="insight-total"></span></strong> tracked across ${trackedCount} entr${trackedCount === 1 ? 'y' : 'ies'}
@@ -4022,6 +4029,12 @@
           blockEntries.length ? computeBlockStats(blockEntries, frozenElapsed, latestTimestamp) : null
         );
         const dayTotalMs = perBlockStats.reduce((sum, s) => sum + (s ? s.totalMs : 0), 0);
+
+        list.querySelectorAll('.entry-group-heading-total[data-heading-total]').forEach((el) => {
+          const b = parseInt(el.dataset.headingTotal);
+          const stats = perBlockStats[b];
+          if (stats) el.textContent = `${formatDurationHuman(stats.totalMs)} tracked`;
+        });
 
         list.querySelectorAll('.entry-group-insight[data-block]').forEach((el) => {
           const b = parseInt(el.dataset.block);
