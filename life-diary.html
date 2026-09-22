@@ -176,6 +176,14 @@
       margin: 0 0 12px;
       font-size: 15px;
     }
+    .card-collapsible-summary {
+      cursor: pointer;
+      user-select: none;
+      margin-bottom: 12px;
+    }
+    .card-collapsible-summary h3 { margin: 0; display: inline; }
+    .card-collapsible-summary::marker { font-size: 12px; color: var(--text-muted); }
+    .card-collapsible-summary:hover h3 { color: var(--accent); }
 
     /* ------------------------------ New entry ---------------------------- */
     textarea {
@@ -523,18 +531,6 @@
       padding: 0;
     }
     .pomodoro-stepper-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .pomodoro-task-input {
-      display: block;
-      width: 100%;
-      box-sizing: border-box;
-      font-size: 13px;
-      padding: 7px 10px;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      background: var(--surface);
-      color: var(--text-primary);
-      margin-bottom: 12px;
-    }
     .pomodoro-mode {
       text-align: center;
       font-weight: 700;
@@ -672,20 +668,17 @@
       flex-wrap: wrap;
       gap: 10px;
     }
-    .pomodoro-log-status {
-      text-align: center;
-      font-size: 12px;
-      color: var(--accent);
-      font-weight: 600;
-      margin: 10px 0 0;
-      min-height: 15px;
-    }
     /* ---------------------------- View controls -------------------------- */
     .view-controls {
       display: flex;
       align-items: center;
       gap: 10px;
       flex-wrap: wrap;
+    }
+    .summary-btn-row {
+      display: flex;
+      justify-content: center;
+      margin-top: 14px;
     }
     .view-controls input[type="date"] {
       padding: 8px 10px;
@@ -698,11 +691,18 @@
       color-scheme: light;
     }
     :root[data-theme="dark"] .view-controls input[type="date"] { color-scheme: dark; }
-    .selected-date-label {
-      font-weight: 700;
-      font-size: 14px;
+    .slot-size-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: nowrap;
+      white-space: nowrap;
+      margin-left: 6px;
     }
-    .selected-date-label.weekend { color: var(--weekend); }
+    .slot-size-group label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
 
     /* ------------------------------- Search -------------------------------- */
     .search-controls {
@@ -723,6 +723,8 @@
       border-radius: 8px;
     }
     #searchResults { margin-top: 12px; }
+    #searchResults:empty { margin: 0; }
+    .search-controls { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px dashed var(--border); }
     .search-result-count {
       font-size: 12.5px;
       color: var(--text-muted);
@@ -1614,7 +1616,8 @@
 
     <!-- Pomodoro timer -->
     <div class="card">
-      <h3>🍅 Pomodoro Timer</h3>
+      <details id="pomodoroDetails">
+        <summary class="card-collapsible-summary"><h3>🍅 Pomodoro Timer</h3></summary>
       <div class="pomodoro-settings-row" id="pomodoroSettingsRow">
         <div class="pomodoro-settings">
           <label for="pomodoroWorkMinutesInput">Work session length</label>
@@ -1711,21 +1714,21 @@
         <button class="btn" id="pomodoroStartBtn" type="button">▶ Start</button>
         <button class="btn-outline btn" id="pomodoroPauseBtn" type="button" style="display: none;">⏸ Pause</button>
         <button class="btn-outline btn" id="pomodoroResetBtn" type="button">↺ Reset</button>
-        <input type="text" id="pomodoroTaskInput" class="pomodoro-task-input" placeholder="What are you working on?">
-        <button class="btn-outline btn" id="pomodoroLogBtn" type="button" style="display: none;" title="Add this session's focused minutes as a new, time-tracked diary entry">📔 Log to Diary</button>
       </div>
-      <p class="pomodoro-log-status" id="pomodoroLogStatus"></p>
       <button class="btn-outline btn session-plan-toggle-btn" id="sessionPlanToggleBtn" type="button">📝 Plan for Each Session</button>
       <div id="sessionPlanContent" class="session-plan-content" style="display: none;">
         <div id="sessionPlanRows"></div>
         <div id="sessionPlanList" class="session-plan-list"></div>
       </div>
+      </details>
     </div>
 
     <!-- 24-hour countdown -->
     <div class="card">
-      <h3>⏱️ Hours of the Day</h3>
-      <div class="hour-box-grid" id="hourBoxGrid"></div>
+      <details id="hoursOfDayDetails">
+        <summary class="card-collapsible-summary"><h3>⏱️ Hours of the Day</h3></summary>
+        <div class="hour-box-grid" id="hourBoxGrid"></div>
+      </details>
     </div>
 
     <!-- Popup: 6 x 10-minute circle breakdown for the currently active hour -->
@@ -1748,36 +1751,38 @@
       </div>
     </div>
 
-    <!-- Search all entries -->
+    <!-- View entries by date -->
     <div class="card">
-      <h3>🔍 Search Entries</h3>
+      <h3>📖 Diary Entries</h3>
+
+      <!-- Search all entries -->
       <div class="search-controls">
         <input type="text" id="searchInput" placeholder="Search across all diary entries...">
         <button class="btn-outline btn" id="searchClearBtn" type="button">Clear</button>
       </div>
       <div id="searchResults"></div>
-    </div>
 
-    <!-- View entries by date -->
-    <div class="card">
-      <h3>📖 Diary Entries</h3>
       <div class="view-controls">
         <input type="date" id="viewDateInput">
         <button class="btn-outline btn" id="todayBtn" type="button">Today</button>
-        <button class="btn btn-small" id="summaryBtn" type="button">✨ Summary</button>
-        <span class="selected-date-label" id="selectedDateLabel"></span>
-        <label for="slotSizeSelect" style="font-size: 12px; color: var(--text-muted); margin-left: 6px;" title="Each entry's minutes are divided by this to show a slot count">Slot size</label>
-        <select id="slotSizeSelect">
-          <option value="5">5 min</option>
-          <option value="10">10 min</option>
-          <option value="15">15 min</option>
-          <option value="20">20 min</option>
-          <option value="30">30 min</option>
-          <option value="45">45 min</option>
-          <option value="60">60 min</option>
-        </select>
+        <span class="slot-size-group">
+          <label for="slotSizeSelect" title="Each entry's minutes are divided by this to show a slot count">Slot size</label>
+          <select id="slotSizeSelect">
+            <option value="5">5 min</option>
+            <option value="10">10 min</option>
+            <option value="15">15 min</option>
+            <option value="20">20 min</option>
+            <option value="30">30 min</option>
+            <option value="45">45 min</option>
+            <option value="60">60 min</option>
+          </select>
+        </span>
       </div>
       <div id="entriesList" style="margin-top: 12px;"></div>
+
+      <div class="summary-btn-row">
+        <button class="btn btn-small" id="summaryBtn" type="button">✨ Summary</button>
+      </div>
 
       <div id="summaryPanel">
         <h4>📋 How the day went — <span id="summaryDateLabel"></span></h4>
@@ -1802,16 +1807,18 @@
 
     <!-- Backup / restore -->
     <div class="card">
-      <h3>💾 Backup &amp; Restore</h3>
-      <div class="backup-row">
-        <button class="btn" id="backupBtn" type="button">💾 Backup</button>
-        <button class="btn-outline btn" id="restoreBtn" type="button">⬆️ Restore from File</button>
-        <button class="btn-outline btn" id="resumeBackupBtn" type="button" style="display: none;">▶️ Resume Auto-Backup</button>
-        <button class="btn-outline btn" id="printLogBtn" type="button">🖨️ Print This Day's Log</button>
-        <input type="file" id="restoreFileInput" accept=".json,application/json">
-      </div>
-      <p class="backup-note" id="backupStatusNote"></p>
-      <p class="backup-note" id="backupOffRow" style="display: none;"><a href="#" id="disableBackupLink">Turn off auto-backup</a></p>
+      <details id="backupRestoreDetails">
+        <summary class="card-collapsible-summary"><h3>💾 Backup &amp; Restore</h3></summary>
+        <div class="backup-row">
+          <button class="btn" id="backupBtn" type="button">💾 Backup</button>
+          <button class="btn-outline btn" id="restoreBtn" type="button">⬆️ Restore from File</button>
+          <button class="btn-outline btn" id="resumeBackupBtn" type="button" style="display: none;">▶️ Resume Auto-Backup</button>
+          <button class="btn-outline btn" id="printLogBtn" type="button">🖨️ Print This Day's Log</button>
+          <input type="file" id="restoreFileInput" accept=".json,application/json">
+        </div>
+        <p class="backup-note" id="backupStatusNote"></p>
+        <p class="backup-note" id="backupOffRow" style="display: none;"><a href="#" id="disableBackupLink">Turn off auto-backup</a></p>
+      </details>
     </div>
 
     <div id="printableLog"></div>
@@ -2388,9 +2395,6 @@
     let pomodoroBreakSecondsCommitted = 0;
     let pomodoroSessionsCompleted = 0;
     let pomodoroBreaksCompleted = 0;
-    // Identifies the diary entry (if any) created by "Log to Diary" for the
-    // current session, so Reset can stop its running timer.
-    let pomodoroLoggedEntry = null; // { key, t } | null
 
     function currentPhaseElapsed() {
       const duration = pomodoroMode === 'work' ? pomodoroWorkSeconds : pomodoroBreakSeconds;
@@ -2416,8 +2420,6 @@
         breakSecondsCommitted: pomodoroBreakSecondsCommitted,
         sessionsCompleted: pomodoroSessionsCompleted,
         breaksCompleted: pomodoroBreaksCompleted,
-        loggedEntry: pomodoroLoggedEntry,
-        taskText: document.getElementById('pomodoroTaskInput').value,
         popupEnabled: document.getElementById('pomodoroPopupToggle').checked,
       }));
     }
@@ -2668,7 +2670,6 @@
       });
       if (setComplete) {
         pausePomodoro();
-        stopLoggedDiaryEntry();
         // The whole set is done (not just paused mid-session), so the
         // settings row -- hidden since Start was pressed -- reappears here
         // too, same as a manual Reset would.
@@ -2696,7 +2697,6 @@
       pomodoroIntervalId = setInterval(pomodoroTick, 1000);
       document.getElementById('pomodoroStartBtn').style.display = 'none';
       document.getElementById('pomodoroPauseBtn').style.display = '';
-      document.getElementById('pomodoroLogBtn').style.display = '';
       document.getElementById('pomodoroWorkMinutesInput').disabled = true;
       document.getElementById('pomodoroBreakMinutesInput').disabled = true;
       document.getElementById('pomodoroTotalSessionsInput').disabled = true;
@@ -2707,6 +2707,7 @@
       document.getElementById('pomodoroTotalSessionsMinusBtn').disabled = true;
       document.getElementById('pomodoroTotalSessionsPlusBtn').disabled = true;
       document.getElementById('pomodoroSettingsRow').style.display = 'none';
+      document.getElementById('pomodoroDetails').open = true;
       // The live "All sessions end at" clock (in pomodoroClocks) takes over
       // once running -- this "would end at" preview is only useful while
       // still configuring things beforehand.
@@ -2724,27 +2725,9 @@
       pomodoroPhaseEndAt = null;
       document.getElementById('pomodoroStartBtn').style.display = '';
       document.getElementById('pomodoroPauseBtn').style.display = 'none';
-      document.getElementById('pomodoroLogBtn').style.display = 'none';
       savePomodoroState();
       showSessionEndPreview();
       updatePomodoroDisplay();
-    }
-
-    // Stops the diary entry (if any) that "Log to Diary" created for this
-    // session, by giving it an explicit endT -- otherwise it would keep
-    // counting as "still running" forever after the pomodoro is reset.
-    function stopLoggedDiaryEntry() {
-      if (!pomodoroLoggedEntry) return;
-      const { key, t } = pomodoroLoggedEntry;
-      const entries = loadEntries();
-      const dayEntries = entries[key] || [];
-      const entry = dayEntries.find((e) => e.t === t);
-      if (entry && !entry.endT) {
-        entry.endT = new Date().toISOString();
-        saveEntries(entries);
-        if (viewDateInput.value === key) renderEntries();
-      }
-      pomodoroLoggedEntry = null;
     }
 
     function resetPomodoro() {
@@ -2755,7 +2738,6 @@
       const restoreDefaults = !pomodoroRunning;
 
       pausePomodoro();
-      stopLoggedDiaryEntry();
       if (restoreDefaults) {
         pomodoroWorkSeconds = DEFAULT_POMODORO_WORK_MINUTES * 60;
         pomodoroBreakSeconds = DEFAULT_POMODORO_BREAK_MINUTES * 60;
@@ -2781,8 +2763,6 @@
       document.getElementById('pomodoroTotalSessionsMinusBtn').disabled = false;
       document.getElementById('pomodoroTotalSessionsPlusBtn').disabled = false;
       document.getElementById('pomodoroSettingsRow').style.display = '';
-      document.getElementById('pomodoroTaskInput').value = '';
-      document.getElementById('pomodoroLogStatus').textContent = '';
       updatePomodoroDisplay();
       localStorage.removeItem(POMODORO_STATE_KEY);
       showSessionEndPreview();
@@ -2833,11 +2813,11 @@
     document.getElementById('pomodoroPauseBtn').addEventListener('click', pausePomodoro);
     document.getElementById('pomodoroResetBtn').addEventListener('click', resetPomodoro);
 
-    // Editing the task text after logging means the last "added to Diary"
-    // confirmation no longer describes what's in the box, so clear it.
-    document.getElementById('pomodoroTaskInput').addEventListener('input', () => {
-      document.getElementById('pomodoroLogStatus').textContent = '';
-      savePomodoroState();
+    // While a session is actively running, keep the card expanded so the
+    // countdown stays visible -- if the user collapses it (e.g. an
+    // accidental click on the summary), snap it back open immediately.
+    document.getElementById('pomodoroDetails').addEventListener('toggle', (e) => {
+      if (pomodoroRunning && !e.target.open) e.target.open = true;
     });
 
     document.getElementById('pomodoroPopupToggle').addEventListener('change', savePomodoroState);
@@ -3459,33 +3439,6 @@
     document.getElementById('pomodoroTotalSessionsPlusBtn').addEventListener('click', () =>
       stepSelectValue('pomodoroTotalSessionsInput', 1, 1, 144, DEFAULT_POMODORO_TOTAL_SESSIONS, (v) => `${v}`));
 
-    document.getElementById('pomodoroLogBtn').addEventListener('click', () => {
-      const totalSeconds = getWorkSecondsThisSession();
-      if (totalSeconds <= 0) {
-        alert('No focused work time to log yet -- start the timer first.');
-        return;
-      }
-      const taskInput = document.getElementById('pomodoroTaskInput');
-      const taskText = taskInput.value.trim();
-      const text = `🍅 ${taskText || 'Pomodoro focus session'}`;
-
-      const now = new Date();
-      const key = dateKey(now);
-      const entries = loadEntries();
-      if (!entries[key]) entries[key] = [];
-      const t = now.toISOString();
-      entries[key].push({ t, text });
-      saveEntries(entries);
-      pomodoroLoggedEntry = { key, t };
-      savePomodoroState();
-
-      document.getElementById('viewDateInput').value = key;
-      renderEntries();
-      renderCalendar();
-
-      document.getElementById('pomodoroLogStatus').textContent = '✅ Session added to Diary Entries.';
-    });
-
     // Restore any saved timer state (settings, counters, running/paused) so
     // a reload or reopening the browser doesn't disturb it. If it was
     // actively running, the stored scheduled end time (phaseEndAt) is
@@ -3507,12 +3460,10 @@
       pomodoroBreakSecondsCommitted = saved.breakSecondsCommitted || 0;
       pomodoroSessionsCompleted = saved.sessionsCompleted || 0;
       pomodoroBreaksCompleted = saved.breaksCompleted || 0;
-      pomodoroLoggedEntry = saved.loggedEntry || null;
 
       document.getElementById('pomodoroWorkMinutesInput').value = Math.round(pomodoroWorkSeconds / 60);
       document.getElementById('pomodoroBreakMinutesInput').value = Math.round(pomodoroBreakSeconds / 60);
       document.getElementById('pomodoroTotalSessionsInput').value = pomodoroTotalSessions;
-      document.getElementById('pomodoroTaskInput').value = saved.taskText || '';
       document.getElementById('pomodoroPopupToggle').checked = !!saved.popupEnabled;
 
       if (saved.running && saved.phaseEndAt) {
@@ -3524,7 +3475,6 @@
         } else {
           pomodoroRunning = false;
           pomodoroPhaseEndAt = null;
-          stopLoggedDiaryEntry();
           pomodoroWorkSecondsCommitted = 0;
           pomodoroBreakSecondsCommitted = 0;
           pomodoroSessionsCompleted = 0;
@@ -3818,12 +3768,7 @@
 
     function renderEntries() {
       const key = viewDateInput.value;
-      const label = document.getElementById('selectedDateLabel');
       const list = document.getElementById('entriesList');
-
-      const d = new Date(key + 'T12:00:00');
-      label.textContent = d.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      label.classList.toggle('weekend', isWeekendKey(key));
 
       const entries = loadEntries();
       const dayEntries = entries[key] || [];
