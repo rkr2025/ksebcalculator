@@ -819,6 +819,15 @@
       white-space: nowrap;
       padding-left: 2px;
     }
+    .entry-slot-count {
+      flex: none;
+      font-size: 9.5px;
+      color: var(--accent);
+      opacity: 0.8;
+      font-family: "Consolas", "Courier New", monospace;
+      white-space: nowrap;
+      padding-left: 2px;
+    }
     .entry-text { flex: 1; word-break: break-word; white-space: pre-wrap; }
     .entry-edit,
     .entry-delete {
@@ -1717,6 +1726,16 @@
         <button class="btn-outline btn" id="todayBtn" type="button">Today</button>
         <button class="btn btn-small" id="summaryBtn" type="button">✨ Summary</button>
         <span class="selected-date-label" id="selectedDateLabel"></span>
+        <label for="slotSizeSelect" style="font-size: 12px; color: var(--text-muted); margin-left: 6px;" title="Each entry's minutes are divided by this to show a slot count">Slot size</label>
+        <select id="slotSizeSelect">
+          <option value="5">5 min</option>
+          <option value="10">10 min</option>
+          <option value="15">15 min</option>
+          <option value="20">20 min</option>
+          <option value="30">30 min</option>
+          <option value="45">45 min</option>
+          <option value="60">60 min</option>
+        </select>
       </div>
       <div id="entriesList" style="margin-top: 12px;"></div>
 
@@ -1763,6 +1782,26 @@
     // Shape: { "YYYY-MM-DD": [ { t: <ISO timestamp>, text: <string> }, ... ] }
     const STORAGE_KEY = 'life_diary_entries';
     const THEME_KEY = 'life_diary_theme';
+    const SLOT_MINUTES_KEY = 'life_diary_slot_minutes';
+    const DEFAULT_SLOT_MINUTES = 10;
+    function getSlotMinutes() {
+      const saved = parseInt(localStorage.getItem(SLOT_MINUTES_KEY), 10);
+      return Number.isFinite(saved) && saved > 0 ? saved : DEFAULT_SLOT_MINUTES;
+    }
+    function setSlotMinutes(minutes) {
+      localStorage.setItem(SLOT_MINUTES_KEY, String(minutes));
+    }
+    // Slot count for an entry's tracked minutes against the user-selected
+    // slot size -- e.g. 20 minutes used at a 10-minute slot size is "2
+    // slots". If the slot size is bigger than the time actually used, there
+    // isn't even one full slot, so it's left out entirely rather than
+    // showing "0 slots".
+    function computeSlotCount(elapsedMs, slotMinutes) {
+      if (!slotMinutes || slotMinutes <= 0) return null;
+      const minutes = elapsedMs / 60000;
+      if (minutes < slotMinutes) return null;
+      return Math.floor(minutes / slotMinutes);
+    }
     // Per-session "save to Diary" bookkeeping (see the Session Plans panel
     // further down): which diary entry each session number currently owns
     // (so re-saving replaces it instead of piling up duplicates), and the
@@ -3529,6 +3568,13 @@
       renderCalendar();
     });
 
+    const slotSizeSelect = document.getElementById('slotSizeSelect');
+    slotSizeSelect.value = String(getSlotMinutes());
+    slotSizeSelect.addEventListener('change', () => {
+      setSlotMinutes(parseInt(slotSizeSelect.value, 10));
+      renderEntries();
+    });
+
     function formatTime(iso) {
       return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
@@ -3799,6 +3845,12 @@
               ? `<span class="entry-elapsed" data-timer-t="${e.t}" title="Running -- this is the latest entry">⏱ 00:00:00</span>`
               : `<span class="entry-elapsed" title="How long this entry ran before the next one was added">⏱ ${formatDuration(elapsedMs)}</span>`;
             const durationMinutes = `${Math.round(elapsedMs / 60000)} min`;
+            const slotMinutes = getSlotMinutes();
+            const slotCount = computeSlotCount(elapsedMs, slotMinutes);
+            const slotTitle = `title="${Math.round(elapsedMs / 60000)} min at a ${slotMinutes}-min slot size"`;
+            const slotLabel = isLive
+              ? `<span class="entry-slot-count" data-slotcount-t="${e.t}" ${slotTitle} style="${slotCount === null ? 'display: none;' : ''}">slots: ${slotCount || 0}</span>`
+              : (slotCount === null ? '' : `<span class="entry-slot-count" ${slotTitle}>slots: ${slotCount}</span>`);
             const endTime = isLive ? 'Ongoing' : formatTime(new Date(endTimeMs).toISOString());
             return `
           <div class="entry-line" data-index="${e.index}">
@@ -3809,6 +3861,7 @@
             <span class="entry-elapsed-block">
               ${badge}
               <span class="entry-duration-min"${isLive ? ` data-durationmin-t="${e.t}"` : ''}>${durationMinutes}</span>
+              ${slotLabel}
             </span>
             <span class="entry-text" data-index="${e.index}"></span>
             <button class="entry-edit" data-index="${e.index}" title="Edit this entry" type="button">✏️</button>
@@ -3969,11 +4022,19 @@
         const startTime = new Date(liveBadge.dataset.timerT).getTime();
         const liveEndTimeEl = list.querySelector('[data-endtime-t]');
         const liveDurationMinEl = list.querySelector('[data-durationmin-t]');
+        const liveSlotCountEl = list.querySelector('[data-slotcount-t]');
         liveEntryTimerId = setInterval(() => {
           const elapsedMs = Date.now() - startTime;
           liveBadge.textContent = `⏱ ${formatDuration(elapsedMs)}`;
           if (liveEndTimeEl) liveEndTimeEl.textContent = 'Ongoing';
           if (liveDurationMinEl) liveDurationMinEl.textContent = `${Math.round(elapsedMs / 60000)} min`;
+          if (liveSlotCountEl) {
+            const slotMinutes = getSlotMinutes();
+            const slotCount = computeSlotCount(elapsedMs, slotMinutes);
+            liveSlotCountEl.style.display = slotCount === null ? 'none' : '';
+            liveSlotCountEl.textContent = `slots: ${slotCount || 0}`;
+            liveSlotCountEl.title = `${Math.round(elapsedMs / 60000)} min at a ${slotMinutes}-min slot size`;
+          }
           refreshGroupInsights();
           refreshEmptyGroupNotes();
         }, 1000);
