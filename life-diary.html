@@ -828,6 +828,15 @@
       white-space: nowrap;
       padding-left: 2px;
     }
+    .entry-slots-left {
+      flex: none;
+      font-size: 9.5px;
+      font-family: "Consolas", "Courier New", monospace;
+      white-space: nowrap;
+      padding-left: 2px;
+      color: var(--text-muted);
+      opacity: 0.85;
+    }
     .entry-text { flex: 1; word-break: break-word; white-space: pre-wrap; }
     .entry-edit,
     .entry-delete {
@@ -880,6 +889,32 @@
       border-radius: 6px;
       padding: 4px 8px;
       margin-bottom: 2px;
+    }
+    .entry-group-progress {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 4px 0 6px;
+    }
+    .entry-group-progress-track {
+      flex: 1;
+      height: 5px;
+      border-radius: 3px;
+      background: var(--surface-muted, rgba(127,127,127,0.15));
+      overflow: hidden;
+    }
+    .entry-group-progress-bar {
+      height: 100%;
+      border-radius: 3px;
+      background: var(--accent);
+      transition: width 0.3s ease;
+    }
+    .entry-group-progress-label {
+      flex: none;
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: "Consolas", "Courier New", monospace;
+      white-space: nowrap;
     }
     .entry-group-insight {
       font-size: 12.5px;
@@ -1801,6 +1836,18 @@
       const minutes = elapsedMs / 60000;
       if (minutes < slotMinutes) return null;
       return Math.floor(minutes / slotMinutes);
+    }
+    // Purely clock-based, not tied to what's actually been tracked: how many
+    // slots of the day have already gone by (from midnight to now) and how
+    // many remain (from now to midnight), given the slot size.
+    function computeSlotsOverAndLeft(slotMinutes) {
+      if (!slotMinutes || slotMinutes <= 0) return null;
+      const now = new Date();
+      const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+      const totalSlotsPerDay = Math.floor((24 * 60) / slotMinutes);
+      const slotsOver = Math.min(totalSlotsPerDay, Math.floor(minutesSinceMidnight / slotMinutes));
+      const slotsLeft = totalSlotsPerDay - slotsOver;
+      return { slotsOver, slotsLeft };
     }
     // Per-session "save to Diary" bookkeeping (see the Session Plans panel
     // further down): which diary entry each session number currently owns
@@ -3632,6 +3679,7 @@
     }
 
     let liveEntryTimerId = null;
+    let blockProgressTimerId = null;
 
     function formatDurationHuman(ms) {
       const totalMinutes = Math.round(ms / 60000);
@@ -3767,6 +3815,7 @@
       const dayEntries = entries[key] || [];
 
       if (liveEntryTimerId) { clearInterval(liveEntryTimerId); liveEntryTimerId = null; }
+      if (blockProgressTimerId) { clearInterval(blockProgressTimerId); blockProgressTimerId = null; }
 
       if (dayEntries.length === 0) {
         list.innerHTML = '<p class="no-entries">No entries for this date.</p>';
@@ -3799,6 +3848,32 @@
         return null;
       };
       const blockStartMs = (b) => new Date(key + 'T00:00:00').getTime() + b * 3 * 60 * 60 * 1000;
+      const THREE_HOUR_BLOCK_MS = 3 * 60 * 60 * 1000;
+
+      // How far a 3-hour time group has progressed, in both time and
+      // slots-of-the-configured-size, so it can be drawn as a bar -- a past
+      // date's blocks are always full, a future date's are always empty,
+      // and today's blocks fill up live as the clock moves through them.
+      const computeBlockProgress = (b) => {
+        let elapsedMs;
+        if (key < todayKey) elapsedMs = THREE_HOUR_BLOCK_MS;
+        else if (key > todayKey) elapsedMs = 0;
+        else elapsedMs = Math.min(THREE_HOUR_BLOCK_MS, Math.max(0, Date.now() - blockStartMs(b)));
+
+        const slotMinutes = getSlotMinutes();
+        const totalSlots = Math.max(1, Math.floor(THREE_HOUR_BLOCK_MS / 60000 / slotMinutes));
+        const slotsElapsed = Math.min(totalSlots, Math.floor(elapsedMs / 60000 / slotMinutes));
+        const pct = Math.min(100, (elapsedMs / THREE_HOUR_BLOCK_MS) * 100);
+        return { pct, slotsElapsed, totalSlots };
+      };
+      const renderBlockProgress = (b) => {
+        const { pct, slotsElapsed, totalSlots } = computeBlockProgress(b);
+        return `
+          <div class="entry-group-progress" data-progress-block="${b}">
+            <div class="entry-group-progress-track"><div class="entry-group-progress-bar" style="width: ${pct}%"></div></div>
+            <span class="entry-group-progress-label">${slotsElapsed}/${totalSlots} slots</span>
+          </div>`;
+      };
 
       list.innerHTML = blocks.map((blockEntries, b) => {
         if (blockEntries.length === 0) {
@@ -3806,6 +3881,7 @@
           return `
         <div class="entry-group">
           <div class="entry-group-heading">${THREE_HOUR_BLOCK_LABELS[b]}</div>
+          ${renderBlockProgress(b)}
           <div class="entry-group-empty" data-empty-block="${b}"></div>
         </div>`;
         }
@@ -3813,6 +3889,7 @@
         return `
         <div class="entry-group">
           <div class="entry-group-heading">${THREE_HOUR_BLOCK_LABELS[b]}</div>
+          ${renderBlockProgress(b)}
           <div class="entry-group-insight" data-block="${b}">
             ⏳ <strong><span class="insight-total"></span></strong> tracked across ${trackedCount} entr${trackedCount === 1 ? 'y' : 'ies'}
             — <span class="insight-highlight"><span class="insight-pct"></span></span> of today's tracked time.
@@ -3848,9 +3925,23 @@
             const slotMinutes = getSlotMinutes();
             const slotCount = computeSlotCount(elapsedMs, slotMinutes);
             const slotTitle = `title="${Math.round(elapsedMs / 60000)} min at a ${slotMinutes}-min slot size"`;
+            // "over/left today" is clock-based, not per-entry, so it's only
+            // shown on the day's last entry rather than repeated on every
+            // entry in the list.
+            const isLastEntryOfDay = e.t === dayEntries[dayEntries.length - 1].t;
+            const slotDayLabel = (() => {
+              if (!isLastEntryOfDay) return '';
+              const { slotsOver, slotsLeft } = computeSlotsOverAndLeft(slotMinutes);
+              return ` <span class="entry-slots-left"${isLive ? ` data-slotsleft-t="${e.t}"` : ''}>(${slotsOver} over, ${slotsLeft} left today)</span>`;
+            })();
+            // The badge itself (the "slots: N" part) still only shows once a
+            // full slot has been used, but the last entry keeps showing the
+            // day's over/left info even if it hasn't hit a full slot yet.
             const slotLabel = isLive
-              ? `<span class="entry-slot-count" data-slotcount-t="${e.t}" ${slotTitle} style="${slotCount === null ? 'display: none;' : ''}">slots: ${slotCount || 0}</span>`
-              : (slotCount === null ? '' : `<span class="entry-slot-count" ${slotTitle}>slots: ${slotCount}</span>`);
+              ? `<span class="entry-slot-count" data-slotcount-t="${e.t}" ${slotTitle} style="${slotCount === null ? 'display: none;' : ''}">slots: ${slotCount || 0}</span>${slotDayLabel}`
+              : (slotCount === null
+                  ? (isLastEntryOfDay ? slotDayLabel.trim() : '')
+                  : `<span class="entry-slot-count" ${slotTitle}>slots: ${slotCount}</span>${slotDayLabel}`);
             const endTime = isLive ? 'Ongoing' : formatTime(new Date(endTimeMs).toISOString());
             return `
           <div class="entry-line" data-index="${e.index}">
@@ -4023,6 +4114,7 @@
         const liveEndTimeEl = list.querySelector('[data-endtime-t]');
         const liveDurationMinEl = list.querySelector('[data-durationmin-t]');
         const liveSlotCountEl = list.querySelector('[data-slotcount-t]');
+        const liveSlotsLeftEl = list.querySelector('[data-slotsleft-t]');
         liveEntryTimerId = setInterval(() => {
           const elapsedMs = Date.now() - startTime;
           liveBadge.textContent = `⏱ ${formatDuration(elapsedMs)}`;
@@ -4032,12 +4124,31 @@
             const slotMinutes = getSlotMinutes();
             const slotCount = computeSlotCount(elapsedMs, slotMinutes);
             liveSlotCountEl.style.display = slotCount === null ? 'none' : '';
-            liveSlotCountEl.textContent = `slots: ${slotCount || 0}`;
+            liveSlotCountEl.childNodes[0].textContent = `slots: ${slotCount || 0} `;
             liveSlotCountEl.title = `${Math.round(elapsedMs / 60000)} min at a ${slotMinutes}-min slot size`;
+          }
+          if (liveSlotsLeftEl) {
+            const { slotsOver, slotsLeft } = computeSlotsOverAndLeft(getSlotMinutes());
+            liveSlotsLeftEl.textContent = `(${slotsOver} over, ${slotsLeft} left today)`;
           }
           refreshGroupInsights();
           refreshEmptyGroupNotes();
         }, 1000);
+      }
+
+      // The time-group progress bars fill up as the real clock moves,
+      // independently of whether any entry is actively being tracked --
+      // only the block covering the current hour can still be moving, so
+      // that's the only one worth polling.
+      if (key === todayKey) {
+        blockProgressTimerId = setInterval(() => {
+          const b = Math.floor(new Date().getHours() / 3);
+          const el = list.querySelector(`.entry-group-progress[data-progress-block="${b}"]`);
+          if (!el) return;
+          const { pct, slotsElapsed, totalSlots } = computeBlockProgress(b);
+          el.querySelector('.entry-group-progress-bar').style.width = `${pct}%`;
+          el.querySelector('.entry-group-progress-label').textContent = `${slotsElapsed}/${totalSlots} slots`;
+        }, 30000);
       }
 
       list.querySelectorAll('.entry-delete').forEach((btn) => {
