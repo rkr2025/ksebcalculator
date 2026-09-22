@@ -95,7 +95,28 @@
       border-radius: 999px;
       overflow: hidden;
       box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
     }
+    #yearDaysBox { max-width: 420px; text-align: left; }
+    .year-days-table-wrap {
+      max-height: 60vh;
+      overflow-y: auto;
+      margin-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .year-days-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .year-days-table td {
+      padding: 5px 6px;
+      border-bottom: 1px dashed var(--border);
+    }
+    .year-days-table .ydt-mark { width: 22px; text-align: center; }
+    .year-days-table tr.is-passed td {
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+    .year-days-table tr.is-passed .ydt-date { text-decoration: line-through; }
+    .year-days-table tr.is-active td { color: var(--text-primary); font-weight: 600; }
+    .year-days-table tr.is-today .ydt-date { color: var(--accent); }
     .year-progress-fill {
       height: 100%;
       width: 0%;
@@ -1571,11 +1592,22 @@
       </div>
     </div>
 
-    <div class="year-progress-track" id="yearProgressTrack" title="How far through the year we are">
+    <div class="year-progress-track" id="yearProgressTrack" title="How far through the year we are -- click for the full list of days">
       <div class="year-progress-fill" id="yearProgressFill"></div>
       <div class="year-progress-label" id="yearProgressLabel"></div>
     </div>
     <p class="year-progress" id="yearProgress"></p>
+
+    <!-- Popup: every day of the year, most recent first -->
+    <div class="hour-detail-overlay" id="yearDaysOverlay">
+      <div class="hour-detail-box" id="yearDaysBox">
+        <button class="hour-detail-close" id="yearDaysClose" type="button" aria-label="Close">✕</button>
+        <div class="hour-detail-title">Days of <span id="yearDaysYearLabel"></span></div>
+        <div class="year-days-table-wrap">
+          <table class="year-days-table" id="yearDaysTableBody"></table>
+        </div>
+      </div>
+    </div>
 
     <!-- Calendar (hidden until toggled) -->
     <div class="card" id="calendarSection">
@@ -2175,7 +2207,7 @@
       const weekNumber = getWeekNumber(now);
       const todayLabel = now.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-      el.innerHTML = `${todayLabel} · ` +
+      el.innerHTML = `${todayLabel}<br>` +
         `<span class="yp-clock" id="yearProgressClock"></span>`;
       updateYearProgressClock();
 
@@ -2202,6 +2234,61 @@
     renderYearProgress();
     setInterval(renderYearProgress, 60000);
     setInterval(updateYearProgressClock, 1000);
+
+    // Every day of the year in one table, most recent first (Dec 31 down to
+    // Jan 1) -- already-gone days are crossed out and greyed, today and
+    // everything still ahead stay active/legible.
+    function openYearDaysModal() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const startOfYear = new Date(year, 0, 1);
+      const startOfNextYear = new Date(year + 1, 0, 1);
+      const msPerDay = 86400000;
+      const dayOfYear = Math.floor((now - startOfYear) / msPerDay) + 1;
+      const totalDaysInYear = Math.round((startOfNextYear - startOfYear) / msPerDay);
+
+      document.getElementById('yearDaysYearLabel').textContent = year;
+
+      // "Day N" is a countdown label, not the calendar day-of-year -- Jan 1
+      // is the first row and reads as "Day <totalDaysInYear>", counting down
+      // to Dec 31 as "Day 1", so the numbers descend as the table is read
+      // top to bottom even though the dates themselves run forward.
+      let html = '';
+      for (let d = 1; d <= totalDaysInYear; d++) {
+        const isPassed = d <= dayOfYear;
+        const isToday = d === dayOfYear;
+        const rowClasses = [isPassed ? 'is-passed' : 'is-active', isToday ? 'is-today' : ''].filter(Boolean).join(' ');
+        const date = new Date(startOfYear.getTime() + (d - 1) * msPerDay);
+        const dateLabel = date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+        const countdownLabel = totalDaysInYear - d + 1;
+        html += `
+          <tr class="${rowClasses}">
+            <td class="ydt-mark">${isPassed ? '✕' : ''}</td>
+            <td>Day ${countdownLabel}</td>
+            <td class="ydt-date">${dateLabel}${isToday ? ' (today)' : ''}</td>
+          </tr>`;
+      }
+      const tableBody = document.getElementById('yearDaysTableBody');
+      tableBody.innerHTML = html;
+      document.getElementById('yearDaysOverlay').style.display = 'flex';
+
+      // Jump straight to where the crossed-out (passed) days give way to
+      // the active ones -- that boundary, not the very top of the table,
+      // is what's actually useful to land on. Deferred a frame so the
+      // overlay has finished laying out before the scroll is computed.
+      requestAnimationFrame(() => {
+        const todayRow = tableBody.querySelector('.is-today') || tableBody.querySelector('.is-active');
+        if (todayRow) todayRow.scrollIntoView({ block: 'center' });
+      });
+    }
+    function closeYearDaysModal() {
+      document.getElementById('yearDaysOverlay').style.display = 'none';
+    }
+    document.getElementById('yearProgressTrack').addEventListener('click', openYearDaysModal);
+    document.getElementById('yearDaysClose').addEventListener('click', closeYearDaysModal);
+    document.getElementById('yearDaysOverlay').addEventListener('click', (e) => {
+      if (e.target.id === 'yearDaysOverlay') closeYearDaysModal();
+    });
 
     // ------------------------------- Theme --------------------------------
     (function initTheme() {
