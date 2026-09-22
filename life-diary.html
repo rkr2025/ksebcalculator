@@ -1610,7 +1610,7 @@
     <!-- Pomodoro timer -->
     <div class="card">
       <h3>🍅 Pomodoro Timer</h3>
-      <div class="pomodoro-settings-row">
+      <div class="pomodoro-settings-row" id="pomodoroSettingsRow">
         <div class="pomodoro-settings">
           <label for="pomodoroWorkMinutesInput">Work session length</label>
           <div class="pomodoro-settings-stepper">
@@ -1685,7 +1685,6 @@
         <input type="checkbox" id="pomodoroPopupToggle">
         🔔 Show a popup when a session/break completes
       </label>
-      <input type="text" id="pomodoroTaskInput" class="pomodoro-task-input" placeholder="What are you working on? (optional)">
       <div class="pomodoro-mode" id="pomodoroMode">🎯 Work Session</div>
       <div class="pomodoro-display" id="pomodoroDisplay">25:00</div>
       <div class="pomodoro-preview-end" id="pomodoroPreviewEnd" style="display: none;"></div>
@@ -1707,6 +1706,7 @@
         <button class="btn" id="pomodoroStartBtn" type="button">▶ Start</button>
         <button class="btn-outline btn" id="pomodoroPauseBtn" type="button" style="display: none;">⏸ Pause</button>
         <button class="btn-outline btn" id="pomodoroResetBtn" type="button">↺ Reset</button>
+        <input type="text" id="pomodoroTaskInput" class="pomodoro-task-input" placeholder="What are you working on?">
         <button class="btn-outline btn" id="pomodoroLogBtn" type="button" style="display: none;" title="Add this session's focused minutes as a new, time-tracked diary entry">📔 Log to Diary</button>
       </div>
       <p class="pomodoro-log-status" id="pomodoroLogStatus"></p>
@@ -2518,8 +2518,11 @@
       document.getElementById('pomodoroDisplay').textContent = formatPomodoroTime(pomodoroRemaining);
       const modeLabel = pomodoroMode === 'work' ? '🎯 Work Session' : '☕ Break';
       const sessionNumber = Math.min(pomodoroSessionsCompleted + 1, Math.max(pomodoroTotalSessions, 1));
+      const workMin = Math.round(pomodoroWorkSeconds / 60);
+      const breakMin = Math.round(pomodoroBreakSeconds / 60);
+      const lengthDetails = breakMin > 0 ? `, ${workMin} min, ${breakMin} min break` : `, ${workMin} min`;
       const sessionLabel = pomodoroTotalSessions > 0
-        ? ` (Session <span class="pomodoro-current-session${pomodoroRunning && pomodoroMode === 'work' ? ' is-live' : ''}">${sessionNumber}</span> of ${pomodoroTotalSessions})`
+        ? ` (Session <span class="pomodoro-current-session${pomodoroRunning && pomodoroMode === 'work' ? ' is-live' : ''}">${sessionNumber}</span> of ${pomodoroTotalSessions}${lengthDetails})`
         : '';
       document.getElementById('pomodoroMode').innerHTML = escapeHtml(modeLabel) + sessionLabel;
       updateSessionPlanHighlight();
@@ -2661,6 +2664,10 @@
       if (setComplete) {
         pausePomodoro();
         stopLoggedDiaryEntry();
+        // The whole set is done (not just paused mid-session), so the
+        // settings row -- hidden since Start was pressed -- reappears here
+        // too, same as a manual Reset would.
+        document.getElementById('pomodoroSettingsRow').style.display = '';
         // Clear this cycle's counters so the progress bars/stats start
         // fresh for the next round, rather than sitting at 100% forever
         // until the user manually hits Reset.
@@ -2694,6 +2701,7 @@
       document.getElementById('pomodoroBreakMinutesPlusBtn').disabled = true;
       document.getElementById('pomodoroTotalSessionsMinusBtn').disabled = true;
       document.getElementById('pomodoroTotalSessionsPlusBtn').disabled = true;
+      document.getElementById('pomodoroSettingsRow').style.display = 'none';
       // The live "All sessions end at" clock (in pomodoroClocks) takes over
       // once running -- this "would end at" preview is only useful while
       // still configuring things beforehand.
@@ -2767,6 +2775,7 @@
       document.getElementById('pomodoroBreakMinutesPlusBtn').disabled = false;
       document.getElementById('pomodoroTotalSessionsMinusBtn').disabled = false;
       document.getElementById('pomodoroTotalSessionsPlusBtn').disabled = false;
+      document.getElementById('pomodoroSettingsRow').style.display = '';
       document.getElementById('pomodoroTaskInput').value = '';
       document.getElementById('pomodoroLogStatus').textContent = '';
       updatePomodoroDisplay();
