@@ -1596,6 +1596,13 @@
               <span class="switch-slider"></span>
             </label>
           </div>
+          <div class="panel-visibility-row">
+            <span>🔍 Search Entries</span>
+            <label class="switch">
+              <input type="checkbox" id="panelVisSearch" checked>
+              <span class="switch-slider"></span>
+            </label>
+          </div>
         </div>
         <div class="settings-list-item">
           <span class="settings-list-label">Help</span>
@@ -1886,11 +1893,13 @@
       <h3>📖 Diary Entries</h3>
 
       <!-- Search all entries -->
-      <div class="search-controls">
-        <input type="text" id="searchInput" placeholder="Search across all diary entries...">
-        <button class="btn-outline btn" id="searchClearBtn" type="button">Clear</button>
+      <div id="searchSection">
+        <div class="search-controls">
+          <input type="text" id="searchInput" placeholder="Search across all diary entries...">
+          <button class="btn-outline btn" id="searchClearBtn" type="button">Clear</button>
+        </div>
+        <div id="searchResults"></div>
       </div>
-      <div id="searchResults"></div>
 
       <div class="view-controls">
         <input type="date" id="viewDateInput">
@@ -2466,13 +2475,14 @@
 
     // --------------------------- Panel visibility ---------------------------
     // Lets the user hide whole panels (Pomodoro, Hours of the Day, Backup &
-    // Restore) from the main page via Settings -- each defaults to visible
-    // (shown) unless the user has explicitly hidden it before.
+    // Restore, Search) from the main page via Settings -- each defaults to
+    // visible (shown) unless the user has explicitly hidden it before.
     const PANEL_VISIBILITY_KEY = 'life_diary_panel_visibility';
     const PANEL_VISIBILITY_TOGGLES = [
       { checkboxId: 'panelVisPomodoro', cardId: 'pomodoroCard' },
       { checkboxId: 'panelVisHoursOfDay', cardId: 'hoursOfDayCard' },
       { checkboxId: 'panelVisBackup', cardId: 'backupRestoreCard' },
+      { checkboxId: 'panelVisSearch', cardId: 'searchSection' },
     ];
     function loadPanelVisibility() {
       try {
@@ -4465,6 +4475,9 @@
       const showing = section.style.display === 'block';
       section.style.display = showing ? 'none' : 'block';
       if (!showing) {
+        // Only one of Calendar/Settings makes sense open at a time -- opening
+        // one closes the other rather than stacking both on screen.
+        document.getElementById('settingsPanel').style.display = 'none';
         // Re-open on the month of the currently selected date.
         const sel = new Date(viewDateInput.value + 'T12:00:00');
         calYear = sel.getFullYear();
@@ -5284,7 +5297,12 @@
       const panel = document.getElementById('settingsPanel');
       const showing = panel.style.display === 'block';
       panel.style.display = showing ? 'none' : 'block';
-      if (!showing) updateSettingsKeyStatus();
+      if (!showing) {
+        // Only one of Settings/Calendar makes sense open at a time -- opening
+        // one closes the other rather than stacking both on screen.
+        document.getElementById('calendarSection').style.display = 'none';
+        updateSettingsKeyStatus();
+      }
     });
     document.getElementById('settingsCloseBtn').addEventListener('click', () => {
       document.getElementById('settingsPanel').style.display = 'none';
