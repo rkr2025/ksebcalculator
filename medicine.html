@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>💊 Medicine Tracker</title>
+<script>
+  (function () {
+    var saved = localStorage.getItem('medicineTrackerTheme');
+    var dark = saved ? saved === 'dark' : true;
+    if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+  })();
+</script>
+<style>
+  :root {
+    --primary: #2a78d6;
+    --primary-dark: #1f5fac;
+    --primary-light: #eaf2fc;
+    --accent: #1baf7a;
+    --accent-dark: #148f60;
+    --danger: #e34948;
+    --warn: #c97e00;
+    --surface: #ffffff;
+    --surface-muted: #f6f8fb;
+    --border: #e3e7ef;
+    --text-primary: #17203a;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --radius: 14px;
+    --shadow: 0 2px 4px rgba(23,32,58,.06), 0 12px 28px -6px rgba(23,32,58,.14), 0 28px 56px -20px rgba(23,32,58,.16);
+    --shadow-sm: 0 1px 2px rgba(23,32,58,.06), 0 6px 14px -4px rgba(23,32,58,.12);
+    --shadow-lift: 0 6px 12px rgba(23,32,58,.08), 0 22px 44px -10px rgba(23,32,58,.22), 0 36px 70px -24px rgba(23,32,58,.22);
+  }
+  :root[data-theme="dark"] {
+    --primary: #5b9ee8;
+    --primary-dark: #86b9ee;
+    --primary-light: rgba(91,158,232,.18);
+    --accent: #33d497;
+    --accent-dark: #16a874;
+    --danger: #f2726f;
+    --warn: #e0a030;
+    --surface: #1a2130;
+    --surface-muted: #232b3d;
+    --border: #313b52;
+    --text-primary: #eef1f8;
+    --text-secondary: #c3cadb;
+    --text-muted: #8792a8;
+    --shadow: 0 2px 4px rgba(0,0,0,.5), 0 12px 28px -6px rgba(0,0,0,.5), 0 28px 56px -20px rgba(0,0,0,.55);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.5), 0 6px 14px -4px rgba(0,0,0,.45);
+    --shadow-lift: 0 6px 12px rgba(0,0,0,.55), 0 22px 44px -10px rgba(0,0,0,.6), 0 36px 70px -24px rgba(0,0,0,.6);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px 10px 32px;
+    font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(42,120,214,.16), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(27,175,122,.14), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(227,73,72,.10), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(201,126,0,.10), transparent 55%),
+      linear-gradient(160deg, #eef1f7, #e4ebf7 60%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    transition: background-color .2s ease, color .2s ease;
+  }
+  :root[data-theme="dark"] body {
+    background:
+      radial-gradient(900px 560px at 8% -6%, rgba(91,158,232,.10), transparent 60%),
+      radial-gradient(760px 520px at 100% 8%, rgba(51,212,151,.08), transparent 55%),
+      radial-gradient(820px 620px at 30% 115%, rgba(242,114,111,.08), transparent 60%),
+      radial-gradient(700px 520px at 92% 100%, rgba(224,160,48,.08), transparent 55%),
+      linear-gradient(160deg, #0f1420, #0b0f18 60%);
+    background-attachment: fixed;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  h1 {
+    text-align: center; font-size: 24px; font-weight: 700; margin: 6px 0 4px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 2px 3px rgba(23,32,58,.15));
+  }
+  .subtitle { text-align: center; color: var(--text-muted); font-size: 13px; margin: 0 0 18px; }
+  .card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.82));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.6);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 16px;
+    transition: background-color .2s ease, border-color .2s ease;
+  }
+  :root[data-theme="dark"] .card {
+    background: linear-gradient(180deg, rgba(26,33,48,.94), rgba(26,33,48,.82));
+    border-color: rgba(255,255,255,.08);
+  }
+  .card h2 { font-size: 15px; margin: 0 0 14px; color: var(--text-secondary); }
+
+  button {
+    position: relative;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: filter .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0) 55%);
+    pointer-events: none;
+  }
+  button:hover { filter: brightness(0.97); transform: translateY(-1px); }
+  button:active { transform: translateY(1px); filter: brightness(0.93); }
+  .btn-add {
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color: #fff;
+    box-shadow: 0 2px 3px rgba(27,175,122,.25), 0 10px 22px -4px rgba(27,175,122,.5);
+  }
+  .btn-add:hover { box-shadow: 0 4px 8px rgba(27,175,122,.3), 0 16px 30px -6px rgba(27,175,122,.55); }
+  .btn-outline {
+    background: linear-gradient(180deg, var(--surface), var(--surface-muted));
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-outline:hover { box-shadow: var(--shadow-lift); }
+  .btn-danger {
+    background: linear-gradient(180deg, var(--danger), #c53433);
+    color: #fff;
+    box-shadow: 0 2px 3px rgba(227,73,72,.25), 0 8px 18px -4px rgba(227,73,72,.5);
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .btn-sm { padding: 6px 10px; font-size: 12px; }
+
+  input, select, textarea {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 9px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: inset 0 1px 3px rgba(23,32,58,.05);
+    transition: border-color .15s ease, box-shadow .15s ease;
+    width: 100%;
+  }
+  textarea { resize: vertical; min-height: 38px; }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light), inset 0 1px 3px rgba(23,32,58,.05);
+  }
+  label { font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .02em; display: block; margin-bottom: 4px; }
+
+  .theme-toggle { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 16px; font-size: 13px; }
+  .switch { position: relative; display: inline-block; width: 36px; height: 21px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch-slider {
+    position: absolute; inset: 0;
+    background: var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.15);
+    transition: background .15s ease;
+  }
+  .switch-slider::before {
+    content: "";
+    position: absolute;
+    height: 15px; width: 15px; left: 3px; top: 3px;
+    background: linear-gradient(180deg, #ffffff, #eef1f7);
+    border-radius: 50%;
+    transition: transform .15s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  }
+  .switch input:checked + .switch-slider { background: linear-gradient(180deg, var(--primary), var(--primary-dark)); }
+  .switch input:checked + .switch-slider::before { transform: translateX(15px); }
+
+  .field-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .field { flex: 1 1 160px; min-width: 0; }
+  .field--checkbox { display: flex; align-items: center; gap: 8px; flex: 1 1 140px; }
+  .field--checkbox input { width: auto; }
+  .field--checkbox label { margin: 0; text-transform: none; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+
+  .actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+
+  .slot-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+  .slot-chip {
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    font-weight: 700;
+    font-size: 12.5px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .slot-chip.active { background: linear-gradient(180deg, var(--primary), var(--primary-dark)); color: #fff; border-color: transparent; }
+
+  .editing-banner { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--primary-light); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size: 12.5px; font-weight: 700; color: var(--primary-dark); }
+
+  .med-list { display: flex; flex-direction: column; gap: 8px; }
+  .med-row {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+  }
+  :root[data-theme="dark"] .med-row { background: #1e2636; }
+  .med-name { font-weight: 800; font-size: 13.5px; min-width: 110px; }
+  .med-dosage { font-size: 12px; color: var(--text-muted); }
+  .med-slots { display: flex; gap: 5px; flex-wrap: wrap; }
+  .med-slot-pill { font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--primary-light); color: var(--primary-dark); }
+  .med-food-pill { font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: rgba(201,126,0,.15); color: var(--warn); }
+  .med-notes-line { font-size: 11.5px; font-style: italic; color: var(--text-secondary); flex: 1 1 100%; }
+  .med-row-actions { margin-left: auto; display: flex; gap: 5px; }
+  .icon-btn { background: none; border: none; box-shadow: none; padding: 4px 6px; font-size: 13px; color: var(--text-muted); }
+  .icon-btn:hover { color: var(--primary); transform: none; filter: none; }
+  .icon-btn::after { display: none; }
+
+  .empty-meds { text-align: center; color: var(--text-muted); font-size: 13px; padding: 20px 10px; }
+
+  /* -------- Printable weekly checklist -------- */
+  .week-controls { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .week-range-label { font-size: 13px; font-weight: 700; color: var(--text-secondary); min-width: 190px; text-align: center; }
+
+  #sheetWrap { overflow-x: auto; background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; }
+  :root[data-theme="dark"] #sheetWrap { background: #1e2636; }
+  .sheet-title { text-align: center; font-weight: 800; font-size: 16px; margin-bottom: 2px; }
+  .sheet-subtitle { text-align: center; font-size: 11.5px; color: var(--text-muted); margin-bottom: 12px; }
+  .med-grid { border-collapse: collapse; width: 100%; table-layout: auto; }
+  .med-grid th, .med-grid td { border: 1px solid var(--border); padding: 6px; text-align: center; vertical-align: middle; }
+  .med-grid thead th { background: var(--surface-muted); font-size: 11px; font-weight: 700; color: var(--text-secondary); white-space: nowrap; }
+  /* Medicine/Time columns are sized by their own content (auto table
+     layout + a small min-width floor) rather than a fixed width, so a
+     short medicine name or slot label frees up horizontal room for more
+     day columns instead of wasting space on padding. */
+  .med-grid th.mg-med-col { text-align: left; width: 1%; white-space: nowrap; }
+  .med-grid td.mg-med-cell { text-align: left; min-width: 60px; max-width: 220px; vertical-align: top; }
+  .med-grid th.mg-slot-col, .med-grid td.mg-slot-cell { width: 1%; min-width: 40px; white-space: nowrap; font-size: 11px; font-weight: 700; color: var(--text-secondary); }
+  .med-grid th.mg-date-col.is-today { background: var(--primary-light); color: var(--primary-dark); }
+  .med-grid td.mg-cell { width: 40px; padding: 4px; }
+
+  /* Separate each medicine's block of slot rows from the next with a
+     visibly thicker rule, so groups read clearly at a glance and on print. */
+  .med-grid tr.mg-group-start td { border-top: 2.5px solid var(--primary); }
+  :root[data-theme="dark"] .med-grid tr.mg-group-start td { border-top-color: var(--primary); }
+
+  /* Month sheets have up to 31 day columns -- shrink cells/type so the
+     whole month still fits a printed landscape page without wrapping. */
+  .med-grid.is-month td.mg-med-cell { min-width: 50px; max-width: 160px; font-size: 11px; }
+  .med-grid.is-month th.mg-slot-col, .med-grid.is-month td.mg-slot-cell { min-width: 34px; font-size: 9.5px; }
+  .med-grid.is-month th.mg-date-col { padding: 3px 1px; font-size: 9.5px; }
+  .med-grid.is-month td.mg-cell { width: 22px; padding: 2px; }
+  .med-grid.is-month .mg-tick { width: 20px; height: 20px; font-size: 10px; border-radius: 4px; }
+
+  .mg-med-name { font-weight: 800; font-size: 12.5px; }
+  .mg-med-meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .mg-med-notes { font-size: 10px; font-style: italic; color: var(--text-secondary); margin-top: 3px; white-space: normal; }
+
+  .mg-tick {
+    width: 30px; height: 30px; border-radius: 6px; border: 1.5px solid var(--border);
+    background: var(--surface-muted); color: var(--text-muted); font-size: 14px; font-weight: 800;
+    padding: 0; box-shadow: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .mg-tick::after { display: none; }
+  .mg-tick.is-done { background: linear-gradient(180deg, var(--accent), var(--accent-dark)); border-color: transparent; color: #fff; }
+  .mg-tick:hover { filter: brightness(1.05); }
+  .mg-tick-na { background: transparent; border-color: transparent; color: var(--text-muted); cursor: default; opacity: .4; }
+
+  .nav-link { display: block; text-align: center; margin-top: 8px; text-decoration: none; color: var(--primary); font-size: 13.5px; }
+
+  @media screen and (max-width: 480px) {
+    body { padding: 10px 6px 24px; }
+    .card { padding: 14px; }
+    h1 { font-size: 20px; }
+    .med-grid th.mg-med-col, .med-grid td.mg-med-cell { min-width: 100px; }
+    .med-grid td.mg-cell { width: 34px; padding: 3px; }
+    .mg-tick { width: 28px; height: 28px; font-size: 13px; }
+  }
+
+  /* -------- Print -------- */
+  @page { size: landscape; margin: 10mm; }
+  @media print {
+    body { background: #fff !important; padding: 0; }
+    .theme-toggle, .card, .slot-picker, .week-controls, .nav-link { display: none !important; }
+    #sheetWrap { box-shadow: none; padding: 0; overflow: visible; }
+    .med-grid th, .med-grid td { border: 1px solid #333; }
+    .med-grid tr.mg-group-start td { border-top: 2px solid #000 !important; }
+    .mg-tick { border: 1.5px solid #333 !important; background: #fff !important; color: #fff !important; }
+    .mg-tick.is-done { background: #fff !important; color: #111 !important; }
+    .mg-tick.is-done::before { content: "✓"; color: #111; }
+    .mg-tick-na { border: none !important; opacity: .35; }
+    /* Month sheets can still be too wide for a single landscape page at
+       normal type size -- shrink further and let the browser scale the
+       table down to fit rather than clipping or wrapping columns. */
+    #sheetWrap.is-month .med-grid { font-size: 9px; }
+    #sheetWrap.is-month .mg-tick { width: 16px; height: 16px; }
+  }
+</style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JFG7JRVYNV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-JFG7JRVYNV');
+</script>
+</head>
+<body>
+  <div class="container">
+    <h1>💊 Medicine Tracker</h1>
+    <p class="subtitle">Add your medicines with their prescribed times, then tick each box once it's taken — on screen or print the weekly sheet and tick it by hand.</p>
+
+    <div class="theme-toggle">
+      <span>☀️</span>
+      <label class="switch">
+        <input type="checkbox" id="themeToggle">
+        <span class="switch-slider"></span>
+      </label>
+      <span>🌙</span>
+    </div>
+
+    <div class="card">
+      <h2 id="formTitle">➕ Add a Medicine</h2>
+      <div id="editingBanner" class="editing-banner" style="display:none;">
+        <span id="editingBannerText"></span>
+        <button class="btn-outline btn-sm" id="cancelEditBtn" type="button">Cancel</button>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="medNameInput">Medicine Name</label>
+          <input type="text" id="medNameInput" maxlength="60" placeholder="e.g. Metformin">
+        </div>
+        <div class="field">
+          <label for="medDosageInput">Dosage (optional)</label>
+          <input type="text" id="medDosageInput" maxlength="40" placeholder="e.g. 500mg, 1 tablet">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field" style="flex: 1 1 100%;">
+          <label>Prescribed Times</label>
+          <div class="slot-picker" id="slotPicker">
+            <div class="slot-chip" data-slot="Morning">🌅 Morning</div>
+            <div class="slot-chip" data-slot="Afternoon">☀️ Afternoon</div>
+            <div class="slot-chip" data-slot="Evening">🌇 Evening</div>
+            <div class="slot-chip" data-slot="Night">🌙 Night</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="medFoodTimingInput">Food Timing (instruction only, not tracked)</label>
+          <select id="medFoodTimingInput">
+            <option value="">— None —</option>
+            <option value="Before Food">🍽️ Before Food</option>
+            <option value="After Food">🍽️ After Food</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="medStartInput">Course Start Date</label>
+          <input type="date" id="medStartInput">
+        </div>
+        <div class="field">
+          <label for="medDurationInput">Duration (days, blank = ongoing)</label>
+          <input type="number" id="medDurationInput" min="1" max="365" placeholder="e.g. 3 or 7">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field" style="flex: 1 1 100%;">
+          <label for="medNotesInput">Notes (optional)</label>
+          <textarea id="medNotesInput" rows="2" maxlength="200" placeholder="e.g. Take with water, avoid on empty stomach"></textarea>
+        </div>
+      </div>
+
+      <div class="actions-row">
+        <button class="btn-add" id="saveMedBtn" type="button">➕ Add Medicine</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📋 Your Medicines</h2>
+      <div class="med-list" id="medList"></div>
+    </div>
+
+    <div class="slot-picker" style="justify-content:center; margin-bottom:12px;">
+      <div class="slot-chip active" data-view="week" id="viewWeekChip">📅 Weekly Sheet</div>
+      <div class="slot-chip" data-view="month" id="viewMonthChip">🗓️ Monthly Sheet</div>
+      <div class="slot-chip" data-view="custom" id="viewCustomChip">🔢 Custom Days</div>
+    </div>
+
+    <div class="week-controls" id="weekControls">
+      <button class="btn-outline btn-sm" id="prevWeekBtn" type="button">← Previous Week</button>
+      <span class="week-range-label" id="weekRangeLabel"></span>
+      <button class="btn-outline btn-sm" id="nextWeekBtn" type="button">Next Week →</button>
+      <button class="btn-outline btn-sm" id="thisWeekBtn" type="button">This Week</button>
+      <button class="btn-add btn-sm" id="printBtn" type="button">🖨️ Print Sheet</button>
+    </div>
+
+    <div class="week-controls" id="monthControls" style="display:none;">
+      <button class="btn-outline btn-sm" id="prevMonthBtn" type="button">← Previous Month</button>
+      <span class="week-range-label" id="monthRangeLabel"></span>
+      <button class="btn-outline btn-sm" id="nextMonthBtn" type="button">Next Month →</button>
+      <button class="btn-outline btn-sm" id="thisMonthBtn" type="button">This Month</button>
+      <button class="btn-add btn-sm" id="printMonthBtn" type="button">🖨️ Print Sheet</button>
+    </div>
+
+    <div class="week-controls" id="customControls" style="display:none;">
+      <label for="customDaysInput" style="margin:0; text-transform:none; font-weight:700; font-size:13px; color:var(--text-secondary);">Days per row:</label>
+      <input type="number" id="customDaysInput" min="1" max="90" value="10" style="width:70px;">
+      <button class="btn-outline btn-sm" id="prevCustomBtn" type="button">← Previous</button>
+      <span class="week-range-label" id="customRangeLabel"></span>
+      <button class="btn-outline btn-sm" id="nextCustomBtn" type="button">Next →</button>
+      <button class="btn-outline btn-sm" id="thisCustomBtn" type="button">Back to Day 1</button>
+      <button class="btn-add btn-sm" id="printCustomBtn" type="button">🖨️ Print Sheet</button>
+    </div>
+
+    <div id="sheetWrap"></div>
+
+    <a href="tools.html" class="nav-link">← Back to Tools</a>
+  </div>
+
+  <script>
+    // ------------------------------ Storage ------------------------------
+    const STORAGE_KEY = 'medicineTrackerData';
+    const DOW_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+    function defaultData() {
+      return { medicines: [], weekOffset: 0, monthOffset: 0, customOffset: 0, customDays: 10, view: 'week', startDate: null };
+    }
+
+    function loadData() {
+      let stored = {};
+      try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { stored = {}; }
+      const d = Object.assign(defaultData(), stored);
+      if (!Array.isArray(d.medicines)) d.medicines = [];
+      // The sheet always starts counting from the day the tracker was first
+      // set up (not the calendar week/month), so lock that in on first run.
+      if (!d.startDate) d.startDate = formatDateInputValue(todayDate());
+      d.medicines.forEach((m) => {
+        if (!m.entries) m.entries = {};
+        if (!Array.isArray(m.slots)) m.slots = [];
+        // Before/After Food used to be tracked time slots; they're now a
+        // non-tracked instruction field, so migrate any old data on load.
+        const foodSlot = m.slots.find((s) => s === 'Before Food' || s === 'After Food');
+        if (foodSlot && !m.foodTiming) m.foodTiming = foodSlot;
+        m.slots = m.slots.filter((s) => s !== 'Before Food' && s !== 'After Food');
+        if (!m.courseStart) m.courseStart = d.startDate;
+        if (m.duration == null) m.duration = null;
+      });
+      return d;
+    }
+    function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+    let data = loadData();
+    let editingId = null;
+    let selectedSlots = [];
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str == null ? '' : str;
+      return div.innerHTML;
+    }
+    function uid() { return 'm_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
+
+    // ------------------------------ Date helpers ------------------------------
+    function formatDateInputValue(d) {
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+    function todayDate() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+    function addDays(date, n) { const d = new Date(date); d.setDate(d.getDate() + n); return d; }
+    function formatShortDate(d) { return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); }
+    function startOfWeek(d) {
+      const day = (d.getDay() + 6) % 7; // 0 = Monday
+      return addDays(d, -day);
+    }
+
+    // ------------------------------ Form (add/edit) ------------------------------
+    document.getElementById('slotPicker').addEventListener('click', (e) => {
+      const chip = e.target.closest('.slot-chip');
+      if (!chip) return;
+      const slot = chip.dataset.slot;
+      if (selectedSlots.includes(slot)) selectedSlots = selectedSlots.filter((s) => s !== slot);
+      else selectedSlots.push(slot);
+      chip.classList.toggle('active');
+    });
+
+    function resetForm() {
+      editingId = null;
+      selectedSlots = [];
+      document.getElementById('editingBanner').style.display = 'none';
+      document.getElementById('formTitle').textContent = '➕ Add a Medicine';
+      document.getElementById('saveMedBtn').textContent = '➕ Add Medicine';
+      document.getElementById('medNameInput').value = '';
+      document.getElementById('medDosageInput').value = '';
+      document.getElementById('medFoodTimingInput').value = '';
+      document.getElementById('medStartInput').value = data.startDate;
+      document.getElementById('medDurationInput').value = '';
+      document.getElementById('medNotesInput').value = '';
+      document.querySelectorAll('.slot-chip').forEach((c) => c.classList.remove('active'));
+    }
+
+    function loadMedIntoForm(med) {
+      editingId = med.id;
+      selectedSlots = med.slots.slice();
+      document.getElementById('editingBanner').style.display = 'flex';
+      document.getElementById('editingBannerText').textContent = `Editing "${med.name}"`;
+      document.getElementById('formTitle').textContent = '✎ Edit Medicine';
+      document.getElementById('saveMedBtn').textContent = '💾 Save Changes';
+      document.getElementById('medNameInput').value = med.name;
+      document.getElementById('medDosageInput').value = med.dosage || '';
+      document.getElementById('medFoodTimingInput').value = med.foodTiming || '';
+      document.getElementById('medStartInput').value = med.courseStart || data.startDate;
+      document.getElementById('medDurationInput').value = med.duration || '';
+      document.getElementById('medNotesInput').value = med.notes || '';
+      document.querySelectorAll('.slot-chip').forEach((c) => c.classList.toggle('active', selectedSlots.includes(c.dataset.slot)));
+      document.getElementById('formTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
+
+    document.getElementById('saveMedBtn').addEventListener('click', () => {
+      const name = document.getElementById('medNameInput').value.trim();
+      if (!name) { alert('Please enter a medicine name.'); return; }
+      if (!selectedSlots.length) { alert('Please pick at least one prescribed time.'); return; }
+
+      let duration = parseInt(document.getElementById('medDurationInput').value, 10);
+      if (!Number.isFinite(duration) || duration < 1) duration = null;
+      const courseStart = document.getElementById('medStartInput').value || data.startDate;
+
+      const med = {
+        id: editingId || uid(),
+        name,
+        dosage: document.getElementById('medDosageInput').value.trim(),
+        foodTiming: document.getElementById('medFoodTimingInput').value,
+        courseStart,
+        duration,
+        notes: document.getElementById('medNotesInput').value.trim(),
+        slots: selectedSlots.slice(),
+        entries: {},
+      };
+
+      if (editingId) {
+        const idx = data.medicines.findIndex((m) => m.id === editingId);
+        med.entries = data.medicines[idx].entries; // preserve existing tracked data
+        data.medicines[idx] = med;
+      } else {
+        data.medicines.push(med);
+      }
+      saveData();
+      resetForm();
+      renderMedList();
+      renderSheet();
+    });
+
+    // ------------------------------ Medicine list ------------------------------
+    function renderMedList() {
+      const wrap = document.getElementById('medList');
+      if (!data.medicines.length) {
+        wrap.innerHTML = '<p class="empty-meds">No medicines yet — add one above to start tracking.</p>';
+        return;
+      }
+      wrap.innerHTML = data.medicines.map((m) => `
+        <div class="med-row">
+          <span class="med-name">${escapeHtml(m.name)}</span>
+          ${m.dosage ? `<span class="med-dosage">${escapeHtml(m.dosage)}</span>` : ''}
+          <span class="med-slots">${m.slots.map((s) => `<span class="med-slot-pill">${escapeHtml(s)}</span>`).join('')}</span>
+          ${m.foodTiming ? `<span class="med-food-pill">🍽️ ${escapeHtml(m.foodTiming)}</span>` : ''}
+          <span class="med-food-pill">📆 ${m.courseStart} · ${escapeHtml(courseLabel(m))}</span>
+          ${m.notes ? `<span class="med-notes-line">📝 ${escapeHtml(m.notes)}</span>` : ''}
+          <span class="med-row-actions">
+            <button class="icon-btn" data-edit="${m.id}" title="Edit">✎</button>
+            <button class="icon-btn" data-del="${m.id}" title="Delete">🗑</button>
+          </span>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('medList').addEventListener('click', (e) => {
+      const editBtn = e.target.closest('[data-edit]');
+      if (editBtn) {
+        const med = data.medicines.find((m) => m.id === editBtn.dataset.edit);
+        if (med) loadMedIntoForm(med);
+        return;
+      }
+      const delBtn = e.target.closest('[data-del]');
+      if (delBtn) {
+        const med = data.medicines.find((m) => m.id === delBtn.dataset.del);
+        if (med && confirm(`Delete "${med.name}" and all its tracked history?`)) {
+          data.medicines = data.medicines.filter((m) => m.id !== delBtn.dataset.del);
+          if (editingId === delBtn.dataset.del) resetForm();
+          saveData();
+          renderMedList();
+          renderSheet();
+        }
+      }
+    });
+
+    // ------------------------------ Printable sheet (week or month) ------------------------------
+    // Both views count forward from data.startDate (the day the tracker was
+    // set up) rather than snapping to calendar week/month boundaries, so day
+    // 1 of the sheet is always the day the medicines were added.
+    function getStartDate() {
+      const parts = data.startDate.split('-').map(Number);
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    function getWeekDates() {
+      const start = addDays(getStartDate(), data.weekOffset * 7);
+      const dates = [];
+      for (let i = 0; i < 7; i++) dates.push(addDays(start, i));
+      return dates;
+    }
+
+    function getMonthDates() {
+      const start = addDays(getStartDate(), data.monthOffset * 30);
+      const dates = [];
+      for (let i = 0; i < 30; i++) dates.push(addDays(start, i));
+      return dates;
+    }
+
+    function getCustomDates() {
+      const n = data.customDays;
+      const start = addDays(getStartDate(), data.customOffset * n);
+      const dates = [];
+      for (let i = 0; i < n; i++) dates.push(addDays(start, i));
+      return dates;
+    }
+
+    function updateWeekRangeLabel(dates) {
+      const label = `${formatShortDate(dates[0])} – ${formatShortDate(dates[dates.length - 1])}${data.weekOffset === 0 ? ' (from day 1)' : ''}`;
+      document.getElementById('weekRangeLabel').textContent = label;
+    }
+
+    function updateMonthRangeLabel(dates) {
+      const label = `${formatShortDate(dates[0])} – ${formatShortDate(dates[dates.length - 1])}${data.monthOffset === 0 ? ' (from day 1)' : ''}`;
+      document.getElementById('monthRangeLabel').textContent = label;
+    }
+
+    function updateCustomRangeLabel(dates) {
+      const label = `${formatShortDate(dates[0])} – ${formatShortDate(dates[dates.length - 1])}${data.customOffset === 0 ? ' (from day 1)' : ''}`;
+      document.getElementById('customRangeLabel').textContent = label;
+    }
+
+    function entryKey(dateStr, slot) { return `${dateStr}|${slot}`; }
+
+    // Course window helpers -- each medicine tracks its own start date +
+    // duration (e.g. a 3-day antibiotic vs. a 7-day one), independent of the
+    // sheet's date range, so a day outside that window renders as blank/
+    // disabled rather than a tickable box.
+    function courseEndDateStr(med) {
+      if (!med.duration) return null; // ongoing / no fixed end
+      const start = med.courseStart.split('-').map(Number);
+      const startD = new Date(start[0], start[1] - 1, start[2]);
+      return formatDateInputValue(addDays(startD, med.duration - 1));
+    }
+    function isDateInCourse(med, dateStr) {
+      if (dateStr < med.courseStart) return false;
+      const end = courseEndDateStr(med);
+      if (end && dateStr > end) return false;
+      return true;
+    }
+    function courseLabel(med) {
+      return med.duration ? `${med.duration}-day course` : 'Ongoing';
+    }
+
+    // Shared renderer: builds the medicine x day-of-slot grid for whichever
+    // date range is passed in (7 days for a week, 28-31 for a month, or any
+    // custom row length). Wide sheets (month, or a custom count > 14) get a
+    // compact-cell class + landscape print CSS so the day columns stay
+    // legible/printable; the underlying markup is identical otherwise.
+    function buildSheetHtml(dates, titleSuffix, titleLabel, compact) {
+      const todayStr = formatDateInputValue(todayDate());
+      let head = '<th class="mg-med-col">Medicine</th><th class="mg-slot-col">Time</th>';
+      dates.forEach((d) => {
+        const key = formatDateInputValue(d);
+        const label = compact ? `${d.getDate()}` : `${DOW_SHORT[d.getDay()]}<br>${d.getDate()}/${d.getMonth() + 1}`;
+        head += `<th class="mg-date-col${key === todayStr ? ' is-today' : ''}">${label}</th>`;
+      });
+
+      let body = '';
+      data.medicines.forEach((med, medIdx) => {
+        // One rowspanning "medicine" cell per group (instead of repeating the
+        // name on every slot row) plus a thicker top border on the group's
+        // first row -- so each medicine reads as a visually separate block.
+        const groupCls = medIdx > 0 ? ' mg-group-start' : '';
+        const medCell = `<td class="mg-med-cell" rowspan="${med.slots.length}"><div class="mg-med-name">${escapeHtml(med.name)}</div>${med.dosage ? `<div class="mg-med-meta">${escapeHtml(med.dosage)}</div>` : ''}${med.foodTiming ? `<div class="mg-med-meta">🍽️ ${escapeHtml(med.foodTiming)}</div>` : ''}${med.duration ? `<div class="mg-med-meta">${escapeHtml(courseLabel(med))}</div>` : ''}${med.notes ? `<div class="mg-med-notes">📝 ${escapeHtml(med.notes)}</div>` : ''}</td>`;
+        med.slots.forEach((slot, slotIdx) => {
+          let cells = '';
+          dates.forEach((d) => {
+            const dateStr = formatDateInputValue(d);
+            if (!isDateInCourse(med, dateStr)) {
+              cells += `<td class="mg-cell"><span class="mg-tick mg-tick-na" title="${escapeHtml(med.name)} — not prescribed on ${dateStr}">–</span></td>`;
+              return;
+            }
+            const key = entryKey(dateStr, slot);
+            const done = med.entries[key] === true;
+            cells += `<td class="mg-cell"><button class="mg-tick${done ? ' is-done' : ''}" data-id="${med.id}" data-key="${key}" title="${escapeHtml(med.name)} — ${escapeHtml(slot)} on ${dateStr}">${done ? '✓' : ''}</button></td>`;
+          });
+          const slotCell = `<td class="mg-slot-cell">${escapeHtml(slot)}</td>`;
+          body += `<tr class="${slotIdx === 0 ? groupCls : ''}">${slotIdx === 0 ? medCell : ''}${slotCell}${cells}</tr>`;
+        });
+      });
+
+      return `
+        <div class="sheet-title">💊 ${titleLabel} Medicine Checklist</div>
+        <div class="sheet-subtitle">${titleSuffix}</div>
+        <table class="med-grid${compact ? ' is-month' : ''}"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
+      `;
+    }
+
+    function renderSheet() {
+      const wrap = document.getElementById('sheetWrap');
+      wrap.classList.toggle('is-month', data.view === 'month' || (data.view === 'custom' && data.customDays > 14));
+      const emptyLabel = data.view === 'month' ? 'monthly' : data.view === 'custom' ? `${data.customDays}-day` : 'weekly';
+      if (!data.medicines.length) {
+        wrap.innerHTML = `<p class="empty-meds">Add a medicine above to generate its ${emptyLabel} tracking sheet.</p>`;
+        return;
+      }
+      if (data.view === 'month') {
+        const dates = getMonthDates();
+        updateMonthRangeLabel(dates);
+        wrap.innerHTML = buildSheetHtml(dates, `${formatShortDate(dates[0])} – ${formatShortDate(dates[dates.length - 1])}`, 'Monthly', true);
+      } else if (data.view === 'custom') {
+        const dates = getCustomDates();
+        updateCustomRangeLabel(dates);
+        wrap.innerHTML = buildSheetHtml(dates, `${formatShortDate(dates[0])} – ${formatShortDate(dates[dates.length - 1])} (${data.customDays} days)`, `${data.customDays}-Day`, data.customDays > 14);
+      } else {
+        const dates = getWeekDates();
+        updateWeekRangeLabel(dates);
+        wrap.innerHTML = buildSheetHtml(dates, `${formatShortDate(dates[0])} – ${formatShortDate(dates[6])}`, 'Weekly', false);
+      }
+    }
+
+    document.getElementById('sheetWrap').addEventListener('click', (e) => {
+      const tickBtn = e.target.closest('.mg-tick');
+      if (!tickBtn) return;
+      const med = data.medicines.find((m) => m.id === tickBtn.dataset.id);
+      if (!med) return;
+      const key = tickBtn.dataset.key;
+      med.entries[key] = med.entries[key] === true ? false : true;
+      if (med.entries[key] === false) delete med.entries[key];
+      saveData();
+      renderSheet();
+    });
+
+    function setView(view) {
+      data.view = view;
+      document.getElementById('viewWeekChip').classList.toggle('active', view === 'week');
+      document.getElementById('viewMonthChip').classList.toggle('active', view === 'month');
+      document.getElementById('viewCustomChip').classList.toggle('active', view === 'custom');
+      document.getElementById('weekControls').style.display = view === 'week' ? '' : 'none';
+      document.getElementById('monthControls').style.display = view === 'month' ? '' : 'none';
+      document.getElementById('customControls').style.display = view === 'custom' ? '' : 'none';
+      saveData();
+      renderSheet();
+    }
+    document.getElementById('viewWeekChip').addEventListener('click', () => setView('week'));
+    document.getElementById('viewMonthChip').addEventListener('click', () => setView('month'));
+    document.getElementById('viewCustomChip').addEventListener('click', () => setView('custom'));
+
+    document.getElementById('prevWeekBtn').addEventListener('click', () => { data.weekOffset--; saveData(); renderSheet(); });
+    document.getElementById('nextWeekBtn').addEventListener('click', () => { data.weekOffset++; saveData(); renderSheet(); });
+    document.getElementById('thisWeekBtn').addEventListener('click', () => { data.weekOffset = 0; saveData(); renderSheet(); });
+    document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+    document.getElementById('prevMonthBtn').addEventListener('click', () => { data.monthOffset--; saveData(); renderSheet(); });
+    document.getElementById('nextMonthBtn').addEventListener('click', () => { data.monthOffset++; saveData(); renderSheet(); });
+    document.getElementById('thisMonthBtn').addEventListener('click', () => { data.monthOffset = 0; saveData(); renderSheet(); });
+    document.getElementById('printMonthBtn').addEventListener('click', () => window.print());
+
+    document.getElementById('customDaysInput').addEventListener('change', (e) => {
+      let n = parseInt(e.target.value, 10);
+      if (!Number.isFinite(n) || n < 1) n = 1;
+      if (n > 90) n = 90;
+      e.target.value = n;
+      data.customDays = n;
+      data.customOffset = 0;
+      saveData();
+      renderSheet();
+    });
+    document.getElementById('prevCustomBtn').addEventListener('click', () => { data.customOffset--; saveData(); renderSheet(); });
+    document.getElementById('nextCustomBtn').addEventListener('click', () => { data.customOffset++; saveData(); renderSheet(); });
+    document.getElementById('thisCustomBtn').addEventListener('click', () => { data.customOffset = 0; saveData(); renderSheet(); });
+    document.getElementById('printCustomBtn').addEventListener('click', () => window.print());
+
+    // ------------------------------- Theme --------------------------------
+    const THEME_KEY = 'medicineTrackerTheme';
+    document.getElementById('themeToggle').checked = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.getElementById('themeToggle').addEventListener('change', function () {
+      if (this.checked) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem(THEME_KEY, 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem(THEME_KEY, 'light');
+      }
+    });
+
+    // --------------------------------- Init ---------------------------------
+    resetForm();
+    renderMedList();
+    document.getElementById('customDaysInput').value = data.customDays;
+    setView(['week', 'month', 'custom'].includes(data.view) ? data.view : 'week');
+  </script>
+</body>
+</html>
