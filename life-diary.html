@@ -1879,15 +1879,23 @@
       localStorage.setItem(SLOT_MINUTES_KEY, String(minutes));
     }
     // Slot count for an entry's tracked minutes against the user-selected
-    // slot size -- e.g. 20 minutes used at a 10-minute slot size is "2
-    // slots". If the slot size is bigger than the time actually used, there
-    // isn't even one full slot, so it's left out entirely rather than
-    // showing "0 slots".
+    // slot size, as a fraction rather than a rounded-down whole number --
+    // e.g. 19 minutes used at a 10-minute slot size is "1.9 slots", not a
+    // misleadingly blunt "1 slot", so the actual usage within a partial
+    // slot is still visible. Rounded to one decimal place; nothing to show
+    // (elapsed time is zero, e.g. a live entry that just started) returns
+    // null rather than a meaningless "0".
     function computeSlotCount(elapsedMs, slotMinutes) {
       if (!slotMinutes || slotMinutes <= 0) return null;
       const minutes = elapsedMs / 60000;
-      if (minutes < slotMinutes) return null;
-      return Math.floor(minutes / slotMinutes);
+      if (minutes <= 0) return null;
+      return Math.round((minutes / slotMinutes) * 10) / 10;
+    }
+    // Trims the trailing ".0" a whole slot count would otherwise get from
+    // computeSlotCount's rounding (e.g. 2 rather than 2.0), while keeping
+    // one decimal place for any genuinely fractional count.
+    function formatSlotCount(slotCount) {
+      return Number.isInteger(slotCount) ? String(slotCount) : slotCount.toFixed(1);
     }
     // Purely clock-based, not tied to what's actually been tracked: how many
     // slots of the day have already gone by (from midnight to now) and how
@@ -4003,14 +4011,14 @@
               const { slotsOver, slotsLeft } = computeSlotsOverAndLeft(slotMinutes);
               return ` <span class="entry-slots-left"${isLive ? ` data-slotsleft-t="${e.t}"` : ''} title="${slotsOver} slots over today, ${slotsLeft} left">(${slotsOver}/${slotsLeft})</span>`;
             })();
-            // The badge itself (the "slots: N" part) still only shows once a
-            // full slot has been used, but the last entry keeps showing the
-            // day's over/left info even if it hasn't hit a full slot yet.
+            // The badge itself (the "slots: N" part) only shows once there's
+            // some tracked time at all, but the last entry keeps showing the
+            // day's over/left info even with zero elapsed time so far.
             const slotLabel = isLive
-              ? `<span class="entry-slot-count" data-slotcount-t="${e.t}" ${slotTitle} style="${slotCount === null ? 'display: none;' : ''}">slots: ${slotCount || 0}</span>${slotDayLabel}`
+              ? `<span class="entry-slot-count" data-slotcount-t="${e.t}" ${slotTitle} style="${slotCount === null ? 'display: none;' : ''}">slots: ${formatSlotCount(slotCount || 0)}</span>${slotDayLabel}`
               : (slotCount === null
                   ? (isLastEntryOfDay ? slotDayLabel.trim() : '')
-                  : `<span class="entry-slot-count" ${slotTitle}>slots: ${slotCount}</span>${slotDayLabel}`);
+                  : `<span class="entry-slot-count" ${slotTitle}>slots: ${formatSlotCount(slotCount)}</span>${slotDayLabel}`);
             const endTime = isLive ? 'Ongoing' : formatTime(new Date(endTimeMs).toISOString());
             return `
           <div class="entry-line" data-index="${e.index}">
@@ -4199,7 +4207,7 @@
             const slotMinutes = getSlotMinutes();
             const slotCount = computeSlotCount(elapsedMs, slotMinutes);
             liveSlotCountEl.style.display = slotCount === null ? 'none' : '';
-            liveSlotCountEl.childNodes[0].textContent = `slots: ${slotCount || 0} `;
+            liveSlotCountEl.childNodes[0].textContent = `slots: ${formatSlotCount(slotCount || 0)} `;
             liveSlotCountEl.title = `${Math.round(elapsedMs / 60000)} min at a ${slotMinutes}-min slot size`;
           }
           if (liveSlotsLeftEl) {
