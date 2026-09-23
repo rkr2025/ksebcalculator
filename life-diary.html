@@ -203,6 +203,20 @@
       font-weight: 700;
       color: var(--text-primary);
     }
+    .yp-analog-clock { display: block; margin: 6px auto 0; }
+    .yp-analog-face { fill: var(--surface-muted); stroke: var(--border); stroke-width: 2; }
+    .yp-analog-number {
+      font-size: 9px;
+      font-weight: 700;
+      fill: var(--text-muted);
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+    .yp-analog-hand { stroke-linecap: round; }
+    .yp-analog-hour { stroke: var(--text); stroke-width: 4; }
+    .yp-analog-minute { stroke: var(--text); stroke-width: 3; }
+    .yp-analog-second { stroke: var(--accent); stroke-width: 1.5; }
+    .yp-analog-center { fill: var(--accent); }
     .theme-toggle {
       display: inline-flex;
       align-items: center;
@@ -1573,6 +1587,13 @@
             <span>🌙</span>
           </div>
         </div>
+        <div class="settings-list-item">
+          <span class="settings-list-label">Analog Clock</span>
+          <label class="switch">
+            <input type="checkbox" id="analogClockToggle" title="Switch the clock above the year progress bar between digital and analog">
+            <span class="switch-slider"></span>
+          </label>
+        </div>
         <div class="settings-list-item settings-list-item--column">
           <span class="settings-list-label">Show/Hide Panels</span>
           <div class="panel-visibility-row">
@@ -2332,7 +2353,8 @@
       const todayLabel = now.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
       el.innerHTML = `${todayLabel}<br>` +
-        `<span class="yp-clock" id="yearProgressClock"></span>`;
+        `<span class="yp-clock" id="yearProgressClock"></span>` +
+        buildAnalogClockSvg();
       updateYearProgressClock();
 
       const fillEl = document.getElementById('yearProgressFill');
@@ -2344,15 +2366,63 @@
       }
     }
 
+    // 1-12 hour numbers at 30-degree intervals from 12 o'clock, placed with
+    // plain x/y coordinates (via sin/cos) rather than a rotate() transform --
+    // that would rotate the digits themselves sideways/upside-down instead
+    // of just moving them around the dial.
+    function buildAnalogClockSvg() {
+      let numbers = '';
+      for (let i = 0; i < 12; i++) {
+        const angle = i * 30;
+        const hourNumber = i === 0 ? 12 : i;
+        const rad = (angle * Math.PI) / 180;
+        const numberRadius = 37;
+        const nx = 50 + numberRadius * Math.sin(rad);
+        const ny = 50 - numberRadius * Math.cos(rad);
+        numbers += `<text class="yp-analog-number" x="${nx}" y="${ny}">${hourNumber}</text>`;
+      }
+      return `
+        <svg class="yp-analog-clock" id="yearProgressAnalogClock" viewBox="0 0 100 100" width="170" height="170" style="display: none;">
+          <circle class="yp-analog-face" cx="50" cy="50" r="47"/>
+          ${numbers}
+          <line class="yp-analog-hand yp-analog-hour" id="analogHourHand" x1="50" y1="50" x2="50" y2="30"/>
+          <line class="yp-analog-hand yp-analog-minute" id="analogMinuteHand" x1="50" y1="50" x2="50" y2="18"/>
+          <line class="yp-analog-hand yp-analog-second" id="analogSecondHand" x1="50" y1="50" x2="50" y2="14"/>
+          <circle class="yp-analog-center" cx="50" cy="50" r="2.5"/>
+        </svg>`;
+    }
+
+    const ANALOG_CLOCK_KEY = 'life_diary_analog_clock';
+    function isAnalogClockEnabled() {
+      return localStorage.getItem(ANALOG_CLOCK_KEY) === 'true';
+    }
+
     function updateYearProgressClock() {
       const clockEl = document.getElementById('yearProgressClock');
-      if (!clockEl) return;
+      const analogEl = document.getElementById('yearProgressAnalogClock');
+      if (!clockEl || !analogEl) return;
       const now = new Date();
-      const pad = (n) => String(n).padStart(2, '0');
-      let hours12 = now.getHours() % 12;
-      if (hours12 === 0) hours12 = 12;
-      const ampm = now.getHours() < 12 ? 'AM' : 'PM';
-      clockEl.textContent = `${pad(hours12)}:${pad(now.getMinutes())}:${pad(now.getSeconds())} ${ampm}`;
+      const analog = isAnalogClockEnabled();
+      clockEl.style.display = analog ? 'none' : '';
+      analogEl.style.display = analog ? '' : 'none';
+
+      if (analog) {
+        const hours = now.getHours() % 12;
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+        const hourDeg = (hours + minutes / 60) * 30;
+        const minuteDeg = (minutes + seconds / 60) * 6;
+        const secondDeg = seconds * 6;
+        document.getElementById('analogHourHand').setAttribute('transform', `rotate(${hourDeg} 50 50)`);
+        document.getElementById('analogMinuteHand').setAttribute('transform', `rotate(${minuteDeg} 50 50)`);
+        document.getElementById('analogSecondHand').setAttribute('transform', `rotate(${secondDeg} 50 50)`);
+      } else {
+        const pad = (n) => String(n).padStart(2, '0');
+        let hours12 = now.getHours() % 12;
+        if (hours12 === 0) hours12 = 12;
+        const ampm = now.getHours() < 12 ? 'AM' : 'PM';
+        clockEl.textContent = `${pad(hours12)}:${pad(now.getMinutes())}:${pad(now.getSeconds())} ${ampm}`;
+      }
     }
 
     // Week starts on Sunday, matching isWeekendKey()'s Sun=0/Sat=6 convention
@@ -2471,6 +2541,13 @@
         document.documentElement.removeAttribute('data-theme');
         localStorage.setItem(THEME_KEY, 'light');
       }
+    });
+
+    // --------------------------- Analog clock toggle -------------------------
+    document.getElementById('analogClockToggle').checked = isAnalogClockEnabled();
+    document.getElementById('analogClockToggle').addEventListener('change', function () {
+      localStorage.setItem(ANALOG_CLOCK_KEY, this.checked ? 'true' : 'false');
+      updateYearProgressClock(); // apply immediately, don't wait for the next 1s tick
     });
 
     // --------------------------- Panel visibility ---------------------------
