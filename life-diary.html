@@ -203,20 +203,58 @@
       font-weight: 700;
       color: var(--text-primary);
     }
-    .yp-analog-clock { display: block; margin: 6px auto 0; }
-    .yp-analog-face { fill: var(--surface-muted); stroke: var(--border); stroke-width: 2; }
-    .yp-analog-number {
+    .yp-analog-clock { display: block; margin: 8px auto 0; }
+    .yp-d1-face { fill: var(--surface-muted); stroke: var(--border); stroke-width: 2; }
+    .yp-d1-number {
       font-size: 9px;
       font-weight: 700;
       fill: var(--text-muted);
       text-anchor: middle;
       dominant-baseline: central;
     }
+    .yp-d1-hand { stroke-linecap: round; }
+    .yp-d1-hour { stroke: var(--text); stroke-width: 4; }
+    .yp-d1-minute { stroke: var(--text); stroke-width: 3; }
+    .yp-d1-second { stroke: var(--accent); stroke-width: 1.5; }
+    .yp-d1-center { fill: var(--accent); }
+    .yp-d1-digital {
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 6.5px;
+      font-weight: 700;
+      fill: var(--text-muted);
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+    #yearProgressAnalogClock.yp-dial-2 { filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.25)); }
+    .yp-analog-bezel { fill: url(#ypClockBezelGrad); }
+    .yp-analog-face { fill: url(#ypClockFaceGrad); }
+    .yp-analog-face-rim { fill: none; stroke: var(--border); stroke-width: 0.6; opacity: 0.8; }
+    .yp-analog-tick-hour { stroke: var(--text); stroke-width: 1.1; stroke-linecap: round; }
+    .yp-analog-tick-minute { stroke: var(--text-muted); stroke-width: 0.5; opacity: 0.7; }
+    .yp-analog-number {
+      font-family: "Georgia", "Times New Roman", serif;
+      font-size: 8.5px;
+      font-weight: 700;
+      fill: var(--text);
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
     .yp-analog-hand { stroke-linecap: round; }
-    .yp-analog-hour { stroke: var(--text); stroke-width: 4; }
-    .yp-analog-minute { stroke: var(--text); stroke-width: 3; }
-    .yp-analog-second { stroke: var(--accent); stroke-width: 1.5; }
+    .yp-analog-hour { fill: var(--text); }
+    .yp-analog-minute { fill: var(--text); }
+    .yp-analog-second { stroke: var(--accent); stroke-width: 1.2; }
+    .yp-analog-center-ring { fill: var(--surface); stroke: var(--accent); stroke-width: 1.1; }
     .yp-analog-center { fill: var(--accent); }
+    .yp-analog-digital-bg { fill: var(--surface); stroke: var(--border); stroke-width: 0.5; opacity: 0.9; }
+    .yp-analog-digital {
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 4.7px;
+      font-weight: 700;
+      fill: var(--text-muted);
+      text-anchor: middle;
+      dominant-baseline: central;
+      letter-spacing: 0.2px;
+    }
     .theme-toggle {
       display: inline-flex;
       align-items: center;
@@ -1594,6 +1632,20 @@
             <span class="switch-slider"></span>
           </label>
         </div>
+        <div class="settings-list-item">
+          <span class="settings-list-label">Clock Dial</span>
+          <select id="clockDialStyleSelect" title="Only applies when Analog Clock is on">
+            <option value="1">Dial 1 (Classic)</option>
+            <option value="2">Dial 2 (Premium)</option>
+          </select>
+        </div>
+        <div class="settings-list-item">
+          <span class="settings-list-label">Clock Hour Format</span>
+          <select id="clockHourFormatSelect" title="Format of the small digital time shown inside the analog clock dial">
+            <option value="12">12-hour</option>
+            <option value="24">24-hour</option>
+          </select>
+        </div>
         <div class="settings-list-item settings-list-item--column">
           <span class="settings-list-label">Show/Hide Panels</span>
           <div class="panel-visibility-row">
@@ -2366,11 +2418,21 @@
       }
     }
 
-    // 1-12 hour numbers at 30-degree intervals from 12 o'clock, placed with
-    // plain x/y coordinates (via sin/cos) rather than a rotate() transform --
-    // that would rotate the digits themselves sideways/upside-down instead
-    // of just moving them around the dial.
+    // Two selectable dial styles (Settings > Clock Dial): Dial 1 is the
+    // original plain flat face (the default), Dial 2 is the gradient/bezel
+    // "premium" look. Both share the same element ids (analogHourHand etc.)
+    // so updateYearProgressClock() below can drive whichever is on screen
+    // without needing to know which style is active.
+    const CLOCK_DIAL_STYLE_KEY = 'life_diary_clock_dial_style';
+    function getClockDialStyle() {
+      return localStorage.getItem(CLOCK_DIAL_STYLE_KEY) === '2' ? '2' : '1';
+    }
     function buildAnalogClockSvg() {
+      return getClockDialStyle() === '2' ? buildAnalogClockSvgDial2() : buildAnalogClockSvgDial1();
+    }
+
+    // Dial 1 -- plain flat face, numbers only, simple line hands.
+    function buildAnalogClockSvgDial1() {
       let numbers = '';
       for (let i = 0; i < 12; i++) {
         const angle = i * 30;
@@ -2379,22 +2441,89 @@
         const numberRadius = 37;
         const nx = 50 + numberRadius * Math.sin(rad);
         const ny = 50 - numberRadius * Math.cos(rad);
-        numbers += `<text class="yp-analog-number" x="${nx}" y="${ny}">${hourNumber}</text>`;
+        numbers += `<text class="yp-d1-number" x="${nx}" y="${ny}">${hourNumber}</text>`;
       }
       return `
         <svg class="yp-analog-clock" id="yearProgressAnalogClock" viewBox="0 0 100 100" width="170" height="170" style="display: none;">
-          <circle class="yp-analog-face" cx="50" cy="50" r="47"/>
+          <circle class="yp-d1-face" cx="50" cy="50" r="47"/>
           ${numbers}
-          <line class="yp-analog-hand yp-analog-hour" id="analogHourHand" x1="50" y1="50" x2="50" y2="30"/>
-          <line class="yp-analog-hand yp-analog-minute" id="analogMinuteHand" x1="50" y1="50" x2="50" y2="18"/>
-          <line class="yp-analog-hand yp-analog-second" id="analogSecondHand" x1="50" y1="50" x2="50" y2="14"/>
-          <circle class="yp-analog-center" cx="50" cy="50" r="2.5"/>
+          <line class="yp-d1-hand yp-d1-hour" id="analogHourHand" x1="50" y1="50" x2="50" y2="30"/>
+          <line class="yp-d1-hand yp-d1-minute" id="analogMinuteHand" x1="50" y1="50" x2="50" y2="18"/>
+          <line class="yp-d1-hand yp-d1-second" id="analogSecondHand" x1="50" y1="50" x2="50" y2="14"/>
+          <circle class="yp-d1-center" cx="50" cy="50" r="2.5"/>
+          <text class="yp-d1-digital" id="analogDigitalTime" x="50" y="66"></text>
+        </svg>`;
+    }
+
+    // Dial 2 -- gradient bezel/face, railroad ticks, tapered hands, drop
+    // shadow, sub-dial digital readout.
+    // 1-12 hour numbers at 30-degree intervals from 12 o'clock, placed with
+    // plain x/y coordinates (via sin/cos) rather than a rotate() transform --
+    // that would rotate the digits themselves sideways/upside-down instead
+    // of just moving them around the dial. Minute ticks (60, thin) and hour
+    // ticks (12, bolder) sit right at the rim (radius 43.5-46.5), well
+    // outside the numbers' radius (37), so nothing overlaps.
+    function buildAnalogClockSvgDial2() {
+      let numbers = '';
+      let ticks = '';
+      for (let i = 0; i < 60; i++) {
+        const angle = i * 6;
+        const isHourTick = i % 5 === 0;
+        const y1 = isHourTick ? 43.5 : 44.8;
+        ticks += `<line class="${isHourTick ? 'yp-analog-tick-hour' : 'yp-analog-tick-minute'}" x1="50" y1="${y1}" x2="50" y2="46.5" transform="rotate(${angle} 50 50)"/>`;
+      }
+      for (let i = 0; i < 12; i++) {
+        const angle = i * 30;
+        const hourNumber = i === 0 ? 12 : i;
+        const rad = (angle * Math.PI) / 180;
+        const numberRadius = 36;
+        const nx = 50 + numberRadius * Math.sin(rad);
+        const ny = 50 - numberRadius * Math.cos(rad);
+        numbers += `<text class="yp-analog-number" x="${nx}" y="${ny}">${hourNumber}</text>`;
+      }
+      return `
+        <svg class="yp-analog-clock yp-dial-2" id="yearProgressAnalogClock" viewBox="0 0 100 100" width="170" height="170" style="display: none;">
+          <defs>
+            <radialGradient id="ypClockFaceGrad" cx="35%" cy="30%" r="75%">
+              <stop offset="0%" stop-color="var(--surface)"/>
+              <stop offset="100%" stop-color="var(--surface-muted)"/>
+            </radialGradient>
+            <linearGradient id="ypClockBezelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="var(--accent)"/>
+              <stop offset="100%" stop-color="var(--primary)"/>
+            </linearGradient>
+            <filter id="ypClockShadow" x="-40%" y="-40%" width="180%" height="180%">
+              <feDropShadow dx="0" dy="1.2" stdDeviation="1.6" flood-color="#000" flood-opacity="0.35"/>
+            </filter>
+          </defs>
+          <circle class="yp-analog-bezel" cx="50" cy="50" r="48.5"/>
+          <circle class="yp-analog-face" cx="50" cy="50" r="44.5"/>
+          <circle class="yp-analog-face-rim" cx="50" cy="50" r="44.5"/>
+          ${ticks}
+          ${numbers}
+          <g filter="url(#ypClockShadow)">
+            <polygon class="yp-analog-hand yp-analog-hour" id="analogHourHand" points="48.3,50 49.1,32 50,29 50.9,32 51.7,50"/>
+            <polygon class="yp-analog-hand yp-analog-minute" id="analogMinuteHand" points="48.7,50 49.3,20 50,17 50.7,20 51.3,50"/>
+            <line class="yp-analog-hand yp-analog-second" id="analogSecondHand" x1="50" y1="58" x2="50" y2="13"/>
+          </g>
+          <circle class="yp-analog-center-ring" cx="50" cy="50" r="3.4"/>
+          <circle class="yp-analog-center" cx="50" cy="50" r="1.6"/>
+          <rect class="yp-analog-digital-bg" x="31" y="61.5" width="38" height="9" rx="4.5"/>
+          <text class="yp-analog-digital" id="analogDigitalTime" x="50" y="66.2"></text>
         </svg>`;
     }
 
     const ANALOG_CLOCK_KEY = 'life_diary_analog_clock';
     function isAnalogClockEnabled() {
       return localStorage.getItem(ANALOG_CLOCK_KEY) === 'true';
+    }
+
+    // Only affects the small digital readout inside the analog dial -- the
+    // separate all-digital clock mode (when Analog Clock is off) keeps its
+    // own fixed 12-hour-with-AM/PM format, unrelated to this setting.
+    const CLOCK_HOUR_FORMAT_KEY = 'life_diary_clock_hour_format';
+    function getClockHourFormat() {
+      return localStorage.getItem(CLOCK_HOUR_FORMAT_KEY) === '24' ? '24' : '12';
     }
 
     function updateYearProgressClock() {
@@ -2406,6 +2535,8 @@
       clockEl.style.display = analog ? 'none' : '';
       analogEl.style.display = analog ? '' : 'none';
 
+      const pad = (n) => String(n).padStart(2, '0');
+
       if (analog) {
         const hours = now.getHours() % 12;
         const minutes = now.getMinutes();
@@ -2416,8 +2547,16 @@
         document.getElementById('analogHourHand').setAttribute('transform', `rotate(${hourDeg} 50 50)`);
         document.getElementById('analogMinuteHand').setAttribute('transform', `rotate(${minuteDeg} 50 50)`);
         document.getElementById('analogSecondHand').setAttribute('transform', `rotate(${secondDeg} 50 50)`);
+        if (getClockHourFormat() === '24') {
+          document.getElementById('analogDigitalTime').textContent =
+            `${pad(now.getHours())}:${pad(minutes)}:${pad(seconds)}`;
+        } else {
+          let hours12 = hours === 0 ? 12 : hours;
+          const ampm = now.getHours() < 12 ? 'AM' : 'PM';
+          document.getElementById('analogDigitalTime').textContent =
+            `${pad(hours12)}:${pad(minutes)}:${pad(seconds)} ${ampm}`;
+        }
       } else {
-        const pad = (n) => String(n).padStart(2, '0');
         let hours12 = now.getHours() % 12;
         if (hours12 === 0) hours12 = 12;
         const ampm = now.getHours() < 12 ? 'AM' : 'PM';
@@ -2547,6 +2686,22 @@
     document.getElementById('analogClockToggle').checked = isAnalogClockEnabled();
     document.getElementById('analogClockToggle').addEventListener('change', function () {
       localStorage.setItem(ANALOG_CLOCK_KEY, this.checked ? 'true' : 'false');
+      updateYearProgressClock(); // apply immediately, don't wait for the next 1s tick
+    });
+
+    // ----------------------------- Clock dial style ---------------------------
+    document.getElementById('clockDialStyleSelect').value = getClockDialStyle();
+    document.getElementById('clockDialStyleSelect').addEventListener('change', function () {
+      localStorage.setItem(CLOCK_DIAL_STYLE_KEY, this.value);
+      // The two dials have entirely different SVG markup (not just a CSS
+      // swap), so the whole clock needs rebuilding, not just re-ticking.
+      renderYearProgress();
+    });
+
+    // ---------------------------- Clock hour format ---------------------------
+    document.getElementById('clockHourFormatSelect').value = getClockHourFormat();
+    document.getElementById('clockHourFormatSelect').addEventListener('change', function () {
+      localStorage.setItem(CLOCK_HOUR_FORMAT_KEY, this.value);
       updateYearProgressClock(); // apply immediately, don't wait for the next 1s tick
     });
 
