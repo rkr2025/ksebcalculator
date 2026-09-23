@@ -802,6 +802,7 @@
       gap: 10px;
       flex-wrap: wrap;
     }
+    #dateNavSection { display: inline-flex; align-items: center; gap: 10px; }
     .view-controls input[type="date"] {
       padding: 8px 10px;
       font-size: 14px;
@@ -1676,6 +1677,27 @@
               <span class="switch-slider"></span>
             </label>
           </div>
+          <div class="panel-visibility-row">
+            <span>📅 Calendar</span>
+            <label class="switch">
+              <input type="checkbox" id="panelVisCalendar" checked>
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="panel-visibility-row">
+            <span>📆 Date Picker &amp; Today</span>
+            <label class="switch">
+              <input type="checkbox" id="panelVisDateNav" checked>
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="panel-visibility-row">
+            <span>⏲️ Slot Size</span>
+            <label class="switch">
+              <input type="checkbox" id="panelVisSlotSize" checked>
+              <span class="switch-slider"></span>
+            </label>
+          </div>
         </div>
         <div class="settings-list-item">
           <span class="settings-list-label">Help</span>
@@ -1975,9 +1997,11 @@
       </div>
 
       <div class="view-controls">
-        <input type="date" id="viewDateInput">
-        <button class="btn-outline btn" id="todayBtn" type="button">Today</button>
-        <span class="slot-size-group">
+        <span id="dateNavSection">
+          <input type="date" id="viewDateInput">
+          <button class="btn-outline btn" id="todayBtn" type="button">Today</button>
+        </span>
+        <span class="slot-size-group" id="slotSizeSection">
           <label for="slotSizeSelect" title="Each entry's minutes are divided by this to show a slot count">Slot size</label>
           <select id="slotSizeSelect">
             <option value="5">5 min</option>
@@ -2707,14 +2731,18 @@
 
     // --------------------------- Panel visibility ---------------------------
     // Lets the user hide whole panels (Pomodoro, Hours of the Day, Backup &
-    // Restore, Search) from the main page via Settings -- each defaults to
-    // visible (shown) unless the user has explicitly hidden it before.
+    // Restore, Search, Calendar) from the main page via Settings -- each
+    // defaults to visible (shown) on every page load unless the user has
+    // explicitly hidden it before.
     const PANEL_VISIBILITY_KEY = 'life_diary_panel_visibility';
     const PANEL_VISIBILITY_TOGGLES = [
       { checkboxId: 'panelVisPomodoro', cardId: 'pomodoroCard' },
       { checkboxId: 'panelVisHoursOfDay', cardId: 'hoursOfDayCard' },
       { checkboxId: 'panelVisBackup', cardId: 'backupRestoreCard' },
       { checkboxId: 'panelVisSearch', cardId: 'searchSection' },
+      { checkboxId: 'panelVisCalendar', cardId: 'calendarToggleBtn' },
+      { checkboxId: 'panelVisDateNav', cardId: 'dateNavSection' },
+      { checkboxId: 'panelVisSlotSize', cardId: 'slotSizeSection' },
     ];
     function loadPanelVisibility() {
       try {
@@ -2745,8 +2773,9 @@
 
     (function initPanelVisibility() {
       const visibility = loadPanelVisibility();
-      PANEL_VISIBILITY_TOGGLES.forEach(({ checkboxId, cardId }) => {
-        const visible = visibility[cardId] !== false; // default: visible
+      PANEL_VISIBILITY_TOGGLES.forEach(({ checkboxId, cardId, defaultVisible = true }) => {
+        const stored = visibility[cardId];
+        const visible = stored === undefined ? defaultVisible : stored !== false;
         document.getElementById(checkboxId).checked = visible;
         document.getElementById(cardId).style.display = visible ? '' : 'none';
         if (cardId === 'hoursOfDayCard') setHourBoxesTickerRunning(visible);
@@ -2757,6 +2786,12 @@
       document.getElementById(checkboxId).addEventListener('change', function () {
         document.getElementById(cardId).style.display = this.checked ? '' : 'none';
         if (cardId === 'hoursOfDayCard') setHourBoxesTickerRunning(this.checked);
+        if (cardId === 'calendarToggleBtn' && !this.checked) {
+          // Hiding the Calendar button doesn't auto-close an already-open
+          // calendar section -- do that explicitly so nothing is left
+          // open with no way to reach the button that would close it.
+          document.getElementById('calendarSection').style.display = 'none';
+        }
         const visibility = loadPanelVisibility();
         visibility[cardId] = this.checked;
         savePanelVisibility(visibility);
