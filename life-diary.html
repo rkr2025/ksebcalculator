@@ -1004,6 +1004,15 @@
       padding: 8px 0;
     }
     .entry-group + .entry-group { margin-top: 14px; }
+    .entry-group-past-wrapper > .entry-group-heading {
+      background: transparent;
+      border: 1px dashed var(--border);
+    }
+    .entry-group-past-wrapper > .entry-group {
+      margin-top: 10px;
+      padding-left: 10px;
+      border-left: 2px solid var(--border);
+    }
     .entry-group-heading {
       display: list-item;
       cursor: pointer;
@@ -4404,15 +4413,16 @@
           </div>`;
       };
 
-      // The last block that actually has entries is the one the user's
-      // most likely still working within -- that's the only group open by
-      // default on load; every other group (including empty ones) starts
-      // shrunk, since <details> without an "open" attribute renders closed.
-      let lastActiveBlockIndex = -1;
-      blocks.forEach((blockEntries, b) => { if (blockEntries.length > 0) lastActiveBlockIndex = b; });
+      // The block covering the current hour (only meaningful when viewing
+      // today) is the one open group on the page; every other rendered
+      // block is "already passed" -- past dates have no active block at
+      // all (every block that renders is passed), future dates have none
+      // either (nothing before "now" to have passed).
+      const activeBlockIndex = key === todayKey ? Math.floor(currentHour / 3) : -1;
+      const isPassedBlock = (b) => blockHasStarted(b) && b !== activeBlockIndex;
 
-      list.innerHTML = blocks.map((blockEntries, b) => {
-        const openAttr = b === lastActiveBlockIndex ? ' open' : '';
+      const blockHtml = blocks.map((blockEntries, b) => {
+        const openAttr = b === activeBlockIndex ? ' open' : '';
         if (blockEntries.length === 0) {
           if (!blockHasStarted(b)) return '';
           return `
@@ -4497,7 +4507,22 @@
           </div>`;
           }).join('')}
         </details>`;
-      }).join('');
+      });
+
+      // Already-passed groups (every block on a past date; today, every
+      // block before the one covering the current hour) are folded into a
+      // single shrinkable/expandable wrapper, collapsed by default -- only
+      // the active block (today's current hour) stays open and standalone.
+      const pastCount = blocks.filter((_, b) => blockHtml[b] && isPassedBlock(b)).length;
+      const pastHtml = blockHtml.filter((html, b) => html && isPassedBlock(b)).join('');
+      const otherHtml = blockHtml.filter((html, b) => html && !isPassedBlock(b)).join('');
+      const pastWrapperHtml = pastCount === 0 ? '' : `
+        <details class="entry-group entry-group-past-wrapper">
+          <summary class="entry-group-heading">🕓 Earlier Time Groups <span class="entry-group-heading-total">${pastCount} group${pastCount === 1 ? '' : 's'}</span></summary>
+          ${pastHtml}
+        </details>`;
+
+      list.innerHTML = pastWrapperHtml + otherHtml;
 
       // Entry text is user content -- assign via textContent, never innerHTML.
       list.querySelectorAll('.entry-text').forEach((span) => {
