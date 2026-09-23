@@ -2113,7 +2113,7 @@
     }
 
     renderHourBoxes();
-    managedInterval(renderHourBoxes, 1000);
+    const hourBoxesInterval = managedInterval(renderHourBoxes, 1000);
 
     // Clicking the active hour box, or any still-upcoming hour box, opens a
     // popup breaking that hour's 3600 seconds into 6 circles of 600 seconds
@@ -2494,18 +2494,37 @@
     function savePanelVisibility(visibility) {
       localStorage.setItem(PANEL_VISIBILITY_KEY, JSON.stringify(visibility));
     }
+    // Hours of the Day has its own always-on 1s ticker (hourBoxesInterval,
+    // registered above) that runs regardless of Pomodoro/tab-visibility
+    // state -- ticking it while the panel itself is hidden here would just
+    // update an invisible grid every second for nothing, so it's paused and
+    // resumed in lockstep with this one panel's visibility too.
+    function setHourBoxesTickerRunning(running) {
+      if (running) {
+        if (!hourBoxesInterval.id && !document.hidden) {
+          renderHourBoxes();
+          hourBoxesInterval.id = setInterval(renderHourBoxes, hourBoxesInterval.ms);
+        }
+      } else if (hourBoxesInterval.id) {
+        clearInterval(hourBoxesInterval.id);
+        hourBoxesInterval.id = null;
+      }
+    }
+
     (function initPanelVisibility() {
       const visibility = loadPanelVisibility();
       PANEL_VISIBILITY_TOGGLES.forEach(({ checkboxId, cardId }) => {
         const visible = visibility[cardId] !== false; // default: visible
         document.getElementById(checkboxId).checked = visible;
         document.getElementById(cardId).style.display = visible ? '' : 'none';
+        if (cardId === 'hoursOfDayCard') setHourBoxesTickerRunning(visible);
       });
     })();
 
     PANEL_VISIBILITY_TOGGLES.forEach(({ checkboxId, cardId }) => {
       document.getElementById(checkboxId).addEventListener('change', function () {
         document.getElementById(cardId).style.display = this.checked ? '' : 'none';
+        if (cardId === 'hoursOfDayCard') setHourBoxesTickerRunning(this.checked);
         const visibility = loadPanelVisibility();
         visibility[cardId] = this.checked;
         savePanelVisibility(visibility);
@@ -5393,6 +5412,10 @@
       } else {
         managedIntervals.forEach((t) => {
           if (t.id) return; // already running -- never was paused
+          // Don't resume the Hours-of-Day ticker if that panel is currently
+          // hidden via Settings -- it was deliberately paused there, not by
+          // this tab-visibility pause, so a tab-show shouldn't restart it.
+          if (t === hourBoxesInterval && document.getElementById('hoursOfDayCard').style.display === 'none') return;
           t.fn();
           t.id = setInterval(t.fn, t.ms);
         });
