@@ -72,7 +72,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      margin-bottom: 6px;
+      margin-bottom: 18px;
     }
     h1 {
       font-size: 24px;
@@ -90,7 +90,7 @@
       width: 100%;
       max-width: 420px;
       height: 20px;
-      margin: 8px auto 4px;
+      margin: 8px auto 16px;
       background: var(--surface-muted);
       border-radius: 999px;
       overflow: hidden;
@@ -104,7 +104,7 @@
       gap: 6px;
       width: 100%;
       max-width: 420px;
-      margin: 4px auto 4px;
+      margin: 4px auto 16px;
     }
     .week-day-cell {
       text-align: center;
@@ -742,11 +742,6 @@
       align-items: center;
       gap: 10px;
       flex-wrap: wrap;
-    }
-    .summary-btn-row {
-      display: flex;
-      justify-content: center;
-      margin-top: 14px;
     }
     .view-controls input[type="date"] {
       padding: 8px 10px;
@@ -1432,6 +1427,15 @@
       font-weight: 700;
       color: var(--text);
     }
+    .panel-visibility-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
     .settings-note {
       font-size: 12px;
       color: var(--text-muted);
@@ -1548,6 +1552,7 @@
 
     <!-- Settings (hidden until toggled) -->
     <div class="card" id="settingsPanel" style="display: none;">
+      <button class="hour-detail-close" id="settingsCloseBtn" type="button" aria-label="Close settings">✕</button>
       <h3>⚙️ Settings</h3>
       <div class="settings-list">
         <div class="settings-list-item">
@@ -1561,9 +1566,37 @@
             <span>🌙</span>
           </div>
         </div>
+        <div class="settings-list-item settings-list-item--column">
+          <span class="settings-list-label">Show/Hide Panels</span>
+          <div class="panel-visibility-row">
+            <span>🍅 Pomodoro Timer</span>
+            <label class="switch">
+              <input type="checkbox" id="panelVisPomodoro" checked>
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="panel-visibility-row">
+            <span>⏱️ Hours of the Day</span>
+            <label class="switch">
+              <input type="checkbox" id="panelVisHoursOfDay" checked>
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="panel-visibility-row">
+            <span>💾 Backup &amp; Restore</span>
+            <label class="switch">
+              <input type="checkbox" id="panelVisBackup" checked>
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+        </div>
         <div class="settings-list-item">
           <span class="settings-list-label">Help</span>
           <button class="btn-outline btn btn-small" id="helpToggleBtn" type="button" title="Help -- how to use this app">❓ How to Use</button>
+        </div>
+        <div class="settings-list-item">
+          <span class="settings-list-label">Day Summary</span>
+          <button class="btn btn-small" id="summaryBtn" type="button" title="Shows below the Diary Entries list, for whichever date is currently selected there">✨ Summary</button>
         </div>
         <div class="settings-list-item settings-list-item--column">
           <span class="settings-list-label">API Key</span>
@@ -1580,6 +1613,17 @@
           <div class="settings-key-row" id="settingsApiKeyEntry">
             <input type="password" id="settingsApiKeyInput" placeholder="Enter your Free Gemini API Key...">
             <button class="btn btn-small" id="settingsSaveKeyBtn" type="button">Save Key</button>
+          </div>
+        </div>
+        <!-- What's special today (Gemini AI, cached once per day in localStorage) -->
+        <div class="settings-list-item settings-list-item--column">
+          <span class="settings-list-label">AI Insight</span>
+          <button class="btn-outline btn whats-special-toggle-btn" id="whatsSpecialToggleBtn" type="button">✨ What's special Today?</button>
+          <div id="whatsSpecialContent" style="display: none;">
+            <p class="whats-special-status" id="whatsSpecialStatus" style="display: none;"></p>
+            <div class="whats-special-text" id="whatsSpecialText" style="display: none;"></div>
+            <button class="btn-outline btn btn-small copy-ai-text-btn" id="whatsSpecialCopyBtn" type="button" style="display: none;">📋 Copy</button>
+            <button class="btn-outline btn whats-special-delete-btn" id="whatsSpecialDeleteBtn" type="button" style="display: none;">🗑️ Delete</button>
           </div>
         </div>
       </div>
@@ -1679,17 +1723,6 @@
       <div class="cal-grid cal-grid--with-week" id="calGrid"></div>
     </div>
 
-    <!-- What's special today (Gemini AI, cached once per day in localStorage) -->
-    <div class="card">
-      <button class="btn-outline btn whats-special-toggle-btn" id="whatsSpecialToggleBtn" type="button">✨ What's special Today?</button>
-      <div id="whatsSpecialContent" style="display: none;">
-        <p class="whats-special-status" id="whatsSpecialStatus" style="display: none;"></p>
-        <div class="whats-special-text" id="whatsSpecialText" style="display: none;"></div>
-        <button class="btn-outline btn btn-small copy-ai-text-btn" id="whatsSpecialCopyBtn" type="button" style="display: none;">📋 Copy</button>
-        <button class="btn-outline btn whats-special-delete-btn" id="whatsSpecialDeleteBtn" type="button" style="display: none;">🗑️ Delete</button>
-      </div>
-    </div>
-
     <!-- New entry -->
     <div class="card">
       <h3>✍️ New Entry</h3>
@@ -1705,7 +1738,7 @@
     </div>
 
     <!-- Pomodoro timer -->
-    <div class="card">
+    <div class="card" id="pomodoroCard">
       <details id="pomodoroDetails">
         <summary class="card-collapsible-summary"><h3>🍅 Pomodoro Timer</h3></summary>
       <div class="pomodoro-settings-row" id="pomodoroSettingsRow">
@@ -1814,7 +1847,7 @@
     </div>
 
     <!-- 24-hour countdown -->
-    <div class="card">
+    <div class="card" id="hoursOfDayCard">
       <details id="hoursOfDayDetails">
         <summary class="card-collapsible-summary"><h3>⏱️ Hours of the Day</h3></summary>
         <div class="hour-box-grid" id="hourBoxGrid"></div>
@@ -1870,10 +1903,6 @@
       </div>
       <div id="entriesList" style="margin-top: 12px;"></div>
 
-      <div class="summary-btn-row">
-        <button class="btn btn-small" id="summaryBtn" type="button">✨ Summary</button>
-      </div>
-
       <div id="summaryPanel">
         <h4>📋 How the day went — <span id="summaryDateLabel"></span></h4>
         <div class="summary-stats" id="summaryStats"></div>
@@ -1896,7 +1925,7 @@
     </div>
 
     <!-- Backup / restore -->
-    <div class="card">
+    <div class="card" id="backupRestoreCard">
       <details id="backupRestoreDetails">
         <summary class="card-collapsible-summary"><h3>💾 Backup &amp; Restore</h3></summary>
         <div class="backup-row">
@@ -2416,6 +2445,44 @@
         document.documentElement.removeAttribute('data-theme');
         localStorage.setItem(THEME_KEY, 'light');
       }
+    });
+
+    // --------------------------- Panel visibility ---------------------------
+    // Lets the user hide whole panels (Pomodoro, Hours of the Day, Backup &
+    // Restore) from the main page via Settings -- each defaults to visible
+    // (shown) unless the user has explicitly hidden it before.
+    const PANEL_VISIBILITY_KEY = 'life_diary_panel_visibility';
+    const PANEL_VISIBILITY_TOGGLES = [
+      { checkboxId: 'panelVisPomodoro', cardId: 'pomodoroCard' },
+      { checkboxId: 'panelVisHoursOfDay', cardId: 'hoursOfDayCard' },
+      { checkboxId: 'panelVisBackup', cardId: 'backupRestoreCard' },
+    ];
+    function loadPanelVisibility() {
+      try {
+        return JSON.parse(localStorage.getItem(PANEL_VISIBILITY_KEY)) || {};
+      } catch {
+        return {};
+      }
+    }
+    function savePanelVisibility(visibility) {
+      localStorage.setItem(PANEL_VISIBILITY_KEY, JSON.stringify(visibility));
+    }
+    (function initPanelVisibility() {
+      const visibility = loadPanelVisibility();
+      PANEL_VISIBILITY_TOGGLES.forEach(({ checkboxId, cardId }) => {
+        const visible = visibility[cardId] !== false; // default: visible
+        document.getElementById(checkboxId).checked = visible;
+        document.getElementById(cardId).style.display = visible ? '' : 'none';
+      });
+    })();
+
+    PANEL_VISIBILITY_TOGGLES.forEach(({ checkboxId, cardId }) => {
+      document.getElementById(checkboxId).addEventListener('change', function () {
+        document.getElementById(cardId).style.display = this.checked ? '' : 'none';
+        const visibility = loadPanelVisibility();
+        visibility[cardId] = this.checked;
+        savePanelVisibility(visibility);
+      });
     });
 
     // ------------------------ Currently-tracking entry -----------------------
@@ -5201,6 +5268,9 @@
       const showing = panel.style.display === 'block';
       panel.style.display = showing ? 'none' : 'block';
       if (!showing) updateSettingsKeyStatus();
+    });
+    document.getElementById('settingsCloseBtn').addEventListener('click', () => {
+      document.getElementById('settingsPanel').style.display = 'none';
     });
 
     document.getElementById('settingsSaveKeyBtn').addEventListener('click', () => {
