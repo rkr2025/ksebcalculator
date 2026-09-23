@@ -138,10 +138,17 @@
       box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent);
     }
     .week-day-cell--active .week-day-label { color: var(--accent); }
+    .week-day-hours-left {
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
     @media (max-width: 380px) {
       .week-progress-grid { gap: 3px; }
       .week-day-cell { padding: 3px 1px 4px; }
       .week-day-label { font-size: 9px; margin-bottom: 3px; }
+      .week-day-hours-left { font-size: 8px; }
     }
     #yearDaysBox { max-width: 420px; text-align: left; }
     .year-days-table-wrap {
@@ -2353,16 +2360,26 @@
       const todayIndex = now.getDay();
       const minutesIntoToday = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
       const todayPct = Math.min(100, Math.max(0, (minutesIntoToday / 1440) * 100));
+      const minutesLeftToday = Math.max(0, Math.round(1440 - minutesIntoToday));
+      const hoursLeftLabel = `${Math.floor(minutesLeftToday / 60)}h ${minutesLeftToday % 60}m`;
 
       grid.innerHTML = WEEKDAY_SHORT_LABELS.map((label, i) => {
-        let pct, stateClass, titleSuffix;
-        if (i < todayIndex) { pct = 100; stateClass = 'week-day-cell--passed'; titleSuffix = ''; }
-        else if (i === todayIndex) { pct = todayPct; stateClass = 'week-day-cell--active'; titleSuffix = ' -- today'; }
-        else { pct = 0; stateClass = 'week-day-cell--upcoming'; titleSuffix = ''; }
+        let pct, stateClass, titleSuffix, hoursLeftHtml;
+        if (i < todayIndex) {
+          pct = 100; stateClass = 'week-day-cell--passed'; titleSuffix = ''; hoursLeftHtml = '';
+        } else if (i === todayIndex) {
+          pct = todayPct; stateClass = 'week-day-cell--active';
+          titleSuffix = ` -- today, ${hoursLeftLabel} left`;
+          hoursLeftHtml = `<div class="week-day-hours-left">${hoursLeftLabel}</div>`;
+        } else {
+          pct = 0; stateClass = 'week-day-cell--upcoming'; titleSuffix = ' -- 24h left';
+          hoursLeftHtml = `<div class="week-day-hours-left">24h</div>`;
+        }
         return `
           <div class="week-day-cell ${stateClass}" title="${label}${titleSuffix}">
             <div class="week-day-label">${label}</div>
             <div class="week-day-track"><div class="week-day-fill" style="width: ${pct}%"></div></div>
+            ${hoursLeftHtml}
           </div>`;
       }).join('');
     }
