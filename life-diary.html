@@ -1953,6 +1953,20 @@
       return dow === 0 || dow === 6; // Sunday or Saturday
     }
 
+    // Every "always on" 1s/60s clock/progress interval below is registered
+    // through this helper so a single visibilitychange handler (set up near
+    // the end of this script) can pause all of them while the tab is hidden
+    // (phone screen off, switched app) and resume them -- with an immediate
+    // refresh so nothing looks stale -- once it's visible again. Ticking
+    // these every second in the background burns battery for no visible
+    // benefit, since nothing they update is on screen anyway.
+    const managedIntervals = [];
+    function managedInterval(fn, ms) {
+      const entry = { fn, ms, id: setInterval(fn, ms) };
+      managedIntervals.push(entry);
+      return entry;
+    }
+
     // --------------------------- Hours of the Day ---------------------------
     // 24 boxes, one per hour of today. Each starts at 3600 (seconds in an
     // hour). Hours already passed grey out; the current hour counts its
@@ -1996,7 +2010,7 @@
     }
 
     renderHourBoxes();
-    setInterval(renderHourBoxes, 1000);
+    managedInterval(renderHourBoxes, 1000);
 
     // Clicking the active hour box, or any still-upcoming hour box, opens a
     // popup breaking that hour's 3600 seconds into 6 circles of 600 seconds
@@ -2239,8 +2253,8 @@
     }
 
     renderYearProgress();
-    setInterval(renderYearProgress, 60000);
-    setInterval(updateYearProgressClock, 1000);
+    managedInterval(renderYearProgress, 60000);
+    managedInterval(updateYearProgressClock, 1000);
 
     // Every day of the year in one table, most recent first (Dec 31 down to
     // Jan 1) -- already-gone days are crossed out and greyed, today and
@@ -2417,7 +2431,7 @@
     // this first tick to right after the whole script finishes executing,
     // by which point every later declaration is safely initialized.
     setTimeout(tickCurrentRunningEntry, 0);
-    setInterval(tickCurrentRunningEntry, 1000);
+    managedInterval(tickCurrentRunningEntry, 1000);
 
     // ---------------------------- Add an entry ----------------------------
     document.getElementById('addEntryBtn').addEventListener('click', () => {
@@ -5146,6 +5160,69 @@
     });
     document.getElementById('helpOverlay').addEventListener('click', (e) => {
       if (e.target.id === 'helpOverlay') document.getElementById('helpOverlay').style.display = 'none';
+    });
+
+    // --------------------- Battery saving: pause hidden-tab timers ---------------------
+    // managedInterval() above covers the "always on" clocks/progress bars.
+    // The remaining timers (hour-detail circles, Pomodoro, the diary list's
+    // own live-entry/block-progress ticks) start and stop on their own
+    // condition (a modal being open, Pomodoro running, viewing today with a
+    // live entry), so each is paused/resumed here individually rather than
+    // through the generic registry. Every one of them is driven off
+    // Date.now()/wall-clock anchors, so pausing for an arbitrary length of
+    // time and refreshing once on resume catches them back up correctly
+    // instead of leaving them stale or drifting.
+    let hourDetailTimerWasRunning = false;
+    let pomodoroTimerWasRunning = false;
+    let entriesTimersWereRunning = false;
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        managedIntervals.forEach((t) => {
+          if (t.id) { clearInterval(t.id); t.id = null; }
+        });
+
+        if (hourDetailTimerId) {
+          clearInterval(hourDetailTimerId);
+          hourDetailTimerId = null;
+          hourDetailTimerWasRunning = true;
+        }
+        if (pomodoroIntervalId) {
+          clearInterval(pomodoroIntervalId);
+          pomodoroIntervalId = null;
+          pomodoroTimerWasRunning = true;
+        }
+        if (liveEntryTimerId || blockProgressTimerId) {
+          if (liveEntryTimerId) { clearInterval(liveEntryTimerId); liveEntryTimerId = null; }
+          if (blockProgressTimerId) { clearInterval(blockProgressTimerId); blockProgressTimerId = null; }
+          entriesTimersWereRunning = true;
+        }
+      } else {
+        managedIntervals.forEach((t) => {
+          if (t.id) return; // already running -- never was paused
+          t.fn();
+          t.id = setInterval(t.fn, t.ms);
+        });
+
+        if (hourDetailTimerWasRunning) {
+          hourDetailTimerWasRunning = false;
+          renderHourDetailCircles();
+          hourDetailTimerId = setInterval(renderHourDetailCircles, 1000);
+        }
+        if (pomodoroTimerWasRunning) {
+          pomodoroTimerWasRunning = false;
+          pomodoroTick();
+          pomodoroIntervalId = setInterval(pomodoroTick, 1000);
+        }
+        if (entriesTimersWereRunning) {
+          entriesTimersWereRunning = false;
+          // Re-render rather than just resuming the two old timers -- time
+          // may have moved far enough while backgrounded (auto-stop, a new
+          // "latest entry", the current 3-hour block changing) that the
+          // stale DOM those timers were ticking no longer matches reality.
+          renderEntries();
+        }
+      }
     });
 
     // ------------------------------- Init ---------------------------------
