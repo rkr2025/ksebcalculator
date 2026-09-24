@@ -32,6 +32,7 @@
   .drop b { color: var(--primary-dark); }
   .drop small { display: block; margin-top: 6px; color: var(--text-muted); }
   input[type=file] { display: none; }
+  select { width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 9px; font: inherit; background: #fff; color: inherit; }
   input[type=text] { width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 9px; font: inherit; }
   label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
   button { font: inherit; cursor: pointer; border: 0; border-radius: 9px; padding: 9px 16px; background: var(--primary); color: #fff; font-weight: 600; }
@@ -100,13 +101,21 @@
   <div class="card">
     <div class="row">
       <div><label for="outName">Output file name</label><input type="text" id="outName" value="merged.pdf"></div>
+      <div><label for="compress">Compression</label>
+        <select id="compress">
+          <option value="none">None (keep original quality)</option>
+          <option value="medium">Medium (smaller file)</option>
+          <option value="strong">Strong (smallest file)</option>
+        </select></div>
       <button id="mergeBtn" disabled>Merge &amp; download</button>
     </div>
     <div class="status" id="status" role="status"></div>
+    <div class="hint">Compression redraws every page as a JPEG image. That can shrink scanned or photo-heavy PDFs a lot, but the text is no longer selectable or searchable and links are lost. If it would not make the file smaller, the uncompressed merge is used instead.</div>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 let files = []; // { id, file, pages, error }
@@ -203,25 +212,65 @@ window.addEventListener('drop', e => { if (dragId == null && !drop.contains(e.ta
 $('sortBtn').onclick = () => { files.sort((a, b) => a.file.name.localeCompare(b.file.name, undefined, { numeric: true })); render(); };
 $('clearBtn').onclick = () => { files = []; setStatus(''); render(); };
 
+async function mergePlain(good) {
+  const out = await PDFLib.PDFDocument.create();
+  for (let i = 0; i < good.length; i++) {
+    setStatus(`Merging ${i + 1} of ${good.length}: ${good[i].file.name}…`);
+    const src = await PDFLib.PDFDocument.load(await good[i].file.arrayBuffer(), { ignoreEncryption: true });
+    (await out.copyPages(src, src.getPageIndices())).forEach(p => out.addPage(p));
+  }
+  return out.save();
+}
+
+// Render each page with pdf.js and re-embed it as a JPEG at the chosen resolution and quality
+async function mergeCompressed(good, dpi, quality) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const out = await PDFLib.PDFDocument.create();
+  const total = good.reduce((n, f) => n + f.pages, 0);
+  let done = 0;
+  for (const f of good) {
+    const doc = await pdfjsLib.getDocument({ data: await f.file.arrayBuffer() }).promise;
+    for (let n = 1; n <= doc.numPages; n++) {
+      setStatus(`Compressing page ${++done} of ${total}…`);
+      const page = await doc.getPage(n);
+      const base = page.getViewport({ scale: 1 }); // size in points, rotation applied
+      const scale = Math.min(dpi / 72, 6000 / Math.max(base.width, base.height));
+      const vp = page.getViewport({ scale });
+      const c = document.createElement('canvas');
+      c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', quality));
+      const img = await out.embedJpg(await blob.arrayBuffer());
+      out.addPage([base.width, base.height]).drawImage(img, { x: 0, y: 0, width: base.width, height: base.height });
+      c.width = c.height = 0; page.cleanup();
+    }
+    await doc.destroy();
+  }
+  return out.save();
+}
+
 $('mergeBtn').onclick = async () => {
   const good = files.filter(f => !f.error && f.pages != null);
   if (good.length < 2) return;
   $('mergeBtn').disabled = true;
   try {
-    const out = await PDFLib.PDFDocument.create();
-    for (let i = 0; i < good.length; i++) {
-      setStatus(`Merging ${i + 1} of ${good.length}: ${good[i].file.name}…`);
-      const src = await PDFLib.PDFDocument.load(await good[i].file.arrayBuffer(), { ignoreEncryption: true });
-      const pages = await out.copyPages(src, src.getPageIndices());
-      pages.forEach(p => out.addPage(p));
+    let bytes = await mergePlain(good), note = '';
+    const level = $('compress').value;
+    if (level !== 'none') {
+      if (!window.pdfjsLib) throw new Error('compression library failed to load; check your internet connection');
+      const small = await mergeCompressed(good, level === 'strong' ? 96 : 144, level === 'strong' ? 0.5 : 0.7);
+      if (small.length < bytes.length) { note = ` Compressed from ${fmtSize(bytes.length)}.`; bytes = small; }
+      else note = ' Compression would not reduce the size, so the original quality was kept.';
     }
-    const bytes = await out.save();
     let name = $('outName').value.trim() || 'merged.pdf';
     if (!/\.pdf$/i.test(name)) name += '.pdf';
+    const total = (await PDFLib.PDFDocument.load(bytes)).getPageCount();
     const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
     const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
-    setStatus(`Done — ${out.getPageCount()} pages saved as ${name} (${fmtSize(bytes.length)}).`, 'ok');
+    setStatus(`Done — ${total} pages saved as ${name} (${fmtSize(bytes.length)}).${note}`, 'ok');
   } catch (e) {
     setStatus('Merge failed: ' + (e.message || e) + '. A file may be damaged or password-protected.', 'err');
   }
