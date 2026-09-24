@@ -60,13 +60,13 @@
   tr.sum.grand td { color: var(--primary-dark); background: var(--primary-light); }
   .total-box { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding: 12px 16px; border-radius: 10px; background: var(--primary-light); color: var(--primary-dark); font-size: 18px; font-weight: 700; }
   .total-box small { display: block; font-weight: 500; font-size: 12px; color: var(--text-secondary); }
-  .print-head, .sign { display: none; }
+  .print-head, .sign, .cheer { display: none; }
 
   @media print {
-    @page { size: A4 landscape; margin: 10mm; }
+    @page { size: A4 landscape; margin: 0; } /* zero page margin hides the browser header/footer */
     body { background: #fff; font-size: 12px; }
     .nav-link, .no-print { display: none !important; }
-    .wrap { max-width: none; padding: 0; }
+    .wrap { max-width: none; padding: 7mm 9mm; }
     .card { box-shadow: none; border: 0; padding: 0; margin: 0; }
     .print-head { display: block; margin-bottom: 8px; }
     .print-head h1 { font-size: 20px; }
@@ -82,25 +82,82 @@
     table.sheet th.rowh, table.sheet td.rowh { background: #eee; }
     td.off { background: #ddd; }
     /* room under each date for handwriting the amount */
-    td.cell { height: 52px; vertical-align: top; }
-    td.cell .d { margin-bottom: 14px; }
+    td.cell { height: 40px; vertical-align: top; }
+    td.cell .d { margin-bottom: 8px; }
     td.cell input { height: 22px; }
     .cell input { border: 0; padding: 0; background: transparent; -moz-appearance: textfield; appearance: textfield; }
     .cell input::-webkit-inner-spin-button, .cell input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     tr.sum.grand td, td.grand, .total-box { background: #eee; color: #000; }
-    .total-box { border: 1px solid #555; border-radius: 0; margin-top: 8px; }
-    .sign { display: flex; justify-content: space-between; margin-top: 30px; }
+    .total-box { border: 1px solid #555; border-radius: 0; margin-top: 6px; padding: 6px 14px; min-height: 0; }
+    .card, .sign, .cheer { break-inside: avoid; page-break-inside: avoid; }
+    .sign { display: flex; justify-content: space-between; margin-top: 14px; }
     .sign div { width: 30%; border-top: 1px solid #000; padding-top: 4px; text-align: center; font-size: 12px; }
     table, tr { break-inside: avoid; }
     /* left blank on paper so the student works these out */
     td[id^="wt"], td[id^="wp"] { color: transparent !important; }
     td[id^="wt"], td[id^="wp"] { height: 34px; }
-    #grandTotal, #totalSub { color: transparent !important; }
-    .total-box { min-height: 44px; }
+    #grandTotal { color: transparent !important; }
+    #totalSub { display: none; }
+    .total-box, body.fun .total-box { width: 300px; margin-left: auto; padding: 4px 12px; font-size: 14px; min-height: 0; }
+    /* ---- colourful kid-friendly styling (only when body.fun) ---- */
+    body.fun * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body.fun .print-head { padding: 5px 12px 6px; border-radius: 16px; background: #fff8e1; border: 3px dashed #ff922b; margin-bottom: 10px; }
+    body.fun .print-head h1 { margin: 0 0 3px; padding: 3px 14px; border-radius: 12px; text-align: center; color: #fff; font-size: 24px; letter-spacing: .02em;
+      background: linear-gradient(90deg, #ff6b6b, #ff922b, #fcc419, #51cf66, #22b8cf, #5c7cfa, #cc5de8); text-shadow: 1px 1px 0 rgba(0,0,0,.25); }
+    body.fun .pname { color: #5c3ea8; }
+    body.fun .pname b { color: #d6336c; }
+    body.fun .prev-row label { color: #1c7ed6; font-weight: 700; }
+    body.fun .prev-row input { border-bottom: 2px dotted #1c7ed6; }
+    body.fun table.sheet { border-collapse: separate; border-spacing: 2px; }
+    body.fun table.sheet th, body.fun table.sheet td { border: 2px solid #fff; border-radius: 8px; }
+    body.fun table.sheet thead th { color: #fff; font-size: 13px; text-shadow: 1px 1px 0 rgba(0,0,0,.2); background: #495057; }
+    body.fun table.sheet.lay-rows thead th:nth-child(2) { background: #ff6b6b; }
+    body.fun table.sheet.lay-rows thead th:nth-child(3) { background: #ff922b; }
+    body.fun table.sheet.lay-rows thead th:nth-child(4) { background: #f0a800; }
+    body.fun table.sheet.lay-rows thead th:nth-child(5) { background: #40b95a; }
+    body.fun table.sheet.lay-rows thead th:nth-child(6) { background: #22b8cf; }
+    body.fun table.sheet.lay-rows thead th:nth-child(7) { background: #5c7cfa; }
+    body.fun table.sheet.lay-rows thead th:nth-child(8) { background: #cc5de8; }
+    body.fun table.sheet.lay-rows thead th:nth-child(9) { background: #e64980; }
+    body.fun table.sheet.lay-rows thead th:nth-child(10) { background: #12b886; }
+    body.fun table.sheet.lay-rows thead th:nth-child(11) { background: #f59f00; }
+    body.fun table.sheet.lay-rows thead th:first-child { background: #7048e8; }
+    body.fun table.sheet.lay-cols tbody tr:nth-child(1) td.rowh { background: #ff6b6b; }
+    body.fun table.sheet.lay-cols tbody tr:nth-child(2) td.rowh { background: #ff922b; }
+    body.fun table.sheet.lay-cols tbody tr:nth-child(3) td.rowh { background: #f0a800; }
+    body.fun table.sheet.lay-cols tbody tr:nth-child(4) td.rowh { background: #40b95a; }
+    body.fun table.sheet.lay-cols tbody tr:nth-child(5) td.rowh { background: #22b8cf; }
+    body.fun table.sheet.lay-cols tbody tr:nth-child(6) td.rowh { background: #5c7cfa; }
+    body.fun table.sheet.lay-cols tbody tr:nth-child(7) td.rowh { background: #cc5de8; }
+    body.fun table.sheet.lay-cols tbody tr:nth-child(n+8) td.rowh { background: #fff3bf; color: #5c3ea8; }
+    body.fun table.sheet.lay-cols tbody tr:nth-child(-n+7) td.rowh { color: #fff; text-shadow: 1px 1px 0 rgba(0,0,0,.2); }
+    body.fun table.sheet .w0 { background: #ffe3e3; }
+    body.fun table.sheet .w1 { background: #fff3bf; }
+    body.fun table.sheet .w2 { background: #d3f9d8; }
+    body.fun table.sheet .w3 { background: #d0ebff; }
+    body.fun table.sheet .w4 { background: #e5dbff; }
+    body.fun table.sheet .w5 { background: #ffe8cc; }
+    body.fun table.sheet th.w0 { background: #ff8787; color: #fff; }
+    body.fun table.sheet th.w1 { background: #fcc419; color: #5c3d00; }
+    body.fun table.sheet th.w2 { background: #51cf66; color: #fff; }
+    body.fun table.sheet th.w3 { background: #4dabf7; color: #fff; }
+    body.fun table.sheet th.w4 { background: #9775fa; color: #fff; }
+    body.fun table.sheet th.w5 { background: #ff922b; color: #fff; }
+    body.fun table.sheet td.rowh.w0, body.fun table.sheet td.rowh.w1, body.fun table.sheet td.rowh.w2, body.fun table.sheet td.rowh.w3, body.fun table.sheet td.rowh.w4, body.fun table.sheet td.rowh.w5 { color: #343a40; font-size: 13px; }
+    body.fun table.sheet td.cell .d { color: #495057; font-weight: 700; }
+    body.fun table.sheet td.off { background: repeating-linear-gradient(45deg, #f1f3f5, #f1f3f5 5px, #dee2e6 5px, #dee2e6 10px); }
+    body.fun table.sheet td[id^="wt"] { background: #c3fae8; }
+    body.fun table.sheet td[id^="wp"] { background: #ffec99; }
+    body.fun table.sheet td:has(input[data-x]) { background: #ffdeeb; }
+    body.fun .total-box { background: #fff3bf; border: 2px dashed #f08c00; border-radius: 10px; color: #d9480f; font-size: 14px; }
+    body.fun .total-box::before { content: "\1F3C6"; font-size: 18px; margin-right: 6px; }
+    body.fun .total-box > div:first-child { flex: 1; }
+    body.fun .sign div { border-top: 2px dotted #7048e8; color: #7048e8; font-weight: 700; }
+    body.fun .cheer { display: block; text-align: center; margin-top: 6px; font-size: 15px; font-weight: 700; color: #e64980; }
   }
 </style>
 </head>
-<body>
+<body class="fun">
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JFG7JRVYNV"></script>
 <script>
@@ -126,7 +183,8 @@
         <select id="weekCount"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
       <div><label for="layoutSel">Layout</label>
         <select id="layoutSel"><option value="rows">Days on top, weeks down the side</option><option value="cols">Weeks on top, days down the side</option></select></div>
-      <div class="chk"><label><input type="checkbox" id="calChk"> Calendar format</label></div>
+      <div class="chk"><label><input type="checkbox" id="calChk"> Calendar format</label>
+        <label><input type="checkbox" id="funChk"> Colourful print</label></div>
       <button class="ghost" id="swapBtn">⇄ Swap</button>
       <button class="ghost" id="clearBtn">Clear amounts</button>
       <button id="printBtn">🖨 Print report</button>
@@ -144,6 +202,7 @@
     <div class="grid-wrap"><table class="sheet" id="sheet"></table></div>
     <div class="total-box"><div>TOTAL TO PAY<small id="totalSub"></small></div><div id="grandTotal">₹0</div></div>
     <div class="sign"><div>Student signature</div><div>Parent signature</div><div>Date</div></div>
+    <div class="cheer">🌈 Keep learning, keep shining! ⭐</div>
   </div>
 </div>
 
@@ -156,7 +215,7 @@ const monday = () => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay(
 const newSheet = () => ({ days: {}, extra: {}, prev: '', weeks: 4, monthOnly: false, calendar: true });
 
 // state.sheets is keyed by the sheet's start date, so every month keeps its own entries
-let state = { name: '', start: monday(), layout: 'rows', sheets: {} };
+let state = { name: '', start: monday(), layout: 'rows', fun: true, sheets: {} };
 try {
   const s = JSON.parse(localStorage.getItem(KEY));
   if (s) {
@@ -193,6 +252,7 @@ const weeksOf = () => {
 
 function build() {
   const S = sh(), W = weeksOf(), L = lead();
+  $('sheet').className = 'sheet lay-' + state.layout;
   const D = Array.from({ length: 7 }, (_, d) => dow(dayDate(d - L)));
   const weekLabel = w => {
     const ks = [0, 1, 2, 3, 4, 5, 6].map(d => w * 7 + d - L).filter(inSheet);
@@ -201,14 +261,14 @@ function build() {
   const dayCell = (w, d) => {
     const k = w * 7 + d - L, v = S.days[k] || {};
     if (!inSheet(k)) return '<td class="cell off"></td>';
-    return `<td class="cell"><span class="d">${D[d].slice(0, 3)}, ${fmt(dayDate(k))}</span><input type="number" min="0" step="1" data-k="amount" data-i="${k}" value="${esc(v.amount)}" aria-label="Amount ${D[d]} ${fmt(dayDate(k))}"></td>`;
+    return `<td class="cell w${w % 6}"><span class="d">${D[d].slice(0, 3)}, ${fmt(dayDate(k))}</span><input type="number" min="0" step="1" data-k="amount" data-i="${k}" value="${esc(v.amount)}" aria-label="Amount ${D[d]} ${fmt(dayDate(k))}"></td>`;
   };
   const extraAmt = w => `<td class="cell"><input type="number" min="0" step="1" data-x="amount" data-w="${w}" value="${esc((S.extra[w] || {}).amount)}" aria-label="Extra reward week ${w + 1}"></td>`;
   let h = '';
   if (state.layout === 'cols') {
     // weeks across the top, days down the side
     h = '<thead><tr><th class="rowh"></th>';
-    for (let w = 0; w < W; w++) h += `<th>${weekLabel(w)}</th>`;
+    for (let w = 0; w < W; w++) h += `<th class="w${w % 6}">${weekLabel(w)}</th>`;
     h += '</tr></thead><tbody>';
     for (let d = 0; d < 7; d++) {
       h += `<tr><td class="rowh">${D[d]}</td>`;
@@ -228,7 +288,7 @@ function build() {
     for (let d = 0; d < 7; d++) h += `<th>${D[d].slice(0, 3)}</th>`;
     h += '<th>Weekly total</th><th>Extra reward</th><th>Week payable</th></tr></thead><tbody>';
     for (let w = 0; w < W; w++) {
-      h += `<tr><td class="rowh">${weekLabel(w)}</td>`;
+      h += `<tr><td class="rowh w${w % 6}">${weekLabel(w)}</td>`;
       for (let d = 0; d < 7; d++) h += dayCell(w, d);
       h += `<td class="sum" id="wt${w}"></td>${extraAmt(w)}<td class="sum grand" id="wp${w}"></td></tr>`;
     }
@@ -259,7 +319,7 @@ function totals() {
   $('grandTotal').textContent = money(daysTotal + extraTotal + prev);
   $('totalSub').textContent = `Daily ${money(daysTotal)} + Extra ${money(extraTotal)} + Previous balance ${money(prev)}`;
   const title = S.monthOnly ? dayDate(0).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : '';
-  $('printTitle').textContent = 'Study Reward Report' + (title ? ' – ' + title : '');
+  $('printTitle').textContent = (state.fun !== false ? '⭐ ' : '') + 'Study Reward Report' + (title ? ' – ' + title : '') + (state.fun !== false ? ' ⭐' : '');
   $('printMeta').innerHTML = `<div class="pname">Student Name: <b>${state.name ? esc(state.name) : '<span class="blank"></span>'}</b></div>Period: ${fmt(dayDate(0))} – ${fmt(dayDate(last))}`;
 }
 
@@ -272,6 +332,8 @@ function syncControls() {
   $('weekCount').value = weeksOf();
   $('weekCount').disabled = isCal() && !!sh().monthOnly; // weeks follow the calendar
   $('calChk').checked = isCal();
+  $('funChk').checked = state.fun !== false;
+  document.body.classList.toggle('fun', state.fun !== false);
   $('layoutSel').value = state.layout;
 }
 
@@ -299,6 +361,7 @@ $('monthSel').addEventListener('input', pickMonth);
 $('monthSel').addEventListener('change', pickMonth);
 $('yearInp').addEventListener('change', pickMonth);
 $('startDate').addEventListener('input', e => { if (e.target.value) { state.start = e.target.value; save(); syncControls(); build(); } });
+$('funChk').addEventListener('change', e => { state.fun = e.target.checked; save(); syncControls(); totals(); });
 $('calChk').addEventListener('change', e => { sh().calendar = e.target.checked; if (e.target.checked && dayDate(0).getDate() === 1) sh().monthOnly = true; save(); syncControls(); build(); });
 $('weekCount').addEventListener('input', e => { sh().weeks = +e.target.value; save(); build(); });
 $('layoutSel').addEventListener('input', e => { state.layout = e.target.value; save(); build(); });
