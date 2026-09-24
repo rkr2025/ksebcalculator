@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image to PDF</title>
+<style>
+  :root {
+    --primary: #2a78d6;
+    --primary-dark: #1f5fac;
+    --primary-light: #eaf2fc;
+    --accent: #1baf7a;
+    --danger: #e34948;
+    --surface: #ffffff;
+    --surface-muted: #f6f8fb;
+    --border: #e3e7ef;
+    --text-primary: #17203a;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --radius: 14px;
+    --shadow: 0 2px 4px rgba(23,32,58,.06), 0 12px 28px -6px rgba(23,32,58,.14);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--surface-muted); color: var(--text-primary); }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 20px 16px 48px; }
+  .nav-link { display: inline-block; margin-bottom: 10px; color: var(--primary); text-decoration: none; font-size: 14px; }
+  h1 { margin: 0 0 4px; font-size: 26px; }
+  .subtitle { margin: 0 0 18px; color: var(--text-secondary); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; margin-bottom: 18px; }
+  .drop { border: 2px dashed var(--primary); background: var(--primary-light); border-radius: var(--radius); padding: 30px 16px; text-align: center; cursor: pointer; transition: background .15s; }
+  .drop.over { background: #d5e6fb; }
+  .drop b { color: var(--primary-dark); }
+  .drop small { display: block; margin-top: 6px; color: var(--text-muted); }
+  input[type=file] { display: none; }
+  input[type=text], select { width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 9px; font: inherit; background: #fff; color: inherit; }
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
+  button { font: inherit; cursor: pointer; border: 0; border-radius: 9px; padding: 9px 16px; background: var(--primary); color: #fff; font-weight: 600; }
+  button:hover:not(:disabled) { background: var(--primary-dark); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button.ghost { background: var(--primary-light); color: var(--primary-dark); }
+  button.danger { background: #fdecec; color: var(--danger); }
+  button.sm { padding: 5px 9px; font-size: 13px; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li.file { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; background: #fff; }
+  li.file.dragging { opacity: .4; }
+  li.file.target { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-light); }
+  .grip { cursor: grab; color: var(--text-muted); user-select: none; font-size: 18px; }
+  .num { width: 22px; text-align: center; font-weight: 700; color: var(--primary-dark); }
+  .thumb { width: 52px; height: 52px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-muted); flex: none; }
+  .info { flex: 1; min-width: 0; }
+  .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .meta { font-size: 12px; color: var(--text-muted); }
+  .meta.err { color: var(--danger); }
+  .btns { display: flex; gap: 4px; }
+  .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .head h2 { margin: 0; font-size: 17px; }
+  .empty { text-align: center; color: var(--text-muted); font-style: italic; padding: 12px 0; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+  .row > div { flex: 1 1 170px; }
+  .row > button { flex: 0 0 auto; }
+  .status { margin-top: 12px; font-size: 14px; min-height: 20px; }
+  .status.err { color: var(--danger); }
+  .status.ok { color: var(--accent); font-weight: 600; }
+  .hint { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+</style>
+</head>
+<body>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JFG7JRVYNV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-JFG7JRVYNV');
+</script>
+<div class="wrap">
+  <a class="nav-link" href="tools.html">← Back to Tools</a>
+  <h1>🖼️ Image to PDF</h1>
+  <p class="subtitle">Turn one or more images into a single PDF, one image per page. Files stay on your device — nothing is uploaded.</p>
+
+  <div class="card">
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose images">
+      <b>Click to choose images</b> or drag and drop them here
+      <small>JPG, PNG, WebP, GIF, BMP. You can add files in several rounds.</small>
+    </div>
+    <input type="file" id="picker" accept="image/*" multiple>
+  </div>
+
+  <div class="card">
+    <div class="head">
+      <h2>Images <span id="count" class="meta"></span></h2>
+      <div class="btns">
+        <button class="ghost sm" id="sortBtn">Sort A–Z</button>
+        <button class="danger sm" id="clearBtn">Clear all</button>
+      </div>
+    </div>
+    <ul id="list"></ul>
+    <div class="empty" id="empty">No images added yet.</div>
+    <div class="hint">Drag the ⠿ handle or use the arrows to change the page order.</div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div><label for="pageSize">Page size</label>
+        <select id="pageSize">
+          <option value="a4">A4</option>
+          <option value="letter">Letter</option>
+          <option value="image">Same as image</option>
+        </select></div>
+      <div><label for="orient">Orientation</label>
+        <select id="orient">
+          <option value="auto">Auto (match each image)</option>
+          <option value="portrait">Portrait</option>
+          <option value="landscape">Landscape</option>
+        </select></div>
+      <div><label for="margin">Margin</label>
+        <select id="margin">
+          <option value="0">None</option>
+          <option value="10" selected>Small (10 mm)</option>
+          <option value="20">Medium (20 mm)</option>
+        </select></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div><label for="outName">Output file name</label><input type="text" id="outName" value="images.pdf"></div>
+      <button id="makeBtn" disabled>Create &amp; download PDF</button>
+    </div>
+    <div class="status" id="status" role="status"></div>
+    <div class="hint">"Same as image" makes each page exactly the image size, so margin and orientation don't apply.</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+let items = []; // { id, file, url, w, h, error }
+let nextId = 1;
+let dragId = null;
+
+const MM = 72 / 25.4;
+const SIZES = { a4: [595.28, 841.89], letter: [612, 792] };
+const fmtSize = b => b < 1024 * 1024 ? (b / 1024).toFixed(0) + ' KB' : (b / 1024 / 1024).toFixed(1) + ' MB';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function setStatus(msg, cls) { const s = $('status'); s.textContent = msg; s.className = 'status ' + (cls || ''); }
+
+const loadImage = url => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error('decode')); im.src = url; });
+
+async function addFiles(list) {
+  const imgs = [...list].filter(f => f.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp)$/i.test(f.name));
+  if (!imgs.length) { setStatus('Please choose image files only.', 'err'); return; }
+  setStatus('');
+  for (const file of imgs) {
+    const item = { id: nextId++, file, url: URL.createObjectURL(file), w: 0, h: 0, error: '' };
+    items.push(item);
+    render();
+    try { const im = await loadImage(item.url); item.w = im.naturalWidth; item.h = im.naturalHeight; }
+    catch (e) { item.error = 'Could not read this image.'; }
+    render();
+  }
+}
+
+function render() {
+  $('list').innerHTML = items.map((f, i) => `
+    <li class="file" draggable="true" data-id="${f.id}">
+      <span class="grip" title="Drag to reorder">⠿</span>
+      <span class="num">${i + 1}</span>
+      <img class="thumb" src="${f.url}" alt="">
+      <div class="info">
+        <div class="name" title="${esc(f.file.name)}">${esc(f.file.name)}</div>
+        <div class="meta ${f.error ? 'err' : ''}">${f.error ? esc(f.error) : fmtSize(f.file.size) + (f.w ? ` · ${f.w}×${f.h}px` : ' · reading…')}</div>
+      </div>
+      <div class="btns">
+        <button class="ghost sm" data-act="up" ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button>
+        <button class="ghost sm" data-act="down" ${i === items.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button>
+        <button class="danger sm" data-act="del" aria-label="Remove">✕</button>
+      </div>
+    </li>`).join('');
+  $('empty').style.display = items.length ? 'none' : 'block';
+  const good = items.filter(f => !f.error && f.w);
+  $('count').textContent = items.length ? `— ${good.length} image${good.length === 1 ? '' : 's'}` : '';
+  $('makeBtn').disabled = !good.length;
+}
+
+$('list').addEventListener('click', e => {
+  const btn = e.target.closest('button'); if (!btn) return;
+  const id = +btn.closest('li').dataset.id, i = items.findIndex(f => f.id === id);
+  if (btn.dataset.act === 'del') { URL.revokeObjectURL(items[i].url); items.splice(i, 1); }
+  else if (btn.dataset.act === 'up' && i > 0) [items[i - 1], items[i]] = [items[i], items[i - 1]];
+  else if (btn.dataset.act === 'down' && i < items.length - 1) [items[i + 1], items[i]] = [items[i], items[i + 1]];
+  render();
+});
+
+// drag to reorder
+$('list').addEventListener('dragstart', e => { const li = e.target.closest('li'); if (!li) return; dragId = +li.dataset.id; li.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', ''); });
+$('list').addEventListener('dragover', e => {
+  if (dragId == null) return;
+  e.preventDefault();
+  document.querySelectorAll('li.target').forEach(x => x.classList.remove('target'));
+  const li = e.target.closest('li'); if (li) li.classList.add('target');
+});
+$('list').addEventListener('drop', e => {
+  if (dragId == null) return;
+  e.preventDefault(); e.stopPropagation();
+  const li = e.target.closest('li');
+  if (li) {
+    const from = items.findIndex(f => f.id === dragId), to = items.findIndex(f => f.id === +li.dataset.id);
+    if (from !== to) items.splice(to, 0, items.splice(from, 1)[0]);
+  }
+  dragId = null; render();
+});
+$('list').addEventListener('dragend', () => { dragId = null; render(); });
+
+// choosing files
+const drop = $('drop');
+drop.onclick = () => $('picker').click();
+drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('picker').click(); } };
+$('picker').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
+['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => { if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files); });
+window.addEventListener('dragover', e => { if (dragId == null) e.preventDefault(); });
+window.addEventListener('drop', e => { if (dragId == null && !drop.contains(e.target)) e.preventDefault(); });
+
+$('sortBtn').onclick = () => { items.sort((a, b) => a.file.name.localeCompare(b.file.name, undefined, { numeric: true })); render(); };
+$('clearBtn').onclick = () => { items.forEach(f => URL.revokeObjectURL(f.url)); items = []; setStatus(''); render(); };
+
+// Redraw through a canvas so EXIF rotation is applied and any format (WebP, GIF, BMP…) becomes JPEG or PNG.
+async function toEmbeddable(item) {
+  const im = await loadImage(item.url);
+  const c = document.createElement('canvas');
+  c.width = im.naturalWidth; c.height = im.naturalHeight;
+  const ctx = c.getContext('2d');
+  const keepJpeg = item.file.type === 'image/jpeg';
+  if (keepJpeg) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); }
+  ctx.drawImage(im, 0, 0);
+  const blob = await new Promise(r => c.toBlob(r, keepJpeg ? 'image/jpeg' : 'image/png', 0.95));
+  return { bytes: await blob.arrayBuffer(), jpeg: keepJpeg, w: c.width, h: c.height };
+}
+
+$('makeBtn').onclick = async () => {
+  const good = items.filter(f => !f.error && f.w);
+  if (!good.length) return;
+  $('makeBtn').disabled = true;
+  try {
+    const pdf = await PDFLib.PDFDocument.create();
+    const size = $('pageSize').value, orient = $('orient').value, margin = +$('margin').value * MM;
+    for (let i = 0; i < good.length; i++) {
+      setStatus(`Adding image ${i + 1} of ${good.length}…`);
+      const img = await toEmbeddable(good[i]);
+      const emb = img.jpeg ? await pdf.embedJpg(img.bytes) : await pdf.embedPng(img.bytes);
+      if (size === 'image') { // page is exactly the image, capped to the PDF page limit
+        const k = Math.min(1, 14400 / Math.max(img.w, img.h)) * 0.75;
+        pdf.addPage([img.w * k, img.h * k]).drawImage(emb, { x: 0, y: 0, width: img.w * k, height: img.h * k });
+        continue;
+      }
+      let [pw, ph] = SIZES[size];
+      const landscape = orient === 'landscape' || (orient === 'auto' && img.w > img.h);
+      if (landscape) [pw, ph] = [ph, pw];
+      const page = pdf.addPage([pw, ph]);
+      const s = Math.min((pw - 2 * margin) / img.w, (ph - 2 * margin) / img.h); // fit inside, keep proportions
+      const w = img.w * s, h = img.h * s;
+      page.drawImage(emb, { x: (pw - w) / 2, y: (ph - h) / 2, width: w, height: h });
+    }
+    const bytes = await pdf.save();
+    let name = $('outName').value.trim() || 'images.pdf';
+    if (!/\.pdf$/i.test(name)) name += '.pdf';
+    const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+    const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    setStatus(`Done — ${good.length} page${good.length === 1 ? '' : 's'} saved as ${name} (${fmtSize(bytes.length)}).`, 'ok');
+  } catch (e) {
+    setStatus('Could not create the PDF: ' + (e.message || e), 'err');
+  }
+  render();
+};
+
+render();
+</script>
+</body>
+</html>
