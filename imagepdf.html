@@ -121,10 +121,17 @@
         </select></div>
     </div>
     <div class="row" style="margin-top:12px">
+      <div><label for="compress">Compression</label>
+        <select id="compress">
+          <option value="none">None (best quality)</option>
+          <option value="medium">Medium (smaller file)</option>
+          <option value="strong">Strong (smallest file)</option>
+        </select></div>
       <div><label for="outName">Output file name</label><input type="text" id="outName" value="images.pdf"></div>
       <button id="makeBtn" disabled>Create &amp; download PDF</button>
     </div>
     <div class="status" id="status" role="status"></div>
+    <div class="hint">Compression shrinks large images and saves them as JPEG (transparent areas become white). An image is only replaced when the compressed copy is actually smaller.</div>
     <div class="hint">"Same as image" makes each page exactly the image size, so margin and orientation don't apply.</div>
   </div>
 </div>
@@ -223,17 +230,32 @@ window.addEventListener('drop', e => { if (dragId == null && !drop.contains(e.ta
 $('sortBtn').onclick = () => { items.sort((a, b) => a.file.name.localeCompare(b.file.name, undefined, { numeric: true })); render(); };
 $('clearBtn').onclick = () => { items.forEach(f => URL.revokeObjectURL(f.url)); items = []; setStatus(''); render(); };
 
-// Redraw through a canvas so EXIF rotation is applied and any format (WebP, GIF, BMP…) becomes JPEG or PNG.
-async function toEmbeddable(item) {
-  const im = await loadImage(item.url);
+const LEVELS = { medium: { maxSide: 2000, quality: 0.75 }, strong: { maxSide: 1200, quality: 0.5 } };
+
+const drawTo = (im, w, h, jpeg) => {
   const c = document.createElement('canvas');
-  c.width = im.naturalWidth; c.height = im.naturalHeight;
+  c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h));
   const ctx = c.getContext('2d');
+  if (jpeg) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); }
+  ctx.drawImage(im, 0, 0, c.width, c.height);
+  return c;
+};
+const canvasBlob = (c, type, q) => new Promise(r => c.toBlob(r, type, q));
+
+// Redraw through a canvas so EXIF rotation is applied and any format (WebP, GIF, BMP…) becomes JPEG or PNG.
+// With compression on, also try a downscaled JPEG and keep whichever is smaller.
+async function toEmbeddable(item, level) {
+  const im = await loadImage(item.url);
+  const w = im.naturalWidth, h = im.naturalHeight;
   const keepJpeg = item.file.type === 'image/jpeg';
-  if (keepJpeg) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); }
-  ctx.drawImage(im, 0, 0);
-  const blob = await new Promise(r => c.toBlob(r, keepJpeg ? 'image/jpeg' : 'image/png', 0.95));
-  return { bytes: await blob.arrayBuffer(), jpeg: keepJpeg, w: c.width, h: c.height };
+  let blob = await canvasBlob(drawTo(im, w, h, keepJpeg), keepJpeg ? 'image/jpeg' : 'image/png', 0.95), jpeg = keepJpeg;
+  const lv = LEVELS[level];
+  if (lv) {
+    const k = Math.min(1, lv.maxSide / Math.max(w, h));
+    const small = await canvasBlob(drawTo(im, w * k, h * k, true), 'image/jpeg', lv.quality);
+    if (small.size < blob.size) { blob = small; jpeg = true; }
+  }
+  return { bytes: await blob.arrayBuffer(), jpeg, w, h, size: blob.size };
 }
 
 $('makeBtn').onclick = async () => {
@@ -242,10 +264,11 @@ $('makeBtn').onclick = async () => {
   $('makeBtn').disabled = true;
   try {
     const pdf = await PDFLib.PDFDocument.create();
+    const originalSize = good.reduce((n, f) => n + f.file.size, 0);
     const size = $('pageSize').value, orient = $('orient').value, margin = +$('margin').value * MM;
     for (let i = 0; i < good.length; i++) {
       setStatus(`Adding image ${i + 1} of ${good.length}…`);
-      const img = await toEmbeddable(good[i]);
+      const img = await toEmbeddable(good[i], $('compress').value);
       const emb = img.jpeg ? await pdf.embedJpg(img.bytes) : await pdf.embedPng(img.bytes);
       if (size === 'image') { // page is exactly the image, capped to the PDF page limit
         const k = Math.min(1, 14400 / Math.max(img.w, img.h)) * 0.75;
@@ -266,7 +289,7 @@ $('makeBtn').onclick = async () => {
     const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
     const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
-    setStatus(`Done — ${good.length} page${good.length === 1 ? '' : 's'} saved as ${name} (${fmtSize(bytes.length)}).`, 'ok');
+    setStatus(`Done — ${good.length} page${good.length === 1 ? '' : 's'} saved as ${name} (${fmtSize(bytes.length)}${$('compress').value !== 'none' ? `, images were ${fmtSize(originalSize)}` : ''}).`, 'ok');
   } catch (e) {
     setStatus('Could not create the PDF: ' + (e.message || e), 'err');
   }
