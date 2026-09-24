@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Reward Tracker</title>
+<style>
+  :root {
+    --primary: #2a78d6;
+    --primary-dark: #1f5fac;
+    --primary-light: #eaf2fc;
+    --accent: #1baf7a;
+    --danger: #e34948;
+    --surface: #ffffff;
+    --surface-muted: #f6f8fb;
+    --border: #e3e7ef;
+    --text-primary: #17203a;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --radius: 14px;
+    --shadow: 0 2px 4px rgba(23,32,58,.06), 0 12px 28px -6px rgba(23,32,58,.14);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--surface-muted); color: var(--text-primary); }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 20px 16px 48px; }
+  .nav-link { display: inline-block; margin-bottom: 10px; color: var(--primary); text-decoration: none; font-size: 14px; }
+  h1 { margin: 0 0 4px; font-size: 26px; }
+  .subtitle { margin: 0 0 18px; color: var(--text-secondary); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; margin-bottom: 18px; }
+  .card h2 { margin: 0 0 12px; font-size: 17px; }
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
+  input, select { width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 9px; font: inherit; background: #fff; color: inherit; }
+  input:focus, select:focus { outline: 2px solid var(--primary-light); border-color: var(--primary); }
+  button { font: inherit; cursor: pointer; border: 0; border-radius: 9px; padding: 9px 16px; background: var(--primary); color: #fff; font-weight: 600; }
+  button:hover { background: var(--primary-dark); }
+  button.ghost { background: var(--primary-light); color: var(--primary-dark); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+  .row > * { flex: 1 1 150px; }
+  .row > button { flex: 0 0 auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 6px; border-bottom: 1px solid var(--border); text-align: left; }
+  th { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+  td.num, th.num { text-align: right; }
+  .tbl-wrap { overflow-x: auto; }
+  .hint { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+  .chk label { display: flex; align-items: center; gap: 6px; margin: 0 0 10px; font-size: 13px; cursor: pointer; }
+  .chk input { width: auto; }
+  .prev-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .prev-row label { margin: 0; font-size: 13px; white-space: nowrap; }
+  .prev-row input { max-width: 140px; text-align: right; }
+  .grid-wrap { overflow-x: auto; }
+  table.sheet { table-layout: fixed; min-width: 640px; }
+  table.sheet th, table.sheet td { border: 1px solid var(--border); text-align: center; vertical-align: middle; }
+  table.sheet th.rowh, table.sheet td.rowh { width: 110px; text-align: left; font-weight: 600; background: var(--surface-muted); }
+  .cell .d { display: block; font-size: 11px; color: var(--text-muted); }
+  .cell input { text-align: center; padding: 6px 4px; }
+  td.off { background: repeating-linear-gradient(45deg, #f1f3f7, #f1f3f7 6px, #fafbfd 6px, #fafbfd 12px); }
+  tr.sum td, td.sum { font-weight: 600; }
+  td.grand { font-weight: 700; color: var(--primary-dark); background: var(--primary-light); }
+  tr.sum.grand td { color: var(--primary-dark); background: var(--primary-light); }
+  .total-box { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding: 12px 16px; border-radius: 10px; background: var(--primary-light); color: var(--primary-dark); font-size: 18px; font-weight: 700; }
+  .total-box small { display: block; font-weight: 500; font-size: 12px; color: var(--text-secondary); }
+  .print-head, .sign { display: none; }
+
+  @media print {
+    @page { size: A4 landscape; margin: 10mm; }
+    body { background: #fff; font-size: 12px; }
+    .nav-link, .no-print { display: none !important; }
+    .wrap { max-width: none; padding: 0; }
+    .card { box-shadow: none; border: 0; padding: 0; margin: 0; }
+    .print-head { display: block; margin-bottom: 8px; }
+    .print-head h1 { font-size: 20px; }
+    .pname { font-size: 16px; margin-bottom: 4px; }
+    .pname .blank { display: inline-block; width: 260px; border-bottom: 1px solid #000; }
+    .grid-wrap { overflow: visible; }
+    .prev-row label { font-size: 13px; }
+    .prev-row input::placeholder { color: transparent; }
+    .prev-row input { border: 0; border-bottom: 1px solid #555; border-radius: 0; padding: 2px 4px; background: transparent; -moz-appearance: textfield; appearance: textfield; min-width: 110px; }
+    .prev-row input::-webkit-inner-spin-button, .prev-row input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    table.sheet { min-width: 0; width: 100%; font-size: 12px; }
+    table.sheet th, table.sheet td { border: 1px solid #555; padding: 4px; }
+    table.sheet th.rowh, table.sheet td.rowh { background: #eee; }
+    td.off { background: #ddd; }
+    /* room under each date for handwriting the amount */
+    td.cell { height: 52px; vertical-align: top; }
+    td.cell .d { margin-bottom: 14px; }
+    td.cell input { height: 22px; }
+    .cell input { border: 0; padding: 0; background: transparent; -moz-appearance: textfield; appearance: textfield; }
+    .cell input::-webkit-inner-spin-button, .cell input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    tr.sum.grand td, td.grand, .total-box { background: #eee; color: #000; }
+    .total-box { border: 1px solid #555; border-radius: 0; margin-top: 8px; }
+    .sign { display: flex; justify-content: space-between; margin-top: 30px; }
+    .sign div { width: 30%; border-top: 1px solid #000; padding-top: 4px; text-align: center; font-size: 12px; }
+    table, tr { break-inside: avoid; }
+    /* left blank on paper so the student works these out */
+    td[id^="wt"], td[id^="wp"] { color: transparent !important; }
+    td[id^="wt"], td[id^="wp"] { height: 34px; }
+    #grandTotal, #totalSub { color: transparent !important; }
+    .total-box { min-height: 44px; }
+  }
+</style>
+</head>
+<body>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JFG7JRVYNV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-JFG7JRVYNV');
+</script>
+<div class="wrap">
+  <a class="nav-link" href="tools.html">← Back to Tools</a>
+  <h1>🏆 Study Reward Tracker</h1>
+  <p class="subtitle no-print">Weeks side by side: enter the amount earned each day, plus any extra reward. Prints on one landscape sheet.</p>
+
+  <div class="card no-print">
+    <h2>Sheet setup</h2>
+    <div class="row">
+      <div><label for="studentName">Student name</label><input id="studentName" placeholder="Name"></div>
+      <div><label for="monthSel">Month</label>
+        <select id="monthSel"><option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select></div>
+      <div><label for="yearInp">Year</label><input id="yearInp" type="number" min="2000" max="2100" step="1"></div>
+      <div><label for="startDate">Week 1 starts on</label><input id="startDate" type="date"></div>
+      <div><label for="weekCount">Number of weeks</label>
+        <select id="weekCount"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+      <div><label for="layoutSel">Layout</label>
+        <select id="layoutSel"><option value="rows">Days on top, weeks down the side</option><option value="cols">Weeks on top, days down the side</option></select></div>
+      <div class="chk"><label><input type="checkbox" id="calChk"> Calendar format</label></div>
+      <button class="ghost" id="swapBtn">⇄ Swap</button>
+      <button class="ghost" id="clearBtn">Clear amounts</button>
+      <button id="printBtn">🖨 Print report</button>
+    </div>
+    <div class="hint">Pick a month to get a sheet starting on the 1st, or choose any start date yourself. Tick Calendar format to line the days up under their real weekdays, with other months' dates left blank. Each month/start date keeps its own amounts, saved in this browser automatically.</div>
+  </div>
+
+  <div class="print-head">
+    <h1 id="printTitle">Study Reward Report</h1>
+    <div id="printMeta"></div>
+  </div>
+
+  <div class="card">
+    <div class="prev-row"><label for="prevBal">Balance from previous month (₹)</label><input id="prevBal" type="number" step="1" placeholder="0"></div>
+    <div class="grid-wrap"><table class="sheet" id="sheet"></table></div>
+    <div class="total-box"><div>TOTAL TO PAY<small id="totalSub"></small></div><div id="grandTotal">₹0</div></div>
+    <div class="sign"><div>Student signature</div><div>Parent signature</div><div>Date</div></div>
+  </div>
+</div>
+
+<script>
+const KEY = 'rewardTracker.v2';
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, '0');
+const iso = d => { const x = new Date(d); x.setMinutes(x.getMinutes() - x.getTimezoneOffset()); return x.toISOString().slice(0, 10); };
+const monday = () => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return iso(d); };
+const newSheet = () => ({ days: {}, extra: {}, prev: '', weeks: 4, monthOnly: false, calendar: true });
+
+// state.sheets is keyed by the sheet's start date, so every month keeps its own entries
+let state = { name: '', start: monday(), layout: 'rows', sheets: {} };
+try {
+  const s = JSON.parse(localStorage.getItem(KEY));
+  if (s) {
+    if (!s.sheets) { // older single-sheet format
+      s.sheets = {};
+      s.sheets[s.start || monday()] = Object.assign(newSheet(), { days: s.days || {}, extra: s.extra || {}, prev: s.prev || '', weeks: s.weeks || 4 });
+      delete s.days; delete s.extra; delete s.prev; delete s.weeks;
+    }
+    state = Object.assign(state, s);
+  }
+} catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+const sh = () => state.sheets[state.start] || (state.sheets[state.start] = newSheet());
+
+const money = n => '₹' + (Math.round(n * 100) / 100).toLocaleString('en-IN');
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const dayDate = i => { const d = new Date(state.start + 'T00:00'); d.setDate(d.getDate() + i); return d; };
+const fmt = d => d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
+const dow = d => d.toLocaleDateString(undefined, { weekday: 'long' });
+const num = v => +v || 0;
+// in month mode, days spilling into the next month are not part of the sheet
+const inSheet = i => i >= 0 && (!sh().monthOnly || iso(dayDate(i)).slice(0, 7) === state.start.slice(0, 7));
+
+// Calendar format: columns are fixed weekdays (Mon-Sun) and the first week is padded with blanks
+// so the 1st lands under its real weekday. Day keys stay "days since the sheet's start date".
+const isCal = () => sh().calendar !== false; // calendar format is the default
+const lead = () => isCal() ? (dayDate(0).getDay() + 6) % 7 : 0;
+const weeksOf = () => {
+  const S = sh();
+  if (!(isCal() && S.monthOnly)) return S.weeks;
+  const d = dayDate(0);
+  return Math.ceil((lead() + new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()) / 7);
+};
+
+function build() {
+  const S = sh(), W = weeksOf(), L = lead();
+  const D = Array.from({ length: 7 }, (_, d) => dow(dayDate(d - L)));
+  const weekLabel = w => {
+    const ks = [0, 1, 2, 3, 4, 5, 6].map(d => w * 7 + d - L).filter(inSheet);
+    return `Week ${w + 1}<br><small>${fmt(dayDate(ks[0]))} – ${fmt(dayDate(ks[ks.length - 1]))}</small>`;
+  };
+  const dayCell = (w, d) => {
+    const k = w * 7 + d - L, v = S.days[k] || {};
+    if (!inSheet(k)) return '<td class="cell off"></td>';
+    return `<td class="cell"><span class="d">${D[d].slice(0, 3)}, ${fmt(dayDate(k))}</span><input type="number" min="0" step="1" data-k="amount" data-i="${k}" value="${esc(v.amount)}" aria-label="Amount ${D[d]} ${fmt(dayDate(k))}"></td>`;
+  };
+  const extraAmt = w => `<td class="cell"><input type="number" min="0" step="1" data-x="amount" data-w="${w}" value="${esc((S.extra[w] || {}).amount)}" aria-label="Extra reward week ${w + 1}"></td>`;
+  let h = '';
+  if (state.layout === 'cols') {
+    // weeks across the top, days down the side
+    h = '<thead><tr><th class="rowh"></th>';
+    for (let w = 0; w < W; w++) h += `<th>${weekLabel(w)}</th>`;
+    h += '</tr></thead><tbody>';
+    for (let d = 0; d < 7; d++) {
+      h += `<tr><td class="rowh">${D[d]}</td>`;
+      for (let w = 0; w < W; w++) h += dayCell(w, d);
+      h += '</tr>';
+    }
+    h += '<tr class="sum"><td class="rowh">Weekly total</td>';
+    for (let w = 0; w < W; w++) h += `<td id="wt${w}"></td>`;
+    h += '</tr><tr class="sum"><td class="rowh">Extra reward</td>';
+    for (let w = 0; w < W; w++) h += extraAmt(w);
+    h += '</tr><tr class="sum grand"><td class="rowh">Week payable</td>';
+    for (let w = 0; w < W; w++) h += `<td id="wp${w}"></td>`;
+    h += '</tr></tbody>';
+  } else {
+    // days across the top, weeks down the side
+    h = '<thead><tr><th class="rowh">Week</th>';
+    for (let d = 0; d < 7; d++) h += `<th>${D[d].slice(0, 3)}</th>`;
+    h += '<th>Weekly total</th><th>Extra reward</th><th>Week payable</th></tr></thead><tbody>';
+    for (let w = 0; w < W; w++) {
+      h += `<tr><td class="rowh">${weekLabel(w)}</td>`;
+      for (let d = 0; d < 7; d++) h += dayCell(w, d);
+      h += `<td class="sum" id="wt${w}"></td>${extraAmt(w)}<td class="sum grand" id="wp${w}"></td></tr>`;
+    }
+    h += '</tbody>';
+  }
+  $('sheet').innerHTML = h;
+  $('prevBal').value = S.prev;
+  totals();
+}
+
+function totals() {
+  const S = sh(), W = weeksOf(), L = lead();
+  let daysTotal = 0, extraTotal = 0, last = 0;
+  for (let w = 0; w < W; w++) {
+    let wt = 0;
+    for (let d = 0; d < 7; d++) {
+      const k = w * 7 + d - L;
+      if (!inSheet(k)) continue;
+      last = k;
+      wt += num((S.days[k] || {}).amount);
+    }
+    const ex = num((S.extra[w] || {}).amount);
+    $('wt' + w).textContent = money(wt);
+    $('wp' + w).textContent = money(wt + ex);
+    daysTotal += wt; extraTotal += ex;
+  }
+  const prev = num(S.prev);
+  $('grandTotal').textContent = money(daysTotal + extraTotal + prev);
+  $('totalSub').textContent = `Daily ${money(daysTotal)} + Extra ${money(extraTotal)} + Previous balance ${money(prev)}`;
+  const title = S.monthOnly ? dayDate(0).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : '';
+  $('printTitle').textContent = 'Study Reward Report' + (title ? ' – ' + title : '');
+  $('printMeta').innerHTML = `<div class="pname">Student Name: <b>${state.name ? esc(state.name) : '<span class="blank"></span>'}</b></div>Period: ${fmt(dayDate(0))} – ${fmt(dayDate(last))}`;
+}
+
+// keep the setup controls in step with the active sheet
+function syncControls() {
+  const d = dayDate(0);
+  $('startDate').value = state.start;
+  $('monthSel').value = d.getMonth() + 1;
+  $('yearInp').value = d.getFullYear();
+  $('weekCount').value = weeksOf();
+  $('weekCount').disabled = isCal() && !!sh().monthOnly; // weeks follow the calendar
+  $('calChk').checked = isCal();
+  $('layoutSel').value = state.layout;
+}
+
+// a month sheet always starts on the 1st of that month
+function goMonth(y, m) {
+  state.start = `${y}-${pad(m)}-01`;
+  const S = sh(); // choosing a month always means "only this month's days"
+  S.monthOnly = true; S.weeks = Math.ceil(new Date(y, m, 0).getDate() / 7);
+  save(); syncControls(); build();
+}
+function pickMonth() {
+  const m = +$('monthSel').value, y = +$('yearInp').value;
+  if (m && y >= 2000 && y <= 2100) goMonth(y, m);
+}
+
+$('sheet').addEventListener('input', e => {
+  const t = e.target, S = sh();
+  if (t.dataset.k) { (S.days[t.dataset.i] = S.days[t.dataset.i] || {})[t.dataset.k] = t.value; }
+  else if (t.dataset.x) { (S.extra[t.dataset.w] = S.extra[t.dataset.w] || {})[t.dataset.x] = t.value; }
+  else return;
+  save(); totals();
+});
+$('studentName').addEventListener('input', e => { state.name = e.target.value.trim(); save(); totals(); });
+$('monthSel').addEventListener('input', pickMonth);
+$('monthSel').addEventListener('change', pickMonth);
+$('yearInp').addEventListener('change', pickMonth);
+$('startDate').addEventListener('input', e => { if (e.target.value) { state.start = e.target.value; save(); syncControls(); build(); } });
+$('calChk').addEventListener('change', e => { sh().calendar = e.target.checked; if (e.target.checked && dayDate(0).getDate() === 1) sh().monthOnly = true; save(); syncControls(); build(); });
+$('weekCount').addEventListener('input', e => { sh().weeks = +e.target.value; save(); build(); });
+$('layoutSel').addEventListener('input', e => { state.layout = e.target.value; save(); build(); });
+$('swapBtn').onclick = () => { state.layout = state.layout === 'cols' ? 'rows' : 'cols'; $('layoutSel').value = state.layout; save(); build(); };
+$('prevBal').addEventListener('input', e => { sh().prev = e.target.value; save(); totals(); });
+$('clearBtn').onclick = () => { if (confirm('Clear all amounts and extra rewards for this sheet?')) { sh().days = {}; sh().extra = {}; save(); build(); } };
+$('printBtn').onclick = () => window.print();
+
+$('studentName').value = state.name;
+const d0 = dayDate(0); // open on the 1st of the month being viewed
+goMonth(d0.getFullYear(), d0.getMonth() + 1);
+</script>
+</body>
+</html>
