@@ -633,6 +633,11 @@
         runningBanner.style.display = 'none';
       }
 
+      // Page tab title: show the running timer (any category), else default
+      document.title = state.current
+        ? `${state.current.isBreak ? '☕ ' : '⏱ '}${formatDuration(currentElapsedMs())} - Work Log`
+        : 'Work Log Tracker';
+
       // Task controls
       const hasText = taskInput.value.trim().length > 0;
       const canAddHere = isToday && !state.current && hasText;
