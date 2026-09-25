@@ -355,6 +355,7 @@
       <div class="task-row">
         <input type="text" id="taskInput" placeholder="What are you working on? (include the word 'break' for breaks)">
         <button class="btn-add" id="addButton">▶ Add Task</button>
+        <button class="btn-outline" id="pauseButton" disabled>⏸ Pause</button>
         <button class="btn-stop" id="stopButton" disabled>⏹ Stop</button>
       </div>
       <p class="task-hint">Tip: name a task "Break" / "Lunch Break" / "Coffee break" etc. -- its duration is logged but excluded from work hours.</p>
@@ -419,6 +420,7 @@
     const taskInput = document.getElementById('taskInput');
     const addButton = document.getElementById('addButton');
     const stopButton = document.getElementById('stopButton');
+    const pauseButton = document.getElementById('pauseButton');
     const taskBlockedNote = document.getElementById('taskBlockedNote');
     const runningBanner = document.getElementById('runningBanner');
     const runningTaskName = document.getElementById('runningTaskName');
@@ -525,7 +527,9 @@
 
     function currentElapsedMs() {
       if (!state.current) return 0;
-      return Date.now() - new Date(state.current.start).getTime();
+      const c = state.current;
+      const now = c.pausedAt ? new Date(c.pausedAt).getTime() : Date.now();
+      return Math.max(0, now - new Date(c.start).getTime() - (c.pausedMs || 0));
     }
 
     function computeTotalsFor(category, dKey) {
@@ -635,7 +639,7 @@
 
       // Page tab title: show the running timer (any category), else default
       document.title = state.current
-        ? `${state.current.isBreak ? '☕ ' : '⏱ '}${formatDuration(currentElapsedMs())} - Work Log`
+        ? `${state.current.pausedAt ? '⏸ ' : state.current.isBreak ? '☕ ' : '⏱ '}${formatDuration(currentElapsedMs())} - Work Log`
         : 'Work Log Tracker';
 
       // Task controls
@@ -643,6 +647,8 @@
       const canAddHere = isToday && !state.current && hasText;
       addButton.disabled = !canAddHere;
       stopButton.disabled = !runningHere;
+      pauseButton.disabled = !runningHere;
+      pauseButton.textContent = (state.current && state.current.pausedAt) ? '▶ Resume' : '⏸ Pause';
       taskInput.disabled = !isToday || runningHere || runningElsewhere;
 
       if (!isToday) {
@@ -830,11 +836,25 @@
       showToast(`Started: ${task}`);
     });
 
+    pauseButton.addEventListener('click', () => {
+      const c = state.current;
+      if (!c) return;
+      if (c.pausedAt) {
+        c.pausedMs = (c.pausedMs || 0) + (Date.now() - new Date(c.pausedAt).getTime());
+        c.pausedAt = null;
+        showToast('Resumed.');
+      } else {
+        c.pausedAt = new Date().toISOString();
+        showToast('Paused.');
+      }
+      renderAll();
+    });
+
     stopButton.addEventListener('click', () => {
       if (!state.current) return;
-      const { category, task, start, isBreak } = state.current;
-      const end = new Date();
-      const ms = end.getTime() - new Date(start).getTime();
+      const { category, task, start, isBreak, pausedAt } = state.current;
+      const end = pausedAt ? new Date(pausedAt) : new Date();
+      const ms = currentElapsedMs();
       const dKey = dateKey(new Date(start));
       if (!state.logs[category]) state.logs[category] = {};
       if (!state.logs[category][dKey]) state.logs[category][dKey] = [];
