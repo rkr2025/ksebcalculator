@@ -226,6 +226,55 @@
   }
   .break-mode #runningTimer { color: var(--warn); }
 
+  /* -------- Activity notes for the running task -------- */
+  #notesBox { display: none; margin-top: 12px; }
+  #notesBox label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+  .note-add-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  #noteInput, .note-edit-input {
+    flex: 1;
+    min-width: 160px;
+    padding: 8px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+  }
+  #noteInput:focus, .note-edit-input:focus { outline: none; border-color: var(--primary); }
+  .notes-list { list-style: none; margin: 8px 0 0; padding: 0; }
+  .note-item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 13.5px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .note-item:last-child { border-bottom: none; }
+  .note-time { font-family: "Consolas","Courier New",monospace; font-size: 11.5px; color: var(--text-muted); flex-shrink: 0; }
+  .note-text { flex: 1; white-space: pre-wrap; word-break: break-word; }
+  .note-dur {
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    background: var(--primary-light);
+    border-radius: 999px;
+    padding: 1px 7px;
+    white-space: nowrap;
+  }
+  .note-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 0 3px;
+  }
+  .note-btn:hover { color: var(--primary); }
+  .note-btn.note-del:hover { color: var(--danger); }
+  td.task-cell .notes-list { margin-top: 4px; }
+  td.task-cell .note-item { font-size: 12px; font-weight: 400; color: var(--text-secondary); padding: 2px 0; }
+
   /* -------- Work log table -------- */
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
@@ -254,6 +303,30 @@
   tfoot td { font-weight: 700; border-bottom: none; border-top: 2px solid var(--border); }
 
   .actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+
+  /* -------- Work log as stacked cards on phones -------- */
+  @media screen and (max-width: 600px) {
+    .table-wrap { overflow-x: visible; }
+    table, tbody, tfoot { display: block; }
+    thead { display: none; }
+    #logBody tr {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    #logBody td { padding: 0; border-bottom: none; font-size: 12.5px; }
+    #logBody td.task-cell { flex: 1 0 100%; font-size: 14px; margin-bottom: 2px; }
+    #logBody td:nth-child(3), #logBody td:nth-child(4) { color: var(--text-secondary); }
+    #logBody td:nth-child(4)::before { content: "→ "; color: var(--text-muted); }
+    #logBody td:nth-child(5) { margin-left: auto; font-weight: 700; font-family: "Consolas","Courier New",monospace; }
+    #logBody td:last-child:empty { display: none; }
+    tfoot tr { display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: space-between; padding-top: 10px; }
+    tfoot td { padding: 0; border-top: none; font-size: 13px; white-space: normal; }
+    tfoot { border-top: 2px solid var(--border); }
+  }
 
   .toast {
     position: fixed;
@@ -286,7 +359,7 @@
 
   @media print {
     body { background: none; padding: 0; }
-    .actions-row, .nav-link, #runningBanner, .no-print { display: none !important; }
+    .actions-row, .nav-link, #runningBanner, #notesBox, .no-print { display: none !important; }
     .card { box-shadow: none; border: 1px solid #ccc; }
   }
 </style>
@@ -365,6 +438,15 @@
         <div id="runningTaskName">—</div>
         <div id="runningTimer">00:00:00</div>
       </div>
+
+      <div id="notesBox">
+        <label for="noteInput">📝 Notes -- what are you doing right now?</label>
+        <div class="note-add-row">
+          <input type="text" id="noteInput" placeholder="e.g. Reviewing tariff revision file">
+          <button class="btn-outline btn-small" id="addNoteButton">+ Add Note</button>
+        </div>
+        <ul class="notes-list" id="currentNotesList"></ul>
+      </div>
     </div>
 
     <!-- Work log summary -->
@@ -425,6 +507,10 @@
     const runningBanner = document.getElementById('runningBanner');
     const runningTaskName = document.getElementById('runningTaskName');
     const runningTimer = document.getElementById('runningTimer');
+    const notesBox = document.getElementById('notesBox');
+    const noteInput = document.getElementById('noteInput');
+    const addNoteButton = document.getElementById('addNoteButton');
+    const currentNotesList = document.getElementById('currentNotesList');
     const elapsedStat = document.getElementById('elapsedStat');
     const remainingStat = document.getElementById('remainingStat');
     const breakStat = document.getElementById('breakStat');
@@ -440,8 +526,9 @@
     const clearButton = document.getElementById('clearButton');
     const toast = document.getElementById('toast');
 
-    // state.logs[category][dateKey] = [{ task, start, end, ms, isBreak }, ...]
-    // state.current = { category, task, start, isBreak } | null  -- always today
+    // state.logs[category][dateKey] = [{ task, start, end, ms, isBreak, notes }, ...]
+    // state.current = { category, task, start, isBreak, notes } | null  -- always today
+    // notes = [{ text, at, elapsedMs }, ...]  -- elapsedMs = task's active (pause-excluded) time when the note was added
     let state = {
       categories: [...DEFAULT_CATEGORIES],
       selectedCategory: DEFAULT_CATEGORIES[0],
@@ -451,6 +538,10 @@
     };
     let viewDate = dateKey(new Date()); // which day's log/stats we're viewing (not persisted)
     let tickInterval = null;
+    let currentNotesSig = '';  // signatures let the 1s tick update times in place instead of rebuilding
+    let tableSig = '';         // (rebuilding every second swallows clicks on the ✎/✕ buttons)
+    let liveRowRefs = null;    // { durTd, notesUl } of the running task's table row
+    let noteEditOpen = false; // while a note is being edited, render() leaves note lists alone so the input keeps focus
 
     function dateKey(d) {
       const y = d.getFullYear();
@@ -519,6 +610,124 @@
         if (typeof state.targetHoursByCategory[c] !== 'number') state.targetHoursByCategory[c] = 8;
         if (!state.logs[c]) state.logs[c] = {};
       });
+    }
+
+    // Earlier builds stored notes as a single string; convert to the list form.
+    function normalizeNotes(obj) {
+      if (typeof obj.notes === 'string') {
+        obj.notes = obj.notes.trim() ? [{ text: obj.notes.trim(), at: obj.start }] : [];
+      } else if (!Array.isArray(obj.notes)) {
+        obj.notes = [];
+      }
+    }
+
+    function normalizeAllNotes() {
+      if (state.current) normalizeNotes(state.current);
+      Object.values(state.logs).forEach((byDate) =>
+        Object.values(byDate).forEach((list) => list.forEach(normalizeNotes)));
+    }
+
+    function formatShortDuration(ms) {
+      const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+      const h = Math.floor(totalSeconds / 3600);
+      const m = Math.floor((totalSeconds % 3600) / 60);
+      const s = totalSeconds % 60;
+      const pad = (n) => String(n).padStart(2, '0');
+      if (h) return `${h}h ${pad(m)}m`;
+      if (m) return `${m}m ${pad(s)}s`;
+      return `${s}s`;
+    }
+
+    // Each note lasts until the next note; the last one until the task ends (or now).
+    // entry = the task/session the notes belong to, totalMs = its active duration.
+    function noteDurations(notes, entry, totalMs) {
+      const offsets = notes.map((n) => typeof n.elapsedMs === 'number'
+        ? n.elapsedMs
+        : Math.max(0, new Date(n.at).getTime() - new Date(entry.start).getTime())); // notes saved before durations existed
+      return offsets.map((off, i) =>
+        Math.max(0, Math.min(totalMs, i < offsets.length - 1 ? offsets[i + 1] : totalMs) - Math.min(off, totalMs)));
+    }
+
+    function updateNoteDurations(ul, notes, entry, totalMs) {
+      const durs = noteDurations(notes, entry, totalMs);
+      ul.querySelectorAll('.note-dur').forEach((el, i) => { el.textContent = formatShortDuration(durs[i]); });
+    }
+
+    function buildNotesList(ul, notes, editable, entry, totalMs) {
+      ul.innerHTML = '';
+      const durs = noteDurations(notes, entry, totalMs);
+      notes.forEach((note, i) => {
+        const li = document.createElement('li');
+        li.className = 'note-item';
+
+        const time = document.createElement('span');
+        time.className = 'note-time';
+        time.textContent = new Date(note.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        li.appendChild(time);
+
+        const text = document.createElement('span');
+        text.className = 'note-text';
+        text.textContent = note.text;
+        li.appendChild(text);
+
+        const dur = document.createElement('span');
+        dur.className = 'note-dur';
+        dur.title = 'Time spent on this note';
+        dur.textContent = formatShortDuration(durs[i]);
+        li.appendChild(dur);
+
+        if (editable) {
+          const editBtn = document.createElement('button');
+          editBtn.className = 'note-btn no-print';
+          editBtn.title = 'Edit note';
+          editBtn.textContent = '✎';
+          editBtn.addEventListener('click', () => startNoteEdit(li, text, notes, i));
+          li.appendChild(editBtn);
+
+          const delBtn = document.createElement('button');
+          delBtn.className = 'note-btn note-del no-print';
+          delBtn.title = 'Delete note';
+          delBtn.textContent = '✕';
+          delBtn.addEventListener('click', () => {
+            if (!confirm('Delete this note?')) return;
+            notes.splice(i, 1);
+            render();
+          });
+          li.appendChild(delBtn);
+        }
+        ul.appendChild(li);
+      });
+      return ul;
+    }
+
+    function startNoteEdit(li, textSpan, notes, i) {
+      noteEditOpen = true;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'note-edit-input';
+      input.value = notes[i].text;
+      input.title = 'Enter to save, Esc to cancel';
+      li.querySelectorAll('.note-btn').forEach((b) => { b.hidden = true; });
+      li.replaceChild(input, textSpan);
+      input.focus();
+      input.select();
+
+      let done = false;
+      const finish = (save) => {
+        if (done) return;
+        done = true;
+        const newText = input.value.trim();
+        if (save && newText) notes[i].text = newText;
+        else if (save) showToast('Note cannot be empty -- use ✕ to delete it.', true);
+        noteEditOpen = false;
+        currentNotesSig = tableSig = ''; // the editor replaced list DOM, so force a rebuild
+        render();
+      };
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') finish(true);
+        else if (e.key === 'Escape') finish(false);
+      });
+      input.addEventListener('blur', () => finish(true));
     }
 
     function sessionsFor(category, dKey) {
@@ -633,8 +842,20 @@
           runningTaskName.appendChild(tag);
         }
         runningTimer.textContent = formatDuration(currentElapsedMs());
+        notesBox.style.display = 'block';
+        if (!noteEditOpen) {
+          const sig = JSON.stringify(state.current.notes);
+          if (sig !== currentNotesSig) {
+            buildNotesList(currentNotesList, state.current.notes, true, state.current, currentElapsedMs());
+            currentNotesSig = sig;
+          } else {
+            updateNoteDurations(currentNotesList, state.current.notes, state.current, currentElapsedMs());
+          }
+        }
       } else {
         runningBanner.style.display = 'none';
+        notesBox.style.display = 'none';
+        currentNotesSig = '';
       }
 
       // Page tab title: show the running timer (any category), else default
@@ -681,17 +902,39 @@
           ? `${pct.toFixed(1)}% of ${targetHours}h target complete`
           : `Target complete -- ${formatDuration(-remainingMs)} over ${targetHours}h`);
 
+      // Rebuilding the table would destroy an open note editor
+      if (noteEditOpen) {
+        saveState();
+        return;
+      }
+
       // Table (for selected category + viewed date)
-      logBody.innerHTML = '';
       const sessions = sessionsFor(cat, viewDate);
+      const liveShown = runningHere && dateKey(new Date(state.current.start)) === viewDate;
+      const sig = JSON.stringify([cat, viewDate, sessions, liveShown && [state.current.task, state.current.notes]]);
+      if (sig === tableSig) {
+        // Only the running row's times change on a tick
+        if (liveRowRefs) {
+          const ms = currentElapsedMs();
+          liveRowRefs.durTd.textContent = formatDuration(ms);
+          if (liveRowRefs.notesUl) updateNoteDurations(liveRowRefs.notesUl, state.current.notes, state.current, ms);
+          logFoot.querySelector('.totals-cell').textContent = `${cat}: ${formatDuration(workMs)} · Break: ${formatDuration(breakMs)}`;
+        }
+        saveState();
+        return;
+      }
+      tableSig = sig;
+      liveRowRefs = null;
+      logBody.innerHTML = '';
       const allRows = sessions.map((s, i) => ({ ...s, index: i }));
-      if (runningHere && dateKey(new Date(state.current.start)) === viewDate) {
+      if (liveShown) {
         allRows.push({
           task: state.current.task,
           start: state.current.start,
           end: null,
           ms: currentElapsedMs(),
           isBreak: state.current.isBreak,
+          notes: state.current.notes,
           index: -1,
           isLive: true
         });
@@ -708,6 +951,14 @@
           const taskTd = document.createElement('td');
           taskTd.className = 'task-cell';
           taskTd.textContent = row.task;
+          let notesUl = null;
+          if (row.notes && row.notes.length) {
+            // Live row notes are edited in the Current Task card; logged ones here
+            const entry = row.isLive ? state.current : sessions[row.index];
+            notesUl = document.createElement('ul');
+            notesUl.className = 'notes-list';
+            taskTd.appendChild(buildNotesList(notesUl, entry.notes, !row.isLive, entry, row.ms));
+          }
           tr.appendChild(taskTd);
 
           const typeTd = document.createElement('td');
@@ -728,6 +979,7 @@
           const durTd = document.createElement('td');
           durTd.textContent = formatDuration(row.ms);
           tr.appendChild(durTd);
+          if (row.isLive) liveRowRefs = { durTd, notesUl };
 
           const actionTd = document.createElement('td');
           actionTd.className = 'no-print';
@@ -747,7 +999,7 @@
         logFoot.innerHTML = `
           <tr>
             <td colspan="4">Totals</td>
-            <td colspan="2">${cat}: ${formatDuration(workMs)} · Break: ${formatDuration(breakMs)}</td>
+            <td colspan="2" class="totals-cell">${cat}: ${formatDuration(workMs)} · Break: ${formatDuration(breakMs)}</td>
           </tr>`;
       }
 
@@ -830,7 +1082,7 @@
         return;
       }
 
-      state.current = { category: state.selectedCategory, task, start: new Date().toISOString(), isBreak: isBreakTask(task) };
+      state.current = { category: state.selectedCategory, task, start: new Date().toISOString(), isBreak: isBreakTask(task), notes: [] };
       startTicking();
       renderAll();
       showToast(`Started: ${task}`);
@@ -853,21 +1105,43 @@
     stopButton.addEventListener('click', () => {
       if (!state.current) return;
       const { category, task, start, isBreak, pausedAt } = state.current;
+      const notes = state.current.notes || [];
       const end = pausedAt ? new Date(pausedAt) : new Date();
       const ms = currentElapsedMs();
       const dKey = dateKey(new Date(start));
       if (!state.logs[category]) state.logs[category] = {};
       if (!state.logs[category][dKey]) state.logs[category][dKey] = [];
-      state.logs[category][dKey].push({ task, start, end: end.toISOString(), ms, isBreak });
+      const entry = { task, start, end: end.toISOString(), ms, isBreak };
+      if (notes.length) entry.notes = notes;
+      state.logs[category][dKey].push(entry);
 
       state.current = null;
       stopTickingIfIdle();
       taskInput.value = '';
+      noteInput.value = '';
       renderAll();
       showToast('Task stopped and logged.');
     });
 
     taskInput.addEventListener('input', render);
+
+    addNoteButton.addEventListener('click', () => {
+      const text = noteInput.value.trim();
+      if (!state.current) return;
+      if (!text) {
+        showToast('Type a note first.', true);
+        return;
+      }
+      normalizeNotes(state.current);
+      state.current.notes.push({ text, at: new Date().toISOString(), elapsedMs: currentElapsedMs() });
+      noteInput.value = '';
+      noteInput.focus();
+      render();
+    });
+
+    noteInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addNoteButton.click();
+    });
 
     printButton.addEventListener('click', () => window.print());
 
@@ -906,6 +1180,7 @@
               if (typeof state.targetHoursByCategory[c] !== 'number') state.targetHoursByCategory[c] = 8;
               if (!state.logs[c]) state.logs[c] = {};
             });
+            normalizeAllNotes();
             if (state.current) startTicking();
             renderAll();
             showToast('Work log restored.');
@@ -932,6 +1207,7 @@
 
     // --------------------------- Initialization ---------------------------
     loadState();
+    normalizeAllNotes();
     if (state.current) startTicking();
     renderAll();
 
