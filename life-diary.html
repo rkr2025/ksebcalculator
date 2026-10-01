@@ -1050,6 +1050,19 @@
     }
     .entry-edit:hover { color: var(--accent, #3a7bfd); }
     .entry-delete:hover { color: var(--danger); }
+    /* Edit/Delete per entry stay hidden until the master "Edit Entries"
+       toggle is switched on for the list -- keeps the day's log clean to
+       just read, and only surfaces the destructive/edit actions when the
+       user explicitly asks for them. */
+    #entriesList:not(.entries-edit-mode) .entry-edit,
+    #entriesList:not(.entries-edit-mode) .entry-delete {
+      display: none;
+    }
+    #entriesEditToggle.is-active {
+      background: var(--accent, #3a7bfd);
+      color: #fff;
+      border-color: var(--accent, #3a7bfd);
+    }
     .entry-edit-textarea {
       flex: 1;
       font: inherit;
@@ -2101,6 +2114,7 @@
             <option value="60">60 min</option>
           </select>
         </span>
+        <button class="btn-outline btn" id="entriesEditToggle" type="button" title="Show edit/delete options on each diary entry">✏️ Edit Entries</button>
       </div>
       <div id="entriesList" style="margin-top: 12px;"></div>
 
@@ -4295,6 +4309,25 @@
     slotSizeSelect.addEventListener('change', () => {
       setSlotMinutes(parseInt(slotSizeSelect.value, 10));
       renderEntries();
+    });
+
+    // Master toggle for the per-entry Edit/Delete buttons -- off by default
+    // so the day's log reads clean; switching it on reveals those actions
+    // on every entry (CSS in #entriesList.entries-edit-mode handles the
+    // show/hide, so this toggle doesn't need to touch renderEntries at all).
+    // The choice is remembered across reloads.
+    const ENTRIES_EDIT_MODE_KEY = 'life_diary_entries_edit_mode';
+    const entriesList = document.getElementById('entriesList');
+    const entriesEditToggle = document.getElementById('entriesEditToggle');
+    function setEntriesEditMode(on) {
+      entriesList.classList.toggle('entries-edit-mode', on);
+      entriesEditToggle.classList.toggle('is-active', on);
+      entriesEditToggle.textContent = on ? '✅ Done Editing' : '✏️ Edit Entries';
+      localStorage.setItem(ENTRIES_EDIT_MODE_KEY, on ? 'true' : 'false');
+    }
+    setEntriesEditMode(localStorage.getItem(ENTRIES_EDIT_MODE_KEY) === 'true');
+    entriesEditToggle.addEventListener('click', () => {
+      setEntriesEditMode(!entriesList.classList.contains('entries-edit-mode'));
     });
 
     function formatTime(iso) {
