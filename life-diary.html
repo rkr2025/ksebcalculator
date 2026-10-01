@@ -981,6 +981,14 @@
       font-family: "Consolas", "Courier New", monospace;
       white-space: nowrap;
     }
+    .entry-contd {
+      flex: none;
+      font-size: 9px;
+      font-style: italic;
+      color: var(--accent);
+      opacity: 0.85;
+      white-space: nowrap;
+    }
     .entry-end-time.is-live {
       color: #1baf7a;
       opacity: 1;
@@ -4701,14 +4709,20 @@
                       ? (isLastEntryOfDay ? slotDayLabel.trim() : '')
                       : `<span class="entry-slot-count" ${slotTitle}>slots: ${formatSlotCount(slotCount)}</span>${slotDayLabel}`))
               : '';
-            const startLabel = row.isFirstSegment
-              ? formatTime(e.t)
-              : `${formatTime(new Date(row.segStart).toISOString())} <span class="entry-contd" title="Carried forward from the previous time group">(contd.)</span>`;
+            const startTimeText = formatTime(row.isFirstSegment ? e.t : new Date(row.segStart).toISOString());
+            // Rendered as its own stacked line inside entry-time-block (which
+            // is already a narrow flex column) rather than appended inline
+            // after the time -- inline made that span too wide for the
+            // column on mobile and forced the whole row to wrap badly.
+            const contdLabel = row.isFirstSegment
+              ? ''
+              : '<span class="entry-contd" title="Carried forward from the previous time group">↳ contd.</span>';
             const endTime = isLiveSegment ? 'Ongoing' : formatTime(new Date(row.segEnd).toISOString());
             return `
           <div class="entry-line" data-index="${row.index}">
             <span class="entry-time-block">
-              <span class="entry-time">${startLabel}</span>
+              <span class="entry-time">${startTimeText}</span>
+              ${contdLabel}
               <span class="entry-end-time${isLiveSegment ? ' is-live' : ''}"${isLiveSegment ? ` data-endtime-t="${e.t}"` : ''}>${endTime}</span>
             </span>
             <span class="entry-elapsed-block">
