@@ -638,6 +638,17 @@
       font-weight: 600;
       cursor: pointer;
     }
+    .current-running-repeat-btn {
+      margin-left: 8px;
+      border: 1.5px solid var(--accent);
+      color: var(--accent);
+      background: none;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
     .entry-actions {
       display: flex;
       justify-content: flex-end;
@@ -2962,7 +2973,8 @@
       el.innerHTML = '<span class="current-running-label">⏱ Currently tracking:</span> ' +
         '<span class="current-running-text"></span> ' +
         `<span class="current-running-elapsed">${formatDuration(elapsedMs)}</span> ` +
-        `<button class="current-running-stop-btn" type="button" data-t="${entry.t}" title="Stop tracking this entry now">⏹ Stop</button>`;
+        `<button class="current-running-stop-btn" type="button" data-t="${entry.t}" title="Stop tracking this entry now">⏹ Stop</button>` +
+        `<button class="current-running-repeat-btn" type="button" data-t="${entry.t}" title="Stop this entry and start a fresh one with the same text">🔁 Repeat</button>`;
       // Entry text is user-authored -- assign via textContent, not innerHTML.
       el.querySelector('.current-running-text').textContent = entry.text;
     }
@@ -2970,17 +2982,41 @@
     // Delegated once (rather than re-bound on every render, since the Stop
     // button's innerHTML is rebuilt every second by the interval below).
     document.getElementById('currentRunningEntry').addEventListener('click', (e) => {
-      const btn = e.target.closest('.current-running-stop-btn');
-      if (!btn) return;
-      if (!confirm('Stop tracking this diary entry now?')) return;
+      const stopBtn = e.target.closest('.current-running-stop-btn');
+      const repeatBtn = e.target.closest('.current-running-repeat-btn');
+      if (!stopBtn && !repeatBtn) return;
 
+      if (stopBtn) {
+        if (!confirm('Stop tracking this diary entry now?')) return;
+
+        const entries = loadEntries();
+        const location = findEntryLocation(entries, stopBtn.dataset.t);
+        if (!location || location.entry.endT) { renderCurrentRunningEntry(); return; }
+
+        location.entry.endT = new Date().toISOString();
+        saveEntries(entries);
+        if (viewDateInput.value === location.key) renderEntries();
+        renderCurrentRunningEntry();
+        return;
+      }
+
+      // Repeat: end the current entry right now, then start a brand-new
+      // tracked entry with the same text, picking up where this one left
+      // off -- handy for a recurring activity logged as back-to-back
+      // entries instead of one long one.
       const entries = loadEntries();
-      const location = findEntryLocation(entries, btn.dataset.t);
+      const location = findEntryLocation(entries, repeatBtn.dataset.t);
       if (!location || location.entry.endT) { renderCurrentRunningEntry(); return; }
 
-      location.entry.endT = new Date().toISOString();
+      const now = new Date();
+      location.entry.endT = now.toISOString();
+
+      const newKey = dateKey(now);
+      if (!entries[newKey]) entries[newKey] = [];
+      entries[newKey].push({ t: new Date(now.getTime() + 1).toISOString(), text: location.entry.text });
+
       saveEntries(entries);
-      if (viewDateInput.value === location.key) renderEntries();
+      if (viewDateInput.value === location.key || viewDateInput.value === newKey) renderEntries();
       renderCurrentRunningEntry();
     });
 
