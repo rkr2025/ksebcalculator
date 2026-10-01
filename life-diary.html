@@ -4330,23 +4330,25 @@
         : (frozenElapsed[e.t] || 0);
     }
 
-    // Untracked entries (noTrack) don't carry any elapsed time, so they're
-    // excluded from the count/average/busiest stats -- otherwise they'd
-    // silently drag the average down and inflate "tracked across N entries".
-    function computeBlockStats(blockEntries, frozenElapsed, latestTimestamp) {
-      const trackedEntries = blockEntries.filter((e) => !e.noTrack);
+    // Computes per-block stats over already carry-forward-split
+    // segment rows (see blockRows in renderEntries) rather than whole
+    // entries -- each row's own segMs is already capped at the block's
+    // 3-hour boundary, so totals here never exceed that window.
+    function computeBlockStatsFromRows(rows) {
+      const trackedRows = rows.filter((r) => !r.noTrack);
       let totalMs = 0;
       let busiest = null;
-      trackedEntries.forEach((e) => {
-        const ms = currentElapsedForEntry(e, frozenElapsed, latestTimestamp);
+      trackedRows.forEach((r) => {
+        const ms = r.segEnd - r.segStart;
         totalMs += ms;
-        if (!busiest || ms > busiest.ms) busiest = { ms, text: e.text };
+        if (!busiest || ms > busiest.ms) busiest = { ms, text: r.e.text };
       });
       return {
         totalMs,
-        count: trackedEntries.length,
-        avgMs: trackedEntries.length ? totalMs / trackedEntries.length : 0,
+        count: trackedRows.length,
+        avgMs: trackedRows.length ? totalMs / trackedRows.length : 0,
         busiest,
+        continuesForward: trackedRows.some((r) => !r.isLastSegment),
       };
     }
 
@@ -4388,12 +4390,57 @@
       const blocks = groupEntriesByThreeHours(dayEntries);
       const { frozenElapsed, latestTimestamp } = buildEntryTimerInfo(allEntries);
 
+      // An entry's timer can run past its own 3-hour block (e.g. it keeps
+      // going, or is still "Ongoing", well into the next block). Rather than
+      // lumping all of that time into the block the entry *started* in,
+      // split it at each block boundary and carry a "(contd.)" row forward
+      // into every later block it actually spills into, so each block's own
+      // table reflects only the time that truly falls inside its window.
+      const dayStartMs = new Date(key + 'T00:00:00').getTime();
+      const THREE_HOUR_BLOCK_MS_PRINT = 3 * 60 * 60 * 1000;
+      const blockEndMs = (b) => dayStartMs + (b + 1) * THREE_HOUR_BLOCK_MS_PRINT;
+
+      const blockRows = THREE_HOUR_BLOCK_LABELS.map(() => []);
+      blocks.forEach((blockEntries, b) => {
+        blockEntries.forEach((e) => {
+          if (e.noTrack) {
+            blockRows[b].push({ noTrack: true, e });
+            return;
+          }
+          const durationMs = currentElapsedForEntry(e, frozenElapsed, latestTimestamp);
+          const startMs = new Date(e.t).getTime();
+          const endMs = startMs + durationMs;
+          const isLive = e.t === latestTimestamp;
+
+          let segStart = startMs;
+          let blockIdx = b;
+          let isFirstSegment = true;
+          while (blockIdx < blockRows.length) {
+            const segEnd = Math.min(endMs, blockEndMs(blockIdx));
+            const segOngoing = isLive && segEnd === endMs;
+            blockRows[blockIdx].push({
+              noTrack: false,
+              text: e.text,
+              startText: isFirstSegment
+                ? formatTime(e.t)
+                : `${new Date(segStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })} (contd.)`,
+              endText: segOngoing ? 'Ongoing' : new Date(segEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+              duration: segEnd - segStart,
+            });
+            if (endMs <= blockEndMs(blockIdx)) break;
+            segStart = blockEndMs(blockIdx);
+            blockIdx++;
+            isFirstSegment = false;
+          }
+        });
+      });
+
       let html = `
         <div class="print-log-heading">Diary Log -- ${dateLabel}</div>
         <p class="print-log-subheading">${dayEntries.length} entr${dayEntries.length === 1 ? 'y' : 'ies'}, grouped by 3-hour blocks.</p>`;
 
-      blocks.forEach((blockEntries, b) => {
-        if (blockEntries.length === 0) return;
+      blockRows.forEach((rows, b) => {
+        if (rows.length === 0) return;
         html += `<div class="print-log-group">
           <div class="print-log-group-heading">${THREE_HOUR_BLOCK_LABELS[b]}</div>
           <table class="print-log-table">
@@ -4401,8 +4448,9 @@
               <tr><th>Diary Entries</th><th>Start Time</th><th>End Time</th><th>Duration</th></tr>
             </thead>
             <tbody>`;
-        blockEntries.forEach((e) => {
-          if (e.noTrack) {
+        rows.forEach((row) => {
+          if (row.noTrack) {
+            const e = row.e;
             html += `<tr>
               <td>${escapeHtml(e.text)}</td>
               <td>${formatTime(e.t)}</td>
@@ -4411,15 +4459,11 @@
             </tr>`;
             return;
           }
-          const durationMs = currentElapsedForEntry(e, frozenElapsed, latestTimestamp);
-          const endMs = new Date(e.t).getTime() + durationMs;
-          const isLive = e.t === latestTimestamp;
-          const endText = isLive ? 'Ongoing' : new Date(endMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
           html += `<tr>
-            <td>${escapeHtml(e.text)}</td>
-            <td>${formatTime(e.t)}</td>
-            <td>${endText}</td>
-            <td>${formatDuration(durationMs)}</td>
+            <td>${escapeHtml(row.text)}</td>
+            <td>${row.startText}</td>
+            <td>${row.endText}</td>
+            <td>${formatDuration(row.duration)}</td>
           </tr>`;
         });
         html += `</tbody></table></div>`;
@@ -4451,6 +4495,46 @@
       const blocks = groupEntriesByThreeHours(dayEntries);
       const { frozenElapsed, latestTimestamp } = buildEntryTimerInfo(entries);
 
+      const blockStartMs = (b) => new Date(key + 'T00:00:00').getTime() + b * 3 * 60 * 60 * 1000;
+      const THREE_HOUR_BLOCK_MS = 3 * 60 * 60 * 1000;
+
+      // An entry's timer can run past its own 3-hour block (e.g. it's still
+      // "Ongoing" well into the next block). Rather than letting its full
+      // duration pile up in the block it started in, split it at each block
+      // boundary: the timer stops at the boundary in the block it started
+      // in, and the *same* entry is carried forward into the next block,
+      // where its duration keeps counting (and keeps live-ticking, if it's
+      // still the running entry) from that point on.
+      const blockRows = THREE_HOUR_BLOCK_LABELS.map(() => []);
+      dayEntries.forEach((e, index) => {
+        const startBlock = Math.floor(new Date(e.t).getHours() / 3);
+        if (e.noTrack) {
+          blockRows[startBlock].push({ noTrack: true, e, index });
+          return;
+        }
+        const isLiveEntry = e.t === latestTimestamp && !e.endT;
+        const totalElapsedMs = isLiveEntry ? (Date.now() - new Date(e.t).getTime()) : (frozenElapsed[e.t] || 0);
+        const entryEndMs = new Date(e.t).getTime() + totalElapsedMs;
+
+        let segStart = new Date(e.t).getTime();
+        let blockIdx = startBlock;
+        let isFirstSegment = true;
+        while (blockIdx < blockRows.length) {
+          const boundaryMs = blockStartMs(blockIdx) + THREE_HOUR_BLOCK_MS;
+          const segEnd = Math.min(entryEndMs, boundaryMs);
+          const isLastSegment = segEnd >= entryEndMs;
+          blockRows[blockIdx].push({
+            noTrack: false, e, index, isFirstSegment, isLastSegment,
+            isLiveSegment: isLastSegment && isLiveEntry,
+            segStart, segEnd, totalElapsedMs,
+          });
+          if (isLastSegment) break;
+          segStart = boundaryMs;
+          blockIdx++;
+          isFirstSegment = false;
+        }
+      });
+
       // A block "has passed" (and so is worth flagging as empty) once its
       // 3-hour window has started -- viewing a past date, every block has
       // passed; viewing a future date, none have; viewing today, only
@@ -4463,18 +4547,16 @@
         return b * 3 <= currentHour;
       };
 
-      // For an empty block, find the last entry from an earlier block (if
-      // any) so we can tell whether that entry's still-running timer
-      // spills over into this empty window, rather than just saying
-      // "no entry" when something is actually still in progress.
+      // For a block with no rows at all, find the last entry from an
+      // earlier block (if any) -- its spilling-over timer is now carried
+      // forward as a row of its own, so this is only reached for a block
+      // that's genuinely empty.
       const findLastEntryBeforeBlock = (b) => {
         for (let i = b - 1; i >= 0; i--) {
           if (blocks[i].length > 0) return blocks[i][blocks[i].length - 1];
         }
         return null;
       };
-      const blockStartMs = (b) => new Date(key + 'T00:00:00').getTime() + b * 3 * 60 * 60 * 1000;
-      const THREE_HOUR_BLOCK_MS = 3 * 60 * 60 * 1000;
 
       // How far a 3-hour time group has progressed, in both time and
       // slots-of-the-configured-size, so it can be drawn as a bar -- a past
@@ -4509,9 +4591,9 @@
       const activeBlockIndex = key === todayKey ? Math.floor(currentHour / 3) : -1;
       const isPassedBlock = (b) => blockHasStarted(b) && b !== activeBlockIndex;
 
-      const blockHtml = blocks.map((blockEntries, b) => {
+      const blockHtml = blockRows.map((rows, b) => {
         const openAttr = b === activeBlockIndex ? ' open' : '';
-        if (blockEntries.length === 0) {
+        if (rows.length === 0) {
           if (!blockHasStarted(b)) return '';
           return `
         <details class="entry-group"${openAttr}>
@@ -4520,7 +4602,7 @@
           <div class="entry-group-empty" data-empty-block="${b}"></div>
         </details>`;
         }
-        const trackedCount = blockEntries.filter((e) => !e.noTrack).length;
+        const trackedCount = rows.filter((r) => !r.noTrack).length;
         return `
         <details class="entry-group"${openAttr}>
           <summary class="entry-group-heading">${THREE_HOUR_BLOCK_LABELS[b]} <span class="entry-group-heading-total" data-heading-total="${b}"></span></summary>
@@ -4532,66 +4614,75 @@
             <span class="insight-longest"></span>
             <span class="insight-overflow"></span>
           </div>
-          ${blockEntries.map((e) => {
-            if (e.noTrack) {
+          ${rows.map((row) => {
+            const e = row.e;
+            if (row.noTrack) {
               const label = e.isPlan
                 ? '<span class="entry-not-tracked entry-plan-label" title="This is a plan, not a tracked activity">📋 Plan</span>'
                 : '<span class="entry-not-tracked" title="Time tracking was turned off for this entry">DiaryNote</span>';
               return `
-          <div class="entry-line" data-index="${e.index}">
+          <div class="entry-line" data-index="${row.index}">
             <span class="entry-time-block">
               <span class="entry-time">${formatTime(e.t)}</span>
             </span>
             <span class="entry-elapsed-block">
               ${label}
             </span>
-            <span class="entry-text" data-index="${e.index}"></span>
-            <button class="entry-edit" data-index="${e.index}" title="Edit this entry" type="button">✏️</button>
-            <button class="entry-delete" data-index="${e.index}" title="Delete this entry" type="button">✕</button>
+            <span class="entry-text" data-index="${row.index}"></span>
+            <button class="entry-edit" data-index="${row.index}" title="Edit this entry" type="button">✏️</button>
+            <button class="entry-delete" data-index="${row.index}" title="Delete this entry" type="button">✕</button>
           </div>`;
             }
-            const isLive = e.t === latestTimestamp && !e.endT;
-            const elapsedMs = isLive ? (Date.now() - new Date(e.t).getTime()) : (frozenElapsed[e.t] || 0);
-            const endTimeMs = new Date(e.t).getTime() + elapsedMs;
-            const badge = isLive
+            const isLiveSegment = row.isLiveSegment;
+            const segMs = row.segEnd - row.segStart;
+            const badge = isLiveSegment
               ? `<span class="entry-elapsed" data-timer-t="${e.t}" title="Running -- this is the latest entry">⏱ 00:00:00</span>`
-              : `<span class="entry-elapsed" title="How long this entry ran before the next one was added">⏱ ${formatDuration(elapsedMs)}</span>`;
-            const durationMinutes = `${Math.round(elapsedMs / 60000)} min`;
+              : `<span class="entry-elapsed" title="How long this entry ran ${row.isFirstSegment ? 'before the next one was added' : 'in this time group'}">⏱ ${formatDuration(segMs)}</span>`;
+            const durationMinutes = `${Math.round(segMs / 60000)} min`;
             const slotMinutes = getSlotMinutes();
-            const slotCount = computeSlotCount(elapsedMs, slotMinutes);
-            const slotTitle = `title="${Math.round(elapsedMs / 60000)} min at a ${slotMinutes}-min slot size"`;
+            // The slot count reflects the entry's running total, not just
+            // this segment, so it's only shown on the entry's final/live
+            // segment -- earlier, carried-forward segments just show the
+            // time that fell in that group before it continued onward.
+            const slotCount = row.isLastSegment ? computeSlotCount(row.totalElapsedMs, slotMinutes) : null;
+            const slotTitle = `title="${Math.round(row.totalElapsedMs / 60000)} min at a ${slotMinutes}-min slot size"`;
             // "over/left today" is clock-based, not per-entry, so it's only
             // shown on the day's last entry rather than repeated on every
             // entry in the list.
-            const isLastEntryOfDay = e.t === dayEntries[dayEntries.length - 1].t;
+            const isLastEntryOfDay = row.isLastSegment && e.t === dayEntries[dayEntries.length - 1].t;
             const slotDayLabel = (() => {
               if (!isLastEntryOfDay) return '';
               const { slotsOver, slotsLeft } = computeSlotsOverAndLeft(slotMinutes);
-              return ` <span class="entry-slots-left"${isLive ? ` data-slotsleft-t="${e.t}"` : ''} title="${slotsOver} slots over today, ${slotsLeft} left">(${slotsOver}/${slotsLeft})</span>`;
+              return ` <span class="entry-slots-left"${isLiveSegment ? ` data-slotsleft-t="${e.t}"` : ''} title="${slotsOver} slots over today, ${slotsLeft} left">(${slotsOver}/${slotsLeft})</span>`;
             })();
             // The badge itself (the "slots: N" part) only shows once there's
             // some tracked time at all, but the last entry keeps showing the
             // day's over/left info even with zero elapsed time so far.
-            const slotLabel = isLive
-              ? `<span class="entry-slot-count" data-slotcount-t="${e.t}" ${slotTitle} style="${slotCount === null ? 'display: none;' : ''}">slots: ${formatSlotCount(slotCount || 0)}</span>${slotDayLabel}`
-              : (slotCount === null
-                  ? (isLastEntryOfDay ? slotDayLabel.trim() : '')
-                  : `<span class="entry-slot-count" ${slotTitle}>slots: ${formatSlotCount(slotCount)}</span>${slotDayLabel}`);
-            const endTime = isLive ? 'Ongoing' : formatTime(new Date(endTimeMs).toISOString());
+            const slotLabel = row.isLastSegment
+              ? (isLiveSegment
+                  ? `<span class="entry-slot-count" data-slotcount-t="${e.t}" ${slotTitle} style="${slotCount === null ? 'display: none;' : ''}">slots: ${formatSlotCount(slotCount || 0)}</span>${slotDayLabel}`
+                  : (slotCount === null
+                      ? (isLastEntryOfDay ? slotDayLabel.trim() : '')
+                      : `<span class="entry-slot-count" ${slotTitle}>slots: ${formatSlotCount(slotCount)}</span>${slotDayLabel}`))
+              : '';
+            const startLabel = row.isFirstSegment
+              ? formatTime(e.t)
+              : `${formatTime(new Date(row.segStart).toISOString())} <span class="entry-contd" title="Carried forward from the previous time group">(contd.)</span>`;
+            const endTime = isLiveSegment ? 'Ongoing' : formatTime(new Date(row.segEnd).toISOString());
             return `
-          <div class="entry-line" data-index="${e.index}">
+          <div class="entry-line" data-index="${row.index}">
             <span class="entry-time-block">
-              <span class="entry-time">${formatTime(e.t)}</span>
-              <span class="entry-end-time${isLive ? ' is-live' : ''}"${isLive ? ` data-endtime-t="${e.t}"` : ''}>${endTime}</span>
+              <span class="entry-time">${startLabel}</span>
+              <span class="entry-end-time${isLiveSegment ? ' is-live' : ''}"${isLiveSegment ? ` data-endtime-t="${e.t}"` : ''}>${endTime}</span>
             </span>
             <span class="entry-elapsed-block">
               ${badge}
-              <span class="entry-duration-min"${isLive ? ` data-durationmin-t="${e.t}"` : ''}>${durationMinutes}</span>
+              <span class="entry-duration-min"${isLiveSegment ? ` data-durationmin-t="${e.t}"` : ''}>${durationMinutes}</span>
               ${slotLabel}
             </span>
-            <span class="entry-text" data-index="${e.index}"></span>
-            <button class="entry-edit" data-index="${e.index}" title="Edit this entry" type="button">✏️</button>
-            <button class="entry-delete" data-index="${e.index}" title="Delete this entry" type="button">✕</button>
+            <span class="entry-text" data-index="${row.index}"></span>
+            <button class="entry-edit" data-index="${row.index}" title="Edit this entry" type="button">✏️</button>
+            <button class="entry-delete" data-index="${row.index}" title="Delete this entry" type="button">✕</button>
           </div>`;
           }).join('')}
         </details>`;
@@ -4617,11 +4708,9 @@
         span.textContent = dayEntries[parseInt(span.dataset.index)].text;
       });
 
-      const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
-
       function refreshGroupInsights() {
-        const perBlockStats = blocks.map((blockEntries) =>
-          blockEntries.length ? computeBlockStats(blockEntries, frozenElapsed, latestTimestamp) : null
+        const perBlockStats = blockRows.map((rows) =>
+          rows.length ? computeBlockStatsFromRows(rows) : null
         );
         const dayTotalMs = perBlockStats.reduce((sum, s) => sum + (s ? s.totalMs : 0), 0);
 
@@ -4648,17 +4737,13 @@
             longestEl.textContent = '';
           }
 
-          // This group's own window is only 3 hours wide, so total tracked
-          // time can only exceed that because an entry's timer (time until
-          // the next entry, or "now" if it's still running) stretches past
-          // the window -- call that out explicitly.
+          // An entry whose timer is still running past this group's own
+          // 3-hour window stops counting here and is carried forward as a
+          // row of its own in the next group -- flag that it continues on.
           const overflowEl = el.querySelector('.insight-overflow');
-          if (stats.totalMs > THREE_HOURS_MS) {
-            const overflowMs = stats.totalMs - THREE_HOURS_MS;
-            overflowEl.textContent = `⚠️ Total tracked time in this group is ${formatDurationHuman(stats.totalMs)} -- more than 3 hours, continuing ${formatDurationHuman(overflowMs)} further.`;
-          } else {
-            overflowEl.textContent = '';
-          }
+          overflowEl.textContent = stats.continuesForward
+            ? `⏩ An entry here is still running -- it continues into the next time group.`
+            : '';
         });
       }
 
