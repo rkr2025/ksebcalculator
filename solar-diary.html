@@ -913,6 +913,10 @@
     <div class="section-box print-hide-section" id="monthSwitcher">
       <label for="viewMonthSelect" style="font-weight: 700;">📆 View month</label>
       <select id="viewMonthSelect"></select>
+      <label style="display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; font-weight: 600; cursor: pointer;">
+        <input type="checkbox" id="splitByMonthToggle" style="width: 18px; height: 18px; flex: 0 0 auto; margin: 0; padding: 0;">
+        Split data by month (leave unticked to continue the same calculation into the next month)
+      </label>
       <div id="viewMonthNotice" style="display: none; margin-top: 10px; font-size: 13px; color: var(--text-secondary);">
         <span id="viewMonthNoticeText"></span>
         <button type="button" id="backToCurrentBtn" class="action-btn action-btn--outline" style="margin-top: 8px;">↩️ Back to current month</button>
@@ -977,7 +981,7 @@
           </select>
         </div>
         <div id="profile_bankedUnitsWrap" style="display: none;">
-          <label for="profile_bankedUnits">Banked Units (kWh) — carried over from your last KSEB bill</label>
+          <label for="profile_bankedUnits">Banked Units (kWh) — carried over from your last KSEB bill (for your first month here; later months carry forward automatically)</label>
           <input type="number" id="profile_bankedUnits" value="0" min="0">
         </div>
       </div>
@@ -1234,6 +1238,11 @@
     let entries = [];
     let monthlyData = JSON.parse(localStorage.getItem("monthlyData")) || null;
     let selectedMonth = currentMonthKey();
+    // "Split data by month" (off by default). When off, all months form one
+    // continuous calculation: the first Initial Reading is used and every
+    // entry, in any month, counts toward it. Months are still stored
+    // separately underneath, so turning the option on restores them.
+    let splitByMonth = localStorage.getItem('splitByMonth') === 'true';
 
     // Splits a pre-per-month (single continuous timeline) save into months so
     // each month only holds dates from that month: entries go to the month
@@ -1328,11 +1337,67 @@
     localStorage.setItem("monthlyData", JSON.stringify(monthlyData));
 
     function loadSelectedMonthData() {
+      if (!splitByMonth) {
+        const combined = continuousTimeline();
+        initialReadings = combined.initialReadings;
+        entries = combined.entries;
+        return;
+      }
       const data = monthlyData[selectedMonth];
       initialReadings = (data && data.initialReadings) || null;
       entries = (data && data.entries) || [];
     }
     loadSelectedMonthData();
+
+    // One timeline across all months: the earliest Initial Reading plus every
+    // entry in date order.
+    function continuousTimeline() {
+      const keys = Object.keys(monthlyData).sort();
+      const firstWithInitial = keys.find((k) => monthlyData[k].initialReadings);
+      const all = [];
+      keys.forEach((k) => (monthlyData[k].entries || []).forEach((e) => all.push(e)));
+      all.sort((a, b) => a.timestamp - b.timestamp);
+      return {
+        initialReadings: firstWithInitial ? { ...monthlyData[firstWithInitial].initialReadings } : null,
+        entries: all
+      };
+    }
+
+    // Writes the continuous timeline back into the per-month buckets. Each
+    // entry goes to its own month, and later months get a carried-over
+    // Initial Reading (last reading of the month before), as in split mode.
+    function saveContinuousTimeline() {
+      Object.keys(monthlyData).forEach((k) => { monthlyData[k].entries = []; });
+      entries.forEach((e) => {
+        const k = monthKeyOf(localDateKey(e.timestamp));
+        if (!monthlyData[k]) monthlyData[k] = { initialReadings: null, entries: [] };
+        monthlyData[k].entries.push(e);
+      });
+
+      const initialKey = initialReadingDateKey() ? monthKeyOf(initialReadingDateKey()) : null;
+      Object.keys(monthlyData).forEach((k) => {
+        const b = monthlyData[k];
+        if (initialReadings && k === initialKey) b.initialReadings = { ...initialReadings };
+        else if (!initialReadings && b.initialReadings && !b.initialReadings.carriedOver) b.initialReadings = null;
+      });
+      if (initialReadings && initialKey && !monthlyData[initialKey]) {
+        monthlyData[initialKey] = { initialReadings: { ...initialReadings }, entries: [] };
+      }
+
+      let prevLast = null;
+      Object.keys(monthlyData).sort().forEach((k) => {
+        const b = monthlyData[k];
+        if (!b.entries.length && !b.initialReadings) { delete monthlyData[k]; return; }
+        if (prevLast && k !== initialKey && (!b.initialReadings || b.initialReadings.carriedOver)) {
+          b.initialReadings = { date: `${k}-01`, solar: prevLast.solar, t1: prevLast.t1, t2: prevLast.t2, t3: prevLast.t3, export: prevLast.export, timestamp: Date.now(), carriedOver: true };
+        }
+        if (b.entries.length) {
+          prevLast = b.entries[b.entries.length - 1];
+          monthlyCurrentReadings[k] = { ...prevLast };
+        }
+      });
+      saveMonthlyArchives();
+    }
 
     // --- Monthly archives -----------------------------------------------
     // Two small extra archives, keyed by "YYYY-MM":
@@ -1480,7 +1545,9 @@
     }
 
     function updateStorage() {
-      if (initialReadings || entries.length > 0) {
+      if (!splitByMonth) {
+        saveContinuousTimeline();
+      } else if (initialReadings || entries.length > 0) {
         monthlyData[selectedMonth] = { initialReadings, entries };
       } else {
         delete monthlyData[selectedMonth];
@@ -2077,14 +2144,48 @@
     // not a second copy. Solar generation and export both happen during
     // daylight, so they're treated as Normal-timezone (T1) figures; this is
     // an approximation since the diary doesn't split export by timezone.
-    function billInputsFromUsage(usage) {
+    // Units carried into a month from the bill before it. The first month with
+    // data starts from the Banked Units in Billing Profile (what KSEB carried
+    // over to you); every later month starts from the previous month's
+    // "Remaining in Bank". Continuous mode is one calculation, so it uses the
+    // Billing Profile value only.
+    function openingBankFor(monthKey) {
+      let bank = billingProfile.hasBankBalance ? (billingProfile.bankedUnits || 0) : 0;
+      if (!splitByMonth) return bank;
+      Object.keys(monthlyData).sort().forEach((k) => {
+        if (k >= monthKey) return;
+        const closing = closingBankForMonth(k, bank);
+        if (closing !== null) bank = closing;
+      });
+      return bank;
+    }
+
+    // Units left in the bank after one month's bill, or null if that month has
+    // no usable readings yet.
+    function closingBankForMonth(monthKey, opening) {
+      const data = monthlyData[monthKey];
+      if (!data || !data.initialReadings || !data.entries || !data.entries.length) return null;
+      const init = data.initialReadings;
+      const last = data.entries[data.entries.length - 1];
+      const usage = {
+        solar: last.solar - init.solar,
+        t1: last.t1 - init.t1,
+        t2: last.t2 - init.t2,
+        t3: last.t3 - init.t3,
+        export: last.export - init.export
+      };
+      const bill = computeBill(billInputsFromUsage(usage, opening));
+      return bill.error ? null : bill.accountBalance;
+    }
+
+    function billInputsFromUsage(usage, bank = openingBankFor(selectedMonth)) {
       return {
         phase: billingProfile.phase,
         meterOwner: billingProfile.meterOwner,
         billingType: 'tod',
         connectedLoad: billingProfile.connectedLoad,
-        hasBankBalance: billingProfile.hasBankBalance,
-        bankedUnits: billingProfile.bankedUnits,
+        hasBankBalance: bank > 0,
+        bankedUnits: bank,
         solarNormal: Math.max(0, usage.solar),
         solarOffPeak: 0,
         solarPeak: 0,
@@ -2157,9 +2258,9 @@
       // explicitly so it's visible they were actually applied, not silently
       // ignored.
       const bankRow = bill.myBankDepositAtKseb > 0
-        ? `<tr><td>Banked Units Applied (from Billing Profile)</td><td>${bill.myBankDepositAtKseb.toFixed(2)} Unit</td></tr>`
+        ? `<tr><td>Banked Units Applied (carried into this month)</td><td>${bill.myBankDepositAtKseb.toFixed(2)} Unit</td></tr>`
         : '';
-      const remainingBankRow = bill.myBankDepositAtKseb > 0 && bill.accountBalance > 0
+      const remainingBankRow = bill.accountBalance > 0
         ? `<tr><td>Remaining in Bank After This Bill</td><td>${bill.accountBalance.toFixed(2)} Unit</td></tr>`
         : '';
 
@@ -2332,6 +2433,8 @@
     // copy -- otherwise next month would keep calculating from the old value.
     // (An Initial Reading the user typed in themselves is left alone.)
     function syncCarriedOverReadings() {
+      // The continuous timeline already refreshes carried-over readings on save.
+      if (!splitByMonth) { saveMonthlyArchives(); return; }
       const last = entries[entries.length - 1];
       if (last) monthlyCurrentReadings[selectedMonth] = { ...last }; else delete monthlyCurrentReadings[selectedMonth];
       const [y, m] = selectedMonth.split('-').map(Number);
@@ -2511,6 +2614,14 @@
     window.deleteInitial = deleteInitial;
     window.deleteEntry = deleteEntry;
     window.startEditingEntry = startEditingEntry;
+
+    document.getElementById('splitByMonthToggle').checked = splitByMonth;
+    document.getElementById('splitByMonthToggle').addEventListener('change', (e) => {
+      splitByMonth = e.target.checked;
+      localStorage.setItem('splitByMonth', String(splitByMonth));
+      loadSelectedMonthData();
+      refreshMonthView();
+    });
 
     document.getElementById('viewMonthSelect').addEventListener('change', (e) => switchMonth(e.target.value));
     document.getElementById('backToCurrentBtn').addEventListener('click', () => switchMonth(currentMonthKey()));
