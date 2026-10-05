@@ -504,6 +504,9 @@
           <button class="btn-outline btn-small" id="addNoteButton">+ Add Note</button>
         </div>
         <ul class="notes-list" id="currentNotesList"></ul>
+        <div class="actions-row">
+          <button class="btn-outline btn-small" id="clearNotesButton">🗑️ Clear Notes</button>
+        </div>
       </div>
     </div>
 
@@ -516,6 +519,9 @@
       </div>
       <ul class="todo-list" id="todoList"></ul>
       <p class="todo-empty" id="todoEmpty">No to-dos yet. Add one above, then press ▶ Start to begin working on it.</p>
+      <div class="actions-row">
+        <button class="btn-outline btn-small" id="clearTodosButton">🗑️ Clear To-Do List</button>
+      </div>
     </div>
 
     <!-- Work log summary -->
@@ -580,6 +586,7 @@
     const noteInput = document.getElementById('noteInput');
     const addNoteButton = document.getElementById('addNoteButton');
     const currentNotesList = document.getElementById('currentNotesList');
+    const clearNotesButton = document.getElementById('clearNotesButton');
     const elapsedStat = document.getElementById('elapsedStat');
     const remainingStat = document.getElementById('remainingStat');
     const breakStat = document.getElementById('breakStat');
@@ -598,6 +605,7 @@
     const addTodoButton = document.getElementById('addTodoButton');
     const todoList = document.getElementById('todoList');
     const todoEmpty = document.getElementById('todoEmpty');
+    const clearTodosButton = document.getElementById('clearTodosButton');
     const toast = document.getElementById('toast');
 
     // state.logs[category][dateKey] = [{ task, start, end, ms, isBreak, notes }, ...]
@@ -927,6 +935,7 @@
         }
         runningTimer.textContent = formatDuration(currentElapsedMs());
         notesBox.style.display = 'block';
+        clearNotesButton.disabled = !(state.current.notes && state.current.notes.length);
         if (!noteEditOpen) {
           const sig = JSON.stringify(state.current.notes);
           if (sig !== currentNotesSig) {
@@ -1104,6 +1113,7 @@
       todoCategoryLabel.textContent = cat;
       todoList.innerHTML = '';
       todoEmpty.style.display = list.length ? 'none' : 'block';
+      clearTodosButton.disabled = list.length === 0;
 
       list.forEach((item) => {
         const li = document.createElement('li');
@@ -1416,6 +1426,25 @@
 
     todoInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') addTodoButton.click();
+    });
+
+    clearTodosButton.addEventListener('click', () => {
+      const cat = state.selectedCategory;
+      const count = (state.todos[cat] || []).length;
+      if (!count) return;
+      if (!confirm(`Clear all ${count} to-do${count === 1 ? '' : 's'} (and their subtasks) in "${cat}"? Logged work is not affected.`)) return;
+      state.todos[cat] = [];
+      renderAll();
+      showToast('To-do list cleared.');
+    });
+
+    clearNotesButton.addEventListener('click', () => {
+      if (!state.current || !state.current.notes || !state.current.notes.length) return;
+      const count = state.current.notes.length;
+      if (!confirm(`Clear all ${count} note${count === 1 ? '' : 's'} on the running task "${state.current.task}"? The task itself keeps running.`)) return;
+      state.current.notes = [];
+      render();
+      showToast('Notes cleared.');
     });
 
     addNoteButton.addEventListener('click', () => {
