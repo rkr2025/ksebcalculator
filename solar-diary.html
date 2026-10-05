@@ -917,6 +917,13 @@
         <input type="checkbox" id="splitByMonthToggle" style="width: 18px; height: 18px; flex: 0 0 auto; margin: 0; padding: 0;">
         Split data by month (leave unticked to continue the same calculation into the next month)
       </label>
+      <div id="billDateWrap" style="display: none; margin-top: 10px; font-size: 13px;">
+        <label for="billDateInput" style="font-weight: 600;">🧾 Current bill date (entries are listed from this date)</label>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px;">
+          <input type="date" id="billDateInput">
+          <button type="button" id="clearBillDateBtn" class="action-btn action-btn--outline">✕ Clear</button>
+        </div>
+      </div>
       <div id="viewMonthNotice" style="display: none; margin-top: 10px; font-size: 13px; color: var(--text-secondary);">
         <span id="viewMonthNoticeText"></span>
         <button type="button" id="backToCurrentBtn" class="action-btn action-btn--outline" style="margin-top: 8px;">↩️ Back to current month</button>
@@ -1236,6 +1243,8 @@
     // re-render. Starting a new month never touches an older month's data.
     let initialReadings = null;
     let entries = [];
+    let hiddenEntries = [];  // split mode: entries before the bill date (see splitByBillDate)
+    let billDate = null;     // split mode: this month's "Current bill date" (YYYY-MM-DD) or null
     let monthlyData = JSON.parse(localStorage.getItem("monthlyData")) || null;
     let selectedMonth = currentMonthKey();
     // "Split data by month" (off by default). When off, all months form one
@@ -1306,6 +1315,7 @@
         bucket.entries.forEach((e) => { if (!seen.has(e.timestamp)) existing.entries.push(e); });
         existing.entries.sort((a, b) => a.timestamp - b.timestamp);
         if (!existing.initialReadings) existing.initialReadings = bucket.initialReadings;
+        if (!existing.billDate) existing.billDate = bucket.billDate;
       };
       Object.keys(data).sort().forEach((key) => {
         const bucket = data[key] || {};
@@ -1325,7 +1335,7 @@
               initial.carriedOver = true;
             }
           }
-          merge(key, { initialReadings: initial, entries: [...bucketEntries] });
+          merge(key, { initialReadings: initial, entries: [...bucketEntries], billDate: bucket.billDate || null });
         } else {
           const split = splitLegacyIntoMonths(bucket.initialReadings || null, bucketEntries);
           Object.keys(split).forEach((k) => merge(k, split[k]));
@@ -1336,16 +1346,37 @@
     monthlyData = normalizeMonthlyData(monthlyData);
     localStorage.setItem("monthlyData", JSON.stringify(monthlyData));
 
+    // Split mode only: a month can have a "Current bill date". Entries dated
+    // before it are kept in storage but left out of this month's list and
+    // calculations; `hiddenEntries` holds them so saves don't drop them.
+    function billStartTime() {
+      return billDate ? new Date(`${billDate}T00:00:00`).getTime() : -Infinity;
+    }
+
+    function splitByBillDate(list, dateStr) {
+      if (!dateStr) return { visible: list, hidden: [] };
+      const start = new Date(`${dateStr}T00:00:00`).getTime();
+      return {
+        visible: list.filter((e) => e.timestamp >= start),
+        hidden: list.filter((e) => e.timestamp < start)
+      };
+    }
+
     function loadSelectedMonthData() {
       if (!splitByMonth) {
         const combined = continuousTimeline();
         initialReadings = combined.initialReadings;
         entries = combined.entries;
+        hiddenEntries = [];
+        billDate = null;
         return;
       }
       const data = monthlyData[selectedMonth];
       initialReadings = (data && data.initialReadings) || null;
-      entries = (data && data.entries) || [];
+      billDate = (data && data.billDate) || null;
+      const split = splitByBillDate((data && data.entries) || [], billDate);
+      entries = split.visible;
+      hiddenEntries = split.hidden;
     }
     loadSelectedMonthData();
 
@@ -1547,8 +1578,8 @@
     function updateStorage() {
       if (!splitByMonth) {
         saveContinuousTimeline();
-      } else if (initialReadings || entries.length > 0) {
-        monthlyData[selectedMonth] = { initialReadings, entries };
+      } else if (initialReadings || entries.length > 0 || hiddenEntries.length > 0 || billDate) {
+        monthlyData[selectedMonth] = { initialReadings, entries: [...hiddenEntries, ...entries], billDate };
       } else {
         delete monthlyData[selectedMonth];
       }
@@ -1617,6 +1648,11 @@
       // appendable.
       document.getElementById('currentReadingsSection').style.display = isCurrent ? '' : 'none';
       document.getElementById('viewMonthNotice').style.display = isCurrent ? 'none' : '';
+      document.getElementById('billDateWrap').style.display = splitByMonth ? '' : 'none';
+      const billDateInput = document.getElementById('billDateInput');
+      billDateInput.value = billDate || '';
+      billDateInput.min = `${selectedMonth}-01`;
+      billDateInput.max = lastDayKeyOfMonth(selectedMonth);
       document.getElementById('viewMonthNoticeText').textContent = `Viewing ${monthLabelFor(selectedMonth)} — a past month. You can review, edit or delete its entries, but new readings are added to the current month.`;
       prefillInitialForm();
       renderEntries();
@@ -1653,6 +1689,22 @@
     // Initial Reading's date and the latest entry's date -- computed
     // automatically so the day count is always correct, instead of relying
     // on the user to keep a separate number in sync by hand.
+    // With a Current bill date (split mode), this bill's usage is measured
+    // from the last reading before that date, and its days are counted from
+    // the bill date. Otherwise it is measured from the Initial Reading.
+    function billModeActive() {
+      return splitByMonth && !!billDate;
+    }
+
+    function baselineReading() {
+      if (billModeActive() && hiddenEntries.length) return hiddenEntries[hiddenEntries.length - 1];
+      return initialReadings;
+    }
+
+    function periodStartKey() {
+      return billModeActive() ? billDate : initialReadingDateKey();
+    }
+
     function initialReadingDateKey() {
       if (!initialReadings) return null;
       if (initialReadings.date) return initialReadings.date;
@@ -1674,12 +1726,13 @@
     // the 1st, so the 1st itself counts as a tracked day. A manually entered
     // one is the meter on its own date, so that date isn't counted.
     function daysFromInitialTo(dateKey) {
-      const diff = calendarDayDiff(initialReadingDateKey(), dateKey);
-      return Math.max(1, diff + (initialReadings.carriedOver ? 1 : 0));
+      const diff = calendarDayDiff(periodStartKey(), dateKey);
+      // A bill date counts as the first day of the bill, like a carried-over reading.
+      return Math.max(1, diff + ((billModeActive() || initialReadings.carriedOver) ? 1 : 0));
     }
 
     function getTotalDaysInput() {
-      const dateKey = initialReadingDateKey();
+      const dateKey = initialReadings ? periodStartKey() : null;
       if (!dateKey || entries.length === 0) return null;
       return daysFromInitialTo(localDateKey(entries[entries.length - 1].timestamp));
     }
@@ -1687,7 +1740,7 @@
     function updateTotalDaysDisplay() {
       const valueEl = document.getElementById('totalDaysValue');
       const subEl = document.getElementById('totalDaysSub');
-      const dateKey = initialReadingDateKey();
+      const dateKey = initialReadings ? periodStartKey() : null;
       if (!dateKey) {
         valueEl.textContent = '—';
         subEl.textContent = 'Set an Initial Reading date first';
@@ -1730,12 +1783,12 @@
       if (!initialReadings || entries.length === 0) return 0;
 
       const dailyByDate = [];
-      let prev = initialReadings;
+      let prev = baselineReading();
       // The Initial Reading's own entered date (not its save timestamp,
       // which is just whenever the "Save Initial" button happened to be
       // clicked) -- the correct starting point for the first row's
       // days-since-previous gap below.
-      let prevKey = initialReadingDateKey();
+      let prevKey = periodStartKey();
       let isFirstEntry = true;
       entries.forEach((entry) => {
         const daily = {
@@ -1751,11 +1804,11 @@
         // (not summed daily deltas), and overwritten by each later entry on
         // the same day, so it always reflects that day's LAST reading.
         const cumulative = {
-          solar: entry.solar - initialReadings.solar,
-          export: entry.export - initialReadings.export,
-          t1: entry.t1 - initialReadings.t1,
-          t2: entry.t2 - initialReadings.t2,
-          t3: entry.t3 - initialReadings.t3,
+          solar: entry.solar - baselineReading().solar,
+          export: entry.export - baselineReading().export,
+          t1: entry.t1 - baselineReading().t1,
+          t2: entry.t2 - baselineReading().t2,
+          t3: entry.t3 - baselineReading().t3,
         };
         const dayKey = new Date(entry.timestamp).toDateString();
         const existing = dailyByDate.find(d => d.dayKey === dayKey);
@@ -1783,11 +1836,11 @@
 
       const lastEntry = entries[entries.length - 1];
       const cumulativeUsage = {
-        solar: lastEntry.solar - initialReadings.solar,
-        t1: lastEntry.t1 - initialReadings.t1,
-        t2: lastEntry.t2 - initialReadings.t2,
-        t3: lastEntry.t3 - initialReadings.t3,
-        export: lastEntry.export - initialReadings.export
+        solar: lastEntry.solar - baselineReading().solar,
+        t1: lastEntry.t1 - baselineReading().t1,
+        t2: lastEntry.t2 - baselineReading().t2,
+        t3: lastEntry.t3 - baselineReading().t3,
+        export: lastEntry.export - baselineReading().export
       };
       document.getElementById('overallBillColumnHeader').textContent = "Today's Total Bill";
 
@@ -1860,7 +1913,7 @@
       // projectionTargetDays (30 or 31, see getProjectionTargetDays()) --
       // not the date the underlying data happens to be current as of.
       const projectedEndDateLabel = (() => {
-        const dateKey = initialReadingDateKey();
+        const dateKey = periodStartKey();
         if (!dateKey) return null;
         const endDate = new Date(dateKey + 'T00:00:00');
         endDate.setDate(endDate.getDate() + projectionTargetDays);
@@ -1920,7 +1973,7 @@
     // the same "solar - export + T1 + T2 + T3" figure used throughout this
     // page, so the trend reads consistently with the tables above it.
     function computeEntryUsageSeries() {
-      let prev = initialReadings || { solar: 0, t1: 0, t2: 0, t3: 0, export: 0 };
+      let prev = baselineReading() || { solar: 0, t1: 0, t2: 0, t3: 0, export: 0 };
       return entries.map((entry) => {
         const directSolarUsage = (entry.solar - prev.solar) - (entry.export - prev.export);
         const total = directSolarUsage + (entry.t1 - prev.t1) + (entry.t2 - prev.t2) + (entry.t3 - prev.t3);
@@ -2011,11 +2064,11 @@
 
       entries.forEach((entry, i) => {
         const delta = initialReadings ? {
-          solar: entry.solar - initialReadings.solar,
-          t1: entry.t1 - initialReadings.t1,
-          t2: entry.t2 - initialReadings.t2,
-          t3: entry.t3 - initialReadings.t3,
-          export: entry.export - initialReadings.export
+          solar: entry.solar - baselineReading().solar,
+          t1: entry.t1 - baselineReading().t1,
+          t2: entry.t2 - baselineReading().t2,
+          t3: entry.t3 - baselineReading().t3,
+          export: entry.export - baselineReading().export
         } : null;
 
         total.solar += delta ? delta.solar : entry.solar;
@@ -2044,11 +2097,11 @@
       if (entries.length > 0 && initialReadings) {
         const lastEntry = entries[entries.length - 1];
         const usage = initialReadings ? {
-          solar: lastEntry.solar - initialReadings.solar,
-          t1: lastEntry.t1 - initialReadings.t1,
-          t2: lastEntry.t2 - initialReadings.t2,
-          t3: lastEntry.t3 - initialReadings.t3,
-          export: lastEntry.export - initialReadings.export
+          solar: lastEntry.solar - baselineReading().solar,
+          t1: lastEntry.t1 - baselineReading().t1,
+          t2: lastEntry.t2 - baselineReading().t2,
+          t3: lastEntry.t3 - baselineReading().t3,
+          export: lastEntry.export - baselineReading().export
         } : {
           solar: lastEntry.solar,
           t1: lastEntry.t1,
@@ -2165,8 +2218,11 @@
     function closingBankForMonth(monthKey, opening) {
       const data = monthlyData[monthKey];
       if (!data || !data.initialReadings || !data.entries || !data.entries.length) return null;
-      const init = data.initialReadings;
-      const last = data.entries[data.entries.length - 1];
+      const { visible: listed, hidden } = splitByBillDate(data.entries, data.billDate);
+      if (!listed.length) return null;
+      // Same baseline rule as the live bill (see baselineReading()).
+      const init = hidden.length ? hidden[hidden.length - 1] : data.initialReadings;
+      const last = listed[listed.length - 1];
       const usage = {
         solar: last.solar - init.solar,
         t1: last.t1 - init.t1,
@@ -2410,6 +2466,10 @@
         t3: parseFloat(document.getElementById("t3").value),
         export: parseFloat(document.getElementById("export").value)
       };
+      if (entry.timestamp < billStartTime()) {
+        alert(`Readings are listed from the current bill date (${billDate}). Choose a date on or after it, or clear the bill date.`);
+        return;
+      }
       entries.push(entry);
       updateStorage();
       // Keep this month's "latest current reading" archived so it can
@@ -2494,6 +2554,10 @@
         const newTimestamp = dateInput.value ? new Date(dateInput.value).getTime() : entry.timestamp;
         if (isNaN(newTimestamp) || monthKeyOf(localDateKey(newTimestamp)) !== selectedMonth) {
           alert(`The date must be within ${monthLabelFor(selectedMonth)}.`);
+          return;
+        }
+        if (newTimestamp < billStartTime()) {
+          alert(`The date must be on or after the current bill date (${billDate}).`);
           return;
         }
         if (newTimestamp !== entry.timestamp) {
@@ -2614,6 +2678,27 @@
     window.deleteInitial = deleteInitial;
     window.deleteEntry = deleteEntry;
     window.startEditingEntry = startEditingEntry;
+
+    function setBillDate(value) {
+      const data = monthlyData[selectedMonth] || { initialReadings: null, entries: [] };
+      data.billDate = value || null;
+      monthlyData[selectedMonth] = data;
+      if (!data.initialReadings && !data.entries.length && !data.billDate) delete monthlyData[selectedMonth];
+      localStorage.setItem('monthlyData', JSON.stringify(monthlyData));
+      loadSelectedMonthData();
+      refreshMonthView();
+    }
+
+    document.getElementById('billDateInput').addEventListener('change', (e) => {
+      const value = e.target.value;
+      if (value && monthKeyOf(value) !== selectedMonth) {
+        alert(`The bill date must be within ${monthLabelFor(selectedMonth)}.`);
+        e.target.value = billDate || '';
+        return;
+      }
+      setBillDate(value);
+    });
+    document.getElementById('clearBillDateBtn').addEventListener('click', () => setBillDate(null));
 
     document.getElementById('splitByMonthToggle').checked = splitByMonth;
     document.getElementById('splitByMonthToggle').addEventListener('change', (e) => {
