@@ -104,6 +104,64 @@
     width: 140px;
   }
 
+  /* -------- To-do list per category -------- */
+  .todo-add-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .todo-add-row input[type="text"] {
+    flex: 1;
+    min-width: 180px;
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+  }
+  .todo-add-row input[type="text"]:focus { outline: none; border-color: var(--primary); }
+  .todo-list { list-style: none; margin: 12px 0 0; padding: 0; }
+  .todo-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 4px;
+    border-bottom: 1px dashed var(--border);
+    font-size: 14px;
+  }
+  .todo-item:last-child { border-bottom: none; }
+  .todo-item input[type="checkbox"] { width: 16px; height: 16px; flex-shrink: 0; cursor: pointer; }
+  .todo-text { flex: 1; word-break: break-word; font-weight: 600; }
+  .todo-item.done .todo-text { text-decoration: line-through; color: var(--text-muted); font-weight: 400; }
+  .todo-item.running { background: var(--primary-light); border-radius: 8px; }
+  .todo-item.running .todo-text { color: var(--primary-dark); }
+  .todo-tag {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    background: #fff;
+    border-radius: 999px;
+    padding: 2px 8px;
+    flex-shrink: 0;
+  }
+  .todo-start-btn { padding: 5px 11px; font-size: 12.5px; background: var(--accent); color: #fff; flex-shrink: 0; }
+  .todo-del-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 0 3px;
+    flex-shrink: 0;
+  }
+  .todo-del-btn:hover { color: var(--danger); }
+  .todo-item { flex-wrap: wrap; }
+  .subtask-block { flex: 0 0 100%; display: flex; flex-direction: column; gap: 4px; padding: 0 0 6px 26px; }
+  .subtask-list { list-style: none; margin: 0; padding: 0; }
+  .subtask-item { font-size: 13px; padding: 4px 0; border-bottom: none; }
+  .subtask-item .todo-text { font-weight: 500; }
+  .subtask-item.done .todo-text { text-decoration: line-through; color: var(--text-muted); font-weight: 400; }
+  .subtask-pick { cursor: pointer; }
+  .subtask-pick:hover { color: var(--primary-dark); text-decoration: underline; }
+  .subtask-add-row input[type="text"] { min-width: 140px; padding: 6px 10px; font-size: 13px; }
+  .todo-empty { font-size: 13px; color: var(--text-muted); font-style: italic; margin: 10px 0 0; display: none; }
+
   /* -------- Date + target row -------- */
   .top-controls-row {
     display: flex;
@@ -449,6 +507,17 @@
       </div>
     </div>
 
+    <!-- To-do list for the selected category -->
+    <div class="card no-print">
+      <h2>✅ To-Do List -- <span id="todoCategoryLabel"></span></h2>
+      <div class="todo-add-row">
+        <input type="text" id="todoInput" placeholder="Add a to-do for this category...">
+        <button class="btn-outline btn-small" id="addTodoButton">+ Add To-Do</button>
+      </div>
+      <ul class="todo-list" id="todoList"></ul>
+      <p class="todo-empty" id="todoEmpty">No to-dos yet. Add one above, then press ▶ Start to begin working on it.</p>
+    </div>
+
     <!-- Work log summary -->
     <div class="card">
       <h2>📋 Work Log Summary -- <span id="logCategoryLabel"></span>, <span id="logDateLabel"></span></h2>
@@ -524,16 +593,23 @@
     const restoreButton = document.getElementById('restoreButton');
     const restoreFileInput = document.getElementById('restoreFileInput');
     const clearButton = document.getElementById('clearButton');
+    const todoCategoryLabel = document.getElementById('todoCategoryLabel');
+    const todoInput = document.getElementById('todoInput');
+    const addTodoButton = document.getElementById('addTodoButton');
+    const todoList = document.getElementById('todoList');
+    const todoEmpty = document.getElementById('todoEmpty');
     const toast = document.getElementById('toast');
 
     // state.logs[category][dateKey] = [{ task, start, end, ms, isBreak, notes }, ...]
-    // state.current = { category, task, start, isBreak, notes } | null  -- always today
+    // state.current = { category, task, start, isBreak, notes, todoId? } | null  -- always today
     // notes = [{ text, at, elapsedMs }, ...]  -- elapsedMs = task's active (pause-excluded) time when the note was added
+    // state.todos[category] = [{ id, text, done, subtasks: [{ id, text, done }, ...] }, ...]  -- ▶ Start turns a to-do or subtask into state.current
     let state = {
       categories: [...DEFAULT_CATEGORIES],
       selectedCategory: DEFAULT_CATEGORIES[0],
       targetHoursByCategory: { Work: 8, Study: 2 },
       logs: {},
+      todos: {},
       current: null
     };
     let viewDate = dateKey(new Date()); // which day's log/stats we're viewing (not persisted)
@@ -542,6 +618,7 @@
     let tableSig = '';         // (rebuilding every second swallows clicks on the ✎/✕ buttons)
     let liveRowRefs = null;    // { durTd, notesUl } of the running task's table row
     let noteEditOpen = false; // while a note is being edited, render() leaves note lists alone so the input keeps focus
+    let todoSig = '';         // rebuild the to-do list only when something it shows has changed
 
     function dateKey(d) {
       const y = d.getFullYear();
@@ -551,6 +628,10 @@
     }
 
     function todayKey() { return dateKey(new Date()); }
+
+    function newId() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
 
     function isBreakTask(taskName) {
       return /break/i.test(taskName);
@@ -600,15 +681,17 @@
           state.targetHoursByCategory = parsed.targetHoursByCategory && typeof parsed.targetHoursByCategory === 'object'
             ? parsed.targetHoursByCategory : {};
           state.logs = parsed.logs && typeof parsed.logs === 'object' ? parsed.logs : {};
+          state.todos = parsed.todos && typeof parsed.todos === 'object' ? parsed.todos : {};
           state.current = parsed.current || null;
         }
       } catch (e) {
         console.error('Error loading work log state:', e);
       }
-      // Make sure every category has a target + a logs bucket.
+      // Make sure every category has a target + a logs bucket + a to-do list.
       state.categories.forEach((c) => {
         if (typeof state.targetHoursByCategory[c] !== 'number') state.targetHoursByCategory[c] = 8;
         if (!state.logs[c]) state.logs[c] = {};
+        if (!Array.isArray(state.todos[c])) state.todos[c] = [];
       });
     }
 
@@ -805,6 +888,7 @@
       state.categories = state.categories.filter((c) => c !== cat);
       delete state.targetHoursByCategory[cat];
       delete state.logs[cat];
+      delete state.todos[cat];
       if (state.selectedCategory === cat) state.selectedCategory = state.categories[0];
       renderAll();
       showToast(`Category "${cat}" deleted.`);
@@ -901,6 +985,8 @@
         : (remainingMs >= 0
           ? `${pct.toFixed(1)}% of ${targetHours}h target complete`
           : `Target complete -- ${formatDuration(-remainingMs)} over ${targetHours}h`);
+
+      renderTodos();
 
       // Rebuilding the table would destroy an open note editor
       if (noteEditOpen) {
@@ -1006,6 +1092,143 @@
       saveState();
     }
 
+    function renderTodos() {
+      const cat = state.selectedCategory;
+      const list = state.todos[cat] || [];
+      const canStart = viewDate === todayKey() && !state.current;
+      const runningId = state.current && state.current.category === cat ? state.current.todoId : null;
+      const sig = JSON.stringify([cat, list, canStart, runningId]);
+      if (sig === todoSig) return;
+      todoSig = sig;
+
+      todoCategoryLabel.textContent = cat;
+      todoList.innerHTML = '';
+      todoEmpty.style.display = list.length ? 'none' : 'block';
+
+      list.forEach((item) => {
+        const li = document.createElement('li');
+        li.className = 'todo-item' + (item.done ? ' done' : '') + (item.id === runningId ? ' running' : '');
+
+        const check = document.createElement('input');
+        check.type = 'checkbox';
+        check.checked = !!item.done;
+        check.title = 'Mark as done';
+        check.addEventListener('change', () => {
+          item.done = check.checked;
+          renderAll();
+        });
+        li.appendChild(check);
+
+        const text = document.createElement('span');
+        text.className = 'todo-text';
+        text.textContent = item.text;
+        li.appendChild(text);
+
+        if (item.id === runningId) {
+          const tag = document.createElement('span');
+          tag.className = 'todo-tag';
+          tag.textContent = '⏱ Working';
+          li.appendChild(tag);
+        } else {
+          const startBtn = document.createElement('button');
+          startBtn.className = 'todo-start-btn';
+          startBtn.type = 'button';
+          startBtn.textContent = '▶ Start';
+          startBtn.title = canStart ? 'Start working on this to-do' : 'Needs Today with no task running';
+          startBtn.disabled = !canStart;
+          startBtn.addEventListener('click', () => startTodo(item.id));
+          li.appendChild(startBtn);
+        }
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'todo-del-btn';
+        delBtn.type = 'button';
+        delBtn.title = 'Delete to-do';
+        delBtn.textContent = '✕';
+        delBtn.addEventListener('click', () => {
+          if (!confirm(`Delete to-do "${item.text}"?`)) return;
+          state.todos[cat] = state.todos[cat].filter((t) => t.id !== item.id);
+          renderAll();
+        });
+        li.appendChild(delBtn);
+
+        // Subtasks sit under the to-do, on their own line inside the same row
+        const subBlock = document.createElement('div');
+        subBlock.className = 'subtask-block';
+
+        const subList = document.createElement('ul');
+        subList.className = 'subtask-list';
+        (item.subtasks || []).forEach((sub) => {
+          const sl = document.createElement('li');
+          sl.className = 'todo-item subtask-item' + (sub.done ? ' done' : '');
+
+          const subCheck = document.createElement('input');
+          subCheck.type = 'checkbox';
+          subCheck.checked = !!sub.done;
+          subCheck.title = 'Mark subtask as done';
+          subCheck.addEventListener('change', () => {
+            sub.done = subCheck.checked;
+            renderAll();
+          });
+          sl.appendChild(subCheck);
+
+          // Clicking the subtask logs it as a note on the running task, which times it
+          const subText = document.createElement('span');
+          subText.className = 'todo-text subtask-pick';
+          subText.textContent = sub.text;
+          subText.title = 'Click to track this subtask as a note';
+          subText.addEventListener('click', () => addSubtaskAsNote(item, sub));
+          sl.appendChild(subText);
+
+          const subDel = document.createElement('button');
+          subDel.className = 'todo-del-btn';
+          subDel.type = 'button';
+          subDel.title = 'Delete subtask';
+          subDel.textContent = '✕';
+          subDel.addEventListener('click', () => {
+            if (!confirm(`Delete subtask "${sub.text}"?`)) return;
+            item.subtasks = item.subtasks.filter((s) => s.id !== sub.id);
+            renderAll();
+          });
+          sl.appendChild(subDel);
+
+          subList.appendChild(sl);
+        });
+        subBlock.appendChild(subList);
+
+        const subAddRow = document.createElement('div');
+        subAddRow.className = 'todo-add-row subtask-add-row';
+        const subInput = document.createElement('input');
+        subInput.type = 'text';
+        subInput.placeholder = 'Add a subtask...';
+        const subAddBtn = document.createElement('button');
+        subAddBtn.className = 'btn-outline btn-small';
+        subAddBtn.type = 'button';
+        subAddBtn.textContent = '+ Subtask';
+        const addSubtask = () => {
+          const subText = subInput.value.trim();
+          if (!subText) {
+            showToast('Enter a subtask first.', true);
+            return;
+          }
+          item.subtasks = item.subtasks || [];
+          item.subtasks.push({ id: newId(), text: subText, done: false });
+          renderAll();
+          showToast('Subtask added.');
+        };
+        subAddBtn.addEventListener('click', addSubtask);
+        subInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') addSubtask();
+        });
+        subAddRow.appendChild(subInput);
+        subAddRow.appendChild(subAddBtn);
+        subBlock.appendChild(subAddRow);
+        li.appendChild(subBlock);
+
+        todoList.appendChild(li);
+      });
+    }
+
     function renderAll() {
       renderCategoryPills();
       render();
@@ -1044,6 +1267,7 @@
       state.categories.push(name);
       state.targetHoursByCategory[name] = 8;
       state.logs[name] = {};
+      state.todos[name] = [];
       state.selectedCategory = name;
       newCategoryInput.value = '';
       renderAll();
@@ -1125,6 +1349,75 @@
 
     taskInput.addEventListener('input', render);
 
+    // Adds a subtask as a timed note on the running task. If nothing is running,
+    // the parent to-do is started first so the subtask still gets tracked.
+    function addSubtaskAsNote(item, sub) {
+      if (!state.current) {
+        if (viewDate !== todayKey()) {
+          showToast('Switch to Today to track a subtask.', true);
+          return;
+        }
+        state.current = {
+          category: state.selectedCategory,
+          task: item.text,
+          start: new Date().toISOString(),
+          isBreak: isBreakTask(item.text),
+          notes: [],
+          todoId: item.id
+        };
+        startTicking();
+      } else if (state.current.category !== state.selectedCategory) {
+        showToast(`A task is running under "${state.current.category}" -- switch to it to add notes.`, true);
+        return;
+      }
+      normalizeNotes(state.current);
+      state.current.notes.push({ text: sub.text, at: new Date().toISOString(), elapsedMs: currentElapsedMs() });
+      renderAll();
+      showToast(`Tracking: ${sub.text}`);
+    }
+
+    function startTodo(id) {
+      const cat = state.selectedCategory;
+      const item = (state.todos[cat] || []).find((t) => t.id === id);
+      if (!item) return;
+      if (state.current) {
+        showToast('A task is already running -- stop it first.', true);
+        return;
+      }
+      if (viewDate !== todayKey()) {
+        showToast('Switch to Today to start a task.', true);
+        return;
+      }
+      state.current = {
+        category: cat,
+        task: item.text,
+        start: new Date().toISOString(),
+        isBreak: isBreakTask(item.text),
+        notes: [],
+        todoId: item.id
+      };
+      startTicking();
+      renderAll();
+      showToast(`Started: ${item.text}`);
+    }
+
+    addTodoButton.addEventListener('click', () => {
+      const text = todoInput.value.trim();
+      if (!text) {
+        showToast('Enter a to-do first.', true);
+        return;
+      }
+      const cat = state.selectedCategory;
+      state.todos[cat].push({ id: newId(), text, done: false, subtasks: [] });
+      todoInput.value = '';
+      renderAll();
+      showToast('To-do added.');
+    });
+
+    todoInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addTodoButton.click();
+    });
+
     addNoteButton.addEventListener('click', () => {
       const text = noteInput.value.trim();
       if (!state.current) return;
@@ -1174,11 +1467,13 @@
               selectedCategory: restored.selectedCategory || restored.categories[0],
               targetHoursByCategory: restored.targetHoursByCategory || {},
               logs: restored.logs || {},
+              todos: restored.todos || {},
               current: restored.current || null
             };
             state.categories.forEach((c) => {
               if (typeof state.targetHoursByCategory[c] !== 'number') state.targetHoursByCategory[c] = 8;
               if (!state.logs[c]) state.logs[c] = {};
+              if (!Array.isArray(state.todos[c])) state.todos[c] = [];
             });
             normalizeAllNotes();
             if (state.current) startTicking();
