@@ -735,8 +735,12 @@
       const offsets = notes.map((n) => typeof n.elapsedMs === 'number'
         ? n.elapsedMs
         : Math.max(0, new Date(n.at).getTime() - new Date(entry.start).getTime())); // notes saved before durations existed
-      return offsets.map((off, i) =>
-        Math.max(0, Math.min(totalMs, i < offsets.length - 1 ? offsets[i + 1] : totalMs) - Math.min(off, totalMs)));
+      return offsets.map((off, i) => {
+        // A note ended by its subtask being finished stops at that point
+        const next = i < offsets.length - 1 ? offsets[i + 1] : totalMs;
+        const end = typeof notes[i].endedMs === 'number' ? notes[i].endedMs : next;
+        return Math.max(0, Math.min(totalMs, end) - Math.min(off, totalMs));
+      });
     }
 
     function updateNoteDurations(ul, notes, entry, totalMs) {
@@ -1178,9 +1182,9 @@
           subCheck.title = 'Mark subtask as done';
           subCheck.addEventListener('change', () => {
             sub.done = subCheck.checked;
-            // Finishing the subtask whose timer is running stops that timer
+            // Finishing the subtask whose note timer is running ends that note only
             if (sub.done && isTrackingSubtask(item, sub)) {
-              stopCurrentTask();
+              endCurrentNote();
             } else {
               renderAll();
             }
@@ -1374,7 +1378,19 @@
       const c = state.current;
       if (!c || c.todoId !== item.id || c.category !== state.selectedCategory) return false;
       const notes = c.notes || [];
-      return notes.length > 0 && notes[notes.length - 1].text === sub.text;
+      if (!notes.length) return false;
+      const last = notes[notes.length - 1];
+      return last.text === sub.text && typeof last.endedMs !== 'number';
+    }
+
+    // Stops only the latest note's timer (its time stops counting here). The
+    // running task itself keeps going; time after this point belongs to no note
+    // until the next one is added.
+    function endCurrentNote() {
+      const notes = state.current.notes;
+      notes[notes.length - 1].endedMs = currentElapsedMs();
+      renderAll();
+      showToast(`Stopped timer: ${notes[notes.length - 1].text}`);
     }
 
     function addSubtaskAsNote(item, sub) {
