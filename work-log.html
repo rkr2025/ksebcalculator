@@ -1108,7 +1108,7 @@
     function renderTodos() {
       const cat = state.selectedCategory;
       const list = state.todos[cat] || [];
-      const canStart = viewDate === todayKey() && !state.current;
+      const canStart = viewDate === todayKey();
       const runningId = state.current && state.current.category === cat ? state.current.todoId : null;
       const sig = JSON.stringify([cat, list, canStart, runningId]);
       if (sig === todoSig) return;
@@ -1148,7 +1148,7 @@
           startBtn.className = 'todo-start-btn';
           startBtn.type = 'button';
           startBtn.textContent = '▶ Start';
-          startBtn.title = canStart ? 'Start working on this to-do' : 'Needs Today with no task running';
+          startBtn.title = canStart ? 'Start working on this to-do (stops any running task)' : 'Switch to Today to start a to-do';
           startBtn.disabled = !canStart;
           startBtn.addEventListener('click', () => startTodo(item.id));
           li.appendChild(startBtn);
@@ -1370,8 +1370,6 @@
 
     taskInput.addEventListener('input', render);
 
-    // Adds a subtask as a timed note on the running task. If nothing is running,
-    // the parent to-do is started first so the subtask still gets tracked.
     // True when this subtask's note is the latest one on the running task,
     // i.e. its timer is the one running right now.
     function isTrackingSubtask(item, sub) {
@@ -1393,15 +1391,20 @@
       showToast(`Stopped timer: ${notes[notes.length - 1].text}`);
     }
 
+    // Clicking a subtask adds it as a timed note on its parent to-do's task, which
+    // starts running under that to-do. Any other running task is logged first.
     function addSubtaskAsNote(item, sub) {
       if (isTrackingSubtask(item, sub) && !confirm(`"${sub.text}" is already being tracked. Add it again as a new entry?`)) {
         return;
       }
-      if (!state.current) {
+      const sameTodo = state.current && state.current.todoId === item.id && state.current.category === state.selectedCategory;
+      if (!sameTodo) {
         if (viewDate !== todayKey()) {
           showToast('Switch to Today to track a subtask.', true);
           return;
         }
+        // Any other running task is logged first, then this to-do takes over
+        if (state.current) stopCurrentTask();
         state.current = {
           category: state.selectedCategory,
           task: item.text,
@@ -1411,9 +1414,6 @@
           todoId: item.id
         };
         startTicking();
-      } else if (state.current.category !== state.selectedCategory) {
-        showToast(`A task is running under "${state.current.category}" -- switch to it to add notes.`, true);
-        return;
       }
       normalizeNotes(state.current);
       state.current.notes.push({ text: sub.text, at: new Date().toISOString(), elapsedMs: currentElapsedMs() });
@@ -1425,14 +1425,13 @@
       const cat = state.selectedCategory;
       const item = (state.todos[cat] || []).find((t) => t.id === id);
       if (!item) return;
-      if (state.current) {
-        showToast('A task is already running -- stop it first.', true);
-        return;
-      }
+      if (state.current && state.current.todoId === id && state.current.category === cat) return;
       if (viewDate !== todayKey()) {
         showToast('Switch to Today to start a task.', true);
         return;
       }
+      // Any running task is logged first, then this to-do takes over
+      if (state.current) stopCurrentTask();
       state.current = {
         category: cat,
         task: item.text,
