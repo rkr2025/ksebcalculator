@@ -910,25 +910,6 @@
   <div class="container">
     <h2>📘 Solar Diary - Estimate your Bill</h2>
     <p class="note">This diary records your daily solar and meter usage, and estimates your electricity bill both for today and projected for the full month.</p>
-    <div class="section-box print-hide-section" id="monthSwitcher">
-      <label for="viewMonthSelect" style="font-weight: 700;">📆 View month</label>
-      <select id="viewMonthSelect"></select>
-      <label style="display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; font-weight: 600; cursor: pointer;">
-        <input type="checkbox" id="splitByMonthToggle" style="width: 18px; height: 18px; flex: 0 0 auto; margin: 0; padding: 0;">
-        Split data by month (leave unticked to continue the same calculation into the next month)
-      </label>
-      <div id="billDateWrap" style="display: none; margin-top: 10px; font-size: 13px;">
-        <label for="billDateInput" style="font-weight: 600;">🧾 Current bill date (entries are listed from this date)</label>
-        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px;">
-          <input type="date" id="billDateInput">
-          <button type="button" id="clearBillDateBtn" class="action-btn action-btn--outline">✕ Clear</button>
-        </div>
-      </div>
-      <div id="viewMonthNotice" style="display: none; margin-top: 10px; font-size: 13px; color: var(--text-secondary);">
-        <span id="viewMonthNoticeText"></span>
-        <button type="button" id="backToCurrentBtn" class="action-btn action-btn--outline" style="margin-top: 8px;">↩️ Back to current month</button>
-      </div>
-    </div>
     <div class="section-box print-hide-section">
       <div class="section-box-header">
         <h3>⚙️ Billing Profile</h3>
@@ -1247,11 +1228,10 @@
     let billDate = null;     // split mode: this month's "Current bill date" (YYYY-MM-DD) or null
     let monthlyData = JSON.parse(localStorage.getItem("monthlyData")) || null;
     let selectedMonth = currentMonthKey();
-    // "Split data by month" (off by default). When off, all months form one
-    // continuous calculation: the first Initial Reading is used and every
-    // entry, in any month, counts toward it. Months are still stored
-    // separately underneath, so turning the option on restores them.
-    let splitByMonth = localStorage.getItem('splitByMonth') === 'true';
+    // All months form one continuous calculation: the first Initial Reading is
+    // used and every entry, in any month, counts toward it. Months are still
+    // stored separately underneath.
+    const splitByMonth = false;
 
     // Splits a pre-per-month (single continuous timeline) save into months so
     // each month only holds dates from that month: entries go to the month
@@ -1584,21 +1564,6 @@
         delete monthlyData[selectedMonth];
       }
       localStorage.setItem("monthlyData", JSON.stringify(monthlyData));
-      renderMonthSelector();
-    }
-
-    // --- "View month" selector --------------------------------------------
-    // Lists every month that has saved data, plus the current month (so a
-    // new month is always available to start filling in).
-    function renderMonthSelector() {
-      const keys = new Set(Object.keys(monthlyData));
-      keys.add(currentMonthKey());
-      keys.add(selectedMonth);
-      const select = document.getElementById('viewMonthSelect');
-      select.innerHTML = Array.from(keys).sort().reverse().map((key) => (
-        `<option value="${key}">${monthLabelFor(key)}${key === currentMonthKey() ? ' (current)' : ''}</option>`
-      )).join('');
-      select.value = selectedMonth;
     }
 
     function defaultInitialDate() {
@@ -1640,29 +1605,14 @@
       document.getElementById('initialVerifyText').textContent = initialReadings && initialReadings.autoFilled
         ? `This month's Initial Reading was filled in automatically from your last reading of ${monthLabelFor(previousMonthKey(selectedMonth))}. Please make sure it is correct — the bill estimate for ${monthLabelFor(selectedMonth)} is calculated from it. / ഈ മാസത്തെ Initial Reading കഴിഞ്ഞ മാസത്തെ അവസാന റീഡിങ്ങിൽ നിന്ന് സ്വയമേവ ചേർത്തതാണ്. ബിൽ എസ്റ്റിമേറ്റ് ഇതിനെ അടിസ്ഥാനമാക്കിയായതിനാൽ ശരിയാണെന്ന് ഉറപ്പാക്കുക.`
         : `Please make sure this month's Initial Reading is correct — the bill estimate for ${monthLabelFor(selectedMonth)} is calculated from it. / ഈ മാസത്തെ Initial Reading ശരിയാണെന്ന് ഉറപ്പാക്കുക — ബിൽ എസ്റ്റിമേറ്റ് ഇതിനെ അടിസ്ഥാനമാക്കിയാണ്.`;
-      renderMonthSelector();
       renderInitialReadingForMonth();
       document.getElementById('currentReadingsHeading').innerHTML = `➕ Current Solar Readings (<span style="color: var(--accent); font-weight: 800;">${new Date(`${selectedMonth}-01T00:00:00`).toLocaleString('en-US', { month: 'long' })}</span>)`;
       // New readings are always stamped "now", so they only make sense for
       // the current month; past months stay viewable/editable but not
       // appendable.
       document.getElementById('currentReadingsSection').style.display = isCurrent ? '' : 'none';
-      document.getElementById('viewMonthNotice').style.display = isCurrent ? 'none' : '';
-      document.getElementById('billDateWrap').style.display = splitByMonth ? '' : 'none';
-      const billDateInput = document.getElementById('billDateInput');
-      billDateInput.value = billDate || '';
-      billDateInput.min = `${selectedMonth}-01`;
-      billDateInput.max = lastDayKeyOfMonth(selectedMonth);
-      document.getElementById('viewMonthNoticeText').textContent = `Viewing ${monthLabelFor(selectedMonth)} — a past month. You can review, edit or delete its entries, but new readings are added to the current month.`;
       prefillInitialForm();
       renderEntries();
-    }
-
-    function switchMonth(monthKey) {
-      selectedMonth = monthKey;
-      skipAutoInitial = false;
-      loadSelectedMonthData();
-      refreshMonthView();
     }
 
     // If this month has no Initial Reading yet, reset the form and prefill it
@@ -2678,38 +2628,6 @@
     window.deleteInitial = deleteInitial;
     window.deleteEntry = deleteEntry;
     window.startEditingEntry = startEditingEntry;
-
-    function setBillDate(value) {
-      const data = monthlyData[selectedMonth] || { initialReadings: null, entries: [] };
-      data.billDate = value || null;
-      monthlyData[selectedMonth] = data;
-      if (!data.initialReadings && !data.entries.length && !data.billDate) delete monthlyData[selectedMonth];
-      localStorage.setItem('monthlyData', JSON.stringify(monthlyData));
-      loadSelectedMonthData();
-      refreshMonthView();
-    }
-
-    document.getElementById('billDateInput').addEventListener('change', (e) => {
-      const value = e.target.value;
-      if (value && monthKeyOf(value) !== selectedMonth) {
-        alert(`The bill date must be within ${monthLabelFor(selectedMonth)}.`);
-        e.target.value = billDate || '';
-        return;
-      }
-      setBillDate(value);
-    });
-    document.getElementById('clearBillDateBtn').addEventListener('click', () => setBillDate(null));
-
-    document.getElementById('splitByMonthToggle').checked = splitByMonth;
-    document.getElementById('splitByMonthToggle').addEventListener('change', (e) => {
-      splitByMonth = e.target.checked;
-      localStorage.setItem('splitByMonth', String(splitByMonth));
-      loadSelectedMonthData();
-      refreshMonthView();
-    });
-
-    document.getElementById('viewMonthSelect').addEventListener('change', (e) => switchMonth(e.target.value));
-    document.getElementById('backToCurrentBtn').addEventListener('click', () => switchMonth(currentMonthKey()));
 
     loadBillingProfileIntoForm();
     refreshMonthView();
