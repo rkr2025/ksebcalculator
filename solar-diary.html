@@ -1324,6 +1324,20 @@
       return result;
     }
     monthlyData = normalizeMonthlyData(monthlyData);
+
+    // One-time repair for data saved before the stale-Initial-Reading fix
+    // above: if more than one bucket still has a real (non-carried-over)
+    // Initial Reading -- e.g. an old value left behind by a correction --
+    // continuousTimeline() would silently use the earliest one forever.
+    // Keep only the most recently saved one (highest timestamp) so a
+    // correction actually takes effect.
+    (() => {
+      const real = Object.keys(monthlyData).filter((k) => monthlyData[k].initialReadings && !monthlyData[k].initialReadings.carriedOver);
+      if (real.length > 1) {
+        const keep = real.reduce((a, b) => ((monthlyData[a].initialReadings.timestamp || 0) >= (monthlyData[b].initialReadings.timestamp || 0) ? a : b));
+        real.forEach((k) => { if (k !== keep) monthlyData[k].initialReadings = null; });
+      }
+    })();
     localStorage.setItem("monthlyData", JSON.stringify(monthlyData));
 
     // Split mode only: a month can have a "Current bill date". Entries dated
@@ -1385,11 +1399,17 @@
         monthlyData[k].entries.push(e);
       });
 
+      // Continuous mode has exactly one true Initial Reading -- the one at
+      // initialKey. Every other bucket's initialReadings is cleared here
+      // (even an old manually-entered one left over from a correction) so a
+      // stale reading in an earlier month can never outrank the current one
+      // when continuousTimeline() picks "the first month with an Initial
+      // Reading". Later months get a fresh carried-over one rebuilt below.
       const initialKey = initialReadingDateKey() ? monthKeyOf(initialReadingDateKey()) : null;
       Object.keys(monthlyData).forEach((k) => {
         const b = monthlyData[k];
         if (initialReadings && k === initialKey) b.initialReadings = { ...initialReadings };
-        else if (!initialReadings && b.initialReadings && !b.initialReadings.carriedOver) b.initialReadings = null;
+        else b.initialReadings = null;
       });
       if (initialReadings && initialKey && !monthlyData[initialKey]) {
         monthlyData[initialKey] = { initialReadings: { ...initialReadings }, entries: [] };
@@ -1624,7 +1644,10 @@
       initDateEl.min = `${selectedMonth}-01`;
       initDateEl.max = lastDayKeyOfMonth(selectedMonth);
       initDateEl.value = defaultInitialDate();
-      if (initialReadings) return;
+      // skipAutoInitial means the user just deleted the Initial Reading on
+      // purpose -- leave the fields blank instead of immediately prefilling
+      // them again with the previous reading.
+      if (initialReadings || skipAutoInitial) return;
       const prevReading = previousMonthLastReading(selectedMonth);
       if (prevReading) {
         document.getElementById("init_solar").value = prevReading.solar;
