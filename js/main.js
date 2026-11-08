@@ -327,6 +327,7 @@ function wireRateGroup(toggleId, resetButtonId, fieldIds, defaults) {
 
 const DUTY_SURCHARGE_FIELD_IDS = ['dutyRatePercent', 'fuelSurchargeInput'];
 const DUTY_SURCHARGE_DEFAULTS = [DUTY_RATE * 100, FUEL_SURCHARGE_PER_UNIT * 100];
+DUTY_SURCHARGE_FIELD_IDS.forEach((id, i) => { document.getElementById(id).value = DUTY_SURCHARGE_DEFAULTS[i]; });
 wireRateGroup('dutySurchargeEditToggle', 'resetDutySurchargeButton', DUTY_SURCHARGE_FIELD_IDS, DUTY_SURCHARGE_DEFAULTS);
 
 const TARIFF_RATE_FIELD_IDS = [
